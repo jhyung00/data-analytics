@@ -891,31 +891,31 @@
             <div class="card">
                 <div class="accordion-item">
                     <div class="accordion-header" onclick="toggleAccordion(this)">Lab 1: Excel Fundamentals <i data-lucide="chevron-down"></i></div>
-                    <div class="accordion-body">Focus on VLOOKUP, XLOOKUP, Index/Match, and Pivot Tables.</div>
+                    <div class="accordion-body"><strong>Tool: Excel.</strong> Conditional functions (IF/IFS), Lookups (XLOOKUP), and basic data formatting.</div>
                 </div>
                 <div class="accordion-item">
-                    <div class="accordion-header" onclick="toggleAccordion(this)">Lab 2: Diagnostic Analytics <i data-lucide="chevron-down"></i></div>
-                    <div class="accordion-body">Performing variance analysis and identifying root causes of financial anomalies.</div>
+                    <div class="accordion-header" onclick="toggleAccordion(this)">Lab 2: Advanced Data Analysis <i data-lucide="chevron-down"></i></div>
+                    <div class="accordion-body"><strong>Tool: Excel.</strong> Using the Data Analysis Toolpak for descriptive statistics and variance analysis.</div>
                 </div>
                 <div class="accordion-item">
-                    <div class="accordion-header" onclick="toggleAccordion(this)">Lab 3: Predictive Tools <i data-lucide="chevron-down"></i></div>
-                    <div class="accordion-body">Applying statistical functions and predictive modeling tools within Excel/Alteryx.</div>
+                    <div class="accordion-header" onclick="toggleAccordion(this)">Lab 3: Optimization & Modeling <i data-lucide="chevron-down"></i></div>
+                    <div class="accordion-body"><strong>Tool: Excel.</strong> Using Solver for resource allocation and Scenario Planning for "what-if" analysis.</div>
                 </div>
                 <div class="accordion-item">
-                    <div class="accordion-header" onclick="toggleAccordion(this)">Lab 4: Power BI Intro <i data-lucide="chevron-down"></i></div>
-                    <div class="accordion-body">Importing data into Power BI, creating measures with DAX, and building first dashboard.</div>
+                    <div class="accordion-header" onclick="toggleAccordion(this)">Lab 4: Power BI Modeling <i data-lucide="chevron-down"></i></div>
+                    <div class="accordion-body"><strong>Tool: Power BI.</strong> Data Modeling (Star Schema), relationships, and information modeling with basic DAX measures.</div>
                 </div>
                 <div class="accordion-item">
-                    <div class="accordion-header" onclick="toggleAccordion(this)">Lab 5: Project Setup <i data-lucide="chevron-down"></i></div>
-                    <div class="accordion-body">Initial data cleaning workflow setup for the Group Project. Submit Alteryx workflow (.yxmd).</div>
+                    <div class="accordion-header" onclick="toggleAccordion(this)">Lab 5: Alteryx Cleaning <i data-lucide="chevron-down"></i></div>
+                    <div class="accordion-body"><strong>Tool: Alteryx.</strong> Data cleaning, parsing text, filtering, and shaping data for analysis.</div>
                 </div>
                 <div class="accordion-item">
-                    <div class="accordion-header" onclick="toggleAccordion(this)">Lab 6: Alteryx Combining Data <i data-lucide="chevron-down"></i></div>
-                    <div class="accordion-body">Using Joins and Unions to combine multiple datasets (Movie Database example).</div>
+                    <div class="accordion-header" onclick="toggleAccordion(this)">Lab 6: Alteryx Combining <i data-lucide="chevron-down"></i></div>
+                    <div class="accordion-body"><strong>Tool: Alteryx.</strong> Joining multiple datasets and using Unions to stack data.</div>
                 </div>
                 <div class="accordion-item">
-                    <div class="accordion-header" onclick="toggleAccordion(this)">Lab 7: Alteryx Transformation <i data-lucide="chevron-down"></i></div>
-                    <div class="accordion-body">Advanced parsing, formulas, and summarization tools in Alteryx.</div>
+                    <div class="accordion-header" onclick="toggleAccordion(this)">Lab 7: Alteryx Analysis <i data-lucide="chevron-down"></i></div>
+                    <div class="accordion-body"><strong>Tool: Alteryx.</strong> Analyzing transformed data and creating summary reports.</div>
                 </div>
             </div>
         </div>
@@ -926,12 +926,12 @@
             
             <div class="card" style="border-left: 5px solid var(--accent); background: #fdfdfd;">
                 <h3>Data Reflection</h3>
-                <div class="flip-card" style="height: 150px;" onclick="this.classList.toggle('flipped')">
+                <div class="flip-card" style="height: 150px;" onclick="flipWithAuth(this)">
                     <div class="flip-inner">
                         <div class="flip-front" style="background: linear-gradient(135deg, #e67e22, #d35400);">
-                            <i data-lucide="help-circle" size="48" style="margin-bottom: 10px;"></i>
+                            <i data-lucide="lock" size="48" style="margin-bottom: 10px;"></i>
                             <h3>Did you interact with data today?</h3>
-                            <p>Click to see examples</p>
+                            <p>(Instructor Mode Required)</p>
                         </div>
                         <div class="flip-back" style="align-items: flex-start; text-align: left;">
                             <ul style="font-size: 14px; margin-left: 20px;">
@@ -1605,6 +1605,11 @@
                 <h2>Concept Quiz</h2>
                 <div id="score-con" style="font-weight: bold; color: var(--success);">Score: 0</div>
             </div>
+            <!-- Added Intro Text -->
+            <div class="info-box" style="margin-bottom: 20px; border-left-color: var(--warning);">
+                <strong><i data-lucide="info"></i> Diagnostic Only</strong>
+                <p style="margin-bottom: 0; font-size: 14px;">This quiz covers advanced topics we will learn this semester. It is NOT graded. The goal is to gauge your prior knowledge and preview the tools (Power BI, Power Query, DAX) and critical thinking skills you will develop.</p>
+            </div>
             <div class="card">
                 <div id="qc-content">
                     <h3 id="qc-text" style="margin-bottom: 20px;">Question...</h3>
@@ -1849,12 +1854,68 @@
         { q: "Is individual work permitted on the Group Project?", opts: ["Yes", "No"], ans: 1, expl: "Projects must be groups of 2-3." }
     ];
 
-    // -- Concept Quiz Data --
+    // -- Concept Quiz Data (Updated to be more scenario based) --
     const conceptQs = [
-        { q: "What distinguishes 'New World' accounting data?", opts: ["Aggregation First", "Granularity First"], ans: 1, expl: "Modern accounting stores transaction-level detail first." },
-        { q: "Which Bias involves using the easiest data to find?", opts: ["Confirmation Bias", "Availability Bias"], ans: 1, expl: "Availability Bias uses easily accessible info." },
-        { q: "What is the best use of a Scatter Plot in audit?", opts: ["Comparing Totals", "Detecting Anomalies"], ans: 1, expl: "Scatter plots reveal outliers effectively." },
-        { q: "Data Literacy Step 1 is:", opts: ["Analyze", "Interpret"], ans: 1, expl: "You must interpret data before analyzing." }
+        { 
+            q: "Which chart type is best for showing the distribution of a single numerical variable, such as the frequency of invoice amounts?", 
+            opts: ["Line Chart", "Histogram", "Pie Chart"], 
+            ans: 1, 
+            expl: "Histograms are designed to show frequency distributions." 
+        },
+        { 
+            q: "An auditor only tests the first 5 invoices they see on a pile because they are easy to reach. Which cognitive bias is this?", 
+            opts: ["Confirmation Bias", "Availability Bias", "Anchoring Bias"], 
+            ans: 1, 
+            expl: "Availability Bias involves relying on information that is easily accessible rather than representative." 
+        },
+        { 
+            q: "In Power Query, you have columns for 'Jan', 'Feb', and 'Mar', but you need a single column for 'Month' and one for 'Amount'. Which transformation do you use?", 
+            opts: ["Pivot", "Unpivot", "Transpose"], 
+            ans: 1, 
+            expl: "Unpivot rotates columns into rows, creating a 'Attribute' and 'Value' pair, essential for data analysis." 
+        },
+        { 
+            q: "In Power BI, which DAX function is considered the most powerful because it allows you to modify the filter context of a calculation?", 
+            opts: ["SUM", "CALCULATE", "AVERAGE"], 
+            ans: 1, 
+            expl: "CALCULATE evaluates an expression in a modified filter context." 
+        },
+        { 
+            q: "When cleaning data, you find entries like ' WA', 'WA ', and 'wa'. Which function removes the leading/trailing spaces?", 
+            opts: ["CLEAN", "TRIM", "UPPER"], 
+            ans: 1, 
+            expl: "TRIM removes extra spaces from text. (UPPER would fix the capitalization)." 
+        },
+        { 
+            q: "Which of the following describes the 'Star Schema' used in Data Modeling?", 
+            opts: ["A central Fact table surrounded by Dimension tables", "A central Dimension table surrounded by Fact tables", "All tables connected in a circle"], 
+            ans: 0, 
+            expl: "A Star Schema centers on transactions (Facts) linked to descriptive attributes (Dimensions)." 
+        },
+        { 
+            q: "In Power Query, what is the underlying formula language called?", 
+            opts: ["DAX", "M", "Python"], 
+            ans: 1, 
+            expl: "Power Query uses the 'M' language for data transformation steps." 
+        },
+        { 
+            q: "Critical Thinking: If Ice Cream sales and Shark Attacks both increase in July, does Ice Cream cause Shark Attacks?", 
+            opts: ["Yes", "No, it's likely a coincidence", "No, it's a correlation driven by a third variable (Seasonality)"], 
+            ans: 2, 
+            expl: "Correlation does not imply causation. Both increase due to summer weather (confounding variable)." 
+        },
+        { 
+            q: "In Power BI, what is the key difference between a Calculated Column and a Measure?", 
+            opts: ["Measures are static", "Calculated Columns use RAM; Measures use CPU at query time", "There is no difference"], 
+            ans: 1, 
+            expl: "Calculated Columns are stored in the file (consuming RAM). Measures are dynamic calculations run when the visual renders." 
+        },
+        { 
+            q: "What is a common use of 'Benford's Law' in accounting data analytics?", 
+            opts: ["Predicting future sales", "Detecting potential fraud in naturally occurring numbers", "Calculating depreciation"], 
+            ans: 1, 
+            expl: "Benford's Law predicts the frequency of leading digits; deviations can suggest manipulated data." 
+        }
     ];
 
     // -- Quiz Engines --
