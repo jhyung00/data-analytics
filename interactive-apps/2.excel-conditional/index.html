@@ -191,7 +191,7 @@
                         
                         <div id="download-container" class="mb-4 hidden">
                             <button id="download-btn" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded flex items-center gap-2 transition-colors border border-slate-200 w-full justify-center">
-                                <i data-lucide="download" class="w-3 h-3"></i> <span>Download Practice File</span>
+                                <i data-lucide="download" class="w-3 h-3"></i> <span>Download Lab Workbook</span>
                             </button>
                         </div>
 
@@ -271,7 +271,10 @@
 
     <script>
         // --- 1. DATASETS & CONTENT ---
+        const WORKBOOK_FILENAME = 'data/Excel_Logic_Lab.xlsx';
 
+        // NOTE: These generators are kept for the INTERACTIVE DEMOS in the web app.
+        // The student downloads a static .xlsx file that contains this data pre-loaded.
         const generateAccountingData = () => {
              // 30 rows + header logic simulation for robust practice
              const data = [
@@ -335,11 +338,6 @@
         };
 
         const generateCreditData = () => {
-            // New Dataset: Credit History Log
-            // Designed for:
-            // 1. Search Mode -1 (Duplicates: Acme Corp 600 then 650)
-            // 2. Wildcard Mode 2 (Wayne Ent Intl, Cyberdyne Systems)
-            // 3. Match Mode -1 (Approximate matching for risk tiering)
             return [
                 { date: "2024-01-01", client: "Acme Corp", score: 600 },
                 { date: "2024-01-10", client: "Stark Ind", score: 720 },
@@ -379,9 +377,10 @@
                 `,
                 project: {
                     title: "Format the Sales Ledger",
-                    brief: "The sales team sent a raw CSV dump. It needs to be a proper Table before we can analyze it.",
+                    brief: `The sales team data is in the <strong>'Sales_Data'</strong> sheet of your workbook.`,
                     steps: [
-                        "Download the Main Sales Dataset.",
+                        `Download and open the <strong>${WORKBOOK_FILENAME}</strong> workbook (button above).`,
+                        "Navigate to the <strong>'Sales_Data'</strong> sheet.",
                         "Select the main block of data (Headers + 30 rows).",
                         "Convert to Table (Ctrl+T) and name it 'SalesTable'.",
                     ]
@@ -427,9 +426,9 @@
                 `,
                 project: {
                     title: "Sanitize the Ledger",
-                    brief: "The downloaded dataset has 'burned-in' errors in the Amount column (Rows 11 and 19).",
+                    brief: "The dataset has 'burned-in' errors in the Amount column (Rows 11 and 19).",
                     steps: [
-                        "Identify #DIV/0! and #N/A text values.",
+                        "Identify #DIV/0! and #N/A text values in 'Sales_Data'.",
                         "Create a 'CleanAmount' column using <code>=IFERROR(Value, 0)</code> logic.",
                         "Ensure the fallback value is exactly 0."
                     ]
@@ -518,10 +517,8 @@
                     title: "Link Client Emails",
                     brief: "Map contact emails to the main sales table. The lookup list contains all your major clients.",
                     steps: [
-                        "Download the 'client_lookup_table.csv' file.",
-                        "Open the CSV, copy all data (Ctrl+A, Ctrl+C).",
-                        "Paste it into a new sheet named 'LookupData' in your main workbook.",
-                        "Use Basic XLOOKUP to pull 'ContactEmail' into the main table based on 'Client Name'."
+                        "Switch to the <strong>'Lookup_Data'</strong> sheet in your workbook.",
+                        "Use Basic XLOOKUP to pull 'ContactEmail' into the main 'SalesTable' based on 'Client Name'."
                     ]
                 },
                 renderDemo: (container, onComplete) => renderBasicLookupDemo(container, onComplete)
@@ -544,7 +541,7 @@
                     title: "Credit Risk Assessment",
                     brief: "We have a log of vendor credit scores. It contains duplicates (by date) and name variations. You must handle all cases.",
                     steps: [
-                        "Download the 'Credit_History_Log.csv' and paste it into a 'CreditData' sheet.",
+                        "Switch to the <strong>'Credit_History'</strong> sheet.",
                         "<strong>Task 1 (Search Mode):</strong> The log has old and new scores. Use <code>Search Mode -1</code> to find the <em>latest</em> score for each client.",
                         "<strong>Task 2 (Wildcard):</strong> 'Wayne Ent' is listed as 'Wayne Ent Intl' in the log. Use <code>Match Mode 2</code> with '*' to map it.",
                         "<strong>Task 3 (Approx Match):</strong> Create a small manual table: 0='High Risk', 600='Medium', 750='Low'. Use <code>Match Mode -1</code> to classify the scores you found."
@@ -719,7 +716,7 @@
                 document.getElementById('current-module-title').innerText = `${index + 1}. ${mod.title}`;
                 document.getElementById('concept-content').innerHTML = mod.concept;
                 document.getElementById('project-title').innerText = mod.project.title;
-                document.getElementById('project-brief').innerText = mod.project.brief;
+                document.getElementById('project-brief').innerHTML = mod.project.brief;
                 document.getElementById('project-steps').innerHTML = mod.project.steps.map(s => `
                     <li class="flex items-start gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1.5 flex-shrink-0"></span>
@@ -728,21 +725,14 @@
                 `).join('');
 
                 // --- DOWNLOAD LOGIC UPDATE ---
+                // Only show download button on Module 1
                 const dlContainer = document.getElementById('download-container');
                 const dlBtn = document.getElementById('download-btn');
                 
                 if (mod.id === 'mod_1') {
                     dlContainer.classList.remove('hidden');
-                    dlBtn.innerHTML = '<i data-lucide="download" class="w-3 h-3"></i> Download Main Dataset (.csv)';
-                    dlBtn.onclick = () => app.downloadPracticeData('main');
-                } else if (mod.id === 'mod_6') {
-                    dlContainer.classList.remove('hidden');
-                    dlBtn.innerHTML = '<i data-lucide="download" class="w-3 h-3"></i> Download Lookup Table (.csv)';
-                    dlBtn.onclick = () => app.downloadPracticeData('lookup');
-                } else if (mod.id === 'mod_7') {
-                    dlContainer.classList.remove('hidden');
-                    dlBtn.innerHTML = '<i data-lucide="download" class="w-3 h-3"></i> Download Credit History Log (.csv)';
-                    dlBtn.onclick = () => app.downloadPracticeData('credit');
+                    dlBtn.innerHTML = '<i data-lucide="download" class="w-3 h-3"></i> Download Lab Workbook (.xlsx)';
+                    dlBtn.onclick = () => app.downloadPracticeData();
                 } else {
                     dlContainer.classList.add('hidden');
                 }
@@ -808,51 +798,15 @@
                this.loadModule(this.activeModuleIndex);
             },
 
-            downloadPracticeData(type) {
-                if (type === 'main') {
-                    // ---------- MAIN DATA ----------
-                    const data = generateAccountingData();
-                    const headers = Object.keys(data[0]).join(',');
-                    const rows = data.map(obj =>
-                        Object.values(obj).map(v => `"${v}"`).join(',')
-                    ).join('\n');
-
-                    const mainCsvContent = headers + '\n' + rows;
-                    const mainLink = document.createElement("a");
-                    mainLink.setAttribute("href", "data:text/csv;charset=utf-8," + encodeURIComponent(mainCsvContent));
-                    mainLink.setAttribute("download", "excel_accounting_dataset_v3.csv");
-                    document.body.appendChild(mainLink);
-                    mainLink.click();
-                    document.body.removeChild(mainLink);
-                } 
-                else if (type === 'lookup') {
-                    // ---------- LOOKUP TABLE (EXPANDED) ----------
-                    const data = generateLookupData();
-                    const headers = "ClientName,ContactEmail";
-                    const rows = data.map(obj => `"${obj.client}","${obj.email}"`).join('\n');
-                    const lookupCsvContent = headers + '\n' + rows;
-
-                    const lookupLink = document.createElement("a");
-                    lookupLink.setAttribute("href", "data:text/csv;charset=utf-8," + encodeURIComponent(lookupCsvContent));
-                    lookupLink.setAttribute("download", "client_lookup_table.csv");
-                    document.body.appendChild(lookupLink);
-                    lookupLink.click();
-                    document.body.removeChild(lookupLink);
-                }
-                else if (type === 'credit') {
-                    // ---------- CREDIT HISTORY LOG (For Mod 8) ----------
-                    const data = generateCreditData();
-                    const headers = "Date,ClientName,CreditScore";
-                    const rows = data.map(obj => `"${obj.date}","${obj.client}",${obj.score}`).join('\n');
-                    const creditCsvContent = headers + '\n' + rows;
-
-                    const creditLink = document.createElement("a");
-                    creditLink.setAttribute("href", "data:text/csv;charset=utf-8," + encodeURIComponent(creditCsvContent));
-                    creditLink.setAttribute("download", "Credit_History_Log.csv");
-                    document.body.appendChild(creditLink);
-                    creditLink.click();
-                    document.body.removeChild(creditLink);
-                }
+            downloadPracticeData() {
+                // Downloads the single static XLSX file for the entire lab
+                const link = document.createElement("a");
+                link.href = WORKBOOK_FILENAME;
+                link.download = WORKBOOK_FILENAME;
+                link.target = "_blank";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             }
         };
 
