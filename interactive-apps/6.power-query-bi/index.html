@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power BI Foundations Lab</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Power BI UI Simulations */
+        .pbi-header {
+            background-color: #F2C811; /* PBI Yellow */
+            color: black;
+        }
+        
+        .da-expression-bar {
+            font-family: 'Consolas', monospace;
+            border: 1px solid #d1d1d1;
+            background: white;
+            position: relative;
+            z-index: 40; /* Ensure bar is above content for dropdown positioning */
+        }
+
+        /* IntelliSense Styles */
+        .suggestions-box {
+            position: absolute;
+            background: white;
+            border: 1px solid #d1d1d1;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 100; /* High z-index to float above everything */
+            width: 300px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 12px;
+        }
+        .suggestion-item {
+            padding: 4px 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .suggestion-item:hover, .suggestion-item.active {
+            background-color: #e6f7ff;
+        }
+        .icon-table { color: #d97706; } /* Amber */
+        .icon-col { color: #2563eb; } /* Blue */
+        .icon-func { color: #9333ea; } /* Purple */
+
+        .signature-tooltip {
+            position: absolute;
+            top: 30px; /* Moved below */
+            left: 0;
+            background: #f3f4f6;
+            border: 1px solid #d1d1d1;
+            padding: 4px 8px;
+            font-size: 11px;
+            color: #374151;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            z-index: 100;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* Modeling Styles */
+        .svg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .table-card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 20; 
+            user-select: none;
+            position: absolute; /* Ensure absolute positioning for movement */
+        }
+        .table-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            cursor: move;
+        }
+        
+        /* Draggable Fields for Modeling */
+        .draggable-field { 
+            cursor: grab; 
+            transition: all 0.2s; 
+        }
+        .draggable-field:active { cursor: grabbing; }
+        .draggable-field.linked { 
+            cursor: default; 
+            color: #15803d; /* Green */
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        .droppable-field {
+            transition: all 0.2s;
+        }
+        .droppable-field.drag-over {
+            background-color: #dbeafe; /* Blue-100 */
+            border: 1px dashed #2563eb;
+        }
+        .droppable-field.linked {
+            color: #1d4ed8; /* Blue-700 */
+            font-weight: bold;
+        }
+
+        /* Viz Bucket Styles */
+        .viz-bucket {
+            min-height: 28px;
+            background-color: #f9fafb;
+            border: 1px dashed #d1d5db;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 2px 6px;
+            font-size: 11px;
+            color: #9ca3af;
+            transition: background-color 0.2s;
+            margin-bottom: 6px;
+        }
+        .viz-bucket.drag-over {
+            background-color: #fef3c7; /* Light Yellow */
+            border-color: #f59e0b;
+            color: #b45309;
+        }
+        .field-chip {
+            background-color: #fef08a; /* Yellow-200 */
+            border: 1px solid #fde047;
+            border-radius: 10px;
+            padding: 1px 6px;
+            color: #854d0e;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: grab;
+            font-size: 10px;
+        }
+        .field-chip:active { cursor: grabbing; }
+        
+        /* Viz Selector */
+        .viz-icon {
+            width: 24px;
+            height: 24px;
+            padding: 2px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .viz-icon:hover { background-color: #f3f4f6; border-color: #d1d5db; }
+        .viz-icon.selected { background-color: #fef9c3; border-color: #facc15; }
+
+        /* Animations */
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out forwards;
+        }
+        
+        .locked-card {
+            filter: grayscale(1);
+            opacity: 0.7;
+            pointer-events: none;
+            position: relative;
+        }
+        .locked-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            backdrop-filter: blur(2px);
+        }
+        
+        /* Profiling Bars */
+        .quality-bar {
+            height: 4px;
+            width: 100%;
+            display: flex;
+            margin-top: 2px;
+        }
+        .quality-valid { background-color: #22c55e; height: 100%; }
+        .quality-error { background-color: #ef4444; height: 100%; }
+        .quality-empty { background-color: #64748b; height: 100%; }
+        
+        .dist-histo {
+            height: 16px;
+            display: flex;
+            align-items: flex-end;
+            gap: 1px;
+            opacity: 0.6;
+            margin-top: 2px;
+        }
+        .dist-bar { width: 20%; background-color: #cbd5e1; }
+        .dist-bar.spike { background-color: #ef4444; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-xl flex-shrink-0 z-20">
+        <div class="p-6 border-b border-slate-700 bg-slate-800">
+            <h1 class="text-xl font-bold text-yellow-400 flex items-center gap-2">
+                <i data-lucide="bar-chart-4" class="w-6 h-6"></i>
+                PowerMaster
+            </h1>
+            <p class="text-xs text-slate-400 mt-1">Foundations: Data to Dashboard</p>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul id="module-list" class="space-y-1">
+                <!-- Modules injected by JS -->
+            </ul>
+        </nav>
+
+        <div class="p-4 bg-slate-800 border-t border-slate-700">
+            <div class="flex justify-between text-xs mb-2 text-slate-300">
+                <span>Course Progress</span>
+                <span id="progress-text">0%</span>
+            </div>
+            <div class="w-full bg-slate-700 rounded-full h-2">
+                <div id="progress-bar" class="bg-yellow-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 px-8 py-5 shadow-sm flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 id="current-module-title" class="text-2xl font-bold text-slate-800">Loading...</h2>
+                    <p id="current-module-subtitle" class="text-slate-500 text-sm mt-1">Interactive Simulation Lab</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="app.openInstructorModal()" class="text-xs px-3 py-2 text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg flex items-center gap-2 transition-colors">
+                        <i data-lucide="key" class="w-3 h-3"></i> Instructor Key
+                    </button>
+                    <div class="w-px h-8 bg-slate-200 mx-1"></div>
+                    <button onclick="app.clearCurrentModuleState()" class="text-xs px-3 py-2 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-lg flex items-center gap-2 transition-colors">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i> Clear
+                    </button>
+                    <button onclick="app.resetCurrentModule()" class="text-sm px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg flex items-center gap-2 transition-colors">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset Module
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content Area -->
+        <div class="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50" id="main-content-area">
+            
+            <!-- Top Row: Cards (Grid layout toggles based on module type) -->
+            <div id="top-row-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Concept Card -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full animate-fade-in" style="animation-delay: 0.1s">
+                    <div class="bg-yellow-50 px-6 py-3 border-b border-yellow-100 flex items-center gap-2">
+                        <i data-lucide="book-open" class="w-4 h-4 text-yellow-600"></i>
+                        <h3 class="font-semibold text-yellow-900">Core Concept</h3>
+                    </div>
+                    <div id="concept-content" class="p-6 text-sm leading-relaxed text-slate-600 flex-1">
+                        <!-- Content Injected Here -->
+                    </div>
+                </div>
+
+                <!-- Project Card (Instructions) -->
+                <div id="project-card" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full animate-fade-in relative transition-all duration-300" style="animation-delay: 0.2s">
+                    <div class="bg-slate-50 px-6 py-3 border-b border-slate-200 flex items-center gap-2">
+                        <i data-lucide="briefcase" class="w-4 h-4 text-slate-600"></i>
+                        <h3 class="font-semibold text-slate-900">Lab Instructions</h3>
+                    </div>
+                    
+                    <div class="p-6 flex-1 flex flex-col">
+                        <h4 id="project-title" class="font-bold text-slate-800 mb-2"></h4>
+                        <p id="project-brief" class="text-sm text-slate-600 mb-4"></p>
+                        
+                        <!-- Dynamic Content Area -->
+                        <div id="project-custom-content"></div>
+
+                        <div class="mt-auto bg-slate-50 rounded-lg p-4 border border-slate-100" id="instructions-container">
+                            <h5 class="text-xs font-bold uppercase text-slate-400 mb-2">Instructions</h5>
+                            <ul id="project-steps" class="space-y-2 text-sm text-slate-700">
+                                <!-- Steps Injected Here -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Row: Interactive Demo -->
+            <div id="bottom-row-container" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-fade-in" style="animation-delay: 0.3s">
+                <div class="bg-slate-50 px-6 py-3 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="monitor-play" class="w-4 h-4 text-slate-600"></i>
+                        <h3 class="font-semibold text-slate-800">Interface Simulator</h3>
+                    </div>
+                    <div id="demo-status" class="text-xs font-medium px-2 py-1 rounded bg-slate-200 text-slate-600">In Progress</div>
+                </div>
+                
+                <!-- Demo Container -->
+                <div id="demo-container" class="p-6 min-h-[400px] relative">
+                    <!-- Dynamic Demo Content -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-4 rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <div class="bg-emerald-500 p-1 rounded-full">
+            <i data-lucide="check" class="w-4 h-4 text-white"></i>
+        </div>
+        <div>
+            <h4 class="font-bold text-sm">Module Complete!</h4>
+            <p class="text-xs opacity-90">Next mission unlocked.</p>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="password-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm transform transition-all scale-95 opacity-0 animate-in fade-in zoom-in duration-200">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-amber-100 rounded-lg">
+                    <i data-lucide="lock-keyhole" class="w-5 h-5 text-amber-600"></i>
+                </div>
+                <h3 class="font-bold text-slate-800">Instructor Access</h3>
+            </div>
+            
+            <p class="text-sm text-slate-500 mb-4">Enter the instructor password to auto-solve.</p>
+            
+            <input type="password" id="instructor-password-input" 
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm mb-4 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none" 
+                   placeholder="Password">
+            
+            <div class="flex justify-end gap-2">
+                <button onclick="app.closeInstructorModal()" class="px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                <button onclick="app.submitInstructorPassword()" class="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium">Unlock</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CONTENT & CONFIG ---
+        const STUDENT_LAB_FILE = 'data/Accounting_ETL_Student_Lab.xlsx';
+
+        // Helper Data for IntelliSense
+        const DAX_METADATA = {
+            tables: ['Sales', 'Products', 'Customers', 'Calendar'],
+            columns: {
+                'Sales': ['Sales[Sales]', 'Sales[Date]', 'Sales[Product ID]', 'Sales[Customer ID]', 'Sales[Order Priority]', 'Sales[Quantity]', 'Sales[Cost]'],
+                'Products': ['Products[Product ID]', 'Products[Product Name]', 'Products[Category]', 'Products[Color]', 'Products[Unit Cost]'],
+                'Customers': ['Customers[Customer ID]', 'Customers[Customer Name]', 'Customers[Region]']
+            },
+            functions: [
+                { name: 'SUM', sig: 'SUM(<column>)' },
+                { name: 'SUMX', sig: 'SUMX(<table>, <expression>)' },
+                { name: 'AVERAGE', sig: 'AVERAGE(<column>)' },
+                { name: 'CALCULATE', sig: 'CALCULATE(<expression>, [filter1], ...)' },
+                { name: 'FILTER', sig: 'FILTER(<table>, <filter_expression>)' },
+                { name: 'ALL', sig: 'ALL([table_or_column])' },
+                { name: 'RELATED', sig: 'RELATED(<column>)' },
+                { name: 'CALENDARAUTO', sig: 'CALENDARAUTO([fiscal_year_end_month])' },
+                { name: 'TOTALYTD', sig: 'TOTALYTD(<expression>, <dates>, [filter], [year_end_date])' }
+            ]
+        };
+
+        const MODULES = [
+            {
+                id: "mod_pq",
+                title: "ETL: Cleaning Data",
+                concept: `
+                    <p class="mb-3"><strong>Power Query</strong> is the "Kitchen" where you prepare data before serving it. You record steps that replay every time data refreshes.</p>
+                    <p class="mb-2 text-sm">Key Transformation Steps:</p>
+                    <ul class="list-disc pl-5 space-y-2 mb-4 text-sm">
+                        <li><strong>Promote Headers:</strong> Use the first row as column names.</li>
+                        <li><strong>Remove Nulls:</strong> Filter out empty rows.</li>
+                        <li><strong>Remove Columns:</strong> Delete unnecessary columns (e.g. Source_ID).</li>
+                        <li><strong>Replace Values:</strong> Find and replace errors (e.g. typos).</li>
+                        <li><strong>Change Type:</strong> Ensure prices are Numbers, not Text.</li>
+                    </ul>
+                `,
+                project: {
+                    title: "Clean the Sales Data",
+                    brief: "The source file has unstructured headers, null rows, typos, and bad formatting.",
+                    steps: [
+                        "1. Promote Headers.",
+                        "2. Remove Rows with null Order IDs.",
+                        "3. Remove the unnecessary 'Source_ID' column.",
+                        "4. Replace Value: Fix 'Widgett' typo to 'Widget'.",
+                        "5. Change 'Sales' column type from Text to Fixed Decimal Number."
+                    ]
+                },
+                renderDemo: (container, onComplete, isCompleted) => renderPowerQueryDemo(container, onComplete, isCompleted)
+            },
+            {
+                id: "mod_pq_prof",
+                title: "Profiling: Quality Check",
+                concept: `
+                    <p class="mb-3"><strong>Data Profiling</strong> tools help you spot data quality issues instantly.</p>
+                    <ul class="list-disc pl-5 space-y-2 mb-4 text-sm">
+                        <li><strong>Column Quality:</strong> Shows % Valid, Error, Empty.</li>
+                        <li><strong>Column Distribution:</strong> Shows value spreads and outliers.</li>
+                    </ul>
+                    <div class="bg-red-50 p-2 rounded text-xs border border-red-200">
+                        <strong>Red Bar</strong> = Errors (e.g., text in a number column).
+                    </div>
+                `,
+                project: {
+                    title: "Fix Data Errors",
+                    brief: "Use visualization tools to find and fix hidden data issues.",
+                    steps: [
+                        "Go to the View tab in Power Query.",
+                        "Check <strong>Column Quality</strong> and <strong>Column Distribution</strong>.",
+                        "Locate the column with a Red bar (Error).",
+                        "Right-click -> 'Remove Errors'."
+                    ]
+                },
+                renderDemo: (container, onComplete, isCompleted) => renderPowerQueryProfileDemo(container, onComplete, isCompleted)
+            },
+            {
+                id: "mod_pq_unpivot",
+                title: "Transformation: Unpivot",
+                concept: `
+                    <p class="mb-3"><strong>Unpivot</strong> transforms wide data into tall data.</p>
+                    
+                    <div class="mb-4">
+                        <div class="font-bold text-xs text-slate-500 mb-1">Wide Format (Bad for PBI - Hard to Filter by Month)</div>
+                        <table class="w-full text-[10px] border collapse mb-3">
+                            <tr class="bg-red-50"><th class="border p-1">Country</th><th class="border p-1">Jan</th><th class="border p-1">Feb</th><th class="border p-1">Mar</th></tr>
+                            <tr><td class="border p-1">USA</td><td class="border p-1">100</td><td class="border p-1">120</td><td class="border p-1">110</td></tr>
+                            <tr><td class="border p-1">Canada</td><td class="border p-1">80</td><td class="border p-1">90</td><td class="border p-1">85</td></tr>
+                        </table>
+                        
+                        <div class="flex justify-center mb-2 text-slate-400"><i data-lucide="arrow-down" class="w-4 h-4"></i></div>
+
+                        <div class="font-bold text-xs text-slate-500 mb-1">Tall Format (Good for PBI - Single 'Month' Column)</div>
+                        <table class="w-full text-[10px] border collapse">
+                            <tr class="bg-green-50"><th class="border p-1">Country</th><th class="border p-1">Month</th><th class="border p-1">Sales</th></tr>
+                            <tr><td class="border p-1">USA</td><td class="border p-1">Jan</td><td class="border p-1">100</td></tr>
+                            <tr><td class="border p-1">USA</td><td class="border p-1">Feb</td><td class="border p-1">120</td></tr>
+                            <tr><td class="border p-1">USA</td><td class="border p-1">Mar</td><td class="border p-1">110</td></tr>
+                            <tr><td class="border p-1">Canada</td><td class="border p-1">Jan</td><td class="border p-1">80</td></tr>
+                        </table>
+                    </div>
+                `,
+                project: {
+                    title: "Normalize Budget Data",
+                    brief: "The budget file has a separate column for each month. Fix it.",
+                    steps: [
+                        "Select the 'Region' column (the anchor).",
+                        "Right-click header -> <strong>Unpivot Other Columns</strong>.",
+                        "Rename 'Attribute' to 'Month' and 'Value' to 'Budget'."
+                    ]
+                },
+                renderDemo: (container, onComplete, isCompleted) => renderPowerQueryUnpivotDemo(container, onComplete, isCompleted)
+            },
+            {
+                id: "mod_pq_group",
+                title: "Aggregation: Group By",
+                concept: `
+                    <p class="mb-3"><strong>Group By</strong> aggregates data <em>before</em> loading it into the model.</p>
+                    <p class="mb-2 text-sm">Useful when the raw data is too granular (e.g. millions of transaction rows) and you only need daily or category summaries.</p>
+                `,
+                project: {
+                    title: "Pre-Aggregate Transaction Log",
+                    brief: "Compress the daily transaction log into monthly summaries.",
+                    steps: [
+                        "Home Tab -> <strong>Group By</strong>.",
+                        "Group by: <code>Month</code> and <code>Category</code>.",
+                        "New Column: <code>TotalSales</code>, Operation: <code>Sum</code> of Sales."
+                    ]
+                },
+                renderDemo: (container, onComplete, isCompleted) => renderPowerQueryGroupDemo(container, onComplete, isCompleted)
+            },
+            {
+                id: "mod_model",
+                title: "Modeling: Star Schema",
+                concept: `
+                    <p class="mb-3">Power BI works best with a <strong>Star Schema</strong>. Imagine a star with one center and points.</p>
+                    <ul class="list-disc pl-5 space-y-2 mb-4 text-sm">
+                        <li><strong>Fact Table (Center):</strong> Contains the numbers (Sales Amount, Qty). It's what happened. (e.g., "A sale occurred").</li>
+                        <li><strong>Dimension Tables (Points):</strong> Contains the context (Who, What, Where, When). (e.g., "Product A", "Customer Bob").</li>
+                    </ul>
+                    <p class="text-sm bg-blue-50 p-2 rounded"><strong>Why?</strong> Filtering a small Dimension table is faster than filtering a massive Fact table directly.</p>
+                `,
+                project: {
+                    title: "Build the Relationships",
+                    brief: "Create a Star Schema by connecting your Fact table to two Dimension tables.",
+                    steps: [
+                        "<strong>Drag</strong> the tables to rearrange them if needed.",
+                        "Drag <code>Product ID</code> from 'Dim Products' to 'Fact Sales'.",
+                        "Drag <code>Customer ID</code> from 'Dim Customers' to 'Fact Sales'.",
+                        "Verify cardinality is <strong>1:*</strong> (One to Many)."
+                    ]
+                },
+                renderDemo: (container, onComplete, isCompleted) => renderModelingDemo(container, onComplete, isCompleted)
+            },
+            {
+                id: "mod_dax_1",
+                title: "DAX Basics: Columns",
+                concept: `
+                    <p class="mb-3"><strong>Calculated Columns</strong> live in the table. Use <strong>RELATED()</strong> to grab data from a connected lookup table.</p>
+                    <code class="block bg-slate-800 text-yellow-400 p-2 rounded text-xs mb-3 font-mono">
+                        Cost = Sales[Quantity] * RELATED('Products'[Unit Cost])
+                    </code>
+                `,
+                project: {
+                    title: "Enrich Sales Data",
+                    brief: "Fetch the Unit Cost from the Product table to calculate Total Cost.",
+                    steps: [
+                        "New Column in Sales Table: <code>TotalCost</code>.",
+                        "Formula: <code>Sales[Quantity] * RELATED(Products[Unit Cost])</code>."
+                    ]
+                },
+                renderDemo: (container, onComplete, isCompleted) => renderDAXRelatedDemo(container, onComplete, isCompleted)
+            },
+            {
+                id: "mod_dax_2",
+                title: "DAX Advanced: Measures",
+                concept: `
+                    <p class="mb-3"><strong>Measures</strong> are dynamic aggregations. <strong>CALCULATE</strong> is the engine of DAX—it modifies the filter context.</p>
+                    <code class="block bg-slate-800 text-yellow-400 p-2 rounded text-xs mb-3 font-mono">
+                        Red Sales = CALCULATE(SUM(Sales[Sales]), Product[Color]="Red")
+                    </code>
+                `,
+                project: {
+                    title: "Analyze High Priority Orders",
+                    brief: "Create a measure to sum sales ONLY for 'Critical' priority orders.",
+                    steps: [
+                        "Right-click Sales table -> 'New Measure'.",
+                        "Name: <code>Critical Sales</code>.",
+                        "Formula: <code>CALCULATE(SUM(Sales[Sales]), Sales[Order Priority] = \"Critical\")</code>."
+                    ]
+                },
+                renderDemo: (container, onComplete, isCompleted) => renderDAXMeasureDemo(container, onComplete, isCompleted)
+            },
+            {
+                id: "mod_dax_time",
+                title: "DAX Special: Time Intelligence",
+                concept: `
+                    <p class="mb-3">Time Intelligence functions make date math easy. They require a contiguous <strong>Date Table</strong>.</p>
+                    <code class="block bg-slate-800 text-yellow-400 p-2 rounded text-xs mb-3 font-mono">
+                        Dates = CALENDARAUTO()
+                    </code>
+                    <p class="text-xs">Creates a table with a continuous range of dates based on your data.</p>
+                `,
+                project: {
+                    title: "Create Date Table",
+                    brief: "Setup a Date table using DAX.",
+                    steps: [
+                        "Modeling Tab -> New Table.",
+                        "Type: <code>Dates = CALENDARAUTO()</code>",
+                        "Press Enter to generate the table."
+                    ]
+                },
+                renderDemo: (container, onComplete, isCompleted) => renderDAXTimeDemo(container, onComplete, isCompleted)
+            },
+            {
+                id: "mod_viz",
+                title: "Visualizations: Building a Dashboard",
+                concept: `
+                    <p class="mb-3">The <strong>Visualizations Pane</strong> controls how data renders. You must drag fields into specific "wells" or buckets.</p>
+                    <ul class="list-disc pl-5 space-y-2 mb-4 text-sm">
+                        <li><strong>X-Axis:</strong> Categories, Time.</li>
+                        <li><strong>Y-Axis / Values:</strong> Numbers to aggregate.</li>
+                        <li><strong>Legend:</strong> Splits bars by color/category.</li>
+                    </ul>
+                `,
+                project: {
+                    title: "Executive Dashboard",
+                    brief: "Build a Stacked Column Chart showing Sales by Region, split by Category.",
+                    steps: [
+                        "Select the <strong>Stacked Column Chart</strong> icon.",
+                        "Drag <code>Region</code> field into the <strong>X-Axis</strong> bucket.",
+                        "Drag <code>Sales</code> field into the <strong>Y-Axis</strong> bucket.",
+                        "Drag <code>Category</code> field into the <strong>Legend</strong> bucket."
+                    ]
+                },
+                renderDemo: (container, onComplete, isCompleted) => renderVizDemo(container, onComplete, isCompleted)
+            },
+            {
+                id: "mod_capstone",
+                title: "Final Project: Accounting Lab",
+                concept: `
+                    <p class="mb-3"><strong>Congratulations!</strong> You've practiced the core skills. Now it's time to apply them to a real-world scenario.</p>
+                    <p class="text-sm">This final lab combines ETL, Modeling, and Visualization into one comprehensive project.</p>
+                `,
+                project: {
+                    title: "Comprehensive Lab",
+                    brief: "Download the student lab file and complete the following tasks in Excel or Power BI Desktop.",
+                    steps: [], // Steps are handled by custom content below
+                    isCapstone: true
+                },
+                renderDemo: (container, onComplete, isCompleted) => {
+                    // Do nothing for renderDemo in capstone, UI is handled by layout change
+                    onComplete();
+                }
+            }
+        ];
+
+        // --- 2. APP LOGIC ---
+        const app = {
+            activeModuleIndex: 0,
+            completedModules: new Set(),
+            
+            init() {
+                this.renderSidebar();
+                this.loadModule(0);
+                lucide.createIcons();
+                
+                document.getElementById('instructor-password-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.submitInstructorPassword();
+                });
+            },
+
+            openInstructorModal() {
+                if (window.currentSolver) {
+                    const modal = document.getElementById('password-modal');
+                    const input = document.getElementById('instructor-password-input');
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                    setTimeout(() => modal.querySelector('div').classList.remove('scale-95', 'opacity-0'), 10);
+                    input.value = ''; input.focus();
+                } else alert("No auto-solver available for this module.");
+            },
+            
+            closeInstructorModal() {
+                const modal = document.getElementById('password-modal');
+                modal.querySelector('div').classList.add('scale-95', 'opacity-0');
+                setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 200);
+            },
+            
+            submitInstructorPassword() {
+                const input = document.getElementById('instructor-password-input');
+                if (input.value.trim().toLowerCase() === "teacher") {
+                    this.closeInstructorModal();
+                    if(window.currentSolver) window.currentSolver();
+                } else {
+                    input.classList.add('border-red-500', 'animate-pulse');
+                    setTimeout(() => input.classList.remove('border-red-500', 'animate-pulse'), 500);
+                }
+            },
+
+            clearCurrentModuleState() {
+                this.completedModules.delete(MODULES[this.activeModuleIndex].id);
+                this.loadModule(this.activeModuleIndex);
+            },
+
+            renderSidebar() {
+                const list = document.getElementById('module-list');
+                list.innerHTML = '';
+                MODULES.forEach((mod, index) => {
+                    const isCompleted = this.completedModules.has(mod.id);
+                    const isActive = index === this.activeModuleIndex;
+                    const li = document.createElement('li');
+                    li.className = `px-4 py-3 cursor-pointer flex items-center justify-between border-l-4 transition-colors ${
+                        isActive ? 'bg-slate-800 border-yellow-500 text-white' : 'border-transparent text-slate-400 hover:bg-slate-800 hover:text-white'
+                    }`;
+                    li.onclick = () => this.loadModule(index);
+                    li.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-mono opacity-50">${index === MODULES.length-1 ? '★' : (index + 1).toString().padStart(2, '0')}</span>
+                            <span class="text-sm font-medium truncate w-32">${mod.title.split(":")[0]}</span>
+                        </div>
+                        ${isCompleted ? '<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>' : ''}
+                    `;
+                    list.appendChild(li);
+                });
+                lucide.createIcons();
+                this.updateProgress();
+            },
+
+            loadModule(index) {
+                // Cleanup previous module state if needed
+                const demoContainer = document.getElementById('demo-container');
+                demoContainer.innerHTML = ''; 
+                
+                this.activeModuleIndex = index;
+                window.currentSolver = null;
+                const mod = MODULES[index];
+                
+                // Sidebar visual update
+                Array.from(document.getElementById('module-list').children).forEach((li, i) => {
+                    li.className = `px-4 py-3 cursor-pointer flex items-center justify-between border-l-4 transition-colors ${
+                        i === index ? 'bg-slate-800 border-yellow-500 text-white' : 'border-transparent text-slate-400 hover:bg-slate-800 hover:text-white'
+                    }`;
+                });
+
+                document.getElementById('current-module-title').innerText = `${index + 1}. ${mod.title}`;
+                document.getElementById('concept-content').innerHTML = mod.concept;
+                document.getElementById('project-title').innerText = mod.project.title;
+                document.getElementById('project-brief').innerHTML = mod.project.brief;
+                
+                // Layout Management for Capstone
+                const topRow = document.getElementById('top-row-grid');
+                const bottomRow = document.getElementById('bottom-row-container');
+                const customContainer = document.getElementById('project-custom-content');
+                const stepsContainer = document.getElementById('instructions-container');
+                const stepsList = document.getElementById('project-steps');
+                
+                if (mod.project.isCapstone) {
+                    // Change layout for Capstone
+                    topRow.classList.remove('lg:grid-cols-2');
+                    topRow.classList.add('grid-cols-1');
+                    bottomRow.classList.add('hidden'); // Hide simulator
+                    
+                    stepsContainer.classList.add('hidden');
+                    customContainer.innerHTML = `
+                        <div class="mb-4">
+                            <button onclick="app.downloadSource()" class="text-sm w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-4 py-3 rounded flex items-center justify-center gap-2 transition-colors shadow-sm mb-4">
+                                <i data-lucide="download" class="w-4 h-4"></i> Download Lab File
+                            </button>
+                            <div class="h-auto overflow-y-auto pr-2 text-xs text-slate-700 space-y-3 bg-slate-50 p-6 rounded border">
+                                <p class="font-bold text-sm">Goal:</p>
+                                <p>You will clean and transform messy accounting transaction data using Power Query, build a star schema Data Model, and visualize results.</p>
+                                
+                                <p class="font-bold text-sm mt-4">Tasks:</p>
+                                <ul class="list-disc pl-4 space-y-2">
+                                    <li><strong>A) Data Profiling:</strong> Identify quality issues (formats, blanks, duplicates).</li>
+                                    <li><strong>B) ETL in Power Query:</strong>
+                                        <ul class="list-disc pl-4 mt-1 space-y-1 text-slate-500">
+                                            <li>Trim/Clean text columns.</li>
+                                            <li>Standardize AccountNo to 4 digits.</li>
+                                            <li>Convert TransDate to Date type.</li>
+                                            <li>Convert Debit/Credit to numbers (handle nulls).</li>
+                                            <li>Fix swapped Debit/Credit based on AccountType.</li>
+                                            <li>Create Net = Debit - Credit.</li>
+                                        </ul>
+                                    </li>
+                                    <li><strong>C) Pivot/Unpivot:</strong> Unpivot Debit/Credit or create summary pivot.</li>
+                                    <li><strong>D) Group By:</strong> Create monthly summary table.</li>
+                                    <li><strong>E) Calendar Table:</strong> Create using DAX CALENDARAUTO().</li>
+                                    <li><strong>F) Data Model:</strong> Connect Fact_Transactions to Dims.</li>
+                                    <li><strong>G) Visualize:</strong>
+                                        <ul class="list-disc pl-4 mt-1 space-y-1 text-slate-500">
+                                            <li>Net by Month (Line/Column)</li>
+                                            <li>Net by AccountType and Department (Matrix)</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Standard Layout
+                    topRow.classList.add('lg:grid-cols-2');
+                    topRow.classList.remove('grid-cols-1');
+                    bottomRow.classList.remove('hidden');
+                    
+                    stepsContainer.classList.remove('hidden');
+                    customContainer.innerHTML = '';
+                    stepsList.innerHTML = mod.project.steps.map(s => `
+                        <li class="flex items-start gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 mt-1.5 flex-shrink-0"></span>
+                            <span>${s}</span>
+                        </li>
+                    `).join('');
+                }
+
+                // Removed Lock Overlay Logic - Instructions always available
+                const isCompleted = this.completedModules.has(mod.id);
+                if (isCompleted) {
+                    document.getElementById('demo-status').innerText = "Completed";
+                    document.getElementById('demo-status').className = "text-xs font-medium px-2 py-1 rounded bg-emerald-100 text-emerald-700";
+                } else {
+                    document.getElementById('demo-status').innerText = "In Progress";
+                    document.getElementById('demo-status').className = "text-xs font-medium px-2 py-1 rounded bg-slate-200 text-slate-600";
+                }
+
+                mod.renderDemo(demoContainer, () => this.completeModule(mod.id), isCompleted);
+                
+                // Re-run icon creation after DOM update
+                setTimeout(() => lucide.createIcons(), 50);
+            },
+
+            completeModule(id) {
+                if (this.completedModules.has(id)) return;
+                this.completedModules.add(id);
+                const toast = document.getElementById('toast');
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+                
+                this.renderSidebar(); 
+                
+                // Force UI update to show unlocked state immediately
+                this.loadModule(this.activeModuleIndex);
+            },
+
+            updateProgress() {
+                const percent = Math.round((this.completedModules.size / MODULES.length) * 100);
+                document.getElementById('progress-bar').style.width = `${percent}%`;
+                document.getElementById('progress-text').innerText = `${percent}%`;
+            },
+
+            resetCurrentModule() { 
+                // Force a full clean by emptying container first
+                document.getElementById('demo-container').innerHTML = '';
+                // Reload
+                this.loadModule(this.activeModuleIndex); 
+            },
+
+            downloadSource() {
+                // Mock download
+                const dummyContent = "Instruction File Placeholder";
+                const blob = new Blob([dummyContent], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = STUDENT_LAB_FILE.split('/').pop();
+                a.click();
+            }
+        };
+
+        // --- INTELLISENSE HELPER ---
+        function enableIntellisense(inp, container) {
+            let tooltip = null;
+            let dropdown = null;
+
+            inp.addEventListener('keyup', (e) => {
+                const val = inp.value;
+                const cursorPos = inp.selectionStart;
+                
+                // 1. Signature Tooltip
+                const lastOpenParen = val.lastIndexOf('(', cursorPos - 1);
+                const lastCloseParen = val.lastIndexOf(')', cursorPos - 1);
+                
+                if (lastOpenParen > lastCloseParen) {
+                    const beforeParen = val.substring(0, lastOpenParen).trim();
+                    const words = beforeParen.split(/[\s,]+/);
+                    const funcName = words[words.length - 1].toUpperCase();
+                    const meta = DAX_METADATA.functions.find(f => f.name === funcName);
+                    
+                    if (meta) {
+                        if(!tooltip) {
+                            tooltip = document.createElement('div');
+                            tooltip.className = 'signature-tooltip';
+                            container.appendChild(tooltip);
+                        }
+                        tooltip.innerText = meta.sig;
+                        // Tooltip placement logic handled by CSS 'top: 30px' now, removed inline style
+                    }
+                } else if (tooltip) {
+                    tooltip.remove(); tooltip = null;
+                }
+
+                // 2. Dropdown Logic
+                const textBeforeCursor = val.substring(0, cursorPos);
+                // Improved Regex to allow whitespace if needed, but standard logic is word boundary
+                const match = textBeforeCursor.match(/([a-zA-Z0-9_\[\]\s]+)$/);
+                
+                if (match) {
+                    const word = match[1].trim().toLowerCase();
+                    if (word.length < 1) { closeDropdown(); return; }
+
+                    let suggestions = [];
+                    suggestions.push(...DAX_METADATA.functions.map(f => ({ type: 'func', text: f.name })));
+                    suggestions.push(...DAX_METADATA.tables.map(t => ({ type: 'table', text: t })));
+                    Object.values(DAX_METADATA.columns).flat().forEach(c => {
+                        suggestions.push({ type: 'col', text: c });
+                    });
+
+                    // UPDATED FILTER: Check if search term is in string OR starts with the column name part
+                    const filtered = suggestions.filter(s => {
+                        const lowerText = s.text.toLowerCase();
+                        // 1. Exact contains (e.g. typing "Quant" matches "Sales[Quantity]")
+                        if (lowerText.includes(word)) return true;
+                        // 2. Check column name part (e.g. typing "Q" matches "Quantity" in "Sales[Quantity]")
+                        const parts = lowerText.split('[');
+                        if (parts.length > 1 && parts[1].startsWith(word)) return true;
+                        return false;
+                    });
+
+                    if (filtered.length > 0) {
+                        if (!dropdown) {
+                            dropdown = document.createElement('div');
+                            dropdown.className = 'suggestions-box';
+                            container.appendChild(dropdown);
+                        }
+                        // Explicitly position BELOW the input
+                        dropdown.style.top = (inp.offsetHeight + 2) + 'px'; 
+                        dropdown.style.left = inp.offsetLeft + 'px';
+
+                        dropdown.innerHTML = filtered.map(s => {
+                            let icon = '';
+                            if(s.type === 'func') icon = '<span class="icon-func">ƒx</span>';
+                            if(s.type === 'table') icon = '<span class="icon-table">▦</span>';
+                            if(s.type === 'col') icon = '<span class="icon-col">◫</span>';
+                            return `<div class="suggestion-item" onclick="insertSuggestion('${s.text}')">${icon} ${s.text}</div>`;
+                        }).join('');
+                        
+                        window.insertSuggestion = (text) => {
+                            // Simple replacement strategy: Replace the word at cursor
+                            const lastWordRegex = /([a-zA-Z0-9_\[\]]+)$/;
+                            const match = textBeforeCursor.match(lastWordRegex);
+                            const lastWordLen = match ? match[1].length : word.length;
+                            
+                            const before = val.substring(0, cursorPos - lastWordLen);
+                            const after = val.substring(cursorPos);
+                            inp.value = before + text + after;
+                            inp.focus();
+                            closeDropdown();
+                        };
+                    } else {
+                        closeDropdown();
+                    }
+                } else {
+                    closeDropdown();
+                }
+            });
+
+            function closeDropdown() {
+                if(dropdown) { dropdown.remove(); dropdown = null; }
+            }
+            inp.addEventListener('blur', () => setTimeout(closeDropdown, 200));
+        }
+
+        // --- 3. DEMO RENDERERS ---
+
+        // MODULE 1: POWER QUERY (ETL)
+        function renderPowerQueryDemo(container, onComplete, isCompleted) {
+            let step = 0; 
+            
+            container.innerHTML = `
+                <div class="h-full flex flex-col border border-slate-300 rounded overflow-hidden">
+                    <div class="pbi-header p-2 flex items-center justify-between">
+                        <div class="font-bold text-xs">Power Query Editor - Sales Query</div>
+                        <div class="flex gap-2">
+                            <button id="pq-promote" class="bg-white border hover:bg-slate-50 text-xs px-2 py-1 rounded flex items-center gap-1 transition-all">
+                                <i data-lucide="table-properties" class="w-3 h-3"></i> Promote Headers
+                            </button>
+                            <button id="pq-remove" class="bg-white border hover:bg-slate-50 text-xs px-2 py-1 rounded flex items-center gap-1 transition-all opacity-50 cursor-not-allowed" disabled>
+                                <i data-lucide="filter-x" class="w-3 h-3"></i> Remove Nulls
+                            </button>
+                            <button id="pq-col-remove" class="bg-white border hover:bg-slate-50 text-xs px-2 py-1 rounded flex items-center gap-1 transition-all opacity-50 cursor-not-allowed" disabled>
+                                <i data-lucide="columns" class="w-3 h-3"></i> Remove Column
+                            </button>
+                            <button id="pq-replace" class="bg-white border hover:bg-slate-50 text-xs px-2 py-1 rounded flex items-center gap-1 transition-all opacity-50 cursor-not-allowed" disabled>
+                                <i data-lucide="replace" class="w-3 h-3"></i> Replace Value
+                            </button>
+                            <button id="pq-type" class="bg-white border hover:bg-slate-50 text-xs px-2 py-1 rounded flex items-center gap-1 transition-all opacity-50 cursor-not-allowed" disabled>
+                                <i data-lucide="hash" class="w-3 h-3"></i> Change Type
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 flex bg-slate-100 relative">
+                        <div class="flex-1 p-4 overflow-auto bg-white m-2 border shadow-sm relative">
+                            <div id="pq-status" class="absolute top-0 left-0 right-0 bg-yellow-100 text-yellow-800 text-xs p-2 text-center border-b border-yellow-200">
+                                Current Step: Click <strong>Promote Headers</strong> to fix the first row.
+                            </div>
+                            <table class="w-full text-xs text-left border-collapse mt-8" id="pq-table"></table>
+                            
+                            <!-- Replace Value Modal -->
+                            <div id="replace-modal" class="hidden absolute top-20 left-1/2 -translate-x-1/2 bg-white border border-slate-300 shadow-xl rounded-lg p-4 w-64 z-50">
+                                <h4 class="font-bold text-sm mb-3">Replace Values</h4>
+                                <div class="space-y-2 mb-4">
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500 uppercase font-bold">Value To Find</label>
+                                        <input type="text" value="Widgett" disabled class="w-full border bg-slate-50 rounded px-2 py-1 text-sm text-slate-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500 uppercase font-bold">Replace With</label>
+                                        <input type="text" id="replace-input" class="w-full border rounded px-2 py-1 text-sm focus:ring-1 ring-yellow-400 outline-none" placeholder="Type correction...">
+                                    </div>
+                                </div>
+                                <div class="flex justify-end gap-2">
+                                    <button id="btn-cancel-replace" class="px-3 py-1 text-xs border rounded hover:bg-slate-50">Cancel</button>
+                                    <button id="btn-confirm-replace" class="px-3 py-1 text-xs bg-yellow-400 hover:bg-yellow-500 font-bold rounded">OK</button>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="w-48 bg-white border-l p-2 flex flex-col">
+                            <div class="bg-slate-100 p-2 text-xs font-bold mb-2 border">Sales Data</div>
+                            <div class="text-[10px] font-bold uppercase text-slate-500 mb-2">Applied Steps</div>
+                            <div id="pq-steps" class="flex-1 space-y-1 overflow-y-auto">
+                                <div class="bg-yellow-100 p-1 text-xs border-l-2 border-yellow-500">Source</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Updated data with dummy column
+            const rawData = [
+                ["Col1", "Col2", "Col3", "Col4"],
+                ["Order ID", "Product", "Sales", "Source_ID"],
+                ["1001", "Widgett A", "$500", "SRC_01"], // Typo: Widgett
+                [null, null, null, null],
+                ["1002", "Widget B", "$200", "SRC_02"]
+            ];
+
+            const renderTable = (data, isHeaderPromoted, isTyped, isReplaced, isColRemoved) => {
+                const tbl = document.getElementById('pq-table');
+                tbl.innerHTML = '';
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                const headers = isHeaderPromoted ? data[0] : rawData[0];
+                
+                headers.forEach((h, i) => {
+                    // Skip render if column is removed (index 3 is Source_ID)
+                    if (isColRemoved && (isHeaderPromoted ? i === 3 : i === 3)) return;
+
+                    const th = document.createElement('th');
+                    th.className = "bg-slate-100 border p-2 font-semibold";
+                    
+                    // Specific highlight for step 3
+                    if (!isColRemoved && isHeaderPromoted && i === 3) {
+                        th.className += " bg-red-50 text-red-600 border-red-200";
+                        th.title = "Remove this column";
+                    }
+
+                    let icon = "ABC";
+                    if(isTyped && i===2) icon = "1.2";
+                    th.innerHTML = `<div class="flex items-center gap-1"><span class="text-[10px] bg-slate-200 px-1 rounded">${icon}</span> ${h}</div>`;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                tbl.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                const rows = isHeaderPromoted ? data.slice(1) : data;
+                
+                rows.forEach(r => {
+                    const tr = document.createElement('tr');
+                    r.forEach((c, i) => {
+                        if (isColRemoved && i === 3) return;
+
+                        const td = document.createElement('td');
+                        td.className = "border p-2 " + (c === null ? "text-slate-300 italic" : "");
+                        
+                        let val = c;
+                        // Logic for display transformation
+                        if (isReplaced && i === 1 && val && val.includes('Widgett')) val = val.replace('Widgett', 'Widget');
+                        
+                        if (isTyped && i===2 && val !== null) td.innerText = val.replace('$', '') + ".00";
+                        else td.innerText = val === null ? "null" : val;
+                        
+                        if(isTyped && i===2) td.classList.add('text-right', 'font-mono');
+                        
+                        // Highlight typo
+                        if (!isReplaced && val && val.toString().includes('Widgett')) td.classList.add('bg-red-50', 'text-red-600', 'font-bold');
+                        
+                        // Highlight column to remove
+                        if (!isColRemoved && isHeaderPromoted && i === 3) td.classList.add('bg-red-50', 'text-slate-400');
+
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                tbl.appendChild(tbody);
+            };
+
+            const addStep = (name) => document.getElementById('pq-steps').innerHTML += `<div class="bg-yellow-100 p-1 text-xs border-l-2 border-yellow-500 animate-fade-in">${name}</div>`;
+            const updateStatus = (msg) => document.getElementById('pq-status').innerHTML = msg;
+
+            // Persistence Check
+            if (isCompleted) {
+                const cleanData = [rawData[1], rawData[2], rawData[4]];
+                renderTable(cleanData, true, true, true, true);
+                addStep("Promoted Headers"); addStep("Filtered Rows"); addStep("Removed Columns"); addStep("Replaced Value"); addStep("Changed Type");
+                updateStatus("<span class='text-green-700 font-bold'>Completed!</span>");
+                return;
+            }
+
+            renderTable(rawData, false, false, false, false);
+
+            document.getElementById('pq-promote').onclick = () => {
+                if(step !== 0) return;
+                step = 1;
+                renderTable(rawData.slice(1), true, false, false, false);
+                addStep("Promoted Headers");
+                updateStatus("Step 2: Rows with 'null' values are bad data. Click <strong>Remove Nulls</strong>.");
+                document.getElementById('pq-remove').disabled = false;
+                document.getElementById('pq-remove').classList.remove('opacity-50', 'cursor-not-allowed');
+                document.getElementById('pq-promote').disabled = true;
+                document.getElementById('pq-promote').classList.add('opacity-50');
+            };
+
+            document.getElementById('pq-remove').onclick = () => {
+                if(step !== 1) return;
+                step = 2;
+                const cleanData = [rawData[1], rawData[2], rawData[4]];
+                renderTable(cleanData, true, false, false, false);
+                addStep("Filtered Rows");
+                updateStatus("Step 3: 'Source_ID' is unnecessary. Click <strong>Remove Column</strong>.");
+                document.getElementById('pq-col-remove').disabled = false;
+                document.getElementById('pq-col-remove').classList.remove('opacity-50', 'cursor-not-allowed');
+                document.getElementById('pq-remove').disabled = true;
+                document.getElementById('pq-remove').classList.add('opacity-50');
+            };
+
+            document.getElementById('pq-col-remove').onclick = () => {
+                if(step !== 2) return;
+                step = 3;
+                const cleanData = [rawData[1], rawData[2], rawData[4]];
+                renderTable(cleanData, true, false, false, true);
+                addStep("Removed Columns");
+                updateStatus("Step 4: 'Widgett' is a typo. Click <strong>Replace Value</strong> to fix it.");
+                document.getElementById('pq-replace').disabled = false;
+                document.getElementById('pq-replace').classList.remove('opacity-50', 'cursor-not-allowed');
+                document.getElementById('pq-col-remove').disabled = true;
+                document.getElementById('pq-col-remove').classList.add('opacity-50');
+            };
+            
+            document.getElementById('pq-replace').onclick = () => {
+                if(step !== 3) return;
+                document.getElementById('replace-modal').classList.remove('hidden');
+                document.getElementById('replace-input').focus();
+            };
+
+            document.getElementById('btn-cancel-replace').onclick = () => {
+                document.getElementById('replace-modal').classList.add('hidden');
+            };
+
+            document.getElementById('btn-confirm-replace').onclick = () => {
+                const val = document.getElementById('replace-input').value.trim();
+                if (val.toLowerCase() === 'widget') {
+                    document.getElementById('replace-modal').classList.add('hidden');
+                    step = 4;
+                    const cleanData = [rawData[1], rawData[2], rawData[4]];
+                    renderTable(cleanData, true, false, true, true);
+                    addStep("Replaced Value");
+                    updateStatus("Step 5: Sales column is Text (ABC). Click <strong>Change Type</strong>.");
+                    document.getElementById('pq-type').disabled = false;
+                    document.getElementById('pq-type').classList.remove('opacity-50', 'cursor-not-allowed');
+                    document.getElementById('pq-replace').disabled = true;
+                    document.getElementById('pq-replace').classList.add('opacity-50');
+                } else {
+                    document.getElementById('replace-input').classList.add('border-red-500');
+                    setTimeout(() => document.getElementById('replace-input').classList.remove('border-red-500'), 500);
+                }
+            };
+
+            document.getElementById('pq-type').onclick = () => {
+                if(step !== 4) return;
+                step = 5;
+                const cleanData = [rawData[1], rawData[2], rawData[4]];
+                renderTable(cleanData, true, true, true, true);
+                addStep("Changed Type");
+                updateStatus("<span class='text-green-700 font-bold'>Success! Data is clean.</span>");
+                document.getElementById('pq-type').disabled = true;
+                document.getElementById('pq-type').classList.add('opacity-50');
+                setTimeout(onComplete, 1000);
+            };
+
+            window.currentSolver = () => {
+                document.getElementById('pq-promote').click();
+                setTimeout(() => document.getElementById('pq-remove').click(), 500);
+                setTimeout(() => document.getElementById('pq-col-remove').click(), 1000);
+                setTimeout(() => {
+                    document.getElementById('pq-replace').click();
+                    document.getElementById('replace-input').value = 'Widget';
+                    document.getElementById('btn-confirm-replace').click();
+                }, 1500);
+                setTimeout(() => document.getElementById('pq-type').click(), 2000);
+            };
+        }
+
+        // MODULE 1.5: POWER QUERY (PROFILING)
+        function renderPowerQueryProfileDemo(container, onComplete, isCompleted) {
+            container.innerHTML = `
+                <div class="h-full flex flex-col border border-slate-300 rounded overflow-hidden">
+                    <div class="pbi-header p-2 flex items-center justify-between">
+                       <div class="font-bold text-xs">Power Query Editor - Data Profiling</div>
+                    </div>
+                    <div class="bg-slate-100 border-b p-1 flex gap-4 text-xs font-bold text-slate-700">
+                        <div class="cursor-pointer px-2 py-1">Home</div>
+                        <div class="cursor-pointer px-2 py-1">Transform</div>
+                        <div class="cursor-pointer px-2 py-1 bg-white border-t border-x rounded-t text-yellow-600">View</div>
+                    </div>
+                    <div class="p-2 border-b flex items-center bg-white h-12 gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer select-none hover:bg-slate-50 px-2 py-1 rounded">
+                            <input type="checkbox" id="chk-quality">
+                            <span class="text-xs">Column Quality</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer select-none hover:bg-slate-50 px-2 py-1 rounded">
+                            <input type="checkbox" id="chk-distrib">
+                            <span class="text-xs">Column Distribution</span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex-1 p-4 overflow-auto bg-slate-50 relative">
+                        <div id="prof-success" class="hidden absolute top-4 right-4 bg-green-100 text-green-800 px-3 py-1 rounded shadow text-xs font-bold animate-fade-in z-20">
+                            Errors Removed!
+                        </div>
+                        <table class="w-full text-xs text-left border-collapse bg-white shadow-sm" id="prof-table">
+                            <thead>
+                                <tr>
+                                    <th class="border p-2 bg-slate-100">Order ID</th>
+                                    <th class="border p-2 bg-slate-100 w-48 align-bottom">
+                                        Postal Code
+                                        <div id="qual-bar" class="quality-bar hidden">
+                                            <div class="quality-valid" style="width: 75%" title="Valid: 75%"></div>
+                                            <div class="quality-error" style="width: 25%" title="Error: 25%"></div>
+                                        </div>
+                                        <div id="dist-bar" class="dist-histo hidden">
+                                            <div class="dist-bar h-3/4"></div>
+                                            <div class="dist-bar h-1/2"></div>
+                                            <div class="dist-bar h-full spike"></div>
+                                            <div class="dist-bar h-2/3"></div>
+                                        </div>
+                                    </th>
+                                    <th class="border p-2 bg-slate-100">Sales</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="border p-2">1001</td><td class="border p-2">98052</td><td class="border p-2">500</td></tr>
+                                <tr><td class="border p-2">1002</td><td class="border p-2">10001</td><td class="border p-2">200</td></tr>
+                                <tr id="error-row"><td class="border p-2">1003</td><td class="border p-2 text-red-600 font-bold error-cell cursor-pointer hover:bg-red-50" title="Right-click to fix">Unknown</td><td class="border p-2">800</td></tr>
+                                <tr><td class="border p-2">1004</td><td class="border p-2">90210</td><td class="border p-2">100</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            if (isCompleted) {
+                document.getElementById('chk-quality').checked = true;
+                document.getElementById('chk-distrib').checked = true;
+                document.getElementById('qual-bar').classList.remove('hidden');
+                document.getElementById('dist-bar').classList.remove('hidden');
+                document.getElementById('error-row').style.display = 'none';
+                document.getElementById('qual-bar').innerHTML = `<div class="quality-valid" style="width: 100%"></div>`;
+                const distBar = document.getElementById('dist-bar');
+                if(distBar) {
+                    const spike = distBar.querySelector('.spike');
+                    if (spike) spike.classList.remove('spike', 'bg-red-400');
+                }
+                document.getElementById('prof-success').classList.remove('hidden');
+                return;
+            }
+
+            let isQualityOn = false;
+            let isDistribOn = false;
+
+            const toggleQuality = (checked) => {
+                isQualityOn = checked;
+                document.getElementById('chk-quality').checked = checked;
+                const bar = document.getElementById('qual-bar');
+                if (checked) bar.classList.remove('hidden'); else bar.classList.add('hidden');
+            };
+
+            const toggleDistrib = (checked) => {
+                isDistribOn = checked;
+                document.getElementById('chk-distrib').checked = checked;
+                const bar = document.getElementById('dist-bar');
+                if (checked) bar.classList.remove('hidden'); else bar.classList.add('hidden');
+            };
+
+            document.getElementById('chk-quality').onchange = (e) => toggleQuality(e.target.checked);
+            document.getElementById('chk-distrib').onchange = (e) => toggleDistrib(e.target.checked);
+
+            const errCell = container.querySelector('.error-cell');
+            if (errCell) {
+                // Keep right-click as the primary interaction
+                errCell.oncontextmenu = (e) => {
+                    e.preventDefault();
+                    if (!isQualityOn || !isDistribOn) { 
+                        alert("Enable both Column Quality and Distribution to proceed."); 
+                        return; 
+                    }
+                    
+                    // Custom Context Menu
+                    const menu = document.createElement('div');
+                    menu.className = "fixed bg-white border shadow-lg text-xs z-50 rounded py-1 cursor-pointer w-32 animate-fade-in";
+                    menu.style.left = e.clientX + 'px';
+                    menu.style.top = e.clientY + 'px';
+                    menu.innerHTML = `<div class="px-4 py-2 hover:bg-slate-100 font-medium text-red-600" id="ctx-remove">Remove Errors</div>`;
+                    document.body.appendChild(menu);
+
+                    const removeMenu = () => { if(menu) menu.remove(); };
+                    document.addEventListener('click', removeMenu, {once:true});
+
+                    document.getElementById('ctx-remove').onclick = () => {
+                        const row = document.getElementById('error-row');
+                        if(row) {
+                            row.classList.add('opacity-0', 'transition-opacity');
+                            setTimeout(() => { if(row) row.style.display = 'none'; }, 300);
+                        }
+
+                        document.getElementById('qual-bar').innerHTML = `<div class="quality-valid" style="width: 100%" title="Valid: 100%"></div>`;
+                        
+                        const distBar = document.getElementById('dist-bar');
+                        if(distBar) {
+                            const spike = distBar.querySelector('.spike');
+                            if (spike) spike.classList.remove('spike', 'bg-red-400');
+                        }
+                        
+                        document.getElementById('prof-success').classList.remove('hidden');
+                        setTimeout(onComplete, 800);
+                    };
+                };
+            }
+
+            window.currentSolver = () => {
+                toggleQuality(true);
+                toggleDistrib(true);
+                setTimeout(() => {
+                    const row = document.getElementById('error-row');
+                    if(row) row.style.display = 'none';
+                    document.getElementById('qual-bar').innerHTML = `<div class="quality-valid" style="width: 100%"></div>`;
+                    document.getElementById('prof-success').classList.remove('hidden');
+                    onComplete();
+                }, 500);
+            };
+        }
+
+        // MODULE 1.6: UNPIVOT
+        function renderPowerQueryUnpivotDemo(container, onComplete, isCompleted) {
+            container.innerHTML = `
+                <div class="h-full flex flex-col border border-slate-300 rounded overflow-hidden">
+                    <div class="pbi-header p-2 flex items-center justify-between">
+                        <div class="font-bold text-xs">Power Query Editor - Budget Data</div>
+                        <button id="btn-unpivot" class="bg-white border hover:bg-slate-50 text-xs px-2 py-1 rounded flex items-center gap-1" disabled style="opacity: 0.5">
+                            <i data-lucide="arrow-right-left" class="w-3 h-3"></i> Unpivot Other Columns
+                        </button>
+                    </div>
+                    <div class="flex-1 p-4 bg-slate-100 overflow-auto">
+                        <table class="w-full text-xs text-left border-collapse bg-white shadow-sm" id="unp-table">
+                            <thead class="bg-slate-200">
+                                <tr>
+                                    <th class="border p-2 cursor-pointer hover:bg-slate-300 transition-colors" id="col-reg">Region</th>
+                                    <th class="border p-2 text-slate-500">Jan</th>
+                                    <th class="border p-2 text-slate-500">Feb</th>
+                                    <th class="border p-2 text-slate-500">Mar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="unp-body">
+                                <tr><td class="border p-2">East</td><td class="border p-2">100</td><td class="border p-2">120</td><td class="border p-2">110</td></tr>
+                                <tr><td class="border p-2">West</td><td class="border p-2">200</td><td class="border p-2">210</td><td class="border p-2">220</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            if (isCompleted) {
+                const thead = container.querySelector('thead tr');
+                thead.innerHTML = `<th class="border p-2 bg-slate-200">Region</th><th class="border p-2 bg-slate-200 font-bold text-green-700">Attribute</th><th class="border p-2 bg-slate-200 font-bold text-green-700">Value</th>`;
+                document.getElementById('unp-body').innerHTML = `
+                    <tr><td class="border p-2">East</td><td class="border p-2">Jan</td><td class="border p-2">100</td></tr>
+                    <tr><td class="border p-2">East</td><td class="border p-2">Feb</td><td class="border p-2">120</td></tr>
+                    <tr><td class="border p-2">East</td><td class="border p-2">Mar</td><td class="border p-2">110</td></tr>
+                    <tr><td class="border p-2">West</td><td class="border p-2">Jan</td><td class="border p-2">200</td></tr>
+                    <!-- ... -->
+                `;
+                document.getElementById('btn-unpivot').disabled = true;
+                return;
+            }
+
+            document.getElementById('col-reg').onclick = function() {
+                this.style.backgroundColor = '#dbeafe'; // Highlight selected
+                this.classList.add('border-blue-400');
+                const btn = document.getElementById('btn-unpivot');
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.classList.add('shadow-sm', 'border-blue-300');
+            };
+
+            document.getElementById('btn-unpivot').onclick = function() {
+                const body = document.getElementById('unp-body');
+                const thead = container.querySelector('thead tr');
+                
+                // Transformation Animation
+                thead.innerHTML = `<th class="border p-2 bg-slate-200">Region</th><th class="border p-2 bg-slate-200 font-bold text-green-700">Attribute</th><th class="border p-2 bg-slate-200 font-bold text-green-700">Value</th>`;
+                body.innerHTML = `
+                    <tr><td class="border p-2">East</td><td class="border p-2">Jan</td><td class="border p-2">100</td></tr>
+                    <tr><td class="border p-2">East</td><td class="border p-2">Feb</td><td class="border p-2">120</td></tr>
+                    <tr><td class="border p-2">East</td><td class="border p-2">Mar</td><td class="border p-2">110</td></tr>
+                    <tr><td class="border p-2">West</td><td class="border p-2">Jan</td><td class="border p-2">200</td></tr>
+                    <!-- ... -->
+                `;
+                this.disabled = true;
+                setTimeout(onComplete, 1000);
+            };
+
+            window.currentSolver = () => {
+                document.getElementById('col-reg').click();
+                setTimeout(() => document.getElementById('btn-unpivot').click(), 300);
+            };
+        }
+
+        // MODULE 1.7: GROUP BY
+        function renderPowerQueryGroupDemo(container, onComplete, isCompleted) {
+            container.innerHTML = `
+                <div class="h-full flex flex-col border border-slate-300 rounded overflow-hidden">
+                    <div class="pbi-header p-2 flex items-center justify-between">
+                        <div class="font-bold text-xs">Power Query Editor - Transactions</div>
+                        <button id="btn-group" class="bg-white border hover:bg-slate-50 text-xs px-2 py-1 rounded flex items-center gap-1 hover:shadow-sm transition-all">
+                            <i data-lucide="layers" class="w-3 h-3"></i> Group By
+                        </button>
+                    </div>
+                    <div class="flex-1 p-4 bg-slate-100 overflow-auto relative">
+                        <table class="w-full text-xs text-left border-collapse bg-white shadow-sm" id="grp-table">
+                            <thead class="bg-slate-200">
+                                <tr><th class="border p-2">Date</th><th class="border p-2">Category</th><th class="border p-2">Sales</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="border p-2">1/1/24</td><td class="border p-2">A</td><td class="border p-2">10</td></tr>
+                                <tr><td class="border p-2">1/2/24</td><td class="border p-2">A</td><td class="border p-2">20</td></tr>
+                                <tr><td class="border p-2">1/1/24</td><td class="border p-2">B</td><td class="border p-2">50</td></tr>
+                                <tr><td class="border p-2">1/2/24</td><td class="border p-2">B</td><td class="border p-2">60</td></tr>
+                            </tbody>
+                        </table>
+                        
+                        <!-- Modal Overlay for Group By Settings -->
+                        <div id="grp-modal" class="absolute inset-0 bg-black/50 hidden flex items-center justify-center backdrop-blur-[1px]">
+                            <div class="bg-white p-4 rounded shadow-lg w-64 text-xs animate-fade-in">
+                                <div class="font-bold mb-3 border-b pb-2 text-sm">Group By</div>
+                                <div class="mb-3">
+                                    <label class="block text-slate-500 mb-1">Group by:</label>
+                                    <select class="border p-1 w-full rounded bg-slate-50"><option>Category</option></select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="block text-slate-500 mb-1">New Column Name:</label>
+                                    <input class="border p-1 w-full rounded" value="Total">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-slate-500 mb-1">Operation:</label>
+                                    <select class="border p-1 w-full rounded bg-slate-50"><option>Sum</option></select>
+                                </div>
+                                <button id="btn-ok-group" class="bg-yellow-400 hover:bg-yellow-500 px-3 py-1.5 rounded w-full font-bold">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const showFinalState = () => {
+                const tbl = document.getElementById('grp-table');
+                tbl.innerHTML = `
+                    <thead class="bg-slate-200"><tr><th class="border p-2">Category</th><th class="border p-2">Total</th></tr></thead>
+                    <tbody>
+                        <tr><td class="border p-2">A</td><td class="border p-2">30</td></tr>
+                        <tr><td class="border p-2">B</td><td class="border p-2">110</td></tr>
+                    </tbody>
+                `;
+            }
+
+            if (isCompleted) {
+                showFinalState();
+                return;
+            }
+
+            document.getElementById('btn-group').onclick = () => {
+                document.getElementById('grp-modal').classList.remove('hidden');
+            };
+
+            document.getElementById('btn-ok-group').onclick = () => {
+                document.getElementById('grp-modal').classList.add('hidden');
+                showFinalState();
+                setTimeout(onComplete, 1000);
+            };
+
+            window.currentSolver = () => {
+                document.getElementById('btn-group').click();
+                setTimeout(() => document.getElementById('btn-ok-group').click(), 500);
+            };
+        }
+
+        // MODULE 2: DATA MODELING (REVAMPED: TRUE DRAG AND DROP & HEIGHT FIX)
+        function renderModelingDemo(container, onComplete, isCompleted) {
+            container.innerHTML = `
+                <div class="h-[450px] flex flex-col border border-slate-300 rounded overflow-hidden relative">
+                    <div class="bg-yellow-400 text-black p-2 text-xs font-bold z-20 relative">
+                        Model View – Build Relationships
+                    </div>
+
+                    <div class="flex-1 relative bg-slate-100 overflow-hidden" id="model-canvas">
+                        <div class="absolute top-2 left-2 bg-white p-2 text-xs border rounded shadow z-30 pointer-events-none">
+                            <strong>Task:</strong> Drag keys from green tables to the blue table.
+                        </div>
+
+                        <!-- Add drag handlers directly to table cards for moving them -->
+                        <div class="table-card absolute top-20 left-10 w-40 bg-white border rounded" id="card-prod" style="left: 40px; top: 80px;">
+                            <div class="bg-green-600 text-white text-xs p-1 font-bold cursor-move handle">Dim Products</div>
+                            <div class="p-2 space-y-1">
+                                <div draggable="true" data-id="Product ID" class="draggable-field text-xs p-1 bg-green-50 rounded border border-transparent hover:border-green-300" id="src-prod">Product ID 🔑</div>
+                            </div>
+                        </div>
+
+                        <div class="table-card absolute top-10 w-44 bg-white border rounded shadow" id="card-fact" style="left: 50%; top: 40px; transform: translateX(-50%);">
+                            <div class="bg-blue-600 text-white text-xs p-1 font-bold cursor-move handle">Fact Sales</div>
+                            <div class="p-2 space-y-1">
+                                <div data-match="Product ID" class="droppable-field text-xs p-1 rounded border border-transparent" id="tgt-prod">Product ID</div>
+                                <div data-match="Customer ID" class="droppable-field text-xs p-1 rounded border border-transparent" id="tgt-cust">Customer ID</div>
+                            </div>
+                        </div>
+
+                        <div class="table-card absolute top-20 right-10 w-44 bg-white border rounded" id="card-cust" style="right: 40px; top: 80px;">
+                            <div class="bg-green-600 text-white text-xs p-1 font-bold cursor-move handle">Dim Customers</div>
+                            <div class="p-2 space-y-1">
+                                <div draggable="true" data-id="Customer ID" class="draggable-field text-xs p-1 bg-green-50 rounded border border-transparent hover:border-green-300" id="src-cust">Customer ID 🔑</div>
+                            </div>
+                        </div>
+
+                        <svg id="svg-lines" class="absolute inset-0 pointer-events-none" style="z-index: 15; width: 100%; height: 100%;">
+                            <line id="drag-line" x1="0" y1="0" x2="0" y2="0" stroke="#9ca3af" stroke-width="2" stroke-dasharray="4" style="display:none;" />
+                        </svg>
+                    </div>
+                </div>
+            `;
+
+            let links = { prod: false, cust: false };
+            const svg = document.getElementById('svg-lines');
+            const dragLine = document.getElementById('drag-line');
+            const canvas = document.getElementById('model-canvas');
+
+            // --- Table Moving Logic ---
+            let activeCard = null;
+            let startX, startY, initialLeft, initialTop;
+
+            const cards = container.querySelectorAll('.table-card');
+            cards.forEach(card => {
+                const handle = card.querySelector('.handle');
+                handle.addEventListener('mousedown', (e) => {
+                    activeCard = card;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    // Compute current styles
+                    const rect = card.getBoundingClientRect();
+                    const canvasRect = canvas.getBoundingClientRect();
+                    // Set initial left/top relative to canvas to avoid transform issues
+                    initialLeft = rect.left - canvasRect.left; 
+                    initialTop = rect.top - canvasRect.top;
+                    
+                    // Reset transform to use absolute positioning logic
+                    card.style.transform = 'none';
+                    card.style.left = initialLeft + 'px';
+                    card.style.top = initialTop + 'px';
+                    card.style.zIndex = 100; // Bring to front
+                });
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (activeCard) {
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+                    activeCard.style.left = (initialLeft + dx) + 'px';
+                    activeCard.style.top = (initialTop + dy) + 'px';
+                    updateLines(); // Update lines while moving
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (activeCard) {
+                    activeCard.style.zIndex = '';
+                    activeCard = null;
+                }
+            });
+
+            function getCenter(el) {
+                if (!el || !canvas) return { x: 0, y: 0 };
+                const r = el.getBoundingClientRect();
+                const c = canvas.getBoundingClientRect();
+                return {
+                    x: r.left - c.left + r.width / 2,
+                    y: r.top - c.top + r.height / 2
+                };
+            }
+
+            function updateLines() {
+                // Clear existing lines except drag-line
+                Array.from(svg.children).forEach(child => {
+                    if (child.id !== 'drag-line') svg.removeChild(child);
+                });
+                
+                // Redraw permanent lines
+                if (links.prod) drawLine(document.getElementById('src-prod'), document.getElementById('tgt-prod'));
+                if (links.cust) drawLine(document.getElementById('src-cust'), document.getElementById('tgt-cust'));
+            }
+
+            function drawLine(src, tgt) {
+                const p1 = getCenter(src);
+                const p2 = getCenter(tgt);
+                
+                // Simple logic to attach to edges based on relative position
+                // If src is to the right of tgt, connect src-left to tgt-right
+                // This mimics Power BI's behavior better than center-to-center
+                
+                let x1 = p1.x;
+                let x2 = p2.x;
+                
+                // If source (Dim) is clearly to the right of target (Fact)
+                if (p1.x > p2.x + 50) { 
+                    x1 = p1.x - 40; // Approx left edge
+                    x2 = p2.x + 60; // Approx right edge
+                } 
+                // If source is clearly to the left
+                else if (p1.x < p2.x - 50) {
+                    x1 = p1.x + 40; 
+                    x2 = p2.x - 60;
+                }
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', p1.y);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', p2.y);
+                line.setAttribute('stroke', '#374151');
+                line.setAttribute('stroke-width', '2');
+                svg.appendChild(line);
+            }
+
+            function createPermanentLink(src, tgt) {
+                src.classList.add('linked');
+                src.draggable = false;
+                if(!src.innerText.includes('✔')) src.innerHTML += " ✔";
+
+                tgt.classList.add('linked');
+                if(!tgt.innerText.includes('(FK)')) tgt.innerHTML += " (FK)";
+
+                if (src.id === 'src-prod') links.prod = true;
+                if (src.id === 'src-cust') links.cust = true;
+
+                updateLines();
+
+                if (links.prod && links.cust) {
+                    setTimeout(onComplete, 500);
+                }
+            }
+
+            if (isCompleted) {
+                createPermanentLink(document.getElementById('src-prod'), document.getElementById('tgt-prod'));
+                createPermanentLink(document.getElementById('src-cust'), document.getElementById('tgt-cust'));
+                return;
+            }
+
+            // --- DRAG START ---
+            let dragStartPos = {x:0, y:0};
+
+            container.querySelectorAll('.draggable-field').forEach(src => {
+                src.addEventListener('dragstart', (e) => {
+                    const payload = JSON.stringify({
+                        fieldId: e.target.dataset.id,
+                        elemId: e.target.id
+                    });
+                    e.dataTransfer.setData('text/plain', payload);
+                    e.dataTransfer.effectAllowed = 'link';
+                    
+                    const center = getCenter(src);
+                    dragStartPos = center;
+                    dragLine.setAttribute('x1', center.x);
+                    dragLine.setAttribute('y1', center.y);
+                    dragLine.setAttribute('x2', center.x);
+                    dragLine.setAttribute('y2', center.y);
+                    dragLine.style.display = 'block';
+                });
+
+                src.addEventListener('dragend', () => {
+                    dragLine.style.display = 'none';
+                });
+            });
+
+            // --- DRAG OVER ON CANVAS ---
+            canvas.addEventListener('dragover', (e) => {
+                e.preventDefault(); // Necessary to allow dropping and to fire dragover consistently
+                const cRect = canvas.getBoundingClientRect();
+                const x = e.clientX - cRect.left;
+                const y = e.clientY - cRect.top;
+                dragLine.setAttribute('x2', x);
+                dragLine.setAttribute('y2', y);
+            });
+
+            // --- DROP ZONE ---
+            container.querySelectorAll('.droppable-field').forEach(tgt => {
+                tgt.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'link';
+                    if (!tgt.classList.contains('linked')) tgt.classList.add('drag-over');
+                });
+
+                tgt.addEventListener('dragleave', () => {
+                    tgt.classList.remove('drag-over');
+                });
+
+                tgt.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    tgt.classList.remove('drag-over');
+                    dragLine.style.display = 'none';
+
+                    try {
+                        const payload = JSON.parse(e.dataTransfer.getData('text/plain'));
+                        const srcElem = document.getElementById(payload.elemId);
+
+                        if (payload.fieldId === tgt.dataset.match && !tgt.classList.contains('linked')) {
+                            createPermanentLink(srcElem, tgt);
+                        } else {
+                            tgt.classList.add('bg-red-100');
+                            setTimeout(() => tgt.classList.remove('bg-red-100'), 500);
+                        }
+                    } catch (err) {
+                        console.error("Drop failed", err);
+                    }
+                });
+            });
+
+            // Auto-solver Hook
+            window.currentSolver = () => {
+                if (!links.prod) createPermanentLink(document.getElementById('src-prod'), document.getElementById('tgt-prod'));
+                if (!links.cust) setTimeout(() => createPermanentLink(document.getElementById('src-cust'), document.getElementById('tgt-cust')), 300);
+            };
+        }
+
+        // MODULE 3: DAX COLUMN (Show 2 Tables)
+        function renderDAXRelatedDemo(container, onComplete, isCompleted) {
+            container.innerHTML = `
+                <div class="h-full flex flex-col border border-slate-300 rounded overflow-hidden">
+                    <div class="pbi-header p-2 flex items-center justify-between">
+                        <div class="font-bold text-xs">Data View - Calculated Columns</div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 p-2 text-xs border-b border-yellow-200">
+                        <strong>Goal:</strong> Calculate <code>TotalCost</code> in Sales table. Grab 'Unit Cost' from Products table using <code>RELATED</code>.
+                    </div>
+                    
+                    <div class="da-expression-bar p-2 flex items-center gap-2 border-b shadow-sm">
+                        <span class="text-xs font-bold text-slate-500">TotalCost =</span>
+                        <input id="dax-inp" class="w-full text-sm font-mono outline-none" placeholder="Type..." autocomplete="off">
+                        <button id="dax-check" class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs px-3 py-1 rounded font-bold">✓</button>
+                    </div>
+                    
+                    <div class="flex flex-1 overflow-hidden">
+                        <!-- Table 1: Sales -->
+                        <div class="flex-1 border-r bg-white p-2">
+                            <div class="text-xs font-bold mb-1 text-blue-700">Sales Table</div>
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead class="bg-slate-100 border-b">
+                                    <tr><th class="p-1 border">Product</th><th class="p-1 border">Qty</th><th class="p-1 border bg-yellow-50">TotalCost</th></tr>
+                                </thead>
+                                <tbody id="dax-body">
+                                    <tr><td class="p-1 border">Widget A</td><td class="p-1 border">2</td><td class="p-1 border bg-yellow-50 text-slate-400">...</td></tr>
+                                    <tr><td class="p-1 border">Widget B</td><td class="p-1 border">5</td><td class="p-1 border bg-yellow-50 text-slate-400">...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Table 2: Products -->
+                        <div class="w-40 bg-slate-50 p-2">
+                            <div class="text-xs font-bold mb-1 text-green-700">Products Table</div>
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead class="bg-slate-100 border-b">
+                                    <tr><th class="p-1 border">Name</th><th class="p-1 border">Unit Cost</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="p-1 border">Widget A</td><td class="p-1 border">$10</td></tr>
+                                    <tr><td class="p-1 border">Widget B</td><td class="p-1 border">$20</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            const inp = document.getElementById('dax-inp');
+            
+            // Fix: Scope selector to this container to avoid errors
+            enableIntellisense(inp, container.querySelector('.da-expression-bar'));
+
+            const showFinalState = () => {
+                const rows = document.getElementById('dax-body').children;
+                rows[0].children[2].innerText = "20"; rows[0].children[2].className = "p-1 border bg-green-100 font-bold";
+                rows[1].children[2].innerText = "100"; rows[1].children[2].className = "p-1 border bg-green-100 font-bold";
+                inp.value = "Sales[Quantity] * RELATED(Products[Unit Cost])";
+                inp.disabled = true;
+                document.getElementById('dax-check').disabled = true;
+            };
+
+            if (isCompleted) {
+                showFinalState();
+                return;
+            }
+
+            document.getElementById('dax-check').onclick = () => {
+                const val = inp.value.toLowerCase().replace(/\s/g, '');
+                if (val.includes('related') && val.includes('products[unitcost]')) {
+                    showFinalState();
+                    setTimeout(onComplete, 1000);
+                } else { alert("Try: Sales[Quantity] * RELATED(Products[Unit Cost])"); }
+            };
+            window.currentSolver = () => {
+                inp.value = "Sales[Quantity] * RELATED(Products[Unit Cost])";
+                document.getElementById('dax-check').click();
+            };
+        }
+
+        // MODULE 3.5: TIME INTELLIGENCE
+        function renderDAXTimeDemo(container, onComplete, isCompleted) {
+            container.innerHTML = `
+                <div class="h-full flex flex-col border border-slate-300 rounded overflow-hidden">
+                    <div class="pbi-header p-2 flex items-center justify-between">
+                        <div class="font-bold text-xs">Data View - Date Table</div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 p-2 text-xs border-b border-yellow-200">
+                        <strong>Goal:</strong> Create a Date Table using DAX.
+                    </div>
+                    
+                    <div class="da-expression-bar p-2 flex items-center gap-2 mb-2 rounded shadow-sm">
+                        <span class="text-xs font-bold text-slate-500">Dates =</span>
+                        <input id="dax-t-inp" class="w-full text-sm font-mono outline-none" placeholder="Type..." autocomplete="off">
+                        <button id="dax-t-check" class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs px-3 py-1 rounded font-bold">✓</button>
+                    </div>
+                    
+                    <div class="flex-1 bg-white p-4 text-center text-slate-400 italic text-sm">
+                        <div id="table-prev" class="hidden h-full flex flex-col">
+                            <div class="text-left font-bold text-xs text-black mb-1">Dates</div>
+                            <table class="w-full text-left text-xs border border-collapse">
+                                <thead class="bg-slate-100"><tr><th class="border p-1">Date</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="border p-1">1/1/2024</td></tr>
+                                    <tr><td class="border p-1">1/2/2024</td></tr>
+                                    <tr><td class="border p-1">...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <span id="t-placeholder">Table Preview will appear here</span>
+                    </div>
+                </div>
+            `;
+            const inp = document.getElementById('dax-t-inp');
+            enableIntellisense(inp, container.querySelector('.da-expression-bar'));
+
+            const showFinalState = () => {
+                document.getElementById('t-placeholder').classList.add('hidden');
+                document.getElementById('table-prev').classList.remove('hidden');
+                inp.value = "CALENDARAUTO()";
+                inp.disabled = true;
+                document.getElementById('dax-t-check').disabled = true;
+            };
+
+            if (isCompleted) {
+                showFinalState();
+                return;
+            }
+
+            document.getElementById('dax-t-check').onclick = () => {
+                const val = inp.value.toLowerCase().replace(/\s/g, '');
+                if (val.includes('calendarauto')) {
+                    showFinalState();
+                    setTimeout(onComplete, 1000);
+                } else { alert("Use: CALENDARAUTO()"); }
+            };
+            window.currentSolver = () => {
+                inp.value = "CALENDARAUTO()";
+                document.getElementById('dax-t-check').click();
+            };
+        }
+
+        // MODULE 4: DAX MEASURE
+        function renderDAXMeasureDemo(container, onComplete, isCompleted) {
+            container.innerHTML = `
+                <div class="h-full flex flex-col border border-slate-300 rounded overflow-hidden">
+                    <div class="pbi-header p-2 flex items-center justify-between">
+                        <div class="font-bold text-xs">Report View - Measure Calculation</div>
+                    </div>
+                    <div class="bg-yellow-50 p-2 text-xs border-b border-yellow-200">
+                        <strong>Goal:</strong> Measure for <code>Critical Sales</code>. (CALCULATE Sum of Sales where Priority is "Critical")
+                    </div>
+                    
+                    <div class="da-expression-bar p-2 flex items-center gap-2 border-b shadow-sm">
+                        <span class="text-xs font-bold text-slate-500">Critical Sales =</span>
+                        <input id="dax-m-inp" class="w-full text-sm font-mono outline-none" placeholder="CALCULATE(..." autocomplete="off">
+                        <button id="dax-m-check" class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs px-3 py-1 rounded font-bold">✓</button>
+                    </div>
+                    
+                    <div class="flex flex-1 overflow-hidden">
+                        <!-- Sample Data Table -->
+                        <div class="w-48 bg-white border-r p-2 flex flex-col text-[10px]">
+                            <div class="font-bold text-slate-500 mb-1">Data Source (Sales)</div>
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-100">
+                                    <tr><th class="border p-1">ID</th><th class="border p-1">Amount</th><th class="border p-1">Priority</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="border p-1">1</td><td class="border p-1">$500</td><td class="border p-1 font-bold text-red-500">Critical</td></tr>
+                                    <tr><td class="border p-1">2</td><td class="border p-1">$400</td><td class="border p-1">Medium</td></tr>
+                                    <tr><td class="border p-1">3</td><td class="border p-1">$600</td><td class="border p-1">Low</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Results -->
+                        <div class="flex-1 p-4 bg-slate-50 flex gap-4 items-center justify-center">
+                            <div class="border rounded bg-white p-2 w-28 text-center h-20 flex flex-col justify-center shadow-sm">
+                                <div class="text-xs text-slate-500">Total Sales</div>
+                                <div class="font-bold text-lg">$1,500</div>
+                            </div>
+                            <div class="border rounded bg-white p-2 w-28 text-center h-20 flex flex-col justify-center shadow-sm">
+                                <div class="text-xs text-slate-500">Critical Sales</div>
+                                <div id="crit-val" class="font-bold text-lg text-slate-300">---</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            const inp = document.getElementById('dax-m-inp');
+            enableIntellisense(inp, container.querySelector('.da-expression-bar'));
+
+            const showFinalState = () => {
+                const res = document.getElementById('crit-val');
+                res.innerText = "$500";
+                res.classList.remove('text-slate-300'); res.classList.add('text-green-600', 'animate-fade-in');
+                inp.value = 'CALCULATE(SUM(Sales[Sales]), Sales[Order Priority]="Critical")';
+                inp.disabled = true;
+                document.getElementById('dax-m-check').disabled = true;
+            };
+
+            if (isCompleted) {
+                showFinalState();
+                return;
+            }
+
+            document.getElementById('dax-m-check').onclick = () => {
+                const val = inp.value.toLowerCase().replace(/\s/g, '');
+                if (val.includes('calculate') && val.includes('sum') && val.includes('critical') && val.includes('sales[sales]')) {
+                    showFinalState();
+                    setTimeout(onComplete, 1000);
+                } else { alert("Syntax: CALCULATE(SUM(Sales[Sales]), Sales[Order Priority]=\"Critical\")"); }
+            };
+            window.currentSolver = () => {
+                inp.value = 'CALCULATE(SUM(Sales[Sales]), Sales[Order Priority]="Critical")';
+                document.getElementById('dax-m-check').click();
+            };
+        }
+
+        // MODULE 5: VISUALIZATIONS
+        function renderVizDemo(container, onComplete, isCompleted) {
+            container.innerHTML = `
+                <div class="h-full flex flex-col border border-slate-300 rounded overflow-hidden">
+                    <div class="pbi-header p-2 flex items-center justify-between">
+                        <div class="font-bold text-xs">Report View - Build Visual</div>
+                    </div>
+                    <div class="flex-1 flex gap-2 p-2 bg-slate-100">
+                        <!-- Fields Pane -->
+                        <div class="w-32 bg-white border rounded flex flex-col shadow-sm">
+                            <div class="text-xs font-bold border-b p-2 bg-slate-50">Data</div>
+                            <div class="p-2 space-y-2 flex-1">
+                                <div class="field-chip cursor-grab" draggable="true" id="f-reg" style="pointer-events: auto;">Region</div>
+                                <div class="field-chip cursor-grab" draggable="true" id="f-sales" style="pointer-events: auto;">Sales</div>
+                                <div class="field-chip cursor-grab bg-slate-100 border-slate-200 text-slate-500" draggable="true" id="f-cat" style="pointer-events: auto;">Category</div>
+                                <div class="field-chip cursor-grab bg-slate-100 border-slate-200 text-slate-500" draggable="true" id="f-date" style="pointer-events: auto;">Date</div>
+                            </div>
+                        </div>
+
+                        <!-- Canvas -->
+                        <div class="flex-1 flex flex-col gap-2">
+                            <div class="flex-1 bg-white border border-dashed border-slate-300 rounded flex items-center justify-center relative p-4" id="viz-canvas">
+                                <div id="chart-area" class="w-full h-full p-4 hidden flex items-end justify-around gap-2"></div>
+                                <span class="text-xs text-slate-400 absolute pointer-events-none" id="empty-msg">Drag fields to buckets on the right...</span>
+                            </div>
+                            <div class="h-20 bg-white border rounded p-2 overflow-auto text-[10px] shadow-sm">
+                                <div class="font-bold border-b mb-1">Data View</div>
+                                <table class="w-full text-left">
+                                    <tr class="text-slate-500"><th>Date</th><th>Region</th><th>Sales</th></tr>
+                                    <tr><td>1/1/2024</td><td>North</td><td>500</td></tr>
+                                    <tr><td>1/2/2024</td><td>South</td><td>750</td></tr>
+                                    <tr><td>1/3/2024</td><td>East</td><td>300</td></tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Visualizations Pane -->
+                        <div class="w-48 bg-white border rounded flex flex-col p-2 gap-2 shadow-sm">
+                            <div class="text-xs font-bold border-b pb-1">Visualizations</div>
+                            
+                            <!-- Viz Selector -->
+                            <div class="grid grid-cols-4 gap-1 mb-2">
+                                <div class="viz-icon selected" data-type="col" title="Column Chart">📊</div>
+                                <div class="viz-icon" data-type="line" title="Line Chart">📈</div>
+                                <div class="viz-icon" data-type="pie" title="Pie Chart">🥧</div>
+                            </div>
+
+                            <div class="space-y-1">
+                                <div class="text-[10px] uppercase font-bold text-slate-500">X-Axis</div>
+                                <div class="viz-bucket" id="b-x">Drag Field Here</div>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="text-[10px] uppercase font-bold text-slate-500">Y-Axis</div>
+                                <div class="viz-bucket" id="b-y">Drag Field Here</div>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="text-[10px] uppercase font-bold text-slate-500">Legend</div>
+                                <div class="viz-bucket" id="b-leg">Drag Field Here</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            let state = { x: null, y: null, leg: null, type: 'col' };
+            
+            const checkViz = () => {
+                const area = document.getElementById('chart-area');
+                let valid = false;
+
+                if (state.type === 'line') {
+                    if (state.x === 'f-date' && state.y === 'f-sales') valid = true;
+                } else {
+                    if (state.x === 'f-reg' && state.y === 'f-sales') valid = true;
+                }
+
+                if (valid) {
+                    document.getElementById('empty-msg').classList.add('hidden');
+                    area.classList.remove('hidden');
+                    
+                    if (state.type === 'col') {
+                        let barClass = state.leg ? "bg-purple-500" : "bg-blue-500";
+                        let topBar = state.leg ? `<div class="w-full h-1/2 bg-orange-400"></div>` : '';
+                        area.innerHTML = `
+                            <div class="w-8 ${barClass} h-1/2 animate-fade-in flex flex-col-reverse relative group" title="North">${topBar}</div>
+                            <div class="w-8 ${barClass} h-3/4 animate-fade-in flex flex-col-reverse relative group" title="South">${topBar}</div>
+                            <div class="w-8 ${barClass} h-1/3 animate-fade-in flex flex-col-reverse relative group" title="East">${topBar}</div>
+                        `;
+                    } else if (state.type === 'line') {
+                        area.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 100 100" class="animate-fade-in"><polyline points="10,80 30,50 50,70 70,30 90,60" fill="none" stroke="#2563eb" stroke-width="2"/><circle cx="10" cy="80" r="2" fill="red"/><circle cx="30" cy="50" r="2" fill="red"/><circle cx="50" cy="70" r="2" fill="red"/><circle cx="70" cy="30" r="2" fill="red"/><circle cx="90" cy="60" r="2" fill="red"/></svg>`;
+                    } else if (state.type === 'pie') {
+                        area.innerHTML = `<div class="w-24 h-24 rounded-full bg-blue-500 border-4 border-white shadow animate-fade-in" style="background: conic-gradient(#3b82f6 0% 30%, #f97316 30% 70%, #22c55e 70% 100%)"></div>`;
+                    }
+                    
+                    if(!isCompleted) setTimeout(onComplete, 1000);
+                } else {
+                    document.getElementById('empty-msg').classList.remove('hidden');
+                    area.classList.add('hidden');
+                }
+            }
+
+            if (isCompleted) {
+                document.getElementById('b-x').innerHTML = `<div class="field-chip text-[10px] py-0 pointer-events-none w-full justify-center">Region</div>`;
+                document.getElementById('b-x').classList.add('border-green-400');
+                
+                document.getElementById('b-y').innerHTML = `<div class="field-chip text-[10px] py-0 pointer-events-none w-full justify-center">Sales</div>`;
+                document.getElementById('b-y').classList.add('border-green-400');
+                
+                document.getElementById('b-leg').innerHTML = `<div class="field-chip text-[10px] py-0 pointer-events-none w-full justify-center">Category</div>`;
+                document.getElementById('b-leg').classList.add('border-green-400');
+                
+                state.x = 'f-reg'; state.y = 'f-sales'; state.leg = 'f-cat';
+                checkViz();
+                return;
+            }
+            
+            // Icon Selector Logic
+            const icons = container.querySelectorAll('.viz-icon');
+            icons.forEach(icon => {
+                icon.onclick = () => {
+                    icons.forEach(i => i.classList.remove('selected'));
+                    icon.classList.add('selected');
+                    state.type = icon.dataset.type;
+                    checkViz();
+                };
+            });
+
+            const fields = document.querySelectorAll('.field-chip');
+            const buckets = document.querySelectorAll('.viz-bucket');
+
+            fields.forEach(f => {
+                f.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text', e.target.innerText);
+                    e.dataTransfer.setData('id', e.target.id);
+                    e.dataTransfer.effectAllowed = 'copy';
+                });
+            });
+
+            buckets.forEach(b => {
+                b.addEventListener('dragover', (e) => { 
+                    e.preventDefault(); 
+                    e.dataTransfer.dropEffect = 'copy';
+                    b.classList.add('drag-over'); 
+                });
+                b.addEventListener('dragleave', () => b.classList.remove('drag-over'));
+                b.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    b.classList.remove('drag-over');
+                    const text = e.dataTransfer.getData('text');
+                    const id = e.dataTransfer.getData('id');
+                    
+                    if (!text || !id) return;
+
+                    b.innerHTML = `<div class="field-chip text-[10px] py-0 pointer-events-none w-full justify-center">${text}</div>`;
+                    b.classList.add('border-green-400', 'bg-green-50'); 
+                    
+                    if (b.id === 'b-x') state.x = id;
+                    if (b.id === 'b-y') state.y = id;
+                    if (b.id === 'b-leg') state.leg = id;
+                    
+                    checkViz();
+                });
+            });
+
+            window.currentSolver = () => {
+                document.getElementById('b-x').innerHTML = `<div class="field-chip text-[10px] py-0 pointer-events-none w-full justify-center">Region</div>`;
+                document.getElementById('b-x').classList.add('border-green-400');
+                
+                document.getElementById('b-y').innerHTML = `<div class="field-chip text-[10px] py-0 pointer-events-none w-full justify-center">Sales</div>`;
+                document.getElementById('b-y').classList.add('border-green-400');
+                
+                document.getElementById('b-leg').innerHTML = `<div class="field-chip text-[10px] py-0 pointer-events-none w-full justify-center">Category</div>`;
+                document.getElementById('b-leg').classList.add('border-green-400');
+                
+                state.x = 'f-reg'; state.y = 'f-sales'; state.leg = 'f-cat';
+                checkViz();
+            };
+        }
+
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>
