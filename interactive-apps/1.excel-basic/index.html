@@ -78,7 +78,7 @@
             
             <button id="download-btn" onclick="app.downloadFiles()" class="hidden flex items-center space-x-2 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors shadow-sm hover:shadow-md">
                 <i data-lucide="download" class="w-4 h-4"></i>
-                <span class="text-sm font-medium">Download Practice Files</span>
+                <span class="text-sm font-medium">Download Workbook</span>
             </button>
         </header>
 
@@ -155,15 +155,8 @@
     <!-- JavaScript Application Logic -->
     <script>
         // --- DATA ---
-        const FLAMIN_MAVEN_CSV = `Journal ID,Date,Account,Description,Debit,Credit,Tax Rate,Status,Approved By
-JE-1001,2025-01-15,Office Supplies,Staples Order,125.50,0.00,0.08,Posted,J.Doe
-JE-1002,2025-01-15,Utilities,Electric Bill,450.00,0.00,0.00,Posted,J.Doe
-JE-1002,2025-01-15,Utilities,Electric Bill,450.00,0.00,0.00,Posted,J.Doe
-JE-1003,2025-01-16,Revenue,Consulting Fees,0.00,1500.00,0.00,Pending,
-JE-1004,2025-01-16,Travel,Flight to NY,650.00,0.00,0.08,Pending,
-JE-1005,2025-01-17,Software,SaaS Subscription,99.00,0.00,0.00,Posted,M.Smith
-JE-1006,2025-01-18,Revenue,Service Contract,0.00,2200.00,0.00,Draft,
-JE-1007,2025-01-19,Rent,January Office Rent,3000.00,0.00,0.00,Posted,J.Doe`;
+        // Workbook filename configuration
+        const WORKBOOK_FILENAME = 'data/Excel_Foundations_Lab.xlsx';
 
         const MODULES = [
             {
@@ -178,10 +171,11 @@ JE-1007,2025-01-19,Rent,January Office Rent,3000.00,0.00,0.00,Posted,J.Doe`;
                     </ul>`,
                 project: {
                     title: 'Mission 1: The Ledger',
-                    brief: 'Open "Accounting_Journal_2025.csv". This contains the raw transaction export for January.',
+                    brief: `Open the "${WORKBOOK_FILENAME}" file you just downloaded. This contains the raw transaction export for January.`,
                     steps: [
-                        'Open the downloaded file.',
-                        'Navigate to Row 8. Identify the account used.',
+                        'Open the downloaded workbook.',
+                        'Navigate to the "Journal" sheet.',
+                        'Go to Row 8. Identify the account used.',
                         'Click the "Debit" column header (Column E) to select all debit amounts.'
                     ]
                 },
@@ -407,10 +401,12 @@ JE-1007,2025-01-19,Rent,January Office Rent,3000.00,0.00,0.00,Posted,J.Doe`;
             },
 
             downloadFiles() {
-                const blob = new Blob([FLAMIN_MAVEN_CSV], { type: 'text/csv;charset=utf-8;' });
+                // Creates a link to download the static XLSX file
+                // Make sure "Excel_Foundations_Lab.xlsx" exists in the same directory
                 const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = 'Accounting_Journal_2025.csv';
+                link.href = WORKBOOK_FILENAME;
+                link.download = WORKBOOK_FILENAME;
+                link.target = "_blank"; // Safety for some browsers
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
