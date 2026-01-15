@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACCT Lab: Inventory Audit & Analytics</title>
+    <!-- Tailwind for Dashboard Styles -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Dashboard Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* Lab Instruction Styles (Scoped to .lab-content to prevent conflicts with Tailwind) */
+        :root {
+            --primary-color: #003366; /* University Blue */
+            --secondary-color: #f8f9fa;
+            --accent-color: #d9534f;
+            --text-color: #333;
+            --success-color: #28a745;
+            --warning-bg: #fff3cd;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+        }
+        
+        /* Container for Lab Instructions */
+        .lab-container {
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 5px solid var(--accent-color);
+        }
+        h1 { margin: 0; font-size: 2.2rem; font-weight: 700; }
+        
+        /* Scoped styles for headings inside lab container to avoid tailwind conflict */
+        .lab-container h2 { 
+            color: var(--primary-color); 
+            border-left: 6px solid var(--accent-color); 
+            padding-left: 15px; 
+            margin-top: 40px; 
+            background: #e9ecef;
+            padding-top: 12px;
+            padding-bottom: 12px;
+            border-radius: 0 5px 5px 0;
+            font-size: 1.5rem;
+            display: block;
+        }
+        .lab-container h3 { 
+            color: #555; 
+            margin-top: 25px; 
+            border-bottom: 1px solid #eee; 
+            padding-bottom: 8px;
+            font-size: 1.25rem;
+            display: block;
+        }
+        
+        .scenario-box {
+            background-color: #e8f4fd;
+            border: 1px solid #b6d4fe;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+            position: relative;
+        }
+        .task-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .task-list li {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            margin: 15px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            position: relative;
+            display: block;
+        }
+        .task-list li:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .level-badge {
+            float: right;
+            font-size: 0.8em;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .lvl-basic { background: #d1e7dd; color: #0f5132; }
+        .lvl-inter { background: #fff3cd; color: #856404; }
+        .lvl-adv { background: #f8d7da; color: #842029; }
+
+        .function-tag {
+            display: inline-block;
+            background-color: #003366;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .complex-tag { background-color: #6610f2; }
+        .audit-concept {
+            display: block;
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+            font-size: 0.9em;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .download-btn {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 15px 35px;
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: background 0.3s;
+            font-size: 1.1em;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .download-btn:hover { background-color: #b02a37; transform: translateY(-1px); }
+        
+        /* Data Tables for Instructions */
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+        .data-table th, .data-table td { border: 1px solid #dee2e6; padding: 10px; text-align: left; }
+        .data-table th { background-color: var(--primary-color); color: white; }
+        .data-table tr:nth-child(even) { background-color: #f2f2f2; }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media (max-width: 768px) { .grid-container { grid-template-columns: 1fr; } }
+        .reference-card {
+            background: white;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        /* Dashboard Specific Styles */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            max-height: 350px;
+        }
+        .status-pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        #dashboard-section {
+            background-color: #f1f5f9; /* Slate 100 */
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+<!-- LAB INSTRUCTIONS SECTION -->
+<div id="lab-instructions">
+    <header>
+        <h1>Audit Analytics Lab</h1>
+        <p>From Basic Controls to Advanced Risk Assessment</p>
+    </header>
+
+    <div class="lab-container">
+
+        <div class="scenario-box">
+            <h3>📊 Audit Engagement: TechGear Solutions</h3>
+            <p><strong>Scenario:</strong> You are the Senior Auditor for TechGear. The client has provided their inventory listing. You must perform a full audit, starting with basic data validation and moving to complex risk modeling.</p>
+            <p><strong>Goal:</strong> Complete all 5 parts of the audit program.</p>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="data/Inventory_Blank.xlsx" class="download-btn" download>📥 Download Inventory_Blank.xlsx</a>
+        </div>
+
+        <!-- Part 1: Basic Logic -->
+        <h2>Part 1: Internal Control Testing (Basic Logic)</h2>
+        <p>Perform standard control tests to flag simple issues.</p>
+
+        <ul class="task-list">
+            <li>
+                <span class="level-badge lvl-basic">Basic</span>
+                <strong>1. Reorder Flag</strong><br>
+                <span class="function-tag">IF</span>
+                <br>Create column <strong>"Action"</strong>. If <em>EndingStock</em> is less than 10, display <strong>"Reorder"</strong>. Otherwise, display <strong>"Sufficient"</strong>.
+            </li>
+            <li>
+                <span class="level-badge lvl-basic">Basic</span>
+                <strong>2. Calculate Average Price</strong><br>
+                <span class="function-tag">IFERROR</span>
+                <br>Create column <strong>"Avg Price"</strong>. Formula: <em>TotalSales</em> / <em>UnitSold</em>. Wrap this in an IFERROR to display <strong>0</strong> if division by zero occurs.
+            </li>
+            <li>
+                <span class="level-badge lvl-inter">Intermediate</span>
+                <strong>3. Stock Status (Turnover Analysis)</strong><br>
+                <span class="function-tag">NESTED IF</span>
+                <br>Create column <strong>"Stock Status"</strong>:
+                <ul>
+                    <li>If <em>EndingStock</em> > 60, display <strong>"Overstock"</strong>.</li>
+                    <li>If <em>EndingStock</em> < 5, display <strong>"Critical Low"</strong>.</li>
+                    <li>Otherwise, display <strong>"Normal"</strong>.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <!-- Part 2: Reconciliation -->
+        <h2>Part 2: Inventory Roll-Forward (Reconciliation)</h2>
+        <p>Verify if the client's reported ending stock matches the transaction history.</p>
+        
+        <ul class="task-list">
+            <li>
+                <span class="level-badge lvl-basic">Basic</span>
+                <strong>4. Independent Recalculation</strong><br>
+                <span class="function-tag">FORMULA</span>
+                <br>Create column <strong>"Calc Ending Stock"</strong>. Formula: <em>BeginningStock</em> + <em>Purchase</em> - <em>UnitSold</em>.
+            </li>
+            <li>
+                <span class="level-badge lvl-basic">Basic</span>
+                <strong>5. Discrepancy Check</strong><br>
+                <span class="function-tag">IF</span>
+                <br>Create column <strong>"Audit Flag"</strong>. If your calculated stock equals the client's <em>EndingStock</em>, display <strong>"Verified"</strong>. Else, display <strong>"Error"</strong>.
+            </li>
+        </ul>
+
+        <!-- Part 3: Data Enrichment -->
+        <h2>Part 3: Data Enrichment (Audit Setup)</h2>
+        <p>The client file is missing key classifications. Use the tables below to assign data.</p>
+        
+        <div class="grid-container">
+            <!-- Wildcard Table -->
+            <div class="reference-card">
+                <h4>📋 Table A: Product Master File</h4>
+                <p><em>(Copy this partial list. Assume the full list exists in the client's system.)</em></p>
+                <table class="data-table">
+                    <tr><th>Product Name</th><th>Dept Code</th></tr>
+                    <tr><td>Laptop</td><td>HW-LAP</td></tr>
+                    <tr><td>Monitor</td><td>HW-MON</td></tr>
+                    <tr><td>Keyboard</td><td>ACC-INP</td></tr>
+                    <tr><td>Headphones</td><td>ACC-AUD</td></tr>
+                    <tr><td>Smartphone</td><td>HW-MOB</td></tr>
+                    <tr><td>Tablet</td><td>HW-MOB</td></tr>
+                    <tr><td>Router</td><td>NET-WIF</td></tr>
+                    <tr><td>Gaming Mouse</td><td>GMG-ACC</td></tr>
+                    <tr><td>Graphics Card</td><td>HW-COM</td></tr>
+                    <tr><td>CPU</td><td>HW-COM</td></tr>
+                </table>
+            </div>
+            <!-- Range Lookup Table -->
+            <div class="reference-card">
+                <h4>📋 Table B: Rebates</h4>
+                <table class="data-table">
+                    <tr><th>Units Sold</th><th>Rebate %</th></tr>
+                    <tr><td>0</td><td>0.0%</td></tr>
+                    <tr><td>10</td><td>2.5%</td></tr>
+                    <tr><td>25</td><td>5.0%</td></tr>
+                    <tr><td>50</td><td>8.0%</td></tr>
+                    <tr><td>75</td><td>12.0%</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <ul class="task-list">
+            <li>
+                <span class="level-badge lvl-inter">Intermediate</span>
+                <strong>6. Assign Department Code (Exact Match)</strong><br>
+                <span class="function-tag">XLOOKUP</span>
+                <br>Create column <strong>"Dept Code"</strong>. Use XLOOKUP to match the <em>Product Name</em> against Table A to find the Department Code.
+                <br><em>Note:</em> Since Table A is a partial list, some items will return #N/A. Wrap your function in <strong>IFNA</strong> or use the `[if_not_found]` argument in XLOOKUP to display <strong>"Pending Audit"</strong>.
+            </li>
+            <li>
+                <span class="level-badge lvl-inter">Intermediate</span>
+                <strong>7. Assign Rebate Rate (Approximate)</strong><br>
+                <span class="function-tag">XLOOKUP</span> <span class="function-tag">Match Mode: -1</span>
+                <br>Create column <strong>"Rebate Rate"</strong>. Lookup <em>UnitsSold</em> in Table B to find the rate. Use match_mode -1 (Next Smaller Item).
+            </li>
+        </ul>
+
+        <!-- Part 4: Analytical Procedures -->
+        <h2>Part 4: Analytical Procedures (Summary Stats)</h2>
+        <p>Create a "Summary Statistics" table to answer these audit inquiries.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Audit Inquiry</th>
+                    <th>Difficulty</th>
+                    <th>Function</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Q1:</strong> How many items have a Cost Per Unit greater than $200?</td>
+                    <td><span class="level-badge lvl-basic">Basic</span></td>
+                    <td><span class="function-tag">COUNTIF</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Q2:</strong> What is the total Sales for the "Laptop" category (Name is exactly "Laptop")?</td>
+                    <td><span class="level-badge lvl-basic">Basic</span></td>
+                    <td><span class="function-tag">SUMIF</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Q3:</strong> What is the average cost of items flagged as "Reorder" in your Action column?</td>
+                    <td><span class="level-badge lvl-basic">Basic</span></td>
+                    <td><span class="function-tag">AVERAGEIF</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Q4 (Risk):</strong> Sum of <em>TotalCost</em> for items where <strong>Cost > $100</strong> AND <strong>UnitsSold < 5</strong>.</td>
+                    <td><span class="level-badge lvl-adv">Advanced</span></td>
+                    <td><span class="function-tag">SUMIFS</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Q5 (Segment):</strong> Average <em>TotalSales</em> for items where Name contains <strong>"Gaming"</strong>.</td>
+                    <td><span class="level-badge lvl-adv">Advanced</span></td>
+                    <td><span class="function-tag">AVERAGEIFS</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Part 5: Advanced Modeling -->
+        <h2>Part 5: The "Manager's Challenge"</h2>
+        <p>This final task combines logic and aggregation to assess departmental performance.</p>
+
+        <ul class="task-list">
+            <li>
+                <span class="level-badge lvl-adv">Advanced</span>
+                <strong>8. Department Performance Flag</strong><br>
+                <span class="function-tag complex-tag">IF + SUMIFS</span>
+                <br>
+                Create a column <strong>"Dept Assessment"</strong>.
+                <br><strong>Logic:</strong> Calculate the Total Sales for the <em>Dept Code</em> of the current row.
+                <ul>
+                    <li>If that Department's Total Sales > $50,000, mark as <strong>"Core Segment"</strong>.</li>
+                    <li>Otherwise, mark as <strong>"Non-Core"</strong>.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <!-- Conclusion / Password Protect Dashboard Toggle -->
+        <div class="mt-8 p-6 bg-slate-100 border-t border-slate-300 rounded-lg text-center">
+            <h2 style="border:none; background:none; padding:0; margin:0 0 10px 0; color:#333;">🎉 Demo complete?</h2>
+            <p class="mb-4">Once you have finished your Excel work, enter the password to view the interactive solution dashboard.</p>
+            
+            <div class="max-w-xs mx-auto flex flex-col sm:flex-row gap-2 justify-center">
+                <input type="password" id="password-input" placeholder="Enter Password" class="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
+                <button onclick="checkPassword()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow transition transform hover:scale-105 whitespace-nowrap">
+                    Unlock 📊
+                </button>
+            </div>
+            <p id="error-msg" class="text-red-600 text-sm mt-2 hidden font-bold">Incorrect password. Please try again.</p>
+        </div>
+
+    </div>
+</div>
+
+<!-- HIDDEN DASHBOARD SECTION -->
+<div id="dashboard-section" class="hidden min-h-screen">
+    
+    <!-- Navigation -->
+    <nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="text-xl font-bold tracking-tight">TechGear<span class="text-blue-400">Audit</span></div>
+                    <div class="hidden md:block px-3 py-1 bg-slate-800 rounded text-xs text-slate-400 border border-slate-700">FY2025 Inventory Review</div>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="switchView('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-md text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition">Dashboard</button>
+                    <button onclick="switchView('workpaper')" id="nav-workpaper" class="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition">Workpaper Detail</button>
+                    <button onclick="switchView('formulas')" id="nav-formulas" class="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition">Formula Logic</button>
+                    <button onclick="toggleDashboard()" class="px-3 py-2 rounded-md text-sm font-medium text-red-300 hover:bg-red-900 hover:text-white transition border border-red-900">Close</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- VIEW: DASHBOARD -->
+        <div id="view-dashboard" class="space-y-6 animate-fade-in">
+            <!-- Intro -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-600">
+                <h2 class="text-2xl font-bold text-slate-900">Executive Summary: Analytical Procedures</h2>
+                <p class="mt-2 text-slate-600">This dashboard synthesizes the findings from the <span class="font-semibold">Inventory Audit Lab</span>. It addresses key audit inquiries regarding valuation, segment performance, and high-risk inventory items.</p>
+            </div>
+
+            <!-- KPI Cards (Q1-Q5) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- Q1 -->
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider">High Value Items</div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span class="text-3xl font-bold text-blue-700" id="kpi-q1">--</span>
+                        <span class="text-sm text-slate-400">Items > $200</span>
+                    </div>
+                    <div class="mt-1 text-xs text-slate-400">Q1 Result</div>
+                </div>
+                <!-- Q2 -->
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider">Laptop Sales</div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span class="text-3xl font-bold text-emerald-600" id="kpi-q2">--</span>
+                    </div>
+                    <div class="mt-1 text-xs text-slate-400">Q2 Result (Exact Match)</div>
+                </div>
+                <!-- Q3 -->
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider">Avg Cost (Reorder)</div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span class="text-3xl font-bold text-amber-600" id="kpi-q3">--</span>
+                    </div>
+                    <div class="mt-1 text-xs text-slate-400">Q3 Result (Liquidity Risk)</div>
+                </div>
+                <!-- Q4 -->
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider">Obsolescence Risk</div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span class="text-3xl font-bold text-red-600" id="kpi-q4">--</span>
+                    </div>
+                    <div class="mt-1 text-xs text-slate-400">Q4 Result (High Cost/Low Vol)</div>
+                </div>
+                <!-- Q5 -->
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                    <div class="text-xs text-slate-500 uppercase font-bold tracking-wider">Gaming Segment</div>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <span class="text-3xl font-bold text-indigo-600" id="kpi-q5">--</span>
+                    </div>
+                    <div class="mt-1 text-xs text-slate-400">Q5 Result (Avg Sales)</div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Stock Status Chart -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">Inventory Health Distribution</h3>
+                    <p class="text-sm text-slate-500 mb-4">Breakdown based on Internal Control Logic (Part 1)</p>
+                    <div class="chart-container">
+                        <canvas id="stockChart"></canvas>
+                    </div>
+                    <div class="mt-4 p-3 bg-slate-50 rounded text-xs text-slate-500">
+                        <strong>Logic Used:</strong> Nested IF(>60 Overstock, <5 Critical).
+                    </div>
+                </div>
+
+                <!-- Dept Assessment Chart -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">Departmental Core Analysis</h3>
+                    <p class="text-sm text-slate-500 mb-4">Manager's Challenge: Segments vs $50k Threshold (Part 5)</p>
+                    <div class="chart-container">
+                        <canvas id="deptChart"></canvas>
+                    </div>
+                    <div class="mt-4 p-3 bg-slate-50 rounded text-xs text-slate-500">
+                        <strong>Logic Used:</strong> SUMIFS(Sales, Dept, CurrentDept) > 50,000.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: WORKPAPER (Data Grid) -->
+        <div id="view-workpaper" class="hidden space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900" style="background:none; border:none; padding:0; margin:0;">Inventory Workpaper</h2>
+                    <p class="text-sm text-slate-500">Detailed listing with applied audit formulas.</p>
+                </div>
+                <div class="flex gap-2">
+                    <select id="filter-status" class="bg-slate-50 border border-slate-300 text-sm rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="all">All Stock Statuses</option>
+                        <option value="Normal">Normal</option>
+                        <option value="Overstock">Overstock</option>
+                        <option value="Critical Low">Critical Low</option>
+                    </select>
+                    <select id="filter-action" class="bg-slate-50 border border-slate-300 text-sm rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="all">All Actions</option>
+                        <option value="Sufficient">Sufficient</option>
+                        <option value="Reorder">Reorder</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Item Detail</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Dept Code</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Metrics (End/Cost)</th>
+                                <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Internal Controls</th>
+                                <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Reconciliation</th>
+                                <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Manager's Assess</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200" id="data-table-body">
+                            <!-- Rows rendered by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: FORMULAS -->
+        <div id="view-formulas" class="hidden space-y-6">
+            <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-emerald-600">
+                <h2 class="text-2xl font-bold text-slate-900" style="background:none; border:none; padding:0; margin:0;">Formula Reference Library</h2>
+                <p class="mt-2 text-slate-600">This section maps the audit logic to the specific Excel syntax used in the answer key.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Part 1 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-blue-800 mb-3 border-b pb-2">Part 1: Internal Controls</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <span class="text-xs font-bold text-slate-500 uppercase">Action Flag</span>
+                            <code class="block mt-1 bg-slate-100 p-2 rounded text-sm text-slate-700 font-mono">=IF(F2 < 10, "Reorder", "Sufficient")</code>
+                            <p class="text-sm text-slate-500 mt-1">Identifies inventory falling below safety stock levels.</p>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-slate-500 uppercase">Stock Status (Nested)</span>
+                            <code class="block mt-1 bg-slate-100 p-2 rounded text-sm text-slate-700 font-mono">=IF(F2 > 60, "Overstock", IF(F2 < 5, "Critical Low", "Normal"))</code>
+                            <p class="text-sm text-slate-500 mt-1">Categorizes inventory health into three buckets.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 2 & 3 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="text-lg font-bold text-blue-800 mb-3 border-b pb-2">Part 2 & 3: Recon & Enrichment</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <span class="text-xs font-bold text-slate-500 uppercase">Reconciliation Check</span>
+                            <code class="block mt-1 bg-slate-100 p-2 rounded text-sm text-slate-700 font-mono">=IF((Beg + Purch - Sold) = End, "Verified", "Error")</code>
+                            <p class="text-sm text-slate-500 mt-1">Validates the Ending Stock figure provided by the client.</p>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-slate-500 uppercase">Dept Code Lookup</span>
+                            <code class="block mt-1 bg-slate-100 p-2 rounded text-sm text-slate-700 font-mono">=XLOOKUP(Name, MasterTable[Name], MasterTable[Code], "Pending")</code>
+                            <p class="text-sm text-slate-500 mt-1">Links individual items to their Department via Master File.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Part 5 -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 md:col-span-2">
+                    <h3 class="text-lg font-bold text-purple-800 mb-3 border-b pb-2">Part 5: Manager's Challenge (Advanced)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <span class="text-xs font-bold text-slate-500 uppercase">Department Assessment Formula</span>
+                            <code class="block mt-1 bg-slate-100 p-2 rounded text-sm text-slate-700 font-mono">=IF(SUMIFS(TotalSales, DeptCol, CurrentDept) > 50000, "Core Segment", "Non-Core")</code>
+                        </div>
+                        <div class="flex items-center">
+                            <p class="text-sm text-slate-600">
+                                <strong class="text-slate-800">Logic Explained:</strong><br>
+                                This formula doesn't just look at the <em>row</em>. It calculates the total sales for the <em>entire department</em> the item belongs to. If that department generates over $50k total, every item in that department gets flagged as "Core Segment".
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- JS Logic for Dashboard -->
+<script>
+    // --- TOGGLE VISIBILITY & PASSWORD ---
+    function checkPassword() {
+        const passwordInput = document.getElementById('password-input');
+        const errorMsg = document.getElementById('error-msg');
+        
+        if (passwordInput.value === 'demo1') {
+            toggleDashboard();
+            errorMsg.classList.add('hidden');
+        } else {
+            errorMsg.classList.remove('hidden');
+            passwordInput.classList.add('border-red-500');
+            passwordInput.classList.add('ring-red-200');
+        }
+    }
+
+    function toggleDashboard() {
+        const lab = document.getElementById('lab-instructions');
+        const dash = document.getElementById('dashboard-section');
+        const passwordInput = document.getElementById('password-input');
+        
+        if (dash.classList.contains('hidden')) {
+            dash.classList.remove('hidden');
+            lab.classList.add('hidden');
+            // Trigger chart resize in case they render weirdly while hidden
+            window.dispatchEvent(new Event('resize'));
+        } else {
+            dash.classList.add('hidden');
+            lab.classList.remove('hidden');
+            passwordInput.value = ''; // Reset password
+            passwordInput.classList.remove('border-red-500', 'ring-red-200'); // Reset styles
+        }
+    }
+
+    // --- DATA SIMULATION ---
+    const inventoryData = [
+        { id: "P101", name: "Laptop", beg: 50, purch: 20, sold: 65, end: 5, cost: 1200, sales: 85800 },
+        { id: "P102", name: "Monitor", beg: 40, purch: 15, sold: 5, end: 50, cost: 500, sales: 2575 },
+        { id: "P103", name: "Keyboard", beg: 60, purch: 25, sold: 15, end: 70, cost: 50, sales: 1050 },
+        { id: "P104", name: "Headphones", beg: 30, purch: 10, sold: 3, end: 37, cost: 100, sales: 420 },
+        { id: "P105", name: "Smartphone", beg: 70, purch: 30, sold: 20, end: 80, cost: 900, sales: 25200 },
+        { id: "P106", name: "Tablet", beg: 45, purch: 18, sold: 8, end: 55, cost: 700, sales: 7840 },
+        { id: "P107", name: "Router", beg: 55, purch: 22, sold: 12, end: 65, cost: 150, sales: 2520 },
+        { id: "P108", name: "External Hard Drive", beg: 25, purch: 12, sold: 5, end: 32, cost: 200, sales: 1200 },
+        { id: "P109", name: "Wireless Earbuds", beg: 35, purch: 15, sold: 7, end: 43, cost: 80, sales: 784 },
+        { id: "P110", name: "Webcam", beg: 40, purch: 20, sold: 10, end: 50, cost: 60, sales: 840 },
+        { id: "P117", name: "Gaming Keyboard", beg: 25, purch: 10, sold: 4, end: 31, cost: 100, sales: 560 },
+        { id: "P118", name: "Gaming Mouse", beg: 30, purch: 5, sold: 29, end: 6, cost: 80, sales: 3248 },
+        { id: "P121", name: "Gaming Monitor", beg: 25, purch: 10, sold: 4, end: 31, cost: 400, sales: 2240 },
+        { id: "P122", name: "Graphics Card", beg: 40, purch: 18, sold: 9, end: 49, cost: 600, sales: 29400 }
+    ];
+
+    const deptMaster = {
+        "Laptop": "HW-LAP", "Monitor": "HW-MON", "Keyboard": "ACC-INP", "Headphones": "ACC-AUD",
+        "Smartphone": "HW-MOB", "Tablet": "HW-MOB", "Router": "NET-WIF",
+        "Gaming Mouse": "GMG-ACC", "Gaming Keyboard": "GMG-ACC", "Gaming Monitor": "GMG-ACC",
+        "Graphics Card": "HW-COM", "External Hard Drive": "ACC-STO", "Wireless Earbuds": "ACC-AUD",
+        "Webcam": "ACC-VID"
+    };
+
+    // --- BUSINESS LOGIC ---
+    const deptSalesTotals = {};
+    inventoryData.forEach(item => {
+        const code = deptMaster[item.name] || "Pending Audit";
+        if (!deptSalesTotals[code]) deptSalesTotals[code] = 0;
+        deptSalesTotals[code] += item.sales;
+    });
+
+    const enrichedData = inventoryData.map(item => {
+        const action = item.end < 10 ? "Reorder" : "Sufficient";
+        let status = "Normal";
+        if (item.end > 60) status = "Overstock";
+        else if (item.end < 5) status = "Critical Low";
+
+        const calcEnd = item.beg + item.purch - item.sold;
+        const auditFlag = calcEnd === item.end ? "Verified" : "Error";
+
+        const deptCode = deptMaster[item.name] || "Pending Audit";
+        const deptTotal = deptSalesTotals[deptCode] || 0;
+        const assessment = deptTotal > 50000 ? "Core Segment" : "Non-Core";
+
+        return { ...item, action, status, calcEnd, auditFlag, deptCode, assessment };
+    });
+
+    // --- UI FUNCTIONS ---
+    function switchView(viewName) {
+        ['dashboard', 'workpaper', 'formulas'].forEach(v => {
+            document.getElementById(`view-${v}`).classList.add('hidden');
+            document.getElementById(`nav-${v}`).classList.remove('bg-slate-800', 'text-white');
+            document.getElementById(`nav-${v}`).classList.add('text-slate-300');
+        });
+        document.getElementById(`view-${viewName}`).classList.remove('hidden');
+        const navBtn = document.getElementById(`nav-${viewName}`);
+        navBtn.classList.add('bg-slate-800', 'text-white');
+        navBtn.classList.remove('text-slate-300');
+    }
+
+    function renderKPIs() {
+        const q1 = enrichedData.filter(i => i.cost > 200).length;
+        document.getElementById('kpi-q1').innerText = q1;
+
+        const q2 = enrichedData.filter(i => i.name === "Laptop").reduce((acc, curr) => acc + curr.sales, 0);
+        document.getElementById('kpi-q2').innerText = `$${q2.toLocaleString()}`;
+
+        const reorderItems = enrichedData.filter(i => i.action === "Reorder");
+        const q3 = reorderItems.length ? (reorderItems.reduce((acc, curr) => acc + curr.cost, 0) / reorderItems.length) : 0;
+        document.getElementById('kpi-q3').innerText = `$${Math.round(q3)}`;
+
+        const riskItems = enrichedData.filter(i => i.cost > 100 && i.sold < 5);
+        const q4 = riskItems.reduce((acc, curr) => acc + (curr.cost * curr.end), 0);
+        document.getElementById('kpi-q4').innerText = `$${q4.toLocaleString()}`;
+
+        const gamingItems = enrichedData.filter(i => i.name.includes("Gaming"));
+        const q5 = gamingItems.length ? (gamingItems.reduce((acc, curr) => acc + curr.sales, 0) / gamingItems.length) : 0;
+        document.getElementById('kpi-q5').innerText = `$${Math.round(q5)}`;
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('data-table-body');
+        const fStatus = document.getElementById('filter-status').value;
+        const fAction = document.getElementById('filter-action').value;
+        
+        tbody.innerHTML = '';
+
+        enrichedData.forEach(row => {
+            if (fStatus !== 'all' && row.status !== fStatus) return;
+            if (fAction !== 'all' && row.action !== fAction) return;
+
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-50 transition";
+            
+            const statusColor = row.status === 'Overstock' ? 'bg-amber-100 text-amber-800' : 
+                                row.status === 'Critical Low' ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800';
+            
+            const actionColor = row.action === 'Reorder' ? 'bg-red-50 text-red-600 border border-red-200' : 'text-slate-500';
+            const assessColor = row.assessment === 'Core Segment' ? 'text-indigo-700 font-bold' : 'text-slate-400';
+
+            tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-slate-900">${row.name}</div>
+                    <div class="text-xs text-slate-400 font-mono">${row.id}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-mono">${row.deptCode}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                    <div class="text-sm text-slate-900 font-bold">${row.end} units</div>
+                    <div class="text-xs text-slate-500">$${row.cost}/unit</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center space-y-1">
+                    <div class="status-pill ${statusColor}">${row.status}</div>
+                    <div class="text-xs ${actionColor} font-medium">${row.action}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                        ${row.auditFlag === 'Verified' ? '<span class="text-emerald-600 font-bold text-sm">✓ Verified</span>' : '<span class="text-red-600 font-bold text-sm">⚠ Error</span>'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center text-sm ${assessColor}">${row.assessment}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function initCharts() {
+        // Stock Status Chart
+        const stockCounts = { 'Overstock': 0, 'Critical Low': 0, 'Normal': 0 };
+        enrichedData.forEach(i => stockCounts[i.status]++);
+
+        const ctxStock = document.getElementById('stockChart');
+        if (ctxStock) {
+            new Chart(ctxStock, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(stockCounts),
+                    datasets: [{
+                        data: Object.values(stockCounts),
+                        backgroundColor: ['#f59e0b', '#ef4444', '#10b981'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+        }
+
+        // Dept Chart
+        const deptLabels = Object.keys(deptSalesTotals);
+        const deptValues = Object.values(deptSalesTotals);
+        const backgroundColors = deptValues.map(v => v > 50000 ? '#4338ca' : '#94a3b8');
+
+        const ctxDept = document.getElementById('deptChart');
+        if (ctxDept) {
+            new Chart(ctxDept, {
+                type: 'bar',
+                data: {
+                    labels: deptLabels,
+                    datasets: [{
+                        label: 'Total Dept Sales ($)',
+                        data: deptValues,
+                        backgroundColor: backgroundColors,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: true, color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderKPIs();
+        renderTable();
+        initCharts();
+        
+        document.getElementById('filter-status').addEventListener('change', renderTable);
+        document.getElementById('filter-action').addEventListener('change', renderTable);
+        
+        // Add Enter key listener for password input
+        document.getElementById('password-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
