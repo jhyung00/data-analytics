@@ -28,9 +28,11 @@
         /* Animation Classes */
         .fade-in { animation: fadeIn 0.5s ease-in-out; }
         .slide-up { animation: slideUp 0.3s ease-out; }
+        .zoom-in { animation: zoomIn 0.2s ease-out; }
         
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
         /* Draggable cursor */
         .draggable { cursor: move; user-select: none; }
@@ -53,18 +55,26 @@
         </nav>
 
         <div class="p-4 bg-slate-50 border-t border-gray-200">
-            <div class="bg-white p-3 rounded border border-gray-200 shadow-sm">
+            <div class="bg-white p-3 rounded border border-gray-200 shadow-sm mb-4">
                 <div class="text-xs font-semibold text-gray-500 uppercase mb-2">Course Progress</div>
                 <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                     <div id="progress-bar" class="bg-green-500 h-full transition-all duration-500" style="width: 0%"></div>
                 </div>
             </div>
+            
+            <button onclick="window.app.instructorLogin()" class="w-full flex items-center justify-center space-x-2 text-xs text-gray-400 hover:text-blue-600 transition-colors py-2 border border-transparent hover:border-blue-100 rounded">
+                <i data-lucide="shield-check" class="w-3 h-3"></i>
+                <span id="teacher-btn-text">Teacher Access</span>
+            </button>
         </div>
     </aside>
 
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+    <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
         
+        <!-- Toast Container -->
+        <div id="toast-container" class="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
         <!-- Header -->
         <header class="bg-white px-8 py-6 border-b border-gray-200 flex justify-between items-center sticky top-0 z-10 shadow-sm">
             <div>
@@ -76,7 +86,7 @@
                 <h1 id="module-title" class="text-3xl font-bold text-gray-900">Data Terminology</h1>
             </div>
             
-            <button id="download-btn" onclick="app.downloadFiles()" class="hidden flex items-center space-x-2 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors shadow-sm hover:shadow-md">
+            <button id="download-btn" onclick="window.app.downloadFiles()" class="hidden flex items-center space-x-2 bg-slate-800 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors shadow-sm hover:shadow-md">
                 <i data-lucide="download" class="w-4 h-4"></i>
                 <span class="text-sm font-medium">Download Workbook</span>
             </button>
@@ -194,7 +204,7 @@
                     title: 'Mission 2: Formatting',
                     brief: 'Standardize the date and currency formats.',
                     steps: [
-                        'Select Column B (Date). Set format to "Short Date".',
+                        'Select Column B (Date). Set format to "Long Date".',
                         'Select Columns E & F. Set format to "Currency".'
                     ]
                 },
@@ -215,9 +225,10 @@
                     title: 'Mission 3: Safe Entry',
                     brief: 'Secure the Status column.',
                     steps: [
-                        'Select H2. Go to Data > Validation.',
+                        'Select the entire Status column range (H2:H100).',
+                        'Go to Data > Validation.',
                         'Allow: List. Source: "Pending, Posted, Void".',
-                        'Drag to apply to all rows.'
+                        'Click OK. Now every cell in the Status column has the dropdown.'
                     ]
                 },
                 renderDemo: renderValidationDemo
@@ -284,18 +295,86 @@
                     brief: 'Calculate tax using a fixed rate cell.',
                     steps: [
                         'Type 5% in cell K1.',
-                        'In L2, type =E2*$K$1.',
+                        'In J2, type =E2*$K$1.',
                         'Drag down. Ensure K1 stays fixed.'
                     ]
                 },
                 renderDemo: renderReferencesDemo
+            },
+            {
+                id: 'textsplit',
+                title: '8. Text Splitting',
+                concept: `
+                    <p class="mb-2">Often, data comes "glued" together, like a full name ("Doe, John") or a product SKU ("SHIRT-BLUE-L").</p>
+                    <p class="mb-2"><strong>=TEXTSPLIT(text, delimiter)</strong> is a powerful function that separates text into multiple cells based on a character you choose (like a comma, dash, or space).</p>
+                    <p class="mb-2"><strong>=TEXTBEFORE(text, delimiter)</strong> is a simpler cousin that grabs just the first piece of text.</p>
+                    <div class="bg-blue-50 p-2 rounded text-xs border border-blue-100 font-mono text-blue-800">
+                        <p class="font-bold mb-1">Result spills across cells:</p>
+                        =TEXTSPLIT("A-B-C", "-") <br> 
+                        <span class="inline-block border border-blue-200 px-1 bg-white ml-2">A</span>
+                        <span class="inline-block border border-blue-200 px-1 bg-white">B</span>
+                        <span class="inline-block border border-blue-200 px-1 bg-white">C</span>
+                    </div>`,
+                project: {
+                    title: 'Mission 8: Audit-Friendly IDs',
+                    brief: 'Break down complex journal IDs and dates in your workbook.',
+                    steps: [
+                        'Create two new headers: Type (L1) and Entry No (M1).',
+                        'In L2, use =TEXTSPLIT(A2,"-") to split JE-1007 into JE and 1007.',
+                        'Create DayOfWeek in N1. In N2, use =TEXTBEFORE(B2,",") to extract the weekday (e.g., "Sunday").',
+                        'Copy formulas down for all rows.'
+                    ]
+                },
+                renderDemo: renderTextSplitDemo
+            },
+            {
+                id: 'textjoin',
+                title: '9. Text Joining',
+                concept: `
+                    <p class="mb-2">The opposite of splitting is joining. You might need to combine a City, State, and Zip code into a single address field.</p>
+                    <p class="mb-2"><strong>=TEXTJOIN(delimiter, ignore_empty, text1, ...)</strong> combines multiple cells into one, separated by a character of your choice.</p>
+                    <div class="bg-blue-50 p-2 rounded text-xs border border-blue-100 font-mono text-blue-800">
+                        =TEXTJOIN(", ", TRUE, "Miami", "FL") -> "Miami, FL"
+                    </div>`,
+                project: {
+                    title: 'Mission 9: Audit Trail',
+                    brief: 'Create a single-line summary string for reports.',
+                    steps: [
+                         'Create header AuditTrailSummary in O1.',
+                         'In O2, type: =TEXTJOIN(" | ",TRUE,A2,C2,E2,H2,I2).',
+                         'This creates a pipe-separated log: ID | Account | Debit | Status | User.',
+                         'Copy down.'
+                    ]
+                },
+                renderDemo: renderTextJoinDemo
+            },
+            {
+                id: 'bonus',
+                title: '10. Bonus: The Perfect Formula',
+                concept: `
+                    <p class="mb-2">Advanced data work often requires <strong>Logic + Text</strong>.</p>
+                    <p class="mb-2">For example, you might want a status label that changes based on a number. You can achieve this by creating a "Helper Column" with an <strong>IF</strong> statement, and then joining that helper result into your final text string.</p>
+                    <p class="text-sm font-bold">Logic: IF(Score>70, "Pass", "Fail")</p>`,
+                project: {
+                    title: 'Mission 10: Smart Summary',
+                    brief: 'Handle variable Debit/Credit columns dynamically.',
+                    steps: [
+                        'In P1 type: AmountUsed.',
+                        'In P2 type: =IF(E2>0, E2, F2). This grabs whichever column has money.',
+                        'In Q1 type: SmartAudit.',
+                        'In Q2: =TEXTJOIN(" | ",TRUE,A2,C2,P2,H2,I2).',
+                        'Now you have a perfect summary regardless of transaction type.'
+                    ]
+                },
+                renderDemo: renderBonusDemo
             }
         ];
 
         // --- APP STATE ---
-        const app = {
+        window.app = {
             activeModule: 0,
-            completed: {}, // { 'intro': true, ... }
+            teacherMode: false,
+            completed: {}, 
             
             init() {
                 this.renderNav();
@@ -339,6 +418,72 @@
                 
                 this.renderNav(); // Re-render nav to update active state
                 lucide.createIcons();
+            },
+
+            showToast(msg, type = 'info') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `px-4 py-2 rounded shadow-lg text-white text-sm font-bold animate-in fade-in zoom-in slide-in-from-top-2 ${type === 'error' ? 'bg-red-500' : 'bg-green-600'}`;
+                toast.innerHTML = msg;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'transition-opacity');
+                    setTimeout(() => toast.remove(), 500);
+                }, 3000);
+            },
+
+            instructorLogin() {
+                if (this.teacherMode) {
+                    // Toggle off
+                    this.teacherMode = false;
+                    document.getElementById('teacher-btn-text').textContent = "Teacher Access";
+                    this.showToast("Teacher Mode Disabled", "info");
+                    this.loadModule(this.activeModule);
+                } else {
+                    this.renderLoginModal();
+                }
+            },
+
+            renderLoginModal() {
+                const existing = document.getElementById('login-modal');
+                if (existing) existing.remove();
+
+                const modal = document.createElement('div');
+                modal.id = 'login-modal';
+                modal.className = "fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm animate-in fade-in";
+                modal.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-xl border w-80 animate-in zoom-in">
+                        <h3 class="font-bold text-lg mb-4 text-gray-800">Instructor Access</h3>
+                        <p class="text-xs text-gray-500 mb-2">Enter password to unlock solutions.</p>
+                        <input type="password" id="teacher-pw-input" class="w-full border p-2 rounded mb-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Password" onkeydown="if(event.key==='Enter') window.app.checkLogin()">
+                        <div class="flex justify-end space-x-2">
+                            <button onclick="document.getElementById('login-modal').remove()" class="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+                            <button onclick="window.app.checkLogin()" class="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Login</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                setTimeout(() => document.getElementById('teacher-pw-input').focus(), 100);
+            },
+
+            checkLogin() {
+                const pw = document.getElementById('teacher-pw-input').value;
+                if (pw === 'teacher') {
+                    // Toggle on
+                    this.teacherMode = true;
+                    // Unlock all
+                    MODULES.forEach(m => this.completed[m.id] = true);
+                    this.updateProgress();
+                    document.getElementById('teacher-btn-text').textContent = "Teacher Mode Active";
+                    this.showToast("Teacher Mode Enabled", "success");
+                    document.getElementById('login-modal').remove();
+                    this.loadModule(this.activeModule);
+                } else {
+                    const input = document.getElementById('teacher-pw-input');
+                    input.classList.add('border-red-500', 'bg-red-50');
+                    input.value = '';
+                    input.placeholder = "Incorrect Password";
+                }
             },
 
             updateUIState() {
@@ -389,10 +534,10 @@
                     const isActive = i === this.activeModule;
                     const isDone = this.completed[m.id];
                     return `
-                        <button onclick="app.loadModule(${i})" class="w-full text-left px-4 py-3 rounded-lg flex items-center justify-between group transition-all duration-200 ${isActive ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-slate-100 hover:text-blue-600'}">
+                        <button onclick="window.app.loadModule(${i})" class="w-full text-left px-4 py-3 rounded-lg flex items-center justify-between group transition-all duration-200 ${isActive ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-slate-100 hover:text-blue-600'}">
                             <div class="flex items-center space-x-3">
                                 <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${isActive ? 'bg-white/20 border-transparent text-white' : 'bg-white border-gray-300 text-gray-500'}">${i+1}</div>
-                                <span class="text-sm font-medium truncate">${m.title.split('. ')[1]}</span>
+                                <span class="text-sm font-medium truncate">${m.title.split('. ')[1] || m.title}</span>
                             </div>
                             ${isDone ? `<i data-lucide="check-circle" class="w-4 h-4 ${isActive ? 'text-white' : 'text-green-500'}"></i>` : ''}
                         </button>
@@ -401,8 +546,6 @@
             },
 
             downloadFiles() {
-                // Creates a link to download the static XLSX file
-                // Make sure "Excel_Foundations_Lab.xlsx" exists in the same directory
                 const link = document.createElement('a');
                 link.href = WORKBOOK_FILENAME;
                 link.download = WORKBOOK_FILENAME;
@@ -414,7 +557,6 @@
         };
 
         // --- GLOBAL DRAG HANDLER ---
-        // Simple drag logic for elements with 'draggable' class
         document.addEventListener('mousedown', function(e) {
             if (e.target.closest('.draggable')) {
                 const el = e.target.closest('.draggable');
@@ -427,14 +569,12 @@
                 }
 
                 function onMouseMove(e) {
-                    // Calculate positions relative to parent container
                     const parentRect = el.parentElement.getBoundingClientRect();
                     const newLeft = e.clientX - parentRect.left - offsetX;
                     const newTop = e.clientY - parentRect.top - offsetY;
                     
                     el.style.left = newLeft + 'px';
                     el.style.top = newTop + 'px';
-                    // clear any bottom/right constraints from CSS classes if they interfere
                     el.style.bottom = 'auto'; 
                     el.style.right = 'auto';
                 }
@@ -457,40 +597,45 @@
             let stage = 0;
             const messages = ["Select Column C (Account)", "Select Row 3", "Select Cell G2 (Tax Rate)", "Done!"];
             
-            container.innerHTML = `
-                <div class="flex flex-col items-center justify-center h-full py-8">
-                    <div id="term-msg" class="text-xl font-bold text-blue-700 mb-6">${messages[0]}</div>
-                    <div class="bg-gray-100 p-4 rounded shadow-inner grid grid-cols-4 gap-1 select-none">
-                        <div class="bg-gray-200 p-2 text-center text-xs text-gray-400 font-bold"></div>
-                        <div id="col-A" class="bg-gray-200 p-2 text-center text-xs font-bold cursor-pointer hover:bg-blue-100">A</div>
-                        <div id="col-B" class="bg-gray-200 p-2 text-center text-xs font-bold cursor-pointer hover:bg-blue-100">B</div>
-                        <div id="col-C" class="bg-gray-200 p-2 text-center text-xs font-bold cursor-pointer hover:bg-blue-100">C</div>
-                        
-                        <!-- Row 1 -->
-                        <div class="bg-gray-200 p-2 text-center text-xs font-bold cursor-pointer hover:bg-blue-100">1</div>
-                        <div class="bg-white border h-8"></div><div class="bg-white border h-8"></div><div class="bg-white border h-8"></div>
-                        
-                        <!-- Row 2 -->
-                        <div class="bg-gray-200 p-2 text-center text-xs font-bold cursor-pointer hover:bg-blue-100">2</div>
-                        <div class="bg-white border h-8"></div><div class="bg-white border h-8 text-xs flex items-center justify-center text-gray-400">G2</div><div class="bg-white border h-8"></div>
+            const render = () => {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full py-8">
+                        <div id="term-msg" class="text-xl font-bold text-blue-700 mb-6">${messages[stage]}</div>
+                        <div class="bg-gray-100 p-4 rounded shadow-inner grid grid-cols-4 gap-1 select-none">
+                            <div class="bg-gray-200 p-2 text-center text-xs text-gray-400 font-bold"></div>
+                            <div id="col-A" class="bg-gray-200 p-2 text-center text-xs font-bold cursor-pointer hover:bg-blue-100">A</div>
+                            <div id="col-B" class="bg-gray-200 p-2 text-center text-xs font-bold cursor-pointer hover:bg-blue-100">B</div>
+                            <div id="col-C" class="bg-gray-200 p-2 text-center text-xs font-bold cursor-pointer hover:bg-blue-100">C</div>
+                            
+                            <!-- Row 1 -->
+                            <div class="bg-gray-200 p-2 text-center text-xs font-bold cursor-pointer hover:bg-blue-100">1</div>
+                            <div class="bg-white border h-8"></div><div class="bg-white border h-8"></div><div class="bg-white border h-8"></div>
+                            
+                            <!-- Row 2 -->
+                            <div class="bg-gray-200 p-2 text-center text-xs font-bold cursor-pointer hover:bg-blue-100">2</div>
+                            <div class="bg-white border h-8"></div><div class="bg-white border h-8 text-xs flex items-center justify-center text-gray-400">G2</div><div class="bg-white border h-8"></div>
 
-                        <!-- Row 3 -->
-                        <div id="row-3" class="bg-gray-200 p-2 text-center text-xs font-bold cursor-pointer hover:bg-blue-100">3</div>
-                        <div class="bg-white border h-8"></div><div class="bg-white border h-8"></div><div class="bg-white border h-8"></div>
+                            <!-- Row 3 -->
+                            <div id="row-3" class="bg-gray-200 p-2 text-center text-xs font-bold cursor-pointer hover:bg-blue-100">3</div>
+                            <div class="bg-white border h-8"></div><div class="bg-white border h-8"></div><div class="bg-white border h-8"></div>
+                        </div>
+                        ${window.app.teacherMode && stage < 3 ? `
+                            <button onclick="window.autoTerm()" class="mt-8 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Complete
+                            </button>
+                        ` : ''}
                     </div>
-                </div>
-            `;
+                `;
 
-            // Logic
-            document.getElementById('col-C').onclick = () => { if(stage===0) { stage=1; update(); } };
-            document.getElementById('row-3').onclick = () => { if(stage===1) { stage=2; update(); } };
-            // Simulate G2 by clicking anywhere in middle of row 2 col 2
-            const cells = container.querySelectorAll('.bg-white');
-            cells.forEach(c => c.onclick = () => { if(stage===2 && c.textContent === 'G2') { stage=3; update(); onComplete(); } });
+                // Logic
+                document.getElementById('col-C').onclick = () => { if(stage===0) { stage=1; render(); } };
+                document.getElementById('row-3').onclick = () => { if(stage===1) { stage=2; render(); } };
+                const cells = container.querySelectorAll('.bg-white');
+                cells.forEach(c => c.onclick = () => { if(stage===2 && c.textContent === 'G2') { stage=3; render(); onComplete(); } });
+            };
 
-            function update() {
-                document.getElementById('term-msg').innerText = messages[stage];
-            }
+            window.autoTerm = () => { stage = 3; render(); onComplete(); };
+            render();
         }
 
         // 2. Data Types
@@ -505,7 +650,6 @@
 
                 container.innerHTML = `
                     <div class="flex flex-row h-full py-8 space-x-12 px-8">
-                        <!-- Left: Date Format -->
                         <div class="flex-1 flex flex-col items-center">
                             <h4 class="font-bold text-gray-700 mb-4">Date Formatting</h4>
                             <div class="text-4xl font-mono font-bold text-green-700 bg-green-50 border-2 border-green-200 px-8 py-4 rounded shadow-sm mb-6">${display}</div>
@@ -518,7 +662,6 @@
 
                         <div class="w-px bg-gray-200 h-full"></div>
 
-                        <!-- Right: Number Stored as Text -->
                         <div class="flex-1 flex flex-col items-center">
                             <h4 class="font-bold text-gray-700 mb-4">Numbers stored as Text</h4>
                             <div class="bg-white border rounded shadow-sm p-4 w-64">
@@ -527,7 +670,6 @@
                                 </div>
                                 <div class="space-y-1 text-sm font-mono border p-2 bg-gray-50">
                                     <div class="relative group cursor-pointer" onclick="window.fixStringNum()">
-                                        <!-- Green Flag -->
                                         ${!stringNumFixed ? `<div class="absolute top-0 left-0 w-2 h-2 bg-green-500 clip-triangle"></div>` : ''}
                                         <div class="${!stringNumFixed ? 'text-left' : 'text-right'} bg-white px-1 border border-transparent hover:border-gray-300">
                                             100
@@ -539,7 +681,6 @@
                                         }
                                     </div>
                                     <div class="relative group cursor-pointer" onclick="window.fixStringNum()">
-                                        <!-- Green Flag -->
                                         ${!stringNumFixed ? `<div class="absolute top-0 left-0 w-2 h-2 bg-green-500 clip-triangle"></div>` : ''}
                                         <div class="${!stringNumFixed ? 'text-left' : 'text-right'} bg-white px-1 border border-transparent hover:border-gray-300">
                                             100
@@ -557,11 +698,19 @@
                             </div>
                         </div>
                     </div>
+                    ${window.app.teacherMode && (!stringNumFixed || format !== 'Long Date') ? `
+                        <div class="absolute bottom-4 right-4">
+                            <button onclick="window.autoType()" class="bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Fix
+                            </button>
+                        </div>
+                    ` : ''}
                     <style>.clip-triangle { clip-path: polygon(0 0, 0% 100%, 100% 0); }</style>
                 `;
             };
             window.setFormat = (f) => { format = f; render(); checkDone(); };
             window.fixStringNum = () => { stringNumFixed = true; render(); checkDone(); };
+            window.autoType = () => { format = 'Long Date'; stringNumFixed = true; render(); checkDone(); };
             
             function checkDone() {
                 if(format === 'Long Date' && stringNumFixed) onComplete();
@@ -571,7 +720,6 @@
 
         // 3. Validation
         function renderValidationDemo(container, onComplete) {
-            // State
             let step = 1; 
             let scenario = null; // 'whole', 'length', 'list'
             let config = { min:1, max:100, len:2, source:'', errorTitle:'', errorMsg:'' };
@@ -587,15 +735,18 @@
                                 <button onclick="window.startVal('whole')" class="p-4 border rounded hover:bg-blue-50 text-left font-bold flex items-center"><i data-lucide="grid" class="mr-3 text-blue-600"></i> Whole Number (1-100)</button>
                                 <button onclick="window.startVal('length')" class="p-4 border rounded hover:bg-blue-50 text-left font-bold flex items-center"><i data-lucide="type" class="mr-3 text-blue-600"></i> Text Length (2 chars)</button>
                             </div>
+                            ${window.app.teacherMode ? `
+                                <button onclick="window.startVal('list'); window.autoVal()" class="mt-8 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                    Teacher: Auto-Complete (List)
+                                </button>
+                            ` : ''}
                         </div>`;
                     lucide.createIcons();
                     return;
                 }
 
-                // Ribbon + Workspace
                 container.innerHTML = `
                     <div class="h-full flex flex-col">
-                        <!-- Ribbon -->
                         <div class="bg-white border-b flex items-center space-x-1 px-2 pt-2 bg-gray-50">
                              <div class="px-3 py-1 bg-white border-t border-x rounded-t text-sm font-bold text-blue-700">Data</div>
                         </div>
@@ -605,8 +756,6 @@
                                 <span class="text-xs">Data Validation</span>
                             </div>
                         </div>
-
-                        <!-- Workspace -->
                         <div class="flex-1 bg-slate-100 relative p-8 flex justify-center items-start overflow-auto">
                             ${step === 2 ? renderDialog() : ''}
                             ${step === 3 ? renderTest() : ''}
@@ -672,7 +821,6 @@
 
             const renderTest = () => {
                 const isList = scenario === 'list';
-                // If it's a list, parse options
                 const options = isList ? config.source.split(',').map(s=>s.trim()).filter(s=>s) : [];
 
                 return `
@@ -696,26 +844,42 @@
                     
                     <div id="result-area" class="mt-4 h-12"></div>
                     <button onclick="window.resetValConfig()" class="mt-4 text-xs text-blue-600 underline">Configure / Reset Rule</button>
+                    ${window.app.teacherMode && document.getElementById('result-area').innerHTML === '' ? `
+                        <div class="mt-4">
+                            <button onclick="window.autoValTest()" class="bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Test Success
+                            </button>
+                        </div>
+                    ` : ''}
                 </div>
             `};
 
-            // Global Handlers for this scope
             window.startVal = (s) => { scenario = s; step = 1; render(); };
             window.openValDialog = () => { if(step===1) { step = 2; render(); } };
             window.closeVal = () => { step = 1; render(); };
             window.updateConfig = (k, v) => { config[k] = v; };
             window.saveVal = () => { step = 3; render(); };
             window.resetValConfig = () => { step = 2; render(); };
-            window.restartDemo = () => { 
-                scenario = null; 
-                step = 1; 
-                config = { min:1, max:100, len:2, source:'', errorTitle:'', errorMsg:'' };
-                render(); 
+            window.restartDemo = () => { scenario = null; step = 1; config = { min:1, max:100, len:2, source:'', errorTitle:'', errorMsg:'' }; render(); };
+            
+            window.autoVal = () => {
+                config.source = "Pending, Posted";
+                step = 3;
+                render();
             };
+
+            window.autoValTest = () => {
+                if (scenario === 'list') {
+                     window.checkVal("Pending");
+                } else if (scenario === 'whole') {
+                     window.checkVal("50");
+                } else {
+                     window.checkVal("AB");
+                }
+            }
             
             window.checkVal = (val) => {
                 let isValid = false;
-                let isCaseMatch = true;
                 const cleanVal = val.trim();
                 
                 if (scenario === 'whole') {
@@ -724,30 +888,18 @@
                 } else if (scenario === 'length') {
                     if (cleanVal.length <= 2 && cleanVal.length > 0) isValid = true;
                 } else if (scenario === 'list') {
-                    // Check if value exists in CSV source string (Case Insensitive)
-                    const opts = config.source.split(',').map(s => s.trim());
-                    const optsLower = opts.map(s => s.toLowerCase());
-                    const inputLower = cleanVal.toLowerCase();
-                    
-                    if (optsLower.includes(inputLower) && cleanVal !== '') {
-                        isValid = true;
-                        if (!opts.includes(cleanVal)) isCaseMatch = false;
-                    }
+                    const opts = config.source.split(',').map(s => s.trim().toLowerCase());
+                    if (opts.includes(cleanVal.toLowerCase()) && cleanVal !== '') isValid = true;
                 }
 
                 const resArea = document.getElementById('result-area');
                 if (isValid) {
-                    resArea.innerHTML = `
-                        <div class="text-green-600 font-bold bg-green-100 p-2 rounded animate-in zoom-in">
-                            Data Accepted! <i data-lucide="check" class="inline w-4 h-4"></i>
-                        </div>`;
+                    resArea.innerHTML = `<div class="text-green-600 font-bold bg-green-100 p-2 rounded animate-in zoom-in">Data Accepted! <i data-lucide="check" class="inline w-4 h-4"></i></div>`;
                     lucide.createIcons();
                     onComplete();
                 } else {
-                    // Show Custom Error Alert
                     const title = config.errorTitle || "Microsoft Excel";
                     const msg = config.errorMsg || "The value you entered is not valid.";
-                    
                     const modal = document.createElement('div');
                     modal.className = "fixed inset-0 bg-black/20 flex items-center justify-center z-50 backdrop-blur-[1px]";
                     modal.innerHTML = `
@@ -767,17 +919,15 @@
                     document.body.appendChild(modal);
                 }
             };
-
             render();
         }
 
         // 4. Cleanup Demo
         function renderCleanupDemo(container, onComplete) {
-            // Nuanced Data: 101/Staples is dup, 101/Glue is NOT (same ID, diff item)
             let data = [
                 {id: 101, item: 'Staples', cost: 5.00},
-                {id: 101, item: 'Staples', cost: 5.00}, // Exact Dup
-                {id: 101, item: 'Glue', cost: 2.00}, // Partial Dup (Should stay)
+                {id: 101, item: 'Staples', cost: 5.00},
+                {id: 101, item: 'Glue', cost: 2.00},
                 {id: 102, item: 'Pen', cost: 1.00},
             ];
             let step = 1;
@@ -785,35 +935,31 @@
             let hasRun = false;
 
             const render = () => {
-                // Determine remaining data based on current state
                 let displayData = [...data];
                 let msg = "";
 
                 if (hasRun) {
-                    if (cols.id && cols.item && cols.cost) {
-                         // Default 'Select All' behavior -> Remove only EXACT matches across all fields
-                         displayData = [
+                     if (cols.id && cols.item && cols.cost) {
+                          displayData = [
                              {id: 101, item: 'Staples', cost: 5.00},
                              {id: 101, item: 'Glue', cost: 2.00},
                              {id: 102, item: 'Pen', cost: 1.00},
-                         ];
-                         msg = "1 Duplicate Removed. Partial duplicate (Glue) kept because ID+Item+Cost combo is unique.";
-                    } else if (cols.id && !cols.item && !cols.cost) {
-                        // Only ID selected: Remove all subsequent IDs regardless of content
+                          ];
+                          msg = "1 Duplicate Removed. Partial duplicate (Glue) kept because ID+Item+Cost combo is unique.";
+                     } else if (cols.id && !cols.item && !cols.cost) {
                         displayData = [
                             {id: 101, item: 'Staples', cost: 5.00},
                             {id: 102, item: 'Pen', cost: 1.00},
                         ];
                         msg = "2 Duplicates Removed. Glue was lost because only ID was matched.";
-                    } else if (cols.id && cols.item) {
-                        // ID + Item selected
-                        displayData = [
+                     } else {
+                          displayData = [
                              {id: 101, item: 'Staples', cost: 5.00},
                              {id: 101, item: 'Glue', cost: 2.00},
                              {id: 102, item: 'Pen', cost: 1.00},
-                         ];
-                         msg = "1 Duplicate Removed. Partial duplicate (Glue) kept because ID+Item combo is unique.";
-                    }
+                          ];
+                          msg = "Default Logic Applied.";
+                     }
                 }
 
                 container.innerHTML = `
@@ -827,8 +973,6 @@
                     </div>
 
                     <div class="flex-1 p-6 bg-slate-100 overflow-hidden relative flex flex-col items-center">
-                        
-                        <!-- Data Table (Scrollable) -->
                         <div class="bg-white border shadow-sm w-full max-w-2xl overflow-hidden rounded-lg">
                             <div class="max-h-64 overflow-y-auto">
                                 <table class="w-full text-sm text-left">
@@ -847,7 +991,6 @@
                             <div class="p-2 bg-gray-50 text-xs text-center text-gray-500 border-t">Showing ${displayData.length} Rows</div>
                         </div>
 
-                        <!-- Dialog -->
                         ${step === 2 ? `
                         <div class="absolute inset-0 bg-black/10 flex items-center justify-center backdrop-blur-[1px]">
                             <div class="bg-white rounded-lg shadow-xl w-80 border overflow-hidden animate-in zoom-in-95">
@@ -877,22 +1020,21 @@
                             </div>
                         </div>
                         ` : ''}
+
+                        ${window.app.teacherMode && !hasRun ? `
+                            <button onclick="window.runClean()" class="absolute bottom-4 right-4 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Clean
+                            </button>
+                        ` : ''}
                     </div>
                 </div>`;
                 lucide.createIcons();
             };
-
             window.openClean = () => { step = 2; render(); };
             window.closeClean = () => { step = 1; render(); };
             window.toggleCol = (c) => { cols[c] = !cols[c]; };
             window.resetClean = () => { hasRun=false; cols = {id:true, item:true, cost:true}; step=1; render(); };
-            window.runClean = () => {
-                hasRun = true;
-                step = 1;
-                render();
-                onComplete();
-            };
-
+            window.runClean = () => { hasRun = true; step = 1; render(); onComplete(); };
             render();
         }
 
@@ -925,21 +1067,15 @@
                             ${dataVals.map(v => {
                                 let style = '';
                                 let inner = '';
-                                
                                 if(mode==='highlight' && v > 500) style = 'bg-red-100 text-red-700 font-bold';
-                                
                                 if(mode==='scale') {
-                                    // Heatmap: Red (Low) to Green (High) or vice versa. usually Exp are bad? Let's do Standard High=Green
-                                    // 0=Red, 120=Green
                                     const hue = (v/max)*120; 
                                     style = `background-color: hsla(${hue}, 70%, 85%, 1)`;
                                 }
-
                                 if(mode==='bars') {
                                     const width = (v/max)*100;
                                     inner = `<div class="absolute top-1 bottom-1 left-0 bg-blue-500 opacity-20 z-0" style="width: ${width}%"></div>`;
                                 }
-
                                 return `<div class="p-3 border-b text-right relative ${mode !== 'scale' ? style : ''}" style="${mode === 'scale' ? style : ''}">
                                     ${inner}
                                     <span class="relative z-10">$${v}</span>
@@ -947,6 +1083,13 @@
                             }).join('')}
                         </div>
                     </div>
+                    ${window.app.teacherMode && mode === 'none' ? `
+                        <div class="absolute bottom-4 right-4">
+                            <button onclick="window.setCond('highlight')" class="bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Format
+                            </button>
+                        </div>
+                    ` : ''}
                 </div>`;
                 lucide.createIcons();
             };
@@ -959,7 +1102,6 @@
             let items = [
                 {n: 'Rent', v: 3000}, {n: 'Utils', v: 450}, {n: 'Travel', v: 650}, {n: 'Supplies', v: 120}
             ];
-            
             const render = () => {
                 container.innerHTML = `
                 <div class="h-full flex flex-col">
@@ -981,6 +1123,13 @@
                             `).join('')}
                         </div>
                     </div>
+                    ${window.app.teacherMode ? `
+                        <div class="absolute bottom-4 right-4">
+                            <button onclick="window.sortNum()" class="bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Sort
+                            </button>
+                        </div>
+                    ` : ''}
                 </div>`;
             };
             window.sortAlpha = () => { items.sort((a,b)=>a.n.localeCompare(b.n)); render(); };
@@ -988,142 +1137,50 @@
             render();
         }
 
-        // 7. References (Tiny Excel Engine)
+        // 7. References
         function renderReferencesDemo(container, onComplete) {
-            // State
             let inputFormula = "";
             let c2_display = ""; 
             let c3_val = "";
             let c4_val = "";
-            let status = "init"; // init, calculated_c2, filled, error, success
+            let status = "init";
             let errorMsg = "";
 
-            // "Mini Excel" Data Model
-            const data = {
-                rows: [
-                    {B: 100, C: 0},
-                    {B: 200, C: 0},
-                    {B: 300, C: 0}
-                ],
-                K1: 0.05
-            };
+            const data = { rows: [{B: 100}, {B: 200}, {B: 300}], K1: 0.05 };
 
-            // Improved parser with relative row shift support
-            // Formula assumed to be entered in Row 2 (index 0)
-            const evaluate = (formula, currentRowIndex) => {
-                // normalize
-                let f = formula.toUpperCase().replace(/\s/g, '');
-                if (!f.startsWith('=')) return { value: "#ERR", isError: true };
-                f = f.substring(1); // remove =
-
-                // 1. Circular Ref Check
-                if (f.includes("C2") || f.includes("C3") || f.includes("C4")) {
-                    return { value: "#CIRC!", isError: true };
-                }
-
-                // 2. Parse References
-                // Regex for standard refs like $B$2, B2, $B2, B$2
-                // We only care about rows mainly for this vertical drag demo
-                // $?([A-Z])\$?(\d+)
+            // Simple parser logic (simulating locked vs unlocked)
+            const evaluate = (f, rowIndex) => {
+                let clean = f.toUpperCase().replace(/\s/g, '');
+                if (!clean.startsWith('=')) return { value: "#ERR", isError: true };
                 
-                // We reconstruct the formula by replacing references with values
-                let mathStr = f;
+                // Check if K1 is locked
+                const isLocked = clean.includes('$K$1');
+                const isK1 = clean.includes('K1');
                 
-                // Replace pattern: (Optional $)(Col Letter)(Optional $)(Row Number)
-                mathStr = mathStr.replace(/(\$?)([A-Z])(\$?)(\d+)/g, (match, colAbs, col, rowAbs, rowNumStr) => {
-                    const rowNum = parseInt(rowNumStr); // 1-based index from reference
-                    const isRowAbs = (rowAbs === '$');
-                    
-                    // The source formula is always written as if it's in Row 2 (Index 0).
-                    // So "K1" means Row 1. "K2" means Row 2.
-                    // If isRowAbs ($1), it stays Row 1.
-                    // If relative:
-                    //   Delta = ReferencedRow - SourceRow(2).
-                    //   TargetRow = CurrentRowIndex(0,1,2) + SourceRow(2) + Delta
-                    //   Actually simpler: TargetRow = CurrentRowIndex + ReferencedRow.
-                    //   Wait. If source is C2 (Row 2) and ref is K1. Delta is -1.
-                    //   In Row 2 (Index 0): Target = 2 + -1 = 1. (Row 1).
-                    //   In Row 3 (Index 1): Target = 3 + -1 = 2. (Row 2).
-                    
-                    // Let's calc the target Row Index (0-based) for lookup.
-                    // Data K1 is row "0" conceptually if we had a full grid, but we treat K1 as special.
-                    // Data B2 is index 0. B3 is index 1.
-                    
-                    let targetRowIndex;
-                    
-                    if (isRowAbs) {
-                        // Absolute Row
-                        // If it's K1 ($K$1 or K$1), we map to our special data.K1
-                        if (col === 'K' && rowNum === 1) return data.K1;
-                        
-                        // If it's B2 ($B$2), it maps to index 0
-                        targetRowIndex = rowNum - 2; 
-                    } else {
-                        // Relative Row
-                        // Calculate shift relative to Row 2
-                        const shift = rowNum - 2; 
-                        targetRowIndex = currentRowIndex + shift;
-                    }
-                    
-                    // Lookup Value
-                    if (col === 'K') {
-                        // Only K1 exists (which would be targetRowIndex = -1 relative to B2 start?)
-                        // Let's map "Row 1" to K1 value, anything else 0
-                        // Since B2 is Row 2. Row 1 is rowNum 1.
-                        // If targetRowIndex was calculated based on B2=0, then Row 1 is -1.
-                        // Let's standardise on row numbers.
-                        
-                        const actualRowNum = (currentRowIndex + 2) + (rowNum - 2); // logic check? 
-                        // If current is Row 2 (0). Ref is K1 (1). 2 + (1-2) = 1. Correct.
-                        // If current is Row 3 (1). Ref is K1 (1). 3 + (1-2) = 2. Correct.
-                        // Wait, if it was absolute, actualRowNum = rowNum.
-                        
-                        const effectiveRowNum = isRowAbs ? rowNum : (currentRowIndex + 2) + (rowNum - 2);
-                        
-                        if (effectiveRowNum === 1) return data.K1;
-                        return 0; // K2, K3 etc are empty
-                    }
-                    
-                    if (col === 'B') {
-                        const effectiveRowNum = isRowAbs ? rowNum : (currentRowIndex + 2) + (rowNum - 2);
-                        const idx = effectiveRowNum - 2;
-                        if (data.rows[idx]) return data.rows[idx].B;
-                        return 0; 
-                    }
-                    
-                    return 0; // Default empty
-                });
+                if (!isK1 && !isLocked) return { value: "#ERR", isError: true }; // Must use K1
 
-                // Safety
-                if (/[A-Z]/.test(mathStr)) return { value: "#NAME?", isError: true };
-
-                try {
-                    const val = new Function('return ' + mathStr)();
-                    if (!isFinite(val) || isNaN(val)) return { value: "#NUM!", isError: true };
-                    return { value: "$" + val.toFixed(0), isError: false, raw: val };
-                } catch (e) {
-                    return { value: "#VALUE!", isError: true };
-                }
-            };
+                const val = data.rows[rowIndex].B;
+                // If row > 0 (dragged down) and NOT locked, K becomes K2 (empty/0)
+                const rate = (rowIndex === 0 || isLocked) ? 0.05 : 0;
+                
+                return { value: "$" + (val * rate).toFixed(0), isError: false };
+            }
 
             const render = () => {
                 container.innerHTML = `
                 <div class="h-full flex flex-col">
                     <div class="p-4 bg-blue-50 text-center text-sm border-b border-blue-100 text-blue-800">
-                        Type the formula in <strong>C2</strong> to calculate Tax (Sales * Rate). Rate is fixed in K1 (5%).
-                        <br><span class="text-xs text-gray-500">Press ENTER to calculate C2, then Drag Handle to fill.</span>
+                        Type formula in <strong>C2</strong>: Sales * Rate. Rate is fixed in K1 (5%).
+                        <br><span class="text-xs text-gray-500">Hint: =B2*$K$1</span>
                     </div>
                     <div class="flex-1 bg-slate-100 flex justify-center items-center p-8 flex-col">
-                        
                         <div class="bg-white border shadow-lg rounded select-none w-96">
-                            <!-- Headers -->
                             <div class="flex text-center text-xs font-bold bg-gray-100 border-b">
                                 <div class="w-8 py-2 border-r"></div>
                                 <div class="flex-1 py-2 border-r">B (Sales)</div>
                                 <div class="flex-1 py-2 border-r bg-yellow-50">C (Tax)</div>
                                 <div class="w-16 py-2 bg-green-50">K (Rate)</div>
                             </div>
-                            
                             <!-- Row 1 -->
                             <div class="flex border-b h-10 items-center text-sm">
                                 <div class="w-8 bg-gray-50 text-center text-xs text-gray-400 border-r h-full flex items-center justify-center">1</div>
@@ -1131,35 +1188,19 @@
                                 <div class="flex-1 px-2 border-r bg-gray-50"></div>
                                 <div class="w-16 px-2 text-center font-bold text-green-700 bg-green-50">5%</div>
                             </div>
-
-                            <!-- Row 2 (Input) -->
+                            <!-- Row 2 -->
                             <div class="flex border-b h-10 items-center text-sm">
                                 <div class="w-8 bg-gray-50 text-center text-xs text-gray-400 border-r h-full flex items-center justify-center">2</div>
                                 <div class="flex-1 px-2 border-r text-right">$100</div>
-                                <div class="flex-1 border-r bg-yellow-50 relative h-full flex items-center px-1 group cursor-text" 
-                                     onclick="window.editFormula()">
-                                    
+                                <div class="flex-1 border-r bg-yellow-50 relative h-full flex items-center px-1 group cursor-text" onclick="window.editFormula()">
                                     ${status === 'init' || status === 'error' ? 
-                                    `<input id="formula-in" 
-                                        class="w-full h-full bg-transparent px-1 outline-none font-mono text-xs" 
-                                        placeholder="=..." 
-                                        value="${inputFormula}" 
-                                        oninput="window.updateFormula(this.value)"
-                                        onkeydown="if(event.key==='Enter') window.calculateC2(this.value)"
-                                        onclick="event.stopPropagation()"
-                                        autofocus
-                                    >` : 
+                                    `<input id="formula-in" class="w-full h-full bg-transparent px-1 outline-none font-mono text-xs" placeholder="=..." value="${inputFormula}" oninput="window.updateFormula(this.value)" onkeydown="if(event.key==='Enter') window.calculateC2(this.value)" onclick="event.stopPropagation()" autofocus>` : 
                                     `<div class="w-full text-right font-mono select-none">${c2_display}</div>`
                                     }
-                                    
-                                    <!-- Fill Handle (Only shown after calc) -->
-                                    ${status !== 'init' && status !== 'error' ? 
-                                    `<div onclick="event.stopPropagation(); window.doFill()" class="absolute -bottom-1 -right-1 w-2 h-2 bg-green-600 border border-white cursor-pointer hover:scale-150 transition-transform shadow-sm z-20"></div>` 
-                                    : ''}
+                                    ${status !== 'init' && status !== 'error' ? `<div onclick="event.stopPropagation(); window.doFill()" class="absolute -bottom-1 -right-1 w-2 h-2 bg-green-600 border border-white cursor-pointer hover:scale-150 transition-transform shadow-sm z-20"></div>` : ''}
                                 </div>
                                 <div class="w-16 bg-gray-50"></div>
                             </div>
-
                             <!-- Row 3 -->
                             <div class="flex border-b h-10 items-center text-sm">
                                 <div class="w-8 bg-gray-50 text-center text-xs text-gray-400 border-r h-full flex items-center justify-center">3</div>
@@ -1167,8 +1208,7 @@
                                 <div class="flex-1 px-2 border-r bg-gray-50 text-right font-mono text-gray-600">${c3_val}</div>
                                 <div class="w-16 bg-gray-50"></div>
                             </div>
-
-                             <!-- Row 4 -->
+                            <!-- Row 4 -->
                             <div class="flex border-b h-10 items-center text-sm">
                                 <div class="w-8 bg-gray-50 text-center text-xs text-gray-400 border-r h-full flex items-center justify-center">4</div>
                                 <div class="flex-1 px-2 border-r text-right">$300</div>
@@ -1176,76 +1216,267 @@
                                 <div class="w-16 bg-gray-50"></div>
                             </div>
                         </div>
-                        
-                        <!-- Error Toast for Input Phase -->
                         ${errorMsg ? `<div class="mt-4 text-xs text-red-600 bg-red-100 px-2 py-1 rounded animate-bounce">${errorMsg}</div>` : ''}
-
                     </div>
-                    ${status === 'error' ? `
-                    <div class="bg-red-100 p-2 text-center text-red-800 text-sm font-bold border-t border-red-200 animate-in slide-in-from-bottom">
-                        Oops! That result looks wrong (probably $0 or Error). Did you lock the reference?
-                        <button onclick="window.resetRef()" class="ml-2 underline text-xs">Try Again</button>
-                    </div>` : ''}
-                    ${status === 'success' ? `
-                    <div class="bg-green-100 p-2 text-center text-green-800 text-sm font-bold border-t border-green-200 animate-in slide-in-from-bottom">
-                        Success! Locking K1 ($K$1) kept the tax rate fixed for all rows.
-                    </div>` : ''}
+                    ${status === 'error' ? `<div class="bg-red-100 p-2 text-center text-red-800 text-sm font-bold border-t border-red-200">Oops! Result looked wrong. Did you use $ to lock K1? <button onclick="window.resetRef()" class="underline">Retry</button></div>` : ''}
+                    ${status === 'success' ? `<div class="bg-green-100 p-2 text-center text-green-800 text-sm font-bold border-t border-green-200">Success! $K$1 kept the rate fixed.</div>` : ''}
+                    
+                    ${window.app.teacherMode && status !== 'success' ? `
+                        <div class="absolute bottom-4 right-4">
+                            <button onclick="window.autoRef()" class="bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Fill
+                            </button>
+                        </div>
+                    ` : ''}
                 </div>`;
             };
-
             window.updateFormula = (v) => { inputFormula = v; errorMsg = ""; };
-
             window.calculateC2 = (v) => {
-                inputFormula = v;
-                const res = evaluate(v, 0); // Row 2 is index 0
-                
-                if (res.isError && res.value === "#ERR") {
-                     errorMsg = "Start with '=' to write a formula.";
-                } else {
-                    c2_display = res.value;
-                    status = 'calculated_c2';
-                    errorMsg = "";
-                }
+                const res = evaluate(v, 0);
+                if (res.isError) { errorMsg = "Use formula =B2*$K$1"; } 
+                else { c2_display = res.value; status = 'calculated_c2'; errorMsg = ""; }
                 render();
             };
-            
             window.doFill = () => {
                 const res3 = evaluate(inputFormula, 1);
                 const res4 = evaluate(inputFormula, 2);
-                
-                c3_val = res3.value;
-                c4_val = res4.value;
-                
-                if (c3_val === "$10" && c4_val === "$15") {
-                    status = 'success';
-                    onComplete();
-                } else {
-                    status = 'error';
-                }
+                c3_val = res3.value; c4_val = res4.value;
+                if (c3_val === "$10" && c4_val === "$15") { status = 'success'; onComplete(); } 
+                else { status = 'error'; }
                 render();
             };
+            window.resetRef = () => { status = 'init'; inputFormula = ''; c2_display = ''; c3_val = ''; c4_val = ''; errorMsg = ''; render(); }
+            window.editFormula = () => { if(status === 'calculated_c2' || status === 'error') { status = 'init'; render(); } }
             
-            window.resetRef = () => {
-                status = 'init';
-                inputFormula = '';
-                c2_display = '';
-                c3_val = '';
-                c4_val = '';
-                errorMsg = '';
-                render();
+            window.autoRef = () => {
+                inputFormula = "=B2*$K$1";
+                window.calculateC2(inputFormula);
+                setTimeout(() => window.doFill(), 500);
             }
 
-            window.editFormula = () => {
-                if(status === 'calculated_c2' || status === 'error') {
-                    status = 'init';
-                    // keep inputFormula same
-                    c2_display = '';
-                    c3_val = '';
-                    c4_val = '';
-                    render();
-                }
-            }
+            render();
+        }
+
+        // 8. Text Split Demo
+        function renderTextSplitDemo(container, onComplete) {
+            let formula = "";
+            let splitDone = false;
             
+            const render = () => {
+                container.innerHTML = `
+                <div class="h-full flex flex-col items-center justify-center p-8">
+                     <h3 class="text-lg font-bold text-gray-700 mb-2">Split the Product SKU</h3>
+                     <p class="text-xs text-gray-500 mb-6">Separate "SHIRT-L-BLUE" by the dash.</p>
+                     
+                     <div class="grid grid-cols-5 gap-2 w-full max-w-2xl mb-4 text-xs font-bold text-gray-400">
+                        <!-- Headers -->
+                        <div class="text-center"></div>
+                        <div class="text-center bg-gray-100 p-1">A</div>
+                        <div class="text-center bg-gray-100 p-1">B (Item)</div>
+                        <div class="text-center bg-gray-100 p-1">C (Size)</div>
+                        <div class="text-center bg-gray-100 p-1">D (Color)</div>
+                        
+                        <!-- Row 1 -->
+                        <div class="flex items-center justify-center bg-gray-100 font-bold text-gray-500">1</div>
+                        <div class="border p-2 flex items-center justify-center bg-white font-mono">SHIRT-L-BLUE</div>
+                        <div class="border bg-yellow-50 relative col-span-3">
+                            ${!splitDone ? `
+                            <input class="w-full h-full p-2 outline-none font-mono text-sm text-center" 
+                                placeholder="=TEXTSPLIT(A1, ...)"
+                                value="${formula}"
+                                oninput="window.updateSplit(this.value)"
+                                onkeydown="if(event.key==='Enter') window.checkSplit()"
+                            >` : `
+                            <div class="grid grid-cols-3 h-full divide-x">
+                                <div class="flex items-center justify-center font-mono text-blue-600 font-bold bg-green-50 animate-in zoom-in">SHIRT</div>
+                                <div class="flex items-center justify-center font-mono text-blue-600 font-bold bg-green-50 animate-in zoom-in">L</div>
+                                <div class="flex items-center justify-center font-mono text-blue-600 font-bold bg-green-50 animate-in zoom-in">BLUE</div>
+                            </div>
+                            `}
+                        </div>
+                     </div>
+                     
+                     ${!splitDone ? `<div class="text-sm text-gray-500">Hint: delimiter is "-"</div>` : 
+                     `<div class="text-green-600 font-bold animate-pulse">Splitting Complete!</div>`}
+                     
+                     ${window.app.teacherMode ? `
+                        <div class="mt-2 p-2 bg-purple-50 text-purple-800 text-xs font-mono border border-purple-200 rounded w-full max-w-2xl">
+                            <strong>Answer Key:</strong> =TEXTSPLIT(A1, "-")
+                        </div>
+                        ${!splitDone ? `
+                            <button onclick="window.updateSplit('=TEXTSPLIT(A1, \\'-\\' )'); window.checkSplit()" class="mt-2 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Complete
+                            </button>
+                        ` : ''}
+                    ` : ''}
+                </div>`;
+            };
+
+            window.updateSplit = (v) => { formula = v; }; // NOTE: DO NOT CALL RENDER HERE TO MAINTAIN FOCUS
+            window.checkSplit = () => {
+                const clean = formula.toUpperCase().replace(/\s/g, '');
+                // Check for TEXTSPLIT(A1, "-") or similar variants
+                if (clean.includes('TEXTSPLIT(A1') && (clean.includes('"-"') || clean.includes("'-'"))) {
+                    splitDone = true;
+                    render(); // Only render on success/submit
+                    onComplete();
+                } else {
+                    alert("Try: =TEXTSPLIT(A1, \"-\")");
+                }
+            };
+            render();
+        }
+
+        // 9. Text Join Demo
+        function renderTextJoinDemo(container, onComplete) {
+            let formula = "";
+            let joinDone = false;
+
+            const render = () => {
+                container.innerHTML = `
+                <div class="h-full flex flex-col items-center justify-center p-8">
+                     <h3 class="text-lg font-bold text-gray-700 mb-2">Build a Full Address</h3>
+                     <p class="text-xs text-gray-500 mb-6">Join City, State, Zip with ", "</p>
+                     
+                     <div class="grid grid-cols-4 gap-2 mb-4 w-full max-w-lg">
+                        <div class="text-center font-bold text-xs bg-gray-100 p-1"></div>
+                        <div class="text-center font-bold text-xs bg-gray-100 p-1">A</div>
+                        <div class="text-center font-bold text-xs bg-gray-100 p-1">B</div>
+                        <div class="text-center font-bold text-xs bg-gray-100 p-1">C</div>
+                        
+                        <div class="flex items-center justify-center font-bold text-xs bg-gray-100">1</div>
+                        <div class="border p-2 bg-white text-center text-sm font-mono">Miami</div>
+                        <div class="border p-2 bg-white text-center text-sm font-mono">FL</div>
+                        <div class="border p-2 bg-white text-center text-sm font-mono">33101</div>
+                     </div>
+                     
+                     <div class="w-full max-w-lg border h-12 bg-yellow-50 flex items-center relative rounded shadow-sm">
+                        ${!joinDone ? `
+                        <input class="w-full h-full p-2 outline-none font-mono text-sm text-center bg-transparent" 
+                            placeholder="=TEXTJOIN(...)"
+                            value="${formula}"
+                            oninput="window.updateJoin(this.value)"
+                            onkeydown="if(event.key==='Enter') window.checkJoin()"
+                        >` : `
+                        <div class="w-full h-full flex items-center justify-center font-mono text-sm text-blue-700 font-bold bg-green-100 animate-in slide-in-from-bottom">
+                            Miami, FL, 33101
+                        </div>
+                        `}
+                     </div>
+                     
+                     ${window.app.teacherMode ? `
+                        <div class="mt-2 p-2 bg-purple-50 text-purple-800 text-xs font-mono border border-purple-200 rounded w-full max-w-lg">
+                            <strong>Answer Key:</strong> =TEXTJOIN(", ", TRUE, A1, B1, C1)
+                        </div>
+                        ${!joinDone ? `
+                            <button onclick="window.updateJoin('=TEXTJOIN(\\' , \\', TRUE, A1, B1, C1)'); window.checkJoin()" class="mt-2 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Complete
+                            </button>
+                        ` : ''}
+                    ` : ''}
+                </div>`;
+            };
+            window.updateJoin = (v) => { formula = v; }; // NOTE: DO NOT CALL RENDER HERE TO MAINTAIN FOCUS
+            window.checkJoin = () => {
+                // Normalize for validation
+                const val = formula.trim().toUpperCase();
+                
+                // Allow flexible whitespace around commas and args
+                // Expected pattern: =TEXTJOIN(delimiter, ignore_empty, text1, ...)
+                // We specifically want A1, B1, C1 refs
+                
+                const isValid = val.startsWith('=TEXTJOIN(') && 
+                                (val.includes('","') || val.includes("', '") || val.includes('", "') || val.includes("','")) &&
+                                (val.includes('TRUE') || val.includes('1')) &&
+                                val.includes('A1') && val.includes('B1') && val.includes('C1');
+
+                if (isValid) {
+                    joinDone = true;
+                    render(); // Only render on success
+                    onComplete();
+                } else {
+                    alert("Formula Check:\n1. Start with =TEXTJOIN\n2. Delimiter is \", \"\n3. Ignore Empty is TRUE\n4. Reference cells A1, B1, C1");
+                }
+            };
+            render();
+        }
+
+        // 10. Bonus Demo
+        function renderBonusDemo(container, onComplete) {
+            let step = 1;
+            
+            const render = () => {
+                container.innerHTML = `
+                <div class="h-full flex flex-col items-center justify-center p-6 space-y-6">
+                    <h3 class="text-lg font-bold text-gray-700">Mission 10: Dynamic Logic (Gradebook)</h3>
+                    
+                    <div class="bg-white border rounded shadow-sm p-4 w-full max-w-xl">
+                        <div class="grid grid-cols-4 gap-2 text-xs font-bold text-center border-b pb-2 mb-2 bg-gray-50">
+                            <div>Student (A)</div>
+                            <div>Score (B)</div>
+                            <div class="text-blue-600">Helper (C)</div>
+                            <div class="text-green-600">Final (D)</div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2 items-center h-12">
+                            <div class="text-center text-gray-800 font-mono">John</div>
+                            <div class="text-center font-mono">85</div>
+                            
+                            <!-- Helper Step -->
+                            <div class="border h-full relative">
+                                ${step === 1 ? `
+                                <input class="w-full h-full text-center text-xs outline-none bg-blue-50" 
+                                    placeholder="=IF(B1>=70, ...)"
+                                    onkeydown="if(event.key==='Enter') window.checkBonusHelper(this.value)"
+                                >` : `<div class="flex items-center justify-center h-full font-bold text-blue-600 bg-blue-100">PASS</div>`}
+                            </div>
+                            
+                            <!-- Final Step -->
+                            <div class="border h-full relative">
+                                ${step === 2 ? `
+                                <input class="w-full h-full text-center text-xs outline-none bg-green-50" 
+                                    placeholder="=TEXTJOIN..."
+                                    onkeydown="if(event.key==='Enter') window.checkBonusJoin(this.value)"
+                                >` : (step === 3 ? `<div class="flex items-center justify-center h-full text-[10px] font-bold text-green-700 bg-green-100">John | PASS</div>` : '')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-sm text-gray-500">
+                        ${step === 1 ? "Step 1: Write an IF formula in Col C. If Score >= 70, \"PASS\", else \"FAIL\"." : 
+                          (step === 2 ? "Step 2: Use TEXTJOIN in Col D to combine Student | Status." : 
+                          "Perfect! You combined Logic + Text functions.")}
+                    </div>
+
+                    ${window.app.teacherMode ? `
+                        <div class="mt-4 p-2 bg-purple-50 text-purple-800 text-xs font-mono border border-purple-200 rounded w-full max-w-xl">
+                            <strong>Answer Key:</strong><br>
+                            Step 1 (Col C): =IF(B1>=70, "PASS", "FAIL")<br>
+                            Step 2 (Col D): =TEXTJOIN(" | ", TRUE, A1, C1)
+                        </div>
+                        ${step < 3 ? `
+                            <button onclick="window.solveBonus()" class="mt-2 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Complete (Step ${step})
+                            </button>
+                        ` : ''}
+                    ` : ''}
+                </div>`;
+            };
+
+            window.checkBonusHelper = (v) => {
+                const c = v.toUpperCase().replace(/\s/g,'');
+                if(c.includes('IF(') && c.includes('PASS')) { step=2; render(); }
+                else alert("Logic Check: IF(B1>=70, \"PASS\", \"FAIL\")");
+            }
+            window.checkBonusJoin = (v) => {
+                const c = v.toUpperCase();
+                if(c.includes('TEXTJOIN') && c.includes('C')) { step=3; render(); onComplete(); }
+                else alert("Make sure to reference column C (the helper)!");
+            }
+            window.solveBonus = () => {
+                if (step === 1) { step = 2; }
+                else if (step === 2) { step = 3; onComplete(); }
+                render();
+            }
             render();
         }
 
