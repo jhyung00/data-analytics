@@ -225,7 +225,7 @@
                     title: 'Mission 3: Safe Entry',
                     brief: 'Secure the Status column.',
                     steps: [
-                        'Select the entire Status column range (H2:H100).',
+                        'Select the entire Status column range.',
                         'Go to Data > Validation.',
                         'Allow: List. Source: "Pending, Posted, Void".',
                         'Click OK. Now every cell in the Status column has the dropdown.'
@@ -625,7 +625,7 @@
         // 1. Terminology
         function renderTerminologyDemo(container, onComplete) {
             let stage = 0;
-            const messages = ["Select Column C (Account)", "Select Row 3", "Select Cell G2 (Tax Rate)", "Done!"];
+            const messages = ["Select Column C (Account)", "Select Row 3", "Select Cell B2", "Done!"];
             
             const render = () => {
                 container.innerHTML = `
