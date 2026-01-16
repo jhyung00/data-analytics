@@ -295,33 +295,50 @@
                     brief: 'Calculate tax using a fixed rate cell.',
                     steps: [
                         'Type 5% in cell K1.',
-                        'In J2, type =E2*$K$1.',
+                        { text: 'In J2, type the formula to multiply Debit by Rate. Use the F4 key (or dollar signs) to lock the Rate cell.', answer: '=E2*$K$1' },
                         'Drag down. Ensure K1 stays fixed.'
                     ]
                 },
                 renderDemo: renderReferencesDemo
             },
             {
-                id: 'textsplit',
-                title: '8. Text Splitting',
+                id: 'textbasics',
+                title: '8. Basic Text Functions',
                 concept: `
-                    <p class="mb-2">Often, data comes "glued" together, like a full name ("Doe, John") or a product SKU ("SHIRT-BLUE-L").</p>
-                    <p class="mb-2"><strong>=TEXTSPLIT(text, delimiter)</strong> is a powerful function that separates text into multiple cells based on a character you choose (like a comma, dash, or space).</p>
-                    <p class="mb-2"><strong>=TEXTBEFORE(text, delimiter)</strong> is a simpler cousin that grabs just the first piece of text.</p>
+                    <p class="mb-2">Data often arrives messy. Basic text functions help you clean it up.</p>
+                    <ul class="space-y-2 text-sm text-gray-600 list-disc pl-5">
+                        <li><span class="font-bold text-blue-700">=LEFT(text, num)</span>: Grabs characters from the start (e.g. Area Code).</li>
+                        <li><span class="font-bold text-blue-700">=RIGHT(text, num)</span>: Grabs characters from the end.</li>
+                        <li><span class="font-bold text-blue-700">=TRIM(text)</span>: Removes accidental extra spaces before or after text.</li>
+                    </ul>`,
+                project: {
+                    title: 'Mission 8: Clean & Extract',
+                    brief: 'Extract IDs and clean up descriptions.',
+                    steps: [
+                        { text: 'In Column L, create a header "Prefix". Use the LEFT function to extract just the "JE" part from the Journal ID (Col A).', answer: '=LEFT(A2, 2)' },
+                        { text: 'In Column M, create a header "CleanDesc". Use TRIM on the Description (Col D) to ensure no hidden spaces exist.', answer: '=TRIM(D2)' }
+                    ]
+                },
+                renderDemo: renderTextBasicsDemo
+            },
+            {
+                id: 'textsplit',
+                title: '9. Splitting & Formatting',
+                concept: `
+                    <p class="mb-2">Often, data comes "glued" together, like a product SKU ("SHIRT-BLUE-L").</p>
+                    <p class="mb-2"><strong>=TEXTSPLIT(text, delimiter)</strong> separates text into multiple cells based on a character (like a dash).</p>
+                    <p class="mb-2"><strong>=TEXT(value, format_code)</strong> converts values (like dates) into text using a specific format pattern.</p>
                     <div class="bg-blue-50 p-2 rounded text-xs border border-blue-100 font-mono text-blue-800">
-                        <p class="font-bold mb-1">Result spills across cells:</p>
-                        =TEXTSPLIT("A-B-C", "-") <br> 
-                        <span class="inline-block border border-blue-200 px-1 bg-white ml-2">A</span>
-                        <span class="inline-block border border-blue-200 px-1 bg-white">B</span>
-                        <span class="inline-block border border-blue-200 px-1 bg-white">C</span>
+                        =TEXT("1/1/2025", "dddd") -> "Wednesday"
                     </div>`,
                 project: {
-                    title: 'Mission 8: Audit-Friendly IDs',
-                    brief: 'Break down complex journal IDs and dates in your workbook.',
+                    title: 'Mission 9: Advanced Parsing',
+                    brief: 'Break down complex journal IDs and dates.',
                     steps: [
-                        'Create two new headers: Type (L1) and Entry No (M1).',
-                        'In L2, use =TEXTSPLIT(A2,"-") to split JE-1007 into JE and 1007.',
-                        'Create DayOfWeek in N1. In N2, use =TEXTBEFORE(B2,",") to extract the weekday (e.g., "Sunday").',
+                        'Create two new headers: Type (N1) and Entry No (O1).',
+                        { text: 'In N2, use TEXTSPLIT to split the Journal ID (A2) by the dash symbol into two separate cells.', answer: '=TEXTSPLIT(A2, "-")' },
+                        'Create DayOfWeek in P1.',
+                        { text: 'In P2, use the TEXT function to extract the full day name (e.g., "Wednesday") from the Date column (B2).', answer: '=TEXT(B2, "dddd")' },
                         'Copy formulas down for all rows.'
                     ]
                 },
@@ -329,20 +346,19 @@
             },
             {
                 id: 'textjoin',
-                title: '9. Text Joining',
+                title: '10. Text Joining',
                 concept: `
-                    <p class="mb-2">The opposite of splitting is joining. You might need to combine a City, State, and Zip code into a single address field.</p>
-                    <p class="mb-2"><strong>=TEXTJOIN(delimiter, ignore_empty, text1, ...)</strong> combines multiple cells into one, separated by a character of your choice.</p>
+                    <p class="mb-2">The opposite of splitting is joining. You might need to combine a City, State, and Zip code.</p>
+                    <p class="mb-2"><strong>=TEXTJOIN(delimiter, ignore_empty, text1, ...)</strong> combines multiple cells into one, separated by a character.</p>
                     <div class="bg-blue-50 p-2 rounded text-xs border border-blue-100 font-mono text-blue-800">
                         =TEXTJOIN(", ", TRUE, "Miami", "FL") -> "Miami, FL"
                     </div>`,
                 project: {
-                    title: 'Mission 9: Audit Trail',
+                    title: 'Mission 10: Audit Trail',
                     brief: 'Create a single-line summary string for reports.',
                     steps: [
-                         'Create header AuditTrailSummary in O1.',
-                         'In O2, type: =TEXTJOIN(" | ",TRUE,A2,C2,E2,H2,I2).',
-                         'This creates a pipe-separated log: ID | Account | Debit | Status | User.',
+                         'Create header AuditTrailSummary in Q1.',
+                         { text: 'In Q2, use TEXTJOIN to combine ID (A2), Account (C2), Debit (E2), Status (H2), and User (I2). Use a pipe " | " as the separator.', answer: '=TEXTJOIN(" | ", TRUE, A2, C2, E2, H2, I2)' },
                          'Copy down.'
                     ]
                 },
@@ -350,20 +366,19 @@
             },
             {
                 id: 'bonus',
-                title: '10. Bonus: The Perfect Formula',
+                title: '11. Bonus',
                 concept: `
                     <p class="mb-2">Advanced data work often requires <strong>Logic + Text</strong>.</p>
-                    <p class="mb-2">For example, you might want a status label that changes based on a number. You can achieve this by creating a "Helper Column" with an <strong>IF</strong> statement, and then joining that helper result into your final text string.</p>
+                    <p class="mb-2">You can use an <strong>IF</strong> statement inside other functions to make them dynamic.</p>
                     <p class="text-sm font-bold">Logic: IF(Score>70, "Pass", "Fail")</p>`,
                 project: {
-                    title: 'Mission 10: Smart Summary',
+                    title: 'Mission 11: Smart Summary',
                     brief: 'Handle variable Debit/Credit columns dynamically.',
                     steps: [
-                        'In P1 type: AmountUsed.',
-                        'In P2 type: =IF(E2>0, E2, F2). This grabs whichever column has money.',
-                        'In Q1 type: SmartAudit.',
-                        'In Q2: =TEXTJOIN(" | ",TRUE,A2,C2,P2,H2,I2).',
-                        'Now you have a perfect summary regardless of transaction type.'
+                        'In R1 type: AmountUsed.',
+                        { text: 'In R2, write an IF formula. If Debit (E2) is greater than 0, use Debit. Otherwise, use Credit (F2).', answer: '=IF(E2>0, E2, F2)' },
+                        'In S1 type: StatusKey.',
+                        { text: 'In S2, create a simplified "Status-Amount" key. Use TEXTJOIN to combine Status (H2) and AmountUsed (R2) with a dash " - " separator.', answer: '=TEXTJOIN(" - ", TRUE, H2, R2)' }
                     ]
                 },
                 renderDemo: renderBonusDemo
@@ -401,13 +416,28 @@
                 // Update Project Card
                 document.getElementById('project-title').textContent = mod.project.title;
                 document.getElementById('project-brief').textContent = mod.project.brief;
+                
+                // Render Steps (Handling Teacher Mode Logic)
                 const stepsList = document.getElementById('project-steps');
-                stepsList.innerHTML = mod.project.steps.map((s, i) => `
+                stepsList.innerHTML = mod.project.steps.map((s, i) => {
+                    // Check if step is object with answer
+                    const isObj = typeof s === 'object' && s !== null;
+                    const text = isObj ? s.text : s;
+                    const answer = isObj && s.answer ? s.answer : null;
+                    
+                    return `
                     <li class="flex items-start">
                         <span class="flex-shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold mr-3 mt-0.5 shadow-sm">${i+1}</span>
-                        <span class="text-sm text-gray-800 leading-tight pt-1">${s}</span>
+                        <div class="flex-1">
+                            <span class="text-sm text-gray-800 leading-tight pt-1 block">${text}</span>
+                            ${this.teacherMode && answer ? 
+                                `<div class="mt-2 text-xs font-mono text-purple-700 bg-purple-50 p-2 border border-purple-100 rounded inline-block animate-in slide-in-from-left-2">
+                                    <span class="font-bold">Key:</span> ${answer}
+                                </div>` : ''}
+                        </div>
                     </li>
-                `).join('');
+                    `;
+                }).join('');
 
                 this.updateUIState(); // Lock/Unlock Project
 
@@ -1257,77 +1287,230 @@
             render();
         }
 
-        // 8. Text Split Demo
-        function renderTextSplitDemo(container, onComplete) {
-            let formula = "";
-            let splitDone = false;
-            
+        // 8. Basic Text (Updated with distinct examples)
+        function renderTextBasicsDemo(container, onComplete) {
+            let userResult = "";
+            let mode = ""; 
+            let targetStr = "ACCT-999"; 
+
             const render = () => {
                 container.innerHTML = `
-                <div class="h-full flex flex-col items-center justify-center p-8">
-                     <h3 class="text-lg font-bold text-gray-700 mb-2">Split the Product SKU</h3>
-                     <p class="text-xs text-gray-500 mb-6">Separate "SHIRT-L-BLUE" by the dash.</p>
-                     
-                     <div class="grid grid-cols-5 gap-2 w-full max-w-2xl mb-4 text-xs font-bold text-gray-400">
-                        <!-- Headers -->
-                        <div class="text-center"></div>
-                        <div class="text-center bg-gray-100 p-1">A</div>
-                        <div class="text-center bg-gray-100 p-1">B (Item)</div>
-                        <div class="text-center bg-gray-100 p-1">C (Size)</div>
-                        <div class="text-center bg-gray-100 p-1">D (Color)</div>
-                        
-                        <!-- Row 1 -->
-                        <div class="flex items-center justify-center bg-gray-100 font-bold text-gray-500">1</div>
-                        <div class="border p-2 flex items-center justify-center bg-white font-mono">SHIRT-L-BLUE</div>
-                        <div class="border bg-yellow-50 relative col-span-3">
-                            ${!splitDone ? `
-                            <input class="w-full h-full p-2 outline-none font-mono text-sm text-center" 
-                                placeholder="=TEXTSPLIT(A1, ...)"
-                                value="${formula}"
-                                oninput="window.updateSplit(this.value)"
-                                onkeydown="if(event.key==='Enter') window.checkSplit()"
-                            >` : `
-                            <div class="grid grid-cols-3 h-full divide-x">
-                                <div class="flex items-center justify-center font-mono text-blue-600 font-bold bg-green-50 animate-in zoom-in">SHIRT</div>
-                                <div class="flex items-center justify-center font-mono text-blue-600 font-bold bg-green-50 animate-in zoom-in">L</div>
-                                <div class="flex items-center justify-center font-mono text-blue-600 font-bold bg-green-50 animate-in zoom-in">BLUE</div>
+                <div class="h-full flex flex-col items-center justify-center p-8 space-y-6">
+                    <h3 class="text-xl font-bold text-gray-800">Manipulate Text Strings</h3>
+                    <p class="text-sm text-gray-500 h-6 flex items-center justify-center space-x-2">
+                        <span>Target Cell (A1):</span> 
+                        <span class="font-mono bg-gray-100 px-2 py-1 rounded font-bold border ${mode === 'TRIM' ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}">"${targetStr}"</span>
+                        ${mode === 'TRIM' ? '<span class="text-xs text-orange-600 font-bold bg-orange-100 px-2 py-0.5 rounded-full animate-in zoom-in">Sample Data Switched!</span>' : ''}
+                    </p>
+                    
+                    <div class="flex space-x-4">
+                        <button onclick="window.runBasic('LEFT')" class="p-4 border rounded hover:bg-blue-50 text-center w-32 ${mode==='LEFT'?'bg-blue-100 border-blue-400':''}">
+                            <div class="font-bold text-blue-700 mb-1">=LEFT(A1, 4)</div>
+                            <div class="text-xs text-gray-400">Use "ACCT-999"</div>
+                        </button>
+                        <button onclick="window.runBasic('RIGHT')" class="p-4 border rounded hover:bg-blue-50 text-center w-32 ${mode==='RIGHT'?'bg-blue-100 border-blue-400':''}">
+                            <div class="font-bold text-blue-700 mb-1">=RIGHT(A1, 4)</div>
+                            <div class="text-xs text-gray-400">Use "Year-2025"</div>
+                        </button>
+                        <button onclick="window.runBasic('TRIM')" class="p-4 border rounded hover:bg-blue-50 text-center w-32 ${mode==='TRIM'?'bg-blue-100 border-blue-400':''}">
+                            <div class="font-bold text-blue-700 mb-1">=TRIM(A1)</div>
+                            <div class="text-xs text-gray-400">Use " Supplies"</div>
+                        </button>
+                    </div>
+
+                    <div class="mt-8 h-20 flex items-center justify-center w-full max-w-md">
+                        ${mode ? `
+                            <div class="text-center animate-in zoom-in">
+                                <div class="text-xs text-gray-400 uppercase font-bold mb-2">Result</div>
+                                <div class="text-3xl font-mono font-bold text-green-600 bg-green-50 px-8 py-4 rounded border border-green-200 shadow-sm">
+                                    "${userResult}"
+                                </div>
                             </div>
-                            `}
-                        </div>
-                     </div>
-                     
-                     ${!splitDone ? `<div class="text-sm text-gray-500">Hint: delimiter is "-"</div>` : 
-                     `<div class="text-green-600 font-bold animate-pulse">Splitting Complete!</div>`}
-                     
-                     ${window.app.teacherMode ? `
-                        <div class="mt-2 p-2 bg-purple-50 text-purple-800 text-xs font-mono border border-purple-200 rounded w-full max-w-2xl">
-                            <strong>Answer Key:</strong> =TEXTSPLIT(A1, "-")
-                        </div>
-                        ${!splitDone ? `
-                            <button onclick="window.updateSplit('=TEXTSPLIT(A1, \\'-\\' )'); window.checkSplit()" class="mt-2 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
-                                Teacher: Auto-Complete
+                        ` : '<div class="text-gray-300 italic">Select a function above...</div>'}
+                    </div>
+
+                    ${window.app.teacherMode && !mode ? `
+                        <div class="absolute bottom-4 right-4">
+                            <button onclick="window.runBasic('TRIM')" class="bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Run
                             </button>
-                        ` : ''}
+                        </div>
                     ` : ''}
                 </div>`;
             };
 
-            window.updateSplit = (v) => { formula = v; }; // NOTE: DO NOT CALL RENDER HERE TO MAINTAIN FOCUS
-            window.checkSplit = () => {
-                const clean = formula.toUpperCase().replace(/\s/g, '');
-                // Check for TEXTSPLIT(A1, "-") or similar variants
-                if (clean.includes('TEXTSPLIT(A1') && (clean.includes('"-"') || clean.includes("'-'"))) {
-                    splitDone = true;
-                    render(); // Only render on success/submit
-                    onComplete();
-                } else {
-                    alert("Try: =TEXTSPLIT(A1, \"-\")");
-                }
+            window.runBasic = (m) => {
+                mode = m;
+                if(m === 'LEFT') { targetStr = "ACCT-999"; userResult = "ACCT"; }
+                if(m === 'RIGHT') { targetStr = "Year-2025"; userResult = "2025"; }
+                if(m === 'TRIM') { targetStr = " Supplies"; userResult = "Supplies"; }
+                render();
+                onComplete();
             };
             render();
         }
 
-        // 9. Text Join Demo
+        // 9. Text Split & Format Demo (Updated with Step 3 - TextBefore)
+        function renderTextSplitDemo(container, onComplete) {
+            let formula = "";
+            let splitDone = false;
+            let step = 1; // 1 = Split, 2 = Date Format, 3 = TextBefore
+            let dateFormula = "";
+            let textBeforeFormula = "";
+            
+            const render = () => {
+                if (step === 1) {
+                    container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center p-8">
+                         <h3 class="text-lg font-bold text-gray-700 mb-2">Step 1: Split the Product SKU</h3>
+                         <p class="text-xs text-gray-500 mb-6">Separate "SHIRT-L-BLUE" by the dash.</p>
+                         
+                         <div class="grid grid-cols-5 gap-2 w-full max-w-2xl mb-4 text-xs font-bold text-gray-400">
+                            <!-- Headers -->
+                            <div class="text-center"></div>
+                            <div class="text-center bg-gray-100 p-1">A</div>
+                            <div class="text-center bg-gray-100 p-1">B (Item)</div>
+                            <div class="text-center bg-gray-100 p-1">C (Size)</div>
+                            <div class="text-center bg-gray-100 p-1">D (Color)</div>
+                            
+                            <!-- Row 1 -->
+                            <div class="flex items-center justify-center bg-gray-100 font-bold text-gray-500">1</div>
+                            <div class="border p-2 flex items-center justify-center bg-white font-mono">SHIRT-L-BLUE</div>
+                            <div class="border bg-yellow-50 relative col-span-3">
+                                <input class="w-full h-full p-2 outline-none font-mono text-sm text-center" 
+                                    placeholder="=TEXTSPLIT(A1, ...)"
+                                    value="${formula}"
+                                    oninput="window.updateSplit(this.value)"
+                                    onkeydown="if(event.key==='Enter') window.checkSplit()"
+                                    autofocus
+                                >
+                            </div>
+                         </div>
+                         
+                         <div class="text-sm text-gray-500">Hint: delimiter is "-"</div>
+                         
+                         ${window.app.teacherMode ? `
+                            <button onclick="window.updateSplit('=TEXTSPLIT(A1, \\'-\\' )'); window.checkSplit()" class="mt-4 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Complete (Step 1)
+                            </button>
+                        ` : ''}
+                    </div>`;
+                } else if (step === 2) {
+                    container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center p-8">
+                         <h3 class="text-lg font-bold text-gray-700 mb-2">Step 2: Format the Date</h3>
+                         <p class="text-xs text-gray-500 mb-6">Extract the full day name (e.g. "Wednesday") from the date in B2.</p>
+                         
+                         <div class="grid grid-cols-3 gap-2 w-full max-w-lg mb-4 text-xs font-bold text-gray-400">
+                            <!-- Headers -->
+                            <div class="text-center"></div>
+                            <div class="text-center bg-gray-100 p-1">B (Date)</div>
+                            <div class="text-center bg-gray-100 p-1">C (Day Name)</div>
+                            
+                            <!-- Row 2 -->
+                            <div class="flex items-center justify-center bg-gray-100 font-bold text-gray-500">2</div>
+                            <div class="border p-2 flex items-center justify-center bg-white font-mono text-gray-500">1/15/2025</div>
+                            <div class="border bg-yellow-50 relative">
+                                <input class="w-full h-full p-2 outline-none font-mono text-sm text-center" 
+                                    placeholder="=TEXT(B2, ...)"
+                                    value="${dateFormula}"
+                                    oninput="window.updateDate(this.value)"
+                                    onkeydown="if(event.key==='Enter') window.checkDate()"
+                                    autofocus
+                                >
+                            </div>
+                         </div>
+                         
+                         <div class="text-sm text-gray-500">Hint: code for full day is "dddd"</div>
+                         
+                         ${window.app.teacherMode ? `
+                            <button onclick="window.updateDate('=TEXT(B2, \\'dddd\\' )'); window.checkDate()" class="mt-4 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Complete (Step 2)
+                            </button>
+                        ` : ''}
+                    </div>`;
+                } else if (step === 3) {
+                     container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center p-8">
+                         <h3 class="text-lg font-bold text-gray-700 mb-2">Step 3: Advanced Extraction</h3>
+                         <p class="text-xs text-gray-500 mb-6 max-w-md text-center">Use <strong>=TEXTBEFORE</strong> combined with <strong>TEXT</strong>. Extract the Day Name from a formatted string (e.g. "Wednesday, January...") using the comma as the delimiter. Use the real date "1/15/2025" instead of B2.</p>
+                         
+                         <div class="w-full max-w-lg bg-gray-50 p-4 border rounded mb-4">
+                             <div class="text-xs font-bold text-gray-500 mb-1">Goal Formula:</div>
+                             <div class="text-sm font-mono text-blue-800 break-all">=TEXTBEFORE(TEXT("1/15/2025", "dddd, mmmm d, yyyy"), ",")</div>
+                         </div>
+
+                         <div class="w-full max-w-lg border h-10 bg-yellow-50 flex items-center relative rounded shadow-sm">
+                            <input class="w-full h-full p-2 outline-none font-mono text-xs text-center bg-transparent" 
+                                placeholder="=TEXTBEFORE(TEXT(...)...)"
+                                value="${textBeforeFormula}"
+                                oninput="window.updateTextBefore(this.value)"
+                                onkeydown="if(event.key==='Enter') window.checkTextBefore()"
+                                autofocus
+                            >
+                         </div>
+                         
+                         <div class="text-sm text-gray-500 mt-4">Hint: Use "1/15/2025" directly inside TEXT()</div>
+                         
+                         ${window.app.teacherMode ? `
+                            <button onclick="window.updateTextBefore('=TEXTBEFORE(TEXT(\\'1/15/2025\\', \\'dddd, mmmm d, yyyy\\'), \\',\\')'); window.checkTextBefore()" class="mt-4 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                                Teacher: Auto-Complete (Step 3)
+                            </button>
+                        ` : ''}
+                    </div>`;
+                }
+            };
+
+            window.updateSplit = (v) => { formula = v; }; 
+            window.checkSplit = () => {
+                const clean = formula.toUpperCase().replace(/\s/g, '');
+                if (clean.includes('TEXTSPLIT(A1') && (clean.includes('"-"') || clean.includes("'-'"))) {
+                    step = 2;
+                    render();
+                } else {
+                    alert("Try: =TEXTSPLIT(A1, \"-\")");
+                }
+            };
+
+            window.updateDate = (v) => { dateFormula = v; };
+            window.checkDate = () => {
+                const clean = dateFormula.toUpperCase().replace(/\s/g, '');
+                if (clean.includes('TEXT(B2') && (clean.includes('"DDDD"') || clean.includes("'DDDD'"))) {
+                    step = 3;
+                    render();
+                } else {
+                    alert("Try: =TEXT(B2, \"dddd\")");
+                }
+            };
+
+            window.updateTextBefore = (v) => { textBeforeFormula = v; };
+            window.checkTextBefore = () => {
+                // Lax validation for the long string
+                const clean = textBeforeFormula.toUpperCase().replace(/\s/g, '');
+                if (clean.includes('TEXTBEFORE(TEXT(') && clean.includes('1/15/2025') && clean.includes('","')) {
+                     container.innerHTML = `
+                     <div class="h-full flex flex-col items-center justify-center">
+                        <div class="text-green-600 font-bold text-2xl mb-2 animate-in zoom-in">Perfect!</div>
+                        <div class="text-gray-500">You mastered advanced text parsing.</div>
+                        <div class="mt-6 flex space-x-4">
+                             <div class="p-4 bg-green-50 rounded border border-green-200 text-center">
+                                <div class="text-xs text-gray-400 uppercase">Final Output</div>
+                                <div class="font-mono font-bold text-green-700">Wednesday</div>
+                            </div>
+                        </div>
+                     </div>
+                     `;
+                     lucide.createIcons();
+                     onComplete();
+                } else {
+                    alert("Double check your formula! Did you use \"1/15/2025\"?");
+                }
+            };
+
+            render();
+        }
+
+        // 10. Text Join Demo (Formerly 9)
         function renderTextJoinDemo(container, onComplete) {
             let formula = "";
             let joinDone = false;
@@ -1365,11 +1548,8 @@
                      </div>
                      
                      ${window.app.teacherMode ? `
-                        <div class="mt-2 p-2 bg-purple-50 text-purple-800 text-xs font-mono border border-purple-200 rounded w-full max-w-lg">
-                            <strong>Answer Key:</strong> =TEXTJOIN(", ", TRUE, A1, B1, C1)
-                        </div>
                         ${!joinDone ? `
-                            <button onclick="window.updateJoin('=TEXTJOIN(\\' , \\', TRUE, A1, B1, C1)'); window.checkJoin()" class="mt-2 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                            <button onclick="window.updateJoin('=TEXTJOIN(\\' , \\', TRUE, A1, B1, C1)'); window.checkJoin()" class="mt-4 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
                                 Teacher: Auto-Complete
                             </button>
                         ` : ''}
@@ -1401,14 +1581,14 @@
             render();
         }
 
-        // 10. Bonus Demo
+        // 11. Bonus Demo (Formerly 10)
         function renderBonusDemo(container, onComplete) {
             let step = 1;
             
             const render = () => {
                 container.innerHTML = `
                 <div class="h-full flex flex-col items-center justify-center p-6 space-y-6">
-                    <h3 class="text-lg font-bold text-gray-700">Mission 10: Dynamic Logic (Gradebook)</h3>
+                    <h3 class="text-lg font-bold text-gray-700">Mission 11: Dynamic Logic (Gradebook)</h3>
                     
                     <div class="bg-white border rounded shadow-sm p-4 w-full max-w-xl">
                         <div class="grid grid-cols-4 gap-2 text-xs font-bold text-center border-b pb-2 mb-2 bg-gray-50">
@@ -1448,13 +1628,8 @@
                     </div>
 
                     ${window.app.teacherMode ? `
-                        <div class="mt-4 p-2 bg-purple-50 text-purple-800 text-xs font-mono border border-purple-200 rounded w-full max-w-xl">
-                            <strong>Answer Key:</strong><br>
-                            Step 1 (Col C): =IF(B1>=70, "PASS", "FAIL")<br>
-                            Step 2 (Col D): =TEXTJOIN(" | ", TRUE, A1, C1)
-                        </div>
                         ${step < 3 ? `
-                            <button onclick="window.solveBonus()" class="mt-2 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
+                            <button onclick="window.solveBonus()" class="mt-4 bg-purple-100 text-purple-700 px-3 py-1 rounded text-xs font-bold border border-purple-200 hover:bg-purple-200">
                                 Teacher: Auto-Complete (Step ${step})
                             </button>
                         ` : ''}
