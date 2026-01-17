@@ -449,9 +449,9 @@
                     title: "Flag Critical Invoices",
                     brief: "We need a 'Priority' column in the Sales Table.",
                     steps: [
-                        "Create a column named 'Priority'.",
-                        "Use <strong>AND</strong>: If Amount > 5000 AND Status = 'Pending', return 'Urgent'.",
-                        "Use <strong>OR</strong>: If Region = 'North' OR Region = 'South', return 'Primary Zone'."
+                        "Create a column named 'Flag'.",
+                        "Use <strong>AND</strong>: If Amount > 5000 AND Status = 'Pending', return 'Urgent'. Otherwise, Standard",
+                        "Create a column named 'Zone' ; Use OR: If Region = 'North' OR Region = 'South', return 'Primary Zone', otherwise 'Regular Zone'."
                     ]
                 },
                 renderDemo: (container, onComplete) => renderLogicDemo(container, onComplete)
@@ -471,7 +471,7 @@
                     brief: "Group invoices into 'Small', 'Medium', and 'Large' buckets.",
                     steps: [
                         "Create a 'SizeCategory' column.",
-                        "Write a Nested IF: < $1,000 is 'Small', < $10,000 is 'Medium', otherwise 'Large'."
+                        "Write a Nested IF: amount < $1,000 is 'Small', amount < $10,000 is 'Medium', otherwise 'Large'."
                     ]
                 },
                 renderDemo: (container, onComplete) => renderNestedIfDemo(container, onComplete)
@@ -497,7 +497,7 @@
                     title: "Regional Sales Report",
                     brief: "Management wants totals by Region and Status.",
                     steps: [
-                        "Calculate Total Revenue (SUMIFS) for 'North' region where Status is 'Paid'.",
+                        "Calculate Total Tax amount (SUMIFS) for 'East' region where Status is 'Paid'.",
                         "Count Invoices (COUNTIFS) that are 'Overdue' in the 'West' region."
                     ]
                 },
@@ -542,9 +542,8 @@
                     brief: "We have a log of vendor credit scores. It contains duplicates (by date) and name variations. You must handle all cases.",
                     steps: [
                         "Switch to the <strong>'Credit_History'</strong> sheet.",
-                        "<strong>Task 1 (Search Mode):</strong> The log has old and new scores. Use <code>Search Mode -1</code> to find the <em>latest</em> score for each client.",
-                        "<strong>Task 2 (Wildcard):</strong> 'Wayne Ent' is listed as 'Wayne Ent Intl' in the log. Use <code>Match Mode 2</code> with '*' to map it.",
-                        "<strong>Task 3 (Approx Match):</strong> Create a small manual table: 0='High Risk', 600='Medium', 750='Low'. Use <code>Match Mode -1</code> to classify the scores you found."
+                        "<strong>Task 1 (Search Mode):</strong> The log has old and new scores. Use <code>Search Mode -1</code> to find the latest score for Acme Corp.",
+                        "<strong>Task 2 (Approx Match):</strong> Create a small manual table: 0='High Risk', 600='Medium', 750='Low'. Use <code>Match Mode -1</code> to classify the scores you found."
                     ]
                 },
                 renderDemo: (container, onComplete) => renderAdvancedLookupDemo(container, onComplete)
