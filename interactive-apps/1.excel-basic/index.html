@@ -661,7 +661,7 @@
                 document.getElementById('col-C').onclick = () => { if(stage===0) { stage=1; render(); } };
                 document.getElementById('row-3').onclick = () => { if(stage===1) { stage=2; render(); } };
                 const cells = container.querySelectorAll('.bg-white');
-                cells.forEach(c => c.onclick = () => { if(stage===2 && c.textContent === 'G2') { stage=3; render(); onComplete(); } });
+                cells.forEach(c => c.onclick = () => { if(stage===2 && c.textContent === 'B2') { stage=3; render(); onComplete(); } });
             };
 
             window.autoTerm = () => { stage = 3; render(); onComplete(); };
