@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ledger Capital - Internal Mail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .phase-card { transition: all 0.2s; }
+        .phase-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        
+        /* Modal Animation */
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow: hidden; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col overflow-hidden">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-900 text-white p-4 flex justify-between items-center shadow-md z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-blue-500 rounded flex items-center justify-center font-bold text-lg">L</div>
+            <span class="font-semibold tracking-wide">Ledger Capital <span class="text-slate-400 font-normal">| WebMail</span></span>
+        </div>
+        <div class="text-sm text-slate-300">Logged in as: <span class="font-semibold text-white">Junior Analyst</span></div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col">
+            <div class="p-4">
+                <button onclick="openReplyModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition">Compose</button>
+            </div>
+            <nav class="flex-1 overflow-y-auto">
+                <ul class="space-y-1">
+                    <li class="bg-blue-50 text-blue-700 border-l-4 border-blue-600 px-4 py-2 cursor-pointer font-medium">Inbox <span class="float-right bg-blue-200 text-blue-800 text-xs px-2 py-0.5 rounded-full">1</span></li>
+                    <li class="text-gray-600 px-4 py-2 hover:bg-gray-50 cursor-pointer">Sent Items</li>
+                    <li class="text-gray-600 px-4 py-2 hover:bg-gray-50 cursor-pointer">Drafts</li>
+                    <li class="text-gray-600 px-4 py-2 hover:bg-gray-50 cursor-pointer">Archive</li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-hidden relative">
+            
+            <!-- Email Header -->
+            <div class="bg-white border-b border-gray-200 p-6 shadow-sm">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800 mb-2">URGENT: Q1 & Q2 Performance Report Needed ASAP</h1>
+                        <div class="flex items-center gap-3 text-sm">
+                            <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-lg">SJ</div>
+                            <div>
+                                <p class="font-semibold text-gray-900">Sarah Jenkins <span class="font-normal text-gray-500">&lt;sjenkins@ledgercapital.com&gt;</span></p>
+                                <p class="text-gray-500">To: <span class="text-gray-700">Junior Analyst Team</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right text-gray-500 text-sm">
+                        <p>May 20, 2025</p>
+                        <p>8:42 AM</p>
+                    </div>
+                </div>
+
+                <!-- Attachment Chip (Clickable) -->
+                <div class="mt-4 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                    <button onclick="downloadCSV()" class="group text-sm font-medium text-gray-700 bg-gray-50 hover:bg-white hover:border-green-500 px-3 py-1 rounded-full border border-gray-200 flex items-center gap-2 transition-all shadow-sm">
+                        <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v5h5v11H6z"/></svg>
+                        RawData_Logs.csv
+                        <span class="text-xs text-gray-400 group-hover:text-green-600 ml-1 font-normal">(Download)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Email Body / Scrollable Area -->
+            <div class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <div class="max-w-4xl mx-auto space-y-6">
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-gray-700 leading-relaxed">
+                        <p class="mb-4">Hi Team,</p>
+                        <p class="mb-4">I know it’s late, but the partners just asked for a full breakdown of our Crypto trading activity for the first half of 2025. I need this dashboard on my desk before the morning meeting.</p>
+                        <p class="mb-4">I’ve attached the raw transaction logs. It’s a mess—just a dump from the trading engine. Please clean it up and build a dashboard that answers the requirements below.</p>
+                        <p class="font-medium text-red-600">Please handle these tasks strictly in order:</p>
+                    </div>
+
+                    <!-- PHASE 1 -->
+                    <div class="phase-card bg-white rounded-lg shadow-sm border-l-4 border-red-500 overflow-hidden">
+                        <div class="bg-red-50 px-6 py-3 border-b border-red-100 flex items-center justify-between">
+                            <h2 class="font-bold text-red-800 flex items-center gap-2">
+                                <span class="bg-red-200 text-red-800 text-xs px-2 py-1 rounded uppercase tracking-wider">Phase 1</span>
+                                Fix The Data
+                            </h2>
+                            <span class="text-xs font-semibold text-red-400 uppercase">Do not skip</span>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="flex gap-4">
+                                <div class="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center font-bold text-gray-500">1</div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Format as Table</h3>
+                                    <p class="text-sm text-gray-600">Convert the raw range to an official Excel Table (<code class="bg-gray-100 px-1 py-0.5 rounded text-red-600">Ctrl+T</code>). Name it <strong>"CryptoData"</strong>.</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center font-bold text-gray-500">2</div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Missing Values</h3>
+                                    <p class="text-sm text-gray-600">We have Units and Price, but no total. Add a <strong>"Gross_Value"</strong> column to the source data.</p>
+                                    <div class="mt-2 text-xs bg-gray-800 text-gray-200 inline-block px-2 py-1 rounded font-mono">Formula: = [Units] * [Price_Per_Unit]</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PHASE 2 -->
+                    <div class="phase-card bg-white rounded-lg shadow-sm border-l-4 border-blue-500 overflow-hidden">
+                        <div class="bg-blue-50 px-6 py-3 border-b border-blue-100">
+                            <h2 class="font-bold text-blue-800 flex items-center gap-2">
+                                <span class="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded uppercase tracking-wider">Phase 2</span>
+                                The Dashboard
+                            </h2>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <p class="text-sm text-gray-500 italic mb-2">Create a new sheet named <strong>"Dashboard"</strong> for these items:</p>
+                            
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-4 rounded border border-gray-100">
+                                    <div class="text-blue-600 font-bold mb-1">Task 3: Portfolio</div>
+                                    <p class="text-sm text-gray-600">Show <strong>Total Units</strong> held for each <strong>Asset</strong>.</p>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded border border-gray-100">
+                                    <div class="text-blue-600 font-bold mb-1">Task 4: Volume</div>
+                                    <p class="text-sm text-gray-600">Show <strong>Count of Transactions</strong> per <strong>Exchange</strong>.</p>
+                                    <p class="text-xs text-red-500 mt-1 font-medium">⚠️ Warning: Do not Sum!</p>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded border border-gray-100">
+                                <div class="text-blue-600 font-bold mb-1">Task 5: Monthly Trends</div>
+                                <p class="text-sm text-gray-600">Show <strong>Sum of Gross Value</strong> broken down by <strong>Month</strong>.</p>
+                                <p class="text-xs text-gray-400 mt-1">Hint: Drag Date to Rows > Right-click > Group</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PHASE 3 -->
+                    <div class="phase-card bg-white rounded-lg shadow-sm border-l-4 border-purple-500 overflow-hidden">
+                        <div class="bg-purple-50 px-6 py-3 border-b border-purple-100">
+                            <h2 class="font-bold text-purple-800 flex items-center gap-2">
+                                <span class="bg-purple-200 text-purple-800 text-xs px-2 py-1 rounded uppercase tracking-wider">Phase 3</span>
+                                Deep Dive (Advanced)
+                            </h2>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="flex gap-4 items-start">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 flex-shrink-0 flex items-center justify-center text-purple-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Task 6: Net Cost Analysis</h3>
+                                    <p class="text-sm text-gray-600 mb-2">I need to see "Net Cost" (Gross Value + Fees). <span class="font-medium text-purple-700">Do not add columns to source data.</span> Use a Calculated Field.</p>
+                                    <code class="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">PivotTable Analyze > Fields, Items & Sets > Calculated Field</code>
+                                </div>
+                            </div>
+                            <hr class="border-gray-100">
+                            <div class="flex gap-4 items-start">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 flex-shrink-0 flex items-center justify-center text-purple-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Task 7: Market Share</h3>
+                                    <p class="text-sm text-gray-600">Create a table of <strong>Exchange</strong> vs <strong>Gross Value</strong>. Display the numbers as <strong>% of Column Total</strong>.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PHASE 4 -->
+                    <div class="phase-card bg-white rounded-lg shadow-sm border-l-4 border-amber-500 overflow-hidden">
+                        <div class="bg-amber-50 px-6 py-3 border-b border-amber-100">
+                            <h2 class="font-bold text-amber-800 flex items-center gap-2">
+                                <span class="bg-amber-200 text-amber-800 text-xs px-2 py-1 rounded uppercase tracking-wider">Phase 4</span>
+                                Visuals & Formatting
+                            </h2>
+                        </div>
+                        <div class="p-6">
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-3">
+                                    <input type="checkbox" disabled class="mt-1 w-4 h-4 text-amber-600 border-gray-300 rounded">
+                                    <div class="text-sm text-gray-700"><strong>Task 8: Slicers.</strong> Add interactive buttons for "Type" and "Exchange".</div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <input type="checkbox" disabled class="mt-1 w-4 h-4 text-amber-600 border-gray-300 rounded">
+                                    <div class="text-sm text-gray-700"><strong>Task 9: Heat Map.</strong> Create a table of Fees by Asset. Apply <span class="text-green-600 font-bold">Red-White-Green</span> Conditional Formatting to the values.</div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <input type="checkbox" disabled class="mt-1 w-4 h-4 text-amber-600 border-gray-300 rounded">
+                                    <div class="text-sm text-gray-700"><strong>Task 10: Export Ready.</strong> Create a table with Exchange AND Asset in rows. Change layout to <strong>Tabular Form</strong>.</div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- PHASE 5 -->
+                    <div class="phase-card bg-white rounded-lg shadow-sm border-l-4 border-gray-800 overflow-hidden">
+                        <div class="bg-gray-800 px-6 py-3 border-b border-gray-700">
+                            <h2 class="font-bold text-white flex items-center gap-2">
+                                <span class="bg-gray-600 text-white text-xs px-2 py-1 rounded uppercase tracking-wider">Phase 5</span>
+                                Final Audit Check
+                            </h2>
+                        </div>
+                        <div class="p-6 flex gap-6 items-center">
+                            <div class="bg-gray-100 p-4 rounded-full">
+                                <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900 text-lg">Task 11: Verify Bitcoin Fees</h3>
+                                <p class="text-gray-600">The fees for BTC in March look suspiciously high. Please <strong>Double-Click</strong> that specific number to drill down and generate the audit list.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sign off -->
+                    <div class="pt-4 pb-8 text-gray-600">
+                        <p>Thanks,</p>
+                        <p class="font-bold text-gray-800">Sarah</p>
+                        <p class="text-sm">Portfolio Manager, Ledger Capital</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Email Actions Footer -->
+            <div class="bg-white border-t border-gray-200 p-4 flex gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <button onclick="openReplyModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-medium transition shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                    Reply
+                </button>
+                <button onclick="openReplyModal()" class="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2 rounded font-medium transition shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                    Reply All
+                </button>
+                <button class="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2 rounded font-medium transition shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    Forward
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Reply Modal -->
+    <div id="replyModal" class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 flex items-center justify-center z-50">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50" onclick="closeReplyModal()"></div>
+        
+        <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded shadow-lg z-50 overflow-y-auto transform scale-95 transition-transform duration-200">
+            
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center py-3 px-6 bg-slate-900 text-white">
+                <p class="font-bold text-lg">Re: URGENT: Q1 & Q2 Performance Report</p>
+                <div class="cursor-pointer z-50 hover:text-red-300" onclick="closeReplyModal()">
+                    <svg class="fill-current text-white" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                        <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="px-6 py-4">
+                <div class="mb-4 text-sm text-gray-600">
+                    <p><span class="font-bold text-gray-800">To:</span> Sarah Jenkins &lt;sjenkins@ledgercapital.com&gt;</p>
+                    <p><span class="font-bold text-gray-800">Cc:</span> Junior Analyst Team</p>
+                </div>
+                
+                <hr class="mb-4">
+                
+                <textarea class="w-full h-64 border border-gray-300 p-3 rounded focus:outline-none focus:border-blue-500 font-sans text-gray-700" placeholder="Hi Sarah,
+
+Here is the dashboard you requested. I have confirmed the following:
+1. Gross Values have been calculated.
+2. The portfolio breakdown is attached.
+3. The Bitcoin fees in March were audited and verified.
+
+Best,
+[Your Name]"></textarea>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex justify-end pt-2 pb-6 px-6 gap-3">
+                <button onclick="closeReplyModal()" class="px-4 py-2 bg-transparent p-3 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-700 mr-2 border border-gray-300">Discard</button>
+                <button onclick="sendReply()" class="px-6 py-2 bg-blue-600 rounded-lg text-white hover:bg-blue-700 shadow-md font-medium flex items-center gap-2">
+                    Send
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-xl transform translate-y-24 transition-transform duration-300 flex items-center gap-3">
+        <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <div>
+            <h4 class="font-bold text-sm">Sent!</h4>
+            <p class="text-xs text-slate-300">Your reply has been delivered.</p>
+        </div>
+    </div>
+
+    <script>
+        // CSV Content Generation
+        const csvData = `Date,Transaction_ID,Asset,Type,Exchange,Units,Price_Per_Unit,Fee_USD
+1/2/2025,TX2001,BTC,Buy,Coinbase,0.5,92000,15.50
+1/5/2025,TX2002,ETH,Buy,Binance,10,3200,12.25
+1/10/2025,TX2003,SOL,Buy,Kraken,100,145,5.75
+1/12/2025,TX2004,BTC,Sell,Coinbase,0.2,94000,9.80
+1/15/2025,TX2005,ETH,Staking,Binance,0.05,3300,0.00
+1/20/2025,TX2006,BTC,Buy,Binance,0.1,91500,3.10
+2/2/2025,TX2007,SOL,Sell,Kraken,50,160,6.50
+2/5/2025,TX2008,ADA,Buy,Coinbase,5000,0.80,12.50
+2/8/2025,TX2009,BTC,Buy,Kraken,0.8,93000,19.20
+2/14/2025,TX2010,ETH,Sell,Binance,2,3500,6.00
+2/20/2025,TX2011,SOL,Buy,Coinbase,200,155,10.25
+3/1/2025,TX2012,BTC,Sell,Coinbase,0.5,98000,35.50
+3/5/2025,TX2013,ADA,Staking,Coinbase,15,0.85,0.00
+3/10/2025,TX2014,ETH,Buy,Kraken,5,3800,18.50
+3/12/2025,TX2015,SOL,Sell,Kraken,100,190,8.50
+3/15/2025,TX2016,BTC,Buy,Binance,0.1,99000,7.80
+4/2/2025,TX2017,ETH,Sell,Binance,3,3700,11.20
+4/5/2025,TX2018,ADA,Sell,Coinbase,2000,0.90,7.00
+4/10/2025,TX2019,SOL,Staking,Kraken,2,185,0.00
+4/15/2025,TX2020,BTC,Sell,Kraken,0.1,96000,7.40
+5/1/2025,TX2021,BTC,Buy,Coinbase,0.2,95000,7.00
+5/5/2025,TX2022,ETH,Buy,Binance,4,3600,7.20
+5/10/2025,TX2023,SOL,Buy,Kraken,50,175,4.50
+5/15/2025,TX2024,ADA,Buy,Binance,1000,0.75,3.25
+5/20/2025,TX2025,BTC,Sell,Coinbase,0.3,101000,21.50`;
+
+        function downloadCSV() {
+            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "RawData_Logs.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Modal Logic
+        function openReplyModal() {
+            const modal = document.getElementById('replyModal');
+            modal.classList.remove('opacity-0');
+            modal.classList.remove('pointer-events-none');
+            document.body.classList.add('modal-active');
+            
+            // Animate scale
+            const container = modal.querySelector('.modal-container');
+            container.classList.remove('scale-95');
+            container.classList.add('scale-100');
+        }
+
+        function closeReplyModal() {
+            const modal = document.getElementById('replyModal');
+            modal.classList.add('opacity-0');
+            modal.classList.add('pointer-events-none');
+            document.body.classList.remove('modal-active');
+            
+            // Animate scale
+            const container = modal.querySelector('.modal-container');
+            container.classList.add('scale-95');
+            container.classList.remove('scale-100');
+        }
+
+        function sendReply() {
+            closeReplyModal();
+            const toast = document.getElementById('toast');
+            toast.classList.remove('translate-y-24');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-24');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
