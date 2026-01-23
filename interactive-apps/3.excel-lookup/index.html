@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Accelerator: XLOOKUP, INDEX/MATCH & FILTER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom Excel-like styling */
+        .excel-grid {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 0.85rem;
+            background: white;
+        }
+        .excel-grid th {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            padding: 4px 8px;
+            text-align: center; /* Centered headers for Excel look */
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
+        }
+        .excel-grid td {
+            border: 1px solid #e5e7eb;
+            padding: 4px 8px;
+            color: #1f2937;
+            white-space: nowrap;
+        }
+        .excel-grid tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .excel-header {
+            background-color: #107c41; /* Excel Green */
+            color: white;
+        }
+        .formula-bar {
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Module List Styling */
+        .module-item {
+            transition: all 0.2s;
+        }
+        .module-item.active {
+            background-color: #dcfce7; /* green-100 */
+            border-left: 4px solid #16a34a; /* green-600 */
+            color: #166534;
+        }
+        .module-item.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .module-item:not(.locked):hover {
+            background-color: #f3f4f6;
+        }
+        /* Instructor Highlight */
+        .instructor-reveal {
+            border: 2px solid #fbbf24 !important; /* amber-400 */
+            background-color: #fffbeb !important; /* amber-50 */
+        }
+        .instructor-badge {
+            display: none;
+        }
+        .instructor-reveal .instructor-badge {
+            display: inline-block;
+        }
+        /* Blinking animation for Lesson 3 */
+        .blink-target {
+            animation: blinker 1.5s linear infinite;
+        }
+        @keyframes blinker {
+            50% { opacity: 0.4; }
+        }
+        /* Matrix Data Highlight */
+        .matrix-data-cell {
+            background-color: #fffbeb; /* yellow-50 */
+            color: #1e40af; /* blue-800 */
+        }
+        canvas {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col font-sans overflow-hidden">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Navbar -->
+    <nav class="bg-slate-900 text-white px-4 py-3 shadow-lg flex justify-between items-center z-10 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-green-600 p-2 rounded">
+                <i class="fas fa-file-invoice-dollar text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-wide leading-tight">Audit Accelerator</h1>
+                <p class="text-xs text-slate-400">Mastering XLOOKUP, INDEX/MATCH & FILTER</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="data/XLOOKUP_IndexXMATCH_Practice_Student.xlsx" download class="flex items-center gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-sm transition-colors border border-slate-600">
+                <i class="fas fa-download text-green-400"></i>
+                <span>Download Practice Data</span>
+            </a>
+            <div class="h-8 w-px bg-slate-700 mx-2"></div>
+            <div class="text-right">
+                <div class="text-xs text-slate-400 uppercase font-semibold">Progress</div>
+                <div class="font-mono font-bold text-green-400 text-sm" id="progress-text">0%</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Left Sidebar: Module Pane -->
+        <div class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0 z-20 shadow-md">
+            <div class="p-4 border-b border-gray-100 bg-gray-50">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Course Modules</h3>
+            </div>
+            <div id="module-list" class="flex-1 overflow-y-auto py-2">
+                <!-- Modules injected here -->
+            </div>
+            <div class="p-4 border-t border-gray-200 bg-gray-50">
+                <button onclick="toggleInstructorModal()" class="text-xs text-gray-500 hover:text-gray-800 flex items-center gap-2 w-full transition-colors" id="instructor-btn">
+                    <i class="fas fa-user-shield"></i> Instructor Access
+                </button>
+            </div>
+        </div>
+
+        <!-- Center/Right: Workspace -->
+        <div class="flex-1 flex flex-col relative bg-gray-100">
+            
+            <!-- Lesson View (Slides) -->
+            <div id="lesson-view" class="hidden absolute inset-0 bg-white p-8 overflow-y-auto flex flex-col items-center justify-start text-center">
+                <div class="max-w-4xl w-full pt-8">
+                    <span id="lesson-badge" class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase mb-4 inline-block">Lesson</span>
+                    <h2 id="lesson-title" class="text-3xl font-extrabold text-slate-800 mb-6"></h2>
+                    <div id="lesson-content" class="text-base text-slate-600 leading-relaxed space-y-4 mb-8 text-left bg-slate-50 p-8 rounded-xl border border-slate-200 shadow-sm">
+                        <!-- Content injected -->
+                    </div>
+                    <button onclick="nextItem()" class="mb-12 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg font-bold text-lg transition-transform hover:scale-105">
+                        Start Challenge <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Simulation View (Split Pane) -->
+            <div id="simulation-view" class="flex flex-1 overflow-hidden hidden">
+                
+                <!-- Data Pane (Left of Workspace) -->
+                <div class="w-7/12 flex flex-col border-r border-gray-300 bg-gray-100 overflow-hidden">
+                    <div class="p-3 border-b border-gray-200 bg-white flex justify-between items-center shadow-sm z-10">
+                        <span class="text-xs font-bold text-slate-500 uppercase"><i class="fas fa-table mr-1"></i> Data Viewer</span>
+                        <span id="sim-goal-badge" class="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded border border-yellow-200 font-medium">Goal: Find Missing Info</span>
+                    </div>
+                    
+                    <div class="flex-1 overflow-auto p-4 space-y-6">
+                        
+                        <!-- Primary Table -->
+                        <div class="bg-white shadow border border-gray-300 rounded-lg overflow-hidden">
+                            <div class="bg-slate-700 text-white px-4 py-2 text-xs font-bold uppercase tracking-wider flex justify-between items-center">
+                                <span id="table-name">Workpaper (Main)</span>
+                                <span class="bg-slate-600 px-2 py-0.5 rounded text-[10px]">Formula Goes Here</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table id="data-table" class="excel-grid"></table>
+                            </div>
+                        </div>
+                        
+                        <!-- Secondary Table -->
+                        <div id="secondary-table-wrapper" class="hidden bg-white shadow border border-gray-300 rounded-lg overflow-hidden">
+                            <div class="bg-blue-700 text-white px-4 py-2 text-xs font-bold uppercase tracking-wider flex justify-between items-center">
+                                <span id="secondary-table-name">Lookup Source</span>
+                                <span class="bg-blue-600 px-2 py-0.5 rounded text-[10px]">Reference Data</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table id="secondary-data-table" class="excel-grid"></table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Interaction Pane (Right of Workspace) -->
+                <div class="w-5/12 flex flex-col bg-slate-50 border-l border-gray-200">
+                    <!-- Formula Bar -->
+                    <div class="bg-white p-3 border-b border-gray-200 flex items-center gap-2 shadow-sm shrink-0">
+                        <span class="text-green-600 font-serif italic text-lg select-none font-bold">fx</span>
+                        <div class="h-10 bg-gray-50 border border-gray-300 rounded w-full flex items-center px-3 text-sm formula-bar text-gray-800 shadow-inner">
+                            <span id="formula-preview" class="opacity-40">Select the correct formula below...</span>
+                        </div>
+                    </div>
+
+                    <!-- Question & Options -->
+                    <div class="flex-1 overflow-y-auto p-6 relative">
+                        <div id="quiz-content" class="max-w-xl mx-auto">
+                            <h3 id="sim-title" class="text-lg font-bold text-slate-800 mb-2 leading-tight"></h3>
+                            <p id="sim-desc" class="text-slate-600 text-sm mb-6"></p>
+
+                            <div id="options-container" class="space-y-3">
+                                <!-- Options injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Feedback Overlay -->
+                        <div id="feedback-block" class="hidden absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center p-6 text-center fade-in backdrop-blur-sm">
+                            <div id="feedback-icon" class="text-5xl mb-4"></div>
+                            <h4 id="feedback-title" class="text-2xl font-bold mb-2"></h4>
+                            <p id="feedback-message" class="text-slate-600 mb-6 max-w-sm mx-auto leading-relaxed"></p>
+                            
+                            <div id="concept-box" class="bg-slate-100 p-4 rounded-lg border border-slate-200 text-left max-w-sm w-full mb-6 shadow-sm">
+                                <p class="text-xs font-bold text-slate-500 uppercase mb-1">Key Concept</p>
+                                <p id="feedback-concept" class="text-sm text-slate-800 font-medium"></p>
+                            </div>
+
+                            <button id="feedback-btn" class="px-6 py-2.5 rounded-lg shadow-lg font-bold text-white transition-transform hover:scale-105 active:scale-95"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Completion View -->
+            <div id="completion-view" class="hidden absolute inset-0 bg-white flex items-center justify-center p-8 z-30">
+                <div class="text-center max-w-lg">
+                    <div class="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl shadow-sm">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4">Certification Complete!</h2>
+                    <p class="text-slate-600 mb-8 text-lg">You have mastered XLOOKUP, INDEX/MATCH, and Dynamic Arrays.</p>
+                    <button onclick="location.reload()" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold transition-colors shadow-lg">
+                        Restart Course
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Instructor Modal -->
+    <div id="instructor-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-lg p-6 w-80 shadow-2xl border border-gray-200">
+            <h3 class="font-bold text-lg mb-4 text-slate-800 flex items-center gap-2">
+                <i class="fas fa-lock text-slate-400"></i> Instructor Access
+            </h3>
+            <input type="password" id="instructor-pw" placeholder="Enter Password" class="w-full border border-gray-300 rounded p-2 mb-4 focus:ring-2 focus:ring-green-500 outline-none" onkeydown="if(event.key==='Enter') verifyInstructor()">
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleInstructorModal()" class="px-3 py-1 text-sm text-gray-500 hover:text-gray-800">Cancel</button>
+                <button onclick="verifyInstructor()" class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 font-medium shadow">Unlock</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFETTI ENGINE ---
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const pieces = [];
+            const numberOfPieces = 200;
+            const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+            for (let i = 0; i < numberOfPieces; i++) {
+                pieces.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    rotation: Math.random() * 360,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    size: Math.random() * 10 + 5,
+                    speed: Math.random() * 5 + 2,
+                    drift: Math.random() * 2 - 1
+                });
+            }
+
+            function update() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                pieces.forEach(p => {
+                    p.y += p.speed;
+                    p.x += p.drift;
+                    p.rotation += 2;
+                    
+                    if (p.y > canvas.height) p.y = -20;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rotation * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+                });
+                requestAnimationFrame(update);
+            }
+            update();
+        }
+
+        // --- DATA DATASETS ---
+        
+        // --- DATASETS FOR TOPIC 1 (BASIC) ---
+        const vendorData = {
+            name: "Vendors",
+            headers: ["VendorID", "Vendor Name", "Category", "Pay Terms", "Default GL"],
+            rows: [
+                ["V-1001", "Staples", "Office", "Net 30", "6100"],
+                ["V-1002", "Delta", "Travel", "Receipt", "6450"],
+                ["V-1003", "AWS", "Software", "Net 15", "6200"],
+                ["V-1004", "CityUtil", "Utilities", "Net 30", "6300"]
+            ]
+        };
+
+        const invoiceDataBlank = {
+            name: "Workpaper",
+            headers: ["InvID", "VendorID", "Vendor Name", "Amount", "Description"],
+            rows: [
+                ["I-901", "V-1001", "???", "125.50", "Paper"],
+                ["I-902", "V-1003", "???", "99.00", "Hosting"],
+                ["I-903", "V-1003", "???", "500.00", "Server+"],
+                ["I-904", "V-1005", "???", "15.99", "Zoom Sub"]
+            ]
+        };
+        
+        const employeeData = {
+            name: "Employees",
+            headers: ["Emp ID", "Full Name", "Email", "Department"],
+            rows: [
+                ["E-01", "Alice Song", "alice@co.com", "Sales"],
+                ["E-02", "Bob Smith", "bob@co.com", "IT"],
+                ["E-03", "Charlie Li", "char@co.com", "Finance"]
+            ]
+        };
+
+        const payrollData = {
+            name: "Workpaper",
+            headers: ["PayID", "Emp ID", "Email", "Hours"],
+            rows: [
+                ["P-100", "E-02", "???", "40"],
+                ["P-101", "E-01", "???", "38"]
+            ]
+        }
+
+        // --- DATASETS FOR TOPIC 2 (ADVANCED) ---
+        // Single Word Descriptions
+        const invoiceDataFull = {
+            name: "Invoices",
+            headers: ["InvID", "VendorID", "Date", "Amount", "Description"],
+            rows: [
+                ["I-901", "V-1001", "1/10", "125.50", "Stationery"],
+                ["I-902", "V-1003", "1/11", "99.00", "CloudHosting"], 
+                ["I-904", "V-1005", "1/14", "15.99", "ZoomSub"],
+                ["I-903", "V-1003", "1/15", "500.00", "DedicatedServer"]
+            ]
+        };
+
+        const policyData = {
+            name: "Approvers", 
+            headers: ["Limit", "Approver"],
+            rows: [
+                ["0", "Staff"],
+                ["500", "Manager"],
+                ["2000", "Controller"],
+                ["10000", "CFO"]
+            ]
+        };
+
+        const discountRules = {
+            name: "Rules",
+            headers: ["Min", "Disc"],
+            rows: [
+                ["0", "0%"],
+                ["10", "5%"],
+                ["50", "10%"],
+                ["100", "20%"]
+            ]
+        };
+
+        // --- DATASETS FOR TOPIC 3 (INDEX/MATCH) ---
+        const budgetData = {
+            name: "Budget",
+            type: "matrix",
+            headers: ["GL Acct", "Mktg", "Ops", "Fin"],
+            rows: [
+                ["6100", "800", "500", "200"],
+                ["6200", "300", "900", "400"],
+                ["6300", "150", "350", "250"],
+                ["6400", "0", "2500", "0"]
+            ]
+        };
+
+        const taxMatrix = {
+            name: "TaxRates",
+            type: "matrix",
+            headers: ["Income", "CA", "NY", "TX"],
+            rows: [
+                ["Low", "1%", "2%", "0%"],
+                ["Med", "4%", "5%", "0%"],
+                ["High", "9%", "8%", "0%"]
+            ]
+        };
+
+        // --- DATASETS FOR TOPIC 4 (FILTER) ---
+        const riskData = {
+            name: "Transactions",
+            headers: ["ID", "Dept", "Amount", "Risk"],
+            rows: [
+                ["T-101", "Sales", "500", "Low"],
+                ["T-102", "IT", "12,000", "High"],
+                ["T-103", "Ops", "450", "Low"],
+                ["T-104", "Sales", "15,000", "High"]
+            ]
+        };
+
+        // --- COURSE SEQUENCE ---
+        const sequence = [
+            // ================== LESSON 1 ==================
+            {
+                type: 'lesson',
+                title: "XLOOKUP Essentials",
+                content: `
+                    <div class="mb-4 text-left">
+                        <strong class="text-blue-600 block mb-2 text-xl">The Modern Standard</strong>
+                        <p class="mb-4">XLOOKUP replaces VLOOKUP. It is safer, faster, and defaults to exact matches.</p>
+                        
+                        <div class="bg-gray-800 text-green-400 p-4 rounded-lg font-mono text-sm mb-6 shadow-inner">
+                            =XLOOKUP(lookup_value, lookup_array, return_array, [if_not_found])
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white border rounded p-4">
+                                <h4 class="font-bold text-gray-700 mb-2 border-b pb-1">Anatomy</h4>
+                                <ul class="list-disc pl-5 space-y-2 text-sm text-slate-600">
+                                    <li><strong>lookup_value:</strong> The ID you have (e.g., "V-1001").</li>
+                                    <li><strong>lookup_array:</strong> The column with IDs (Table "Vendors", Col "VendorID").</li>
+                                    <li><strong>return_array:</strong> The column with answers (Table "Vendors", Col "Vendor Name").</li>
+                                </ul>
+                            </div>
+                            <div class="bg-white border rounded p-4">
+                                <h4 class="font-bold text-gray-700 mb-2 border-b pb-1">Why XLOOKUP?</h4>
+                                <ul class="list-disc pl-5 space-y-2 text-sm text-slate-600">
+                                    <li>Defaults to Exact Match (no more accidental approx matches).</li>
+                                    <li>Can search left or right (no column counting).</li>
+                                    <li>Built-in error handling.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                type: 'quiz',
+                title: "Basic Lookup: Vendor Name",
+                desc: "We are auditing the Invoice Log. The 'Vendor Name' column is empty. Use the VendorID to pull the name from the Vendor Master.",
+                goal: "Populate Vendor Name in Workpaper",
+                mainTable: invoiceDataBlank,
+                secondaryTable: vendorData,
+                correctIndex: 1, 
+                options: [
+                    { code: "=XLOOKUP([@VendorID], Vendors[Vendor Name], Vendors[VendorID])", feedback: "Incorrect. You swapped the lookup and return arrays. XLOOKUP searches the 2nd argument and returns from the 3rd." },
+                    { code: "=XLOOKUP([@VendorID], Vendors[VendorID], Vendors[Vendor Name], \"Unknown\")", feedback: "Correct! Standard syntax: Search ID column, Return Name column, handle errors." },
+                    { code: "=XLOOKUP(Vendors[VendorID], [@VendorID], Vendors[Vendor Name])", feedback: "Incorrect. The first argument must be the single value you are looking up, not the whole column." },
+                    { code: "=XLOOKUP([@VendorID], Vendors[VendorID])", feedback: "Incorrect. You are missing the return_array. XLOOKUP needs to know which column to bring back." }
+                ]
+            },
+            {
+                type: 'quiz',
+                title: "Basic Lookup: Employee Email",
+                desc: "New Challenge: We need to email employees about their timesheets. Pull the Email Address from the Employee Roster based on Emp ID.",
+                goal: "Find Email Address",
+                mainTable: payrollData,
+                secondaryTable: employeeData,
+                correctIndex: 0,
+                options: [
+                    { code: "=XLOOKUP([@Emp ID], Employees[Emp ID], Employees[Email])", feedback: "Correct! Simple exact match lookup." },
+                    { code: "=VLOOKUP([@Emp ID], Employees, 3, FALSE)", feedback: "Technically works, but we are learning XLOOKUP. Stick to the modern function." },
+                    { code: "=XLOOKUP([@Emp ID], Employees[Email], Employees[Emp ID])", feedback: "Incorrect. You are searching the Email column for an ID. Arguments are swapped." },
+                    { code: "=XLOOKUP(\"E-02\", Employees[Emp ID], Employees[Email])", feedback: "Incorrect. Hardcoding \"E-02\" works for the first row only. Use the cell reference [@Emp ID]." }
+                ]
+            },
+
+            // ================== LESSON 2 ==================
+            {
+                type: 'lesson',
+                title: "Advanced XLOOKUP",
+                content: `
+                    <div class="space-y-6 text-left">
+                        <!-- Top Syntax for Match Mode -->
+                        <div class="font-mono bg-gray-800 text-green-400 p-3 rounded-lg text-xs shadow-inner mb-4">
+                            =XLOOKUP(lookup, array, return, [not_found], <span class="text-yellow-300 font-bold">[MATCH_MODE]</span>, [search_mode])
+                        </div>
+
+                        <!-- 1. Wildcards -->
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <h3 class="font-bold text-blue-800 mb-2">1. Wildcards (Match Mode = 2)</h3>
+                            <p class="text-sm text-gray-700 mb-3">You MUST set the 5th argument to 2 to enable these.</p>
+                            <table class="w-full text-sm bg-white border mb-2">
+                                <tr class="bg-gray-100 font-bold"><td class="p-2 border">Symbol</td><td class="p-2 border">Meaning</td><td class="p-2 border">Example</td></tr>
+                                <tr>
+                                    <td class="p-2 border font-mono text-center text-red-600 font-bold">*</td>
+                                    <td class="p-2 border">Any number of characters</td>
+                                    <td class="p-2 border">"Host*" matches "Hosting", "Hostel"</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border font-mono text-center text-red-600 font-bold">?</td>
+                                    <td class="p-2 border">Exactly ONE character</td>
+                                    <td class="p-2 border">"T?p" matches "Top", "Tap"</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- 2. Approx Match -->
+                        <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                            <h3 class="font-bold text-purple-800 mb-2">2. Approximate Match (Mode -1 vs 1)</h3>
+                            <div class="flex gap-4 mb-2">
+                                <table class="text-xs bg-white border h-fit">
+                                    <tr class="bg-gray-200 font-bold"><td>Tier</td><td>Min</td></tr>
+                                    <tr><td>0</td><td>$0</td></tr>
+                                    <tr><td>1</td><td>$500</td></tr>
+                                </table>
+                                <div class="text-sm text-gray-600 flex-1">
+                                    <p class="mb-1"><strong>Scenario:</strong> Price is $450.</p>
+                                    <p class="text-xs"><span class="font-mono bg-white border px-1">-1</span> (Next Smaller): Finds $0 (Tier 0). <span class="text-green-600 font-bold">Correct.</span></p>
+                                    <p class="text-xs mt-1"><span class="font-mono bg-white border px-1">1</span> (Next Larger): Finds $500 (Tier 1). <span class="text-red-600 font-bold">This is wrong.</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Search Mode -->
+                        <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                            <h3 class="font-bold text-orange-800 mb-2">3. Search Mode (First vs Last)</h3>
+                            <div class="flex gap-4 mb-2">
+                                <table class="text-xs bg-white border w-1/3 text-center">
+                                    <tr class="bg-gray-200 font-bold"><td>SalesID</td><td>Date</td><td>Amt</td></tr>
+                                    <tr><td>S-01</td><td>Jan 1</td><td>$100</td></tr>
+                                    <tr><td>S-02</td><td>Jan 2</td><td>$50</td></tr>
+                                    <tr><td>S-01</td><td>Jan 5</td><td>$200</td></tr>
+                                </table>
+                                <div class="text-sm text-gray-600 flex-1">
+                                    <p class="mb-2"><strong>Goal:</strong> Find sales for S-01.</p>
+                                    <div class="mb-2">
+                                        <span class="font-bold text-xs bg-gray-200 px-1 rounded">Mode 1</span> (Top-Down): 
+                                        Stops at <span class="text-red-600 font-bold">Jan 1</span>. (Oldest)
+                                    </div>
+                                    <div>
+                                        <span class="font-bold text-xs bg-gray-200 px-1 rounded">Mode -1</span> (Bottom-Up): 
+                                        Starts at bottom, finds <span class="text-green-600 font-bold">Jan 5</span>. (Latest)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                `
+            },
+            {
+                type: 'quiz',
+                title: "Wildcard Search",
+                desc: "Find the Amount for the invoice containing the text 'Hosting'. Note: The description is a single word 'CloudHosting'. We need to match the partial text.",
+                goal: "Find Amount for *Hosting",
+                mainTable: invoiceDataFull,
+                secondaryTable: null,
+                correctIndex: 3,
+                options: [
+                    { code: "=XLOOKUP(\"*Hosting\", Invoices[Description], Invoices[Amount])", feedback: "Incorrect. You used wildcards (*) but didn't enable them. You must set the 5th argument [match_mode] to 2." },
+                    { code: "=XLOOKUP(\"Hosting\", Invoices[Description], Invoices[Amount],, 2)", feedback: "Incorrect. 'Hosting' (exact) doesn't equal 'CloudHosting'. You need a leading asterisk (*) to match 'Cloud'." },
+                    { code: "=XLOOKUP(\"*Hosting\", Invoices[Description], Invoices[Amount],, 1)", feedback: "Incorrect. Match mode 1 is 'Exact or Next Larger'. You need mode 2 for Wildcards." },
+                    { code: "=XLOOKUP(\"*Hosting\", Invoices[Description], Invoices[Amount],, 2)", feedback: "Correct! The asterisk matches 'Cloud', allowing 'CloudHosting' to be found." }
+                ]
+            },
+            {
+                type: 'quiz',
+                title: "Search Order (Latest Entry)",
+                desc: "Vendor V-1003 has two invoices (I-902 and I-903). The list is sorted by date. We need the amount of the MOST RECENT invoice (the one further down the list).",
+                goal: "Find Latest Amount for V-1003",
+                mainTable: invoiceDataFull,
+                secondaryTable: null,
+                correctIndex: 2,
+                options: [
+                    { code: "=XLOOKUP(\"V-1003\", Invoices[VendorID], Invoices[Amount])", feedback: "Incorrect. Default search is First-to-Last. This returns the first match (Jan 11)." },
+                    { code: "=XLOOKUP(\"V-1003\", Invoices[VendorID], Invoices[Amount],, 0, 1)", feedback: "Incorrect. Search mode 1 is explicitly Top-to-Bottom." },
+                    { code: "=XLOOKUP(\"V-1003\", Invoices[VendorID], Invoices[Amount],, 0, -1)", feedback: "Correct! Search mode -1 scans Bottom-to-Top, finding the Jan 15 entry." },
+                    { code: "=XLOOKUP(\"V-1003\", Invoices[VendorID], Invoices[Amount], -1)", feedback: "Incorrect. You put -1 in the [if_not_found] position (4th arg), not [search_mode] (6th arg)." }
+                ]
+            },
+            {
+                type: 'quiz',
+                title: "Approximate Match (Discounts)",
+                desc: "We are buying 25 units. Look up the discount rate. (0-9 units=0%, 10-49 units=5%, etc). We need the tier for 25.",
+                goal: "Find Discount for Qty 25",
+                mainTable: { name: "Current Order", headers: ["Qty"], rows: [["25"]] },
+                secondaryTable: discountRules,
+                correctIndex: 1,
+                options: [
+                    { code: "=XLOOKUP(25, Rules[Min], Rules[Disc],, 0)", feedback: "Incorrect. 25 is not in the list. Exact match fails." },
+                    { code: "=XLOOKUP(25, Rules[Min], Rules[Disc],, -1)", feedback: "Correct! Mode -1 finds the 'Next Smaller'. 10 is smaller than 25, so we get 5% discount." },
+                    { code: "=XLOOKUP(25, Rules[Min], Rules[Disc],, 1)", feedback: "Incorrect. Mode 1 finds 'Next Larger' (50), which gives a 10% discount we didn't earn." },
+                    { code: "=XLOOKUP(25, Rules[Min], Rules[Disc],, 2)", feedback: "Incorrect. Mode 2 is for wildcards." }
+                ]
+            },
+             {
+                type: 'quiz',
+                title: "Approximate Match (Policy)",
+                desc: "Assign an Approver for an invoice of $450.00 using the Policy Table. We need the tier that $450 falls into (Between 0 and 500).",
+                goal: "Find Approver for $450",
+                mainTable: { name: "Current Invoice", headers: ["Amount"], rows: [["$450.00"]] },
+                secondaryTable: policyData,
+                correctIndex: 1,
+                options: [
+                    { code: "=XLOOKUP(450, Policy[Limit], Policy[Approver],, 0)", feedback: "Incorrect. 450 does not exist in the table. Exact match (0) fails." },
+                    { code: "=XLOOKUP(450, Policy[Limit], Policy[Approver],, -1)", feedback: "Correct! Mode -1 finds 'Exact or Next Smaller'. 0 is the next smaller limit, so it returns 'Staff'." },
+                    { code: "=XLOOKUP(450, Policy[Limit], Policy[Approver],, 1)", feedback: "Incorrect. This is wrong. Mode 1 finds 'Next Larger' (500), which requires a Manager." },
+                    { code: "=XLOOKUP(450, Policy[Limit], Policy[Approver],, 2)", feedback: "Incorrect. Mode 2 is for wildcards, not number ranges." }
+                ]
+            },
+
+            // ================== LESSON 3 ==================
+            {
+                type: 'lesson',
+                title: "INDEX & XMATCH",
+                content: `
+                    <div class="mb-4 text-left">
+                        <strong class="text-blue-600 block mb-2 text-xl">The Dynamic Duo</strong>
+                        <p class="mb-4">Combining INDEX and XMATCH creates an "Address System" for your data.</p>
+                        
+                        <!-- NEW SYNTAX BLOCK -->
+                        <div class="bg-slate-800 text-white p-4 rounded-lg font-mono text-sm shadow-md mb-6">
+                            <div class="mb-4">
+                                <span class="text-blue-400 font-bold">INDEX</span>(array, row_num, [column_num])
+                                <div class="text-slate-400 text-xs mt-1 ml-4 border-l-2 border-slate-600 pl-2">
+                                    • <span class="text-gray-300">array:</span> The range of cells to look in (e.g., B2:D5)<br>
+                                    • <span class="text-gray-300">row_num:</span> Which row to pick from the array<br>
+                                    • <span class="text-gray-300">column_num:</span> Which column to pick
+                                </div>
+                            </div>
+                            <div>
+                                <span class="text-purple-400 font-bold">XMATCH</span>(lookup_value, lookup_array, [match_mode])
+                                <div class="text-slate-400 text-xs mt-1 ml-4 border-l-2 border-slate-600 pl-2">
+                                    • <span class="text-gray-300">lookup_value:</span> Item to find (e.g. "Ops")<br>
+                                    • <span class="text-gray-300">lookup_array:</span> Range to search (e.g., A2:A5)<br>
+                                    • <span class="text-gray-300">match_mode:</span> 0 (Exact) is default
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-6">
+                            <!-- Visual for INDEX -->
+                            <div class="bg-white border rounded p-4 shadow-sm relative">
+                                <h4 class="font-bold text-gray-700 text-sm mb-2">1. INDEX(Area, Row, Col)</h4>
+                                <div class="overflow-hidden rounded border border-gray-200">
+                                    <table class="w-full text-xs text-center border-collapse">
+                                        <!-- Excel Headers (A, B, C...) -->
+                                        <tr class="bg-gray-200 text-gray-500 font-bold font-sans">
+                                            <td class="p-1 border w-8 bg-gray-300"></td>
+                                            <td class="p-1 border">A</td>
+                                            <td class="p-1 border">B <span class="text-blue-600 text-[9px] block">[1]</span></td>
+                                            <td class="p-1 border">C <span class="text-blue-600 text-[9px] block">[2]</span></td>
+                                        </tr>
+                                        <!-- Row 1 (Headers) -->
+                                        <tr>
+                                            <td class="p-1 border bg-gray-200 font-bold text-gray-500">1</td>
+                                            <td class="p-1 border bg-gray-50 text-gray-400 italic">Type</td>
+                                            <td class="p-1 border bg-gray-50 font-bold">Tee</td>
+                                            <td class="p-1 border bg-gray-50 font-bold">Hoodie</td>
+                                        </tr>
+                                        <!-- Row 2 -->
+                                        <tr>
+                                            <td class="p-1 border bg-gray-200 font-bold text-gray-500">2<div class="text-blue-600 text-[9px]">[1]</div></td>
+                                            <td class="p-1 border bg-gray-50 font-bold">S</td>
+                                            <td class="p-1 border bg-yellow-50 border-yellow-300">$20</td>
+                                            <td class="p-1 border bg-yellow-50 border-yellow-300">$45</td>
+                                        </tr>
+                                        <!-- Row 3 -->
+                                        <tr>
+                                            <td class="p-1 border bg-gray-200 font-bold text-gray-500">3<div class="text-blue-600 text-[9px]">[2]</div></td>
+                                            <td class="p-1 border bg-gray-50 font-bold">M</td>
+                                            <td class="p-1 border bg-blue-600 text-white font-bold ring-2 ring-blue-300 blink-target">$22</td>
+                                            <td class="p-1 border bg-yellow-50 border-yellow-300">$48</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="mt-2 text-sm text-gray-600">
+                                    <p><strong>Range:</strong> B2:C3 (Yellow Area)</p>
+                                    <p><strong>Formula:</strong> <code>=INDEX(B2:C3, 2, 1)</code></p>
+                                    <p class="text-xs mt-1">"Go to Row 2 (M), Col 1 (Tee) inside data". Returns <span class="font-bold text-blue-600">$22</span>.</p>
+                                </div>
+                            </div>
+
+                            <!-- Visual for 2.(a) XMATCH (Find Row #) -->
+                            <div class="bg-white border rounded p-4 shadow-sm">
+                                <h4 class="font-bold text-gray-700 text-sm mb-2">2.(a) XMATCH (Find Row #)</h4>
+                                <p class="text-xs text-gray-500 mb-2">Find the position in a vertical list (A2:A3).</p>
+                                <table class="excel-grid text-xs mb-2 w-1/3 text-center">
+                                    <tr class="bg-gray-200 text-gray-500 font-mono text-[10px] font-bold">
+                                        <td class="border bg-gray-300"></td><td class="border">A</td>
+                                    </tr>
+                                    <tr><td class="border bg-gray-200 text-gray-500">1</td><td class="border bg-gray-100 italic">Type</td></tr>
+                                    <tr><td class="border bg-gray-200 text-gray-500">2</td><td class="border bg-gray-50">S <span class="text-blue-600 text-[9px]">[1]</span></td></tr>
+                                    <tr><td class="border bg-gray-200 text-gray-500">3</td><td class="border bg-yellow-100 font-bold">M <span class="text-blue-600 text-[9px]">[2]</span></td></tr>
+                                </table>
+                                <code class="text-xs bg-gray-100 p-1 block mt-1">XMATCH("M", A2:A3) -> Returns 2</code>
+                            </div>
+
+                            <!-- Visual for 2.(b) XMATCH (Find Column #) -->
+                            <div class="bg-white border rounded p-4 shadow-sm">
+                                <h4 class="font-bold text-gray-700 text-sm mb-2">2.(b) XMATCH (Find Column #)</h4>
+                                <p class="text-xs text-gray-500 mb-2">Find the position in a horizontal list (B1:C1).</p>
+                                <table class="excel-grid text-xs mb-2 w-full text-center">
+                                    <!-- Column Headers + Indices -->
+                                    <tr class="bg-gray-200 text-gray-500 font-mono text-[10px] font-bold">
+                                        <td class="border bg-gray-300"></td>
+                                        <td class="border">A</td>
+                                        <td class="border">B<div class="text-blue-600">[1]</div></td>
+                                        <td class="border">C<div class="text-blue-600">[2]</div></td>
+                                    </tr>
+                                    <tr class="bg-gray-50">
+                                        <td class="border bg-gray-200 font-bold text-gray-500">1</td>
+                                        <td class="border bg-gray-100 italic">Type</td>
+                                        <td class="border bg-green-100">Tee</td>
+                                        <td class="border bg-yellow-100 font-bold">Hoodie</td>
+                                    </tr>
+                                </table>
+                                <code class="text-xs bg-gray-100 p-1 block mt-1">XMATCH("Hoodie", B1:C1) -> Returns 2</code>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                type: 'quiz',
+                title: "Basic INDEX (Coordinates)",
+                desc: "Retrieve the value from Row 2, Column 3 ('Ops' column, '6200' row) from the highlighted Data Body (B2:D5).",
+                goal: "Get Value at Row 2, Col 3",
+                mainTable: budgetData,
+                secondaryTable: null,
+                correctIndex: 2,
+                options: [
+                    { code: "=INDEX($B$2:$D$5, 3, 2)", feedback: "Incorrect. This grabs Row 3, Col 2. We want Row 2, Col 3." },
+                    { code: "=INDEX($B$2:$D$5, \"6200\", \"Ops\")", feedback: "Incorrect. INDEX only understands numbers (integers), not text labels." },
+                    { code: "=INDEX($B$2:$D$5, 2, 3)", feedback: "Correct! Row 2, Column 3 inside the data range (B2:D5) maps to '900'." },
+                    { code: "=INDEX($B$2:$D$5, 2)", feedback: "Incorrect. You only specified a Row. For a 2D matrix, you usually need both." }
+                ]
+            },
+            {
+                type: 'quiz',
+                title: "XMATCH: Finding Coordinates",
+                desc: "Find the position of 'Ops' in the header row (B1:D1).",
+                goal: "Get Column # of 'Ops'",
+                mainTable: budgetData,
+                secondaryTable: null,
+                correctIndex: 0,
+                options: [
+                    { code: "=XMATCH(\"Ops\", $B$1:$D$1, 0)", feedback: "Correct! It searches the header range (B1:D1) and returns 2." },
+                    { code: "=XLOOKUP(\"Ops\", $B$1:$D$1, $B$1:$D$1)", feedback: "Incorrect. XLOOKUP returns the value 'Ops', not the position number." },
+                    { code: "=XMATCH($B$1:$D$1, \"Ops\", 0)", feedback: "Incorrect. Arguments reversed. Syntax is XMATCH(lookup_value, lookup_array)." },
+                    { code: "=INDEX(\"Ops\", $B$1:$D$1)", feedback: "Incorrect. INDEX retrieves data, it doesn't find positions." }
+                ]
+            },
+            {
+                type: 'quiz',
+                title: "The 2-Way Match (Budget)",
+                desc: "Find the Budget amount for GL 6200 (Row) and Dept 'Ops' (Column) using the Data Range B2:D5.",
+                goal: "Dynamic 2-Way Lookup",
+                mainTable: budgetData,
+                secondaryTable: null,
+                correctIndex: 3,
+                options: [
+                    { code: "=XLOOKUP(6200, $A$2:$A$5, XLOOKUP(\"Ops\"...))", feedback: "Technically possible, but INDEX/MATCH is preferred for fixed matrices." },
+                    { code: "=INDEX($B$2:$D$5, XMATCH(\"Ops\", $B$1:$D$1), XMATCH(6200, $A$2:$A$5))", feedback: "Incorrect. You put the Column Match (Ops) in the Row Argument. Order is INDEX(Area, Row, Col)." },
+                    { code: "=INDEX($B$2:$D$5, 2, 3)", feedback: "Incorrect. Don't hardcode numbers! If the sort order changes, your audit breaks." },
+                    { code: "=INDEX($B$2:$D$5, XMATCH(6200, $A$2:$A$5), XMATCH(\"Ops\", $B$1:$D$1))", feedback: "Correct! INDEX(Data, RowMatch, ColMatch). Finds Row 2 and Col 2, returning 500." }
+                ]
+            },
+            {
+                type: 'quiz',
+                title: "The 2-Way Match (Tax Rates)",
+                desc: "Final Boss: Find the Tax Rate for 'Med' Income in 'NY' using the Data Range B2:D4.",
+                goal: "Find Rate for Med/NY",
+                mainTable: taxMatrix,
+                secondaryTable: null,
+                correctIndex: 0,
+                options: [
+                    { code: "=INDEX($B$2:$D$4, XMATCH(\"Med\", $A$2:$A$4), XMATCH(\"NY\", $B$1:$D$1))", feedback: "Correct! Row match finds 'Med' in A2:A4, Column match finds 'NY' in B1:D1." },
+                    { code: "=INDEX($B$2:$D$4, XMATCH(\"NY\", $B$1:$D$1), XMATCH(\"Med\", $A$2:$A$4))", feedback: "Incorrect. You put Column match (NY) in the Row argument." },
+                    { code: "=XMATCH(\"Med\", \"NY\", $B$2:$D$4)", feedback: "Incorrect. This is not valid syntax." },
+                    { code: "=INDEX($B$2:$D$4, \"Med\", \"NY\")", feedback: "Incorrect. INDEX needs numbers, not text labels." }
+                ]
+            },
+            {
+                type: 'quiz',
+                title: "The 2-Way Match (Table Refs)",
+                desc: "Find the Tax Rate for 'Med' Income in 'NY', but this time use **Structured Table References**. The table is named 'TaxRates'.",
+                goal: "Find Rate for Med/NY (Table)",
+                mainTable: taxMatrix,
+                secondaryTable: null,
+                correctIndex: 2,
+                options: [
+                    { code: "=INDEX(TaxRates, XMATCH(\"NY\", TaxRates[#Headers]), XMATCH(\"Med\", TaxRates[Income]))", feedback: "Incorrect. You put Column match (NY) in the Row argument." },
+                    { code: "=INDEX(TaxRates[#Headers], XMATCH(\"Med\", TaxRates[Income]), XMATCH(\"NY\", TaxRates[#Headers]))", feedback: "Incorrect. You are indexing the Headers, not the data body." },
+                    { code: "=INDEX(TaxRates, XMATCH(\"Med\", TaxRates[Income]), XMATCH(\"NY\", TaxRates[#Headers]))", feedback: "Correct! References the Table body, matches Row in [Income] column, matches Column in [#Headers]." },
+                    { code: "=XLOOKUP(\"Med\", TaxRates[Income], \"NY\")", feedback: "Incorrect. XLOOKUP syntax is wrong for a 2-way match on a whole table here." }
+                ]
+            },
+
+            // ================== LESSON 4: FILTER ==================
+            {
+                type: 'lesson',
+                title: "Dynamic Arrays: The FILTER Function",
+                content: `
+                    <div class="mb-4 text-left">
+                        <strong class="text-blue-600 block mb-2 text-xl">The "Smart Copy-Paste"</strong>
+                        <p class="mb-4">XLOOKUP finds <strong>one</strong> match. FILTER finds <strong>all</strong> matches.</p>
+                        
+                        <div class="bg-gray-800 text-green-400 p-4 rounded-lg font-mono text-sm mb-6 shadow-inner">
+                            =FILTER(array, include, [if_empty])
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Comparison -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-red-50 p-4 rounded border border-red-200">
+                                    <h4 class="font-bold text-red-800 mb-2">Classic Lookup</h4>
+                                    <p class="text-sm text-gray-700">"Find me the status of Invoice #123"</p>
+                                    <div class="mt-2 text-xs bg-white p-2 rounded border border-red-100 font-mono">
+                                        =XLOOKUP(...)<br>
+                                        &rarr; Returns 1 Cell
+                                    </div>
+                                </div>
+                                <div class="bg-green-50 p-4 rounded border border-green-200">
+                                    <h4 class="font-bold text-green-800 mb-2">FILTER Function</h4>
+                                    <p class="text-sm text-gray-700">"Show me ALL invoices that are Overdue"</p>
+                                    <div class="mt-2 text-xs bg-white p-2 rounded border border-green-100 font-mono">
+                                        =FILTER(...)<br>
+                                        &rarr; Returns Many Rows
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Explanation -->
+                            <div class="bg-white border rounded p-4 shadow-sm">
+                                <h4 class="font-bold text-gray-700 mb-3">How it works: The "True/False" Test</h4>
+                                <div class="flex gap-4 items-center">
+                                    <div class="w-1/3">
+                                        <table class="excel-grid text-xs text-center">
+                                            <tr class="bg-gray-200 font-bold"><td>ID</td><td>Status</td></tr>
+                                            <tr><td>1</td><td class="bg-red-100 font-bold">Paid</td></tr>
+                                            <tr><td>2</td><td class="bg-green-100 font-bold">Due</td></tr>
+                                            <tr><td>3</td><td class="bg-green-100 font-bold">Due</td></tr>
+                                        </table>
+                                    </div>
+                                    <div class="text-2xl text-gray-400"><i class="fas fa-arrow-right"></i></div>
+                                    <div class="flex-1 text-sm text-gray-600">
+                                        <p class="mb-2"><strong>Rule:</strong> <code>Status="Due"</code></p>
+                                        <p class="text-xs">1. Paid? <span class="text-red-500 font-bold">FALSE</span> (Skip)</p>
+                                        <p class="text-xs">2. Due? <span class="text-green-600 font-bold">TRUE</span> (Keep)</p>
+                                        <p class="text-xs">3. Due? <span class="text-green-600 font-bold">TRUE</span> (Keep)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                type: 'quiz',
+                title: "Extracting High Risk Items",
+                desc: "We need a list of ALL transaction IDs flagged as 'High' Risk to paste into our audit report. XLOOKUP will only give us the first one. Use FILTER to get them all.",
+                goal: "List all High Risk IDs",
+                mainTable: riskData,
+                secondaryTable: null,
+                correctIndex: 1,
+                options: [
+                    { code: "=XLOOKUP(\"High\", Transactions[Risk], Transactions[ID])", feedback: "Incorrect. XLOOKUP stops at the first match (T-102). It misses the second high-risk item (T-104)." },
+                    { code: "=FILTER(Transactions[ID], Transactions[Risk]=\"High\", \"None\")", feedback: "Correct! This 'smart copy-paste' checks the Risk column and returns every ID where the risk is High." },
+                    { code: "=FILTER(Transactions[Risk]=\"High\", Transactions[ID])", feedback: "Incorrect. Arguments swapped. Syntax is FILTER(return_array, include_condition)." },
+                    { code: "=FILTER(Transactions[ID], \"High\")", feedback: "Incorrect. The second argument must be a TRUE/FALSE test (e.g. range=\"value\"), not just a text string." }
+                ]
+            }
+        ];
+
+        // --- STATE & LOGIC ---
+        let currentIndex = 0;
+        let instructorMode = false;
+
+        function init() {
+            renderModuleList();
+            loadItem(0);
+        }
+
+        function renderModuleList() {
+            const list = document.getElementById('module-list');
+            list.innerHTML = '';
+            
+            let lessonCount = 0;
+            let quizCount = 0;
+
+            sequence.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = `module-item px-4 py-3 border-l-4 border-transparent cursor-pointer ${idx === currentIndex ? 'active' : ''} ${idx > currentIndex && !instructorMode ? 'locked' : ''}`;
+                
+                let icon = '';
+                let label = '';
+                
+                if (item.type === 'lesson') {
+                    lessonCount++;
+                    icon = 'fa-chalkboard-teacher';
+                    label = `Lesson ${lessonCount}`;
+                } else {
+                    quizCount++;
+                    icon = 'fa-puzzle-piece';
+                    label = `Quiz ${quizCount}`;
+                }
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <i class="fas ${icon} text-sm ${idx === currentIndex ? 'text-green-600' : 'text-gray-400'}"></i>
+                        <div>
+                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${label}</div>
+                            <div class="text-sm font-medium text-gray-800 leading-tight">${item.title}</div>
+                        </div>
+                    </div>
+                `;
+                
+                if (idx <= currentIndex || instructorMode) {
+                    div.onclick = () => loadItem(idx);
+                }
+                
+                list.appendChild(div);
+            });
+
+            // Update progress
+            const pct = Math.round(((currentIndex) / sequence.length) * 100);
+            document.getElementById('progress-text').innerText = `${pct}%`;
+        }
+
+        function loadItem(index) {
+            currentIndex = index;
+            renderModuleList();
+
+            const item = sequence[index];
+            const lessonView = document.getElementById('lesson-view');
+            const simView = document.getElementById('simulation-view');
+            const completionView = document.getElementById('completion-view');
+            
+            lessonView.classList.add('hidden');
+            simView.classList.add('hidden');
+            completionView.classList.add('hidden');
+
+            if (item.type === 'lesson') {
+                lessonView.classList.remove('hidden');
+                document.getElementById('lesson-title').innerText = item.title;
+                document.getElementById('lesson-content').innerHTML = item.content;
+            } else if (item.type === 'quiz') {
+                simView.classList.remove('hidden');
+                loadQuiz(item);
+            }
+        }
+
+        function loadQuiz(item) {
+            // Text
+            document.getElementById('sim-title').innerText = item.title;
+            document.getElementById('sim-desc').innerText = item.desc;
+            document.getElementById('sim-goal-badge').innerText = "Goal: " + item.goal;
+
+            // Tables
+            renderTable('data-table', item.mainTable);
+            document.getElementById('table-name').innerText = item.mainTable.name || "Main Table";
+
+            const secWrapper = document.getElementById('secondary-table-wrapper');
+            if (item.secondaryTable) {
+                secWrapper.classList.remove('hidden');
+                document.getElementById('secondary-table-name').innerText = item.secondaryTable.name || "Lookup Source";
+                renderTable('secondary-data-table', item.secondaryTable);
+            } else {
+                secWrapper.classList.add('hidden');
+            }
+
+            // Options
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            document.getElementById('formula-preview').innerText = "Select the correct formula below...";
+            document.getElementById('formula-preview').className = "h-10 bg-gray-50 border border-gray-300 rounded w-full flex items-center px-3 text-sm formula-bar text-gray-800 shadow-inner opacity-40";
+            document.getElementById('feedback-block').classList.add('hidden');
+
+            item.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                // Apply instructor highlight if applicable
+                const isCorrect = idx === item.correctIndex;
+                const instructorClass = (instructorMode && isCorrect) ? 'instructor-reveal' : '';
+
+                btn.className = `w-full text-left p-4 rounded-lg border border-gray-200 bg-white hover:bg-slate-50 hover:border-blue-400 transition-all shadow-sm group flex items-start gap-3 ${instructorClass}`;
+                btn.onclick = () => checkAnswer(opt, idx, item.correctIndex);
+                
+                btn.innerHTML = `
+                    <div class="mt-0.5 w-6 h-6 shrink-0 rounded-full border-2 border-slate-300 flex items-center justify-center text-xs font-bold text-slate-400 group-hover:border-blue-500 group-hover:text-blue-500 transition-colors">
+                        ${String.fromCharCode(65 + idx)}
+                    </div>
+                    <div class="flex-1">
+                        <code class="text-sm font-mono text-blue-800 break-all leading-relaxed">${opt.code}</code>
+                    </div>
+                    ${instructorMode && isCorrect ? '<span class="instructor-badge text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded font-bold ml-2"><i class="fas fa-check"></i> Answer</span>' : ''}
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function renderTable(id, data) {
+            const table = document.getElementById(id);
+            table.innerHTML = '';
+            
+            // Check for matrix type to apply special styling
+            const isMatrix = data.type === 'matrix';
+
+            const thead = document.createElement('thead');
+            const trHead = document.createElement('tr');
+            trHead.className = "excel-header";
+            
+            // Render Headers
+            if (isMatrix) {
+                // Top Row: Corner + Letters A, B, C...
+                const topRow = document.createElement('tr');
+                topRow.className = "bg-gray-200 text-gray-500 font-bold font-sans text-xs text-center border-b border-gray-300";
+                
+                // Corner Cell
+                const corner = document.createElement('td');
+                corner.className = "w-8 bg-gray-300 border-r border-gray-400";
+                topRow.appendChild(corner);
+
+                // Letter Headers (A, B, C...)
+                data.headers.forEach((_, i) => {
+                    const th = document.createElement('td');
+                    th.className = "border-r border-gray-300 py-1";
+                    th.innerText = String.fromCharCode(65 + i); // 65 is 'A'
+                    topRow.appendChild(th);
+                });
+                thead.appendChild(topRow);
+            }
+
+            // Standard Header Row (Or Row 1 in Excel Grid)
+            if (!isMatrix) {
+                data.headers.forEach((h) => {
+                    const th = document.createElement('th');
+                    th.innerText = h;
+                    trHead.appendChild(th);
+                });
+                thead.appendChild(trHead);
+            } else {
+                // For matrix, this is "Row 1" containing the actual text headers
+                const rowNumCell = document.createElement('td');
+                rowNumCell.className = "bg-gray-200 text-gray-500 font-bold text-center border-r border-gray-300 w-8 text-xs";
+                rowNumCell.innerText = "1";
+                trHead.appendChild(rowNumCell);
+
+                data.headers.forEach((h, i) => {
+                    const th = document.createElement('td');
+                    th.className = i === 0 ? "bg-gray-50 font-bold text-gray-500 border border-gray-300 px-2 py-1 text-xs" : "bg-gray-50 font-bold text-gray-700 border border-gray-300 px-2 py-1 text-xs text-center";
+                    th.innerText = h;
+                    trHead.appendChild(th);
+                });
+                thead.appendChild(trHead);
+            }
+            
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            data.rows.forEach((r, rowIndex) => {
+                const tr = document.createElement('tr');
+                
+                // If Matrix, add Row Number Cell (2, 3, 4...)
+                if (isMatrix) {
+                    const rowNumCell = document.createElement('td');
+                    rowNumCell.className = "bg-gray-200 text-gray-500 font-bold text-center border-r border-gray-300 text-xs";
+                    rowNumCell.innerText = (rowIndex + 2).toString(); // Start at 2 because Row 1 was headers
+                    tr.appendChild(rowNumCell);
+                }
+
+                r.forEach((c, index) => {
+                    const td = document.createElement('td');
+                    
+                    if (isMatrix) {
+                        if (index === 0) {
+                            // First column (Row Label) - Bold
+                            td.className = "font-bold bg-gray-50 border border-gray-300 text-slate-700 text-xs px-2 py-1";
+                            td.innerText = c;
+                        } else {
+                            // Data Body - Highlight to show it's the "Data" portion
+                            td.className = "bg-yellow-50 text-slate-800 border border-yellow-100 text-center text-xs px-2 py-1";
+                            td.innerText = c;
+                        }
+                    } else {
+                        // Keep standard styling
+                        td.innerText = c;
+                    }
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+        }
+
+        function checkAnswer(option, selectedIdx, correctIdx) {
+            const isCorrect = selectedIdx === correctIdx;
+            const fbBlock = document.getElementById('feedback-block');
+            const fbIcon = document.getElementById('feedback-icon');
+            const fbTitle = document.getElementById('feedback-title');
+            const fbMsg = document.getElementById('feedback-message');
+            const fbConcept = document.getElementById('feedback-concept');
+            const fbBtn = document.getElementById('feedback-btn');
+            const bar = document.getElementById('formula-preview');
+
+            // Show selected formula in bar
+            bar.innerText = option.code;
+            bar.classList.remove('opacity-40');
+
+            fbBlock.classList.remove('hidden');
+
+            if (isCorrect) {
+                fbIcon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
+                fbTitle.innerText = "Correct Logic";
+                fbTitle.className = "text-2xl font-bold mb-2 text-green-700";
+                fbMsg.innerText = option.feedback;
+                fbConcept.parentElement.classList.remove('hidden');
+                fbConcept.innerText = sequence[currentIndex].title + " Mastered.";
+                
+                fbBtn.className = "px-6 py-2.5 rounded-lg shadow-lg font-bold text-white transition-colors bg-green-600 hover:bg-green-700";
+                fbBtn.innerHTML = 'Next <i class="fas fa-arrow-right ml-2"></i>';
+                fbBtn.onclick = nextItem;
+            } else {
+                fbIcon.innerHTML = '<i class="fas fa-times-circle text-red-500"></i>';
+                fbTitle.innerText = "Syntax Error";
+                fbTitle.className = "text-2xl font-bold mb-2 text-red-700";
+                fbMsg.innerText = option.feedback;
+                fbConcept.parentElement.classList.add('hidden');
+                
+                fbBtn.className = "px-6 py-2.5 rounded-lg shadow-lg font-bold text-white transition-colors bg-gray-600 hover:bg-gray-700";
+                fbBtn.innerHTML = '<i class="fas fa-redo mr-2"></i> Try Again';
+                fbBtn.onclick = () => {
+                    fbBlock.classList.add('hidden');
+                };
+            }
+        }
+
+        function nextItem() {
+            if (currentIndex < sequence.length - 1) {
+                currentIndex++;
+                loadItem(currentIndex);
+            } else {
+                // Course Complete
+                document.getElementById('simulation-view').classList.add('hidden');
+                document.getElementById('lesson-view').classList.add('hidden');
+                document.getElementById('completion-view').classList.remove('hidden');
+                document.getElementById('progress-text').innerText = "100%";
+                fireConfetti();
+            }
+        }
+
+        // --- INSTRUCTOR ---
+        function toggleInstructorModal() {
+            const modal = document.getElementById('instructor-modal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                document.getElementById('instructor-pw').value = '';
+                document.getElementById('instructor-pw').focus();
+            }
+        }
+
+        function verifyInstructor() {
+            const input = document.getElementById('instructor-pw').value;
+            if (input === "teacher") {
+                instructorMode = true;
+                toggleInstructorModal();
+                renderModuleList(); // Re-render to unlock everything
+                
+                // If currently viewing a quiz, reload it to show answers
+                if (sequence[currentIndex].type === 'quiz') {
+                    loadQuiz(sequence[currentIndex]);
+                }
+
+                // Visual confirmation
+                const btn = document.getElementById('instructor-btn');
+                btn.classList.add('text-green-600', 'font-bold');
+                btn.innerHTML = '<i class="fas fa-check-shield"></i> Instructor Active';
+
+                alert("Instructor Mode Active: Answers revealed.");
+            } else {
+                alert("Incorrect password.");
+            }
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>
