@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Junior Auditor's Statistics Challenge</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Katex for Math (Optional but good for stats notation) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            height: 100vh;
+            overflow: hidden; /* Prevent body scroll, handle inside containers */
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-up {
+            animation: slideUp 0.4s ease-out forwards;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .correct-anim {
+            animation: pulse-green 0.5s;
+        }
+        .wrong-anim {
+            animation: shake 0.4s;
+        }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        /* Confetti Animation */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        /* Custom scrollbar for lesson content */
+        .custom-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        /* Sidebar Active State */
+        .nav-active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        /* Instructor Mode Styles */
+        .instructor-reveal {
+            border: 2px solid #10b981 !important;
+            background-color: #ecfdf5 !important;
+            position: relative;
+        }
+        .instructor-reveal::after {
+            content: 'CORRECT';
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            background: #10b981;
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50 h-16 flex-none">
+        <div class="max-w-7xl mx-auto px-4 h-full flex justify-between items-center w-full">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-500 p-2 rounded-lg">
+                    <i class="fa-solid fa-calculator text-slate-900 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight">Apex Audit & Tax</h1>
+                    <p class="text-xs text-slate-400">Training Module: Applied Statistics (v2026)</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-6">
+                <div class="text-right hidden sm:block">
+                    <div class="text-xs text-slate-400 uppercase tracking-wider">Current Phase</div>
+                    <div id="phase-display" class="text-sm font-bold text-emerald-400">Introduction</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm font-semibold">Score: <span id="score-display" class="text-emerald-400">0</span></div>
+                    <div class="text-xs text-slate-400">Level: <span id="progress-display">1/13</span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="flex-grow flex max-w-7xl mx-auto w-full pt-4 pb-4 h-[calc(100vh-64px)] gap-4 px-4 overflow-hidden">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white rounded-xl shadow-md hidden md:flex flex-col flex-none h-full overflow-hidden">
+            <div class="p-4 border-b border-slate-100 font-bold text-slate-700 bg-slate-50 flex-none">
+                Course Modules
+            </div>
+            <div class="flex-grow overflow-y-auto custom-scroll p-2 space-y-1" id="nav-list">
+                <!-- Nav items generated via JS -->
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50 flex-none">
+                <button id="instructor-btn" onclick="toggleInstructor()" class="text-xs text-slate-500 hover:text-emerald-600 font-bold flex items-center transition-all w-full p-3 rounded hover:bg-slate-100 border border-transparent">
+                    <i class="fa-solid fa-key mr-2"></i> <span id="instructor-text">Teacher Access</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow relative h-full bg-slate-100 rounded-xl overflow-hidden flex flex-col">
+            
+            <!-- Welcome Screen -->
+            <div id="start-screen" class="w-full h-full bg-white rounded-xl shadow-2xl overflow-y-auto fade-in absolute inset-0 z-20 flex flex-col items-center justify-center">
+                <div class="max-w-2xl w-full">
+                    <div class="bg-gradient-to-r from-emerald-600 to-emerald-800 p-8 text-white text-center rounded-t-xl">
+                        <i class="fa-solid fa-graduation-cap text-6xl mb-4 text-emerald-200"></i>
+                        <h2 class="text-3xl font-bold mb-2">Junior Auditor Challenge 2026</h2>
+                        <p class="text-emerald-100">From Basic Stats to Machine Learning Concepts</p>
+                    </div>
+                    <div class="p-8 space-y-4 text-slate-700 bg-white rounded-b-xl border border-t-0 border-slate-200">
+                        <p class="text-lg">Welcome to the 2026 Apex Audit Training. We use a <strong>Learn-then-Do</strong> approach.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-6">
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                <h3 class="font-bold text-blue-800 mb-2"><i class="fa-solid fa-book-open mr-2"></i>The Lesson</h3>
+                                <p class="text-sm text-blue-600">Interactive theory. Use the <strong>Next/Prev</strong> buttons to learn at your pace.</p>
+                            </div>
+                            <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                                <h3 class="font-bold text-orange-800 mb-2"><i class="fa-solid fa-briefcase mr-2"></i>The Challenge</h3>
+                                <p class="text-sm text-orange-600">Real-world scenarios: Fraud, Regression, and Segmentation.</p>
+                            </div>
+                        </div>
+                        <div class="pt-4 text-center">
+                            <button onclick="startModule()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-10 rounded-full transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg">
+                                Start Training
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lesson Container -->
+            <div id="lesson-container" class="hidden w-full h-full bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col md:flex-row absolute inset-0 z-10">
+                <!-- Left: Theory -->
+                <div class="md:w-1/2 flex flex-col border-r border-slate-200 relative h-full">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-none">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded uppercase tracking-wide">Concept Learning</span>
+                        <button onclick="exitToMenu()" class="text-slate-400 hover:text-slate-600 text-sm font-semibold"><i class="fa-solid fa-house mr-1"></i> Menu</button>
+                    </div>
+                    
+                    <!-- Dynamic Lesson Content Area - Scrollable -->
+                    <div class="flex-grow overflow-y-auto custom-scroll p-8 bg-white" id="lesson-content-scroll">
+                        <h2 id="lesson-title" class="text-3xl font-bold text-slate-800 mb-6">Concept Title</h2>
+                        <div id="lesson-content-area" class="space-y-4 text-base leading-relaxed text-slate-600">
+                            <!-- Content injected here via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Navigation for Lesson Slides -->
+                    <div id="lesson-nav" class="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center flex-none">
+                        <button id="lesson-prev-btn" onclick="prevLessonSlide()" class="text-slate-500 hover:text-slate-800 px-4 py-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-30">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Previous
+                        </button>
+                        <div class="text-xs text-slate-400 font-mono">Slide <span id="lesson-step-counter">1</span></div>
+                        <button id="lesson-next-btn" onclick="nextLessonSlide()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow transition-transform active:scale-95">
+                            Next <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Interactive Playground -->
+                <div class="md:w-1/2 p-8 bg-slate-50 flex flex-col items-center justify-center relative h-full overflow-y-auto custom-scroll">
+                    <div class="absolute top-4 right-4 text-slate-200">
+                        <i class="fa-solid fa-flask text-4xl"></i>
+                    </div>
+                    <div id="lesson-playground" class="w-full flex flex-col items-center justify-center flex-grow">
+                        <!-- Dynamic Interactive Elements -->
+                    </div>
+                    <button onclick="goToChallenge()" class="mt-8 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg shadow transition-colors flex items-center justify-center gap-2 transform hover:-translate-y-0.5 flex-none">
+                        Ready for Challenge <i class="fa-solid fa-bolt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Challenge Container -->
+            <div id="game-container" class="hidden w-full h-full grid grid-cols-1 lg:grid-cols-3 gap-6 fade-in absolute inset-0 z-10 p-1 overflow-y-auto custom-scroll">
+                <!-- Left: Scenario & Visuals -->
+                <div class="lg:col-span-2 h-full flex flex-col min-h-[500px]">
+                    <!-- Scenario Card -->
+                    <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-emerald-500 relative flex-grow flex flex-col h-full">
+                        <div class="flex justify-between items-start mb-4 flex-none">
+                            <div>
+                                <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-1 rounded uppercase">Audit Scenario</span>
+                                <h2 class="text-2xl font-bold text-slate-800 mt-2" id="scenario-title">Scenario Title</h2>
+                            </div>
+                            <i class="fa-solid fa-file-invoice-dollar text-3xl text-slate-300"></i>
+                        </div>
+                        
+                        <div class="text-slate-600 mb-6 leading-relaxed text-sm flex-none" id="scenario-desc">Description goes here.</div>
+                        
+                        <!-- Dynamic Chart Container -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 flex-grow relative shadow-inner flex items-center justify-center min-h-[250px]">
+                            <canvas id="mainChart" class="max-h-full"></canvas>
+                            <!-- For non-chart visuals like tables -->
+                            <div id="visual-content" class="absolute inset-0 flex items-center justify-center hidden p-4 overflow-auto w-full h-full"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Decision Panel -->
+                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col h-full relative overflow-y-auto custom-scroll min-h-[400px]">
+                    <div class="absolute top-2 right-4 z-10">
+                        <button onclick="returnToLesson()" class="text-slate-400 hover:text-slate-600 text-xs uppercase font-bold tracking-wide"><i class="fa-solid fa-arrow-left"></i> Review Lesson</button>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100 flex-none mt-4">Select Audit Action</h3>
+                    <p class="text-sm text-slate-500 mb-4 flex-none">Based on the lesson, what is the correct analytical approach?</p>
+                    
+                    <div id="options-container" class="space-y-3 flex-grow overflow-y-auto custom-scroll pr-2 pb-2">
+                        <!-- Buttons injected here -->
+                    </div>
+                    
+                    <!-- Feedback Area (Hidden initially) -->
+                    <div id="feedback-panel" class="hidden mt-6 pt-4 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-xl flex-none">
+                        <div id="feedback-header" class="font-bold text-lg mb-2 flex items-center gap-2"></div>
+                        <p id="feedback-text" class="text-sm text-slate-600 leading-relaxed mb-4"></p>
+                        <div class="flex gap-2">
+                            <button id="next-btn" onclick="nextStep()" class="w-full bg-slate-800 text-white py-3 rounded-lg hover:bg-slate-900 transition-colors font-semibold shadow-md">
+                                Next <i class="fa-solid fa-forward ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- End Screen -->
+            <div id="end-screen" class="hidden w-full h-full bg-white rounded-xl shadow-2xl overflow-y-auto fade-in absolute inset-0 z-20 flex items-center justify-center">
+                <div class="max-w-md w-full text-center">
+                    <div class="bg-slate-800 p-8 text-white rounded-t-xl">
+                        <i class="fa-solid fa-certificate text-6xl mb-4 text-yellow-400"></i>
+                        <h2 class="text-2xl font-bold">Module Complete</h2>
+                        <p class="opacity-75" id="final-message">Performance Review</p>
+                    </div>
+                    <div class="p-8 bg-white border border-t-0 border-slate-200 rounded-b-xl">
+                        <div class="flex justify-center items-end gap-2 mb-2">
+                            <div class="text-5xl font-bold text-slate-800"><span id="final-score">0</span></div>
+                            <div class="text-xl text-slate-400 font-medium mb-2" id="total-questions">/ 19</div>
+                        </div>
+                        <p class="text-slate-500 mb-6 uppercase tracking-wide text-xs font-bold">Correct Audits</p>
+                        <div id="final-feedback" class="text-sm text-left bg-slate-50 p-4 rounded-lg mb-6 text-slate-600 border border-slate-100 shadow-sm"></div>
+                        <button onclick="restartGame()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg shadow transition-colors">
+                            Restart Training
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Instructor Password Modal -->
+    <div id="instructor-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center fade-in">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Teacher Access</h3>
+            <p class="text-sm text-slate-600 mb-4">Enter the password to reveal answers.</p>
+            <input type="password" id="instructor-pwd-input" class="w-full border border-slate-300 rounded p-2 mb-4 focus:outline-none focus:border-blue-500" placeholder="Password" onkeydown="if(event.key === 'Enter') submitInstructorPwd()">
+            <div class="flex justify-end gap-2">
+                <button onclick="closeInstructorModal()" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded text-sm font-bold">Cancel</button>
+                <button onclick="submitInstructorPwd()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-bold">Unlock</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-200 text-slate-500 text-center py-2 text-xs flex-none">
+        <p>&copy; 2026 Apex Audit Learning System. Internal Training Only.</p>
+    </footer>
+
+    <script>
+        // --- Game State ---
+        const state = {
+            currentLevel: 0,
+            currentChallenge: 0,
+            view: 'start', // start, lesson, challenge, end
+            score: 0,
+            chartInstance: null,
+            lessonSlide: 0, 
+            maxLessonSlides: 0,
+            instructorMode: false,
+            totalPossibleScore: 0
+        };
+
+        // --- Reusable Lesson Content ---
+        const lessonVariableTypes = {
+            title: "Qualitative vs Quantitative",
+            slides: [
+                `<h3 class="font-bold mb-2">1. Qualitative (Categorical) vs Quantitative (Numerical)</h3>
+                <div class="space-y-4 text-sm">
+                    <div class="p-3 bg-blue-50 rounded border border-blue-100">
+                        <strong class="text-blue-800">Qualitative (Categorical):</strong> Labels or categories. No math.
+                        <ul class="list-disc pl-4 mt-1 text-slate-600 text-xs">
+                            <li>Vendor Type ("Domestic")</li>
+                            <li>Expense Category (Travel, Rent)</li>
+                            <li>Audit Result (Pass/Fail)</li>
+                        </ul>
+                    </div>
+                    <div class="p-3 bg-emerald-50 rounded border border-emerald-100">
+                        <strong class="text-emerald-800">Quantitative (Numerical):</strong> Measurable amounts. Math applies.
+                        <ul class="list-disc pl-4 mt-1 text-slate-600 text-xs">
+                            <li>Invoice Amount ($3,000)</li>
+                            <li>Days Past Due (45)</li>
+                            <li>Inventory Count (120)</li>
+                        </ul>
+                    </div>
+                </div>`,
+                
+                `<h3 class="font-bold mb-2">2. Types of Qualitative Data</h3>
+                <div class="space-y-4 text-sm">
+                    <div class="p-3 bg-slate-50 rounded border border-slate-200">
+                        <strong>Nominal (No Order):</strong> Just names. You can't rank them.
+                        <br><em class="text-xs text-slate-500">Ex: Regions (West, East), Payment Method (Check, Wire).</em>
+                    </div>
+                    <div class="p-3 bg-purple-50 rounded border border-purple-100">
+                        <strong>Ordinal (Ordered):</strong> Order matters, but math doesn't.
+                        <br><em class="text-xs text-slate-500">Ex: Risk Rating (Low < High), Satisfaction (1-5 stars).</em>
+                    </div>
+                </div>`,
+
+                `<h3 class="font-bold mb-2">Summary Table</h3>
+                <table class="w-full text-xs text-left border-collapse">
+                    <thead class="bg-gray-100"><tr><th class="p-1 border">Type</th><th class="p-1 border">Example</th><th class="p-1 border">Average?</th></tr></thead>
+                    <tbody>
+                        <tr><td class="p-1 border">Nominal</td><td class="p-1 border">Department</td><td class="p-1 border text-red-500">No</td></tr>
+                        <tr><td class="p-1 border">Ordinal</td><td class="p-1 border">Risk Level</td><td class="p-1 border text-orange-500">No</td></tr>
+                        <tr><td class="p-1 border">Quantitative</td><td class="p-1 border">$$ Amount</td><td class="p-1 border text-green-500">Yes</td></tr>
+                    </tbody>
+                </table>
+                <div class="mt-4 p-2 bg-slate-100 rounded text-xs">
+                    <strong>Audit Dataset Example:</strong><br>
+                    Vendor (Nominal) | Status (Nominal) | Risk (Ordinal) | Amount (Quant)
+                </div>`
+            ],
+            renderInteractive: (container) => {
+                container.innerHTML = `
+                        <div class="w-full max-w-sm text-center">
+                        <h4 class="font-bold mb-2">Data Classifier</h4>
+                        <div id="classifier-box" class="bg-white border-2 border-dashed border-slate-300 rounded p-4 mb-4 min-h-[60px] flex items-center justify-center font-mono text-lg text-slate-700">
+                            Tap a button below
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <button class="bg-blue-100 p-2 rounded hover:bg-blue-200" onclick="classify('Invoice #', 'Nominal (Identifier)')">Invoice #</button>
+                            <button class="bg-emerald-100 p-2 rounded hover:bg-emerald-200" onclick="classify('Amount ($)', 'Quantitative')">Amount ($)</button>
+                            <button class="bg-purple-100 p-2 rounded hover:bg-purple-200" onclick="classify('Risk (L/M/H)', 'Ordinal')">Risk Level</button>
+                            <button class="bg-orange-100 p-2 rounded hover:bg-orange-200" onclick="classify('Vendor Name', 'Nominal')">Vendor Name</button>
+                        </div>
+                    </div>
+                `;
+                window.classify = (item, type) => {
+                    const box = document.getElementById('classifier-box');
+                    box.innerHTML = `<strong>${item}</strong><br><span class="text-sm text-slate-500">is ${type}</span>`;
+                    box.className = "bg-slate-50 border-2 border-slate-400 rounded p-4 mb-4 min-h-[60px] text-center slide-up";
+                }
+            }
+        };
+
+        const lessonDistributions = {
+            title: "The Normal Distribution",
+            slides: [
+                `<h3 class="font-bold mb-2">The Bell Curve</h3><p class="mb-4">The <strong>Normal Distribution</strong> is the superstar of statistics. Think of a standardized test:</p><ul class="list-disc pl-4 text-sm"><li>Symmetrical: Mean = Median = Mode.</li><li>Predictable: We know exactly how much data falls where.</li></ul>`,
+                `<h3 class="font-bold mb-2">The 68-95-99.7 Rule</h3><p class="text-sm mb-2">Memorize this for audit sampling!</p>
+                <div class="space-y-2 text-xs">
+                    <div class="bg-blue-100 p-2 rounded"><strong>68%</strong> of data is within 1 Standard Deviation (σ).</div>
+                    <div class="bg-blue-200 p-2 rounded"><strong>95%</strong> is within 2 Standard Deviations (2σ).</div>
+                    <div class="bg-blue-300 p-2 rounded"><strong>99.7%</strong> is within 3 Standard Deviations (3σ).</div>
+                </div>
+                <p class="mt-2 text-xs">Anything beyond 3σ is an extreme outlier (< 0.3% chance).</p>`,
+                `<h3 class="font-bold mb-2">Z-Score: The "Weirdness" Metric</h3>
+                <p class="mb-2 text-sm">A <strong>Z-Score</strong> tells you exactly how many Standard Deviations a data point is from the Mean.</p>
+                <div class="bg-slate-100 p-3 rounded font-mono text-center text-sm mb-3">Z = (Value - Mean) / StdDev</div>
+                <ul class="text-xs space-y-1">
+                    <li><strong>Z = 0:</strong> Exactly Average.</li>
+                    <li><strong>Z = +2:</strong> High (Top 2.5%).</li>
+                    <li><strong>Z = +4:</strong> <span class="text-red-500 font-bold">Suspicious!</span> (One in 15,000).</li>
+                </ul>`
+            ],
+            renderInteractive: (container) => {
+                container.innerHTML = `
+                    <div class="w-full max-w-sm text-center">
+                        <h4 class="font-bold mb-2">Interactive 68-95-99 Rule</h4>
+                        <div class="relative bg-slate-50 border border-slate-200 rounded flex items-end justify-center overflow-hidden h-48">
+                            <canvas id="bellCanvas" width="300" height="150" class="absolute bottom-0"></canvas>
+                        </div>
+                        <div class="flex justify-center gap-2 mt-2">
+                            <button class="text-xs bg-slate-200 px-2 py-1 rounded hover:bg-slate-300 border border-slate-300" onclick="highlightArea(1)">Show 68% (1σ)</button>
+                            <button class="text-xs bg-slate-200 px-2 py-1 rounded hover:bg-slate-300 border border-slate-300" onclick="highlightArea(2)">Show 95% (2σ)</button>
+                            <button class="text-xs bg-slate-200 px-2 py-1 rounded hover:bg-slate-300 border border-slate-300" onclick="highlightArea(3)">Show 99% (3σ)</button>
+                        </div>
+                        <p id="dist-info" class="text-xs text-slate-500 mt-2 min-h-[20px]">Click a range to visualize.</p>
+                    </div>`;
+                
+                const canvas = document.getElementById('bellCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Bell Curve Function
+                const drawBell = (sigmaHighlight = 0) => {
+                    ctx.clearRect(0,0,300,150);
+                    const width = 300;
+                    const height = 150;
+                    const mean = width / 2;
+                    const stdDev = 30; // Scale for visual
+
+                    // Helper for X to Y mapping
+                    const getY = (x) => {
+                        const exponent = -0.5 * Math.pow((x - mean) / stdDev, 2);
+                        return height - (Math.exp(exponent) * 120); // 120 is peak height
+                    };
+
+                    // Fill Highlight Area first
+                    if(sigmaHighlight > 0) {
+                        ctx.beginPath();
+                        const startX = mean - (sigmaHighlight * stdDev);
+                        const endX = mean + (sigmaHighlight * stdDev);
+                        
+                        ctx.moveTo(startX, height);
+                        for(let x = startX; x <= endX; x++) {
+                            ctx.lineTo(x, getY(x));
+                        }
+                        ctx.lineTo(endX, height);
+                        ctx.closePath();
+                        ctx.fillStyle = sigmaHighlight === 1 ? "rgba(59, 130, 246, 0.5)" : 
+                                        sigmaHighlight === 2 ? "rgba(16, 185, 129, 0.5)" : "rgba(245, 158, 11, 0.5)";
+                        ctx.fill();
+                    }
+
+                    // Draw Outline
+                    ctx.beginPath();
+                    ctx.moveTo(0, height);
+                    for(let x = 0; x <= width; x++) {
+                        ctx.lineTo(x, getY(x));
+                    }
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#475569";
+                    ctx.stroke();
+
+                    // Draw Mean Line
+                    ctx.beginPath();
+                    ctx.setLineDash([5, 5]);
+                    ctx.moveTo(mean, height);
+                    ctx.lineTo(mean, height - 120);
+                    ctx.strokeStyle = "#94a3b8";
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                };
+
+                // Initial Draw
+                setTimeout(() => drawBell(0), 100);
+
+                window.highlightArea = (sigma) => {
+                    drawBell(sigma);
+                    const info = document.getElementById('dist-info');
+                    if(sigma === 1) info.innerHTML = "<strong>68%</strong> of data falls within 1 Standard Deviation.";
+                    if(sigma === 2) info.innerHTML = "<strong>95%</strong> of data falls within 2 Standard Deviations.";
+                    if(sigma === 3) info.innerHTML = "<strong>99.7%</strong> of data falls within 3 Standard Deviations.";
+                };
+            }
+        };
+
+        const lessonLinearRegression = {
+            title: "Predicting Payroll (Linear)",
+            slides: [
+                `<h3 class="font-bold text-lg mb-2 text-blue-600">Predicting with a Line</h3><p class="mb-4">You are auditing <strong>Payroll Expense</strong>. You expect it to go up as headcount goes up.</p><p>This is a <strong>Linear Regression</strong>: <br><em>Expense = (Headcount * Avg Wage) + Fixed Costs</em>.</p>`,
+                `<h3 class="font-bold mb-2">The Model: Y = mX + b</h3><ul class="space-y-2 text-sm"><li><strong>X (Independent):</strong> Headcount.</li><li><strong>Y (Dependent):</strong> Payroll Expense.</li><li><strong>Slope (m):</strong> The Average Wage per person.</li></ul>`,
+                `<p class="mb-2">We draw a "Line of Best Fit" through the data dots.</p><p>If actual expense is way above the line, we might have <strong>Ghost Employees</strong> or Overtime fraud.</p>`,
+                `<h3 class="font-bold text-lg mb-2 text-blue-600">R-Squared (Goodness of Fit)</h3><p class="mb-2">How trustworthy is the line?</p><p class="mb-2"><strong>R² (R-Squared)</strong> tells you how well the line fits the data (0 to 1).</p><ul class="list-disc pl-4 text-sm"><li><strong>R² = 1.0:</strong> Perfect fit.</li><li><strong>R² > 0.8:</strong> Strong audit evidence.</li><li><strong>R² < 0.5:</strong> Weak relationship. Don't rely on it.</li></ul>`
+            ],
+            renderInteractive: (container) => {
+                container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-2">Interactive: Fit the Line</h4><canvas id="regCanvas" width="300" height="200" class="bg-white border border-slate-200 rounded mx-auto"></canvas><input type="range" min="0" max="100" value="50" class="w-full mt-2" id="slope-slider"><p class="text-xs text-slate-500 mt-1">Adjust slope (Average Wage) to fit the headcount data.</p></div>`;
+                const canvas = document.getElementById('regCanvas');
+                const ctx = canvas.getContext('2d');
+                const slider = document.getElementById('slope-slider');
+                const points = [{x: 20, y: 50}, {x: 50, y: 80}, {x: 100, y: 120}, {x: 150, y: 160}, {x: 200, y: 190}, {x: 250, y: 240}];
+                function draw() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = "#3b82f6";
+                    points.forEach(p => { ctx.beginPath(); ctx.arc(p.x, canvas.height - p.y/1.5, 4, 0, Math.PI*2); ctx.fill(); });
+                    const slope = slider.value / 100; 
+                    ctx.strokeStyle = "#10b981"; ctx.lineWidth = 3;
+                    ctx.beginPath(); ctx.moveTo(0, canvas.height - 20); 
+                    const endY = (canvas.height - 20) - (slope * 250);
+                    ctx.lineTo(300, endY); ctx.stroke();
+                }
+                slider.oninput = draw; draw();
+            }
+        };
+
+        // --- Content Data ---
+        // CONSOLIDATED SCENARIOS
+        const scenarios = [
+            {
+                // LEVEL 1
+                topic: "Measures of Central Tendency",
+                lesson: {
+                    title: "The 'Wealthy Uncle' Effect",
+                    slides: [
+                        `<div class="flex items-center gap-3 mb-2"><span class="text-3xl">☕</span><p>Imagine you are chilling in a coffee shop with 9 friends.</p></div><p class="mb-4">You're all doing okay. You calculate the average (Mean) income of the table. It comes out to a modest <strong>$46k/year</strong>.</p>`,
+                        `<div class="flex items-center gap-3 mb-2 animate-bounce"><span class="text-3xl">🚁</span><p class="font-bold text-emerald-600">ENTER BILL GATES!</p></div><p class="mb-4">Suddenly, your wealthy uncle (or a tech billionaire) walks in. He earns <strong>$50M/year</strong>.</p>`,
+                        `<div class="bg-red-50 p-3 rounded border border-red-100 mb-2"><p class="font-bold text-red-600"><i class="fa-solid fa-arrow-trend-up"></i> The Mean jumps to $5M!</p></div><p class="mb-2">Does everyone at the table suddenly feel richer? <strong>No.</strong> The Mean is lying to you because of that one massive outlier.</p>`,
+                        `<div class="bg-emerald-50 p-3 rounded border border-emerald-100 mb-2"><p class="font-bold text-emerald-600"><i class="fa-solid fa-shield-halved"></i> The Solution: Median</p></div><p>The <strong>Median</strong> is the middle value. Even with Bill Gates there, the median stays around $50k.</p>`
+                    ],
+                    renderInteractive: (container) => {
+                        container.innerHTML = `
+                            <div class="w-full max-w-sm">
+                                <h4 class="font-bold text-center mb-4">Coffee Shop Scene</h4>
+                                
+                                <div id="room" class="grid grid-cols-5 gap-2 mb-4 bg-slate-200 p-4 rounded min-h-[220px] content-center justify-items-center relative overflow-hidden">
+                                    <!-- Friends -->
+                                    <div class="text-2xl text-center">🧑‍💼<div class="text-[8px] bg-white rounded px-1 shadow">$46k</div></div>
+                                    <div class="text-2xl text-center">👩‍💼<div class="text-[8px] bg-white rounded px-1 shadow">$42k</div></div>
+                                    <div class="text-2xl text-center">👨‍💻<div class="text-[8px] bg-white rounded px-1 shadow">$48k</div></div>
+                                    <div class="text-2xl text-center">🧑‍🔧<div class="text-[8px] bg-white rounded px-1 shadow">$45k</div></div>
+                                    <div class="text-2xl text-center">👩‍🔬<div class="text-[8px] bg-white rounded px-1 shadow">$50k</div></div>
+                                    <div class="text-2xl text-center">👨‍🎨<div class="text-[8px] bg-white rounded px-1 shadow">$41k</div></div>
+                                    <div class="text-2xl text-center">👩‍✈️<div class="text-[8px] bg-white rounded px-1 shadow">$52k</div></div>
+                                    <div class="text-2xl text-center">👨‍🚒<div class="text-[8px] bg-white rounded px-1 shadow">$43k</div></div>
+                                    <div class="text-2xl text-center">👩‍⚖️<div class="text-[8px] bg-white rounded px-1 shadow">$47k</div></div>
+                                    
+                                    <!-- Uncle Placeholder -->
+                                    <div id="uncle-spot" class="opacity-0 transition-opacity duration-500 text-3xl text-center scale-110">
+                                        🚁<div class="text-[8px] bg-yellow-200 font-bold rounded px-1 shadow border border-yellow-400">$50M</div>
+                                    </div>
+                                </div>
+
+                                <button id="add-uncle-btn" onclick="toggleUncle()" class="w-full bg-slate-800 text-white py-2 rounded-lg hover:bg-slate-900 mb-4 font-bold transition-transform active:scale-95">
+                                    Enter Uncle Bill
+                                </button>
+
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="flex justify-between text-xs font-bold mb-1">
+                                            <span class="text-blue-600">Mean (Average)</span>
+                                            <span id="mean-val">$46k</span>
+                                        </div>
+                                        <div class="w-full bg-slate-200 rounded-full h-2.5">
+                                            <div id="mean-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-700" style="width: 5%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-xs font-bold mb-1">
+                                            <span class="text-emerald-600">Median (Middle)</span>
+                                            <span id="median-val">$46k</span>
+                                        </div>
+                                        <div class="w-full bg-slate-200 rounded-full h-2.5">
+                                            <div id="median-bar" class="bg-emerald-600 h-2.5 rounded-full transition-all duration-500" style="width: 5%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                        
+                        let unclePresent = false;
+                        window.toggleUncle = () => {
+                            unclePresent = !unclePresent;
+                            const btn = document.getElementById('add-uncle-btn');
+                            const uncle = document.getElementById('uncle-spot');
+                            const meanVal = document.getElementById('mean-val');
+                            const meanBar = document.getElementById('mean-bar');
+                            const medVal = document.getElementById('median-val');
+                            
+                            if (unclePresent) {
+                                btn.textContent = "Remove Uncle Bill";
+                                btn.classList.replace('bg-slate-800', 'bg-red-600');
+                                btn.classList.replace('hover:bg-slate-900', 'hover:bg-red-700');
+                                uncle.classList.remove('opacity-0');
+                                
+                                // Update stats
+                                meanVal.textContent = "$5,000k (5M)";
+                                meanVal.classList.add("text-red-600", "animate-pulse");
+                                meanBar.style.width = "100%"; // Max out
+                                meanBar.classList.replace("bg-blue-600", "bg-red-500");
+                                
+                                medVal.textContent = "$47k"; // Slight shift
+                            } else {
+                                btn.textContent = "Enter Uncle Bill";
+                                btn.classList.replace('bg-red-600', 'bg-slate-800');
+                                btn.classList.replace('hover:bg-red-700', 'hover:bg-slate-900');
+                                uncle.classList.add('opacity-0');
+                                
+                                // Reset stats
+                                meanVal.textContent = "$46k";
+                                meanVal.classList.remove("text-red-600", "animate-pulse");
+                                meanBar.style.width = "5%";
+                                meanBar.classList.replace("bg-red-500", "bg-blue-600");
+                                
+                                medVal.textContent = "$46k";
+                            }
+                        }
+                    }
+                },
+                challenges: [
+                    {
+                        title: "The 'Typical' Wage Audit",
+                        desc: "You are auditing a startup. The CEO claims the 'typical' employee makes $136k. <br><br>The data: 6 employees make ~$20k, but the CEO pays themselves $850k. <br><br>Is the CEO's claim fair?",
+                        chartType: "bar",
+                        dataLabel: "Salary ($k)",
+                        data: [15, 22, 18, 20, 12, 19, 850],
+                        labels: ["Emp A", "Emp B", "Emp C", "Emp D", "Emp E", "Emp F", "CEO"],
+                        options: [
+                            { text: "Confirm CEO's Claim (Use Mean)", correct: false, feedback: "Incorrect. The CEO is pulling a 'Wealthy Uncle' move. The Mean is skewed." },
+                            { text: "Reject Claim (Use Median)", correct: true, feedback: "Correct! The Median ($19k) reflects the true 'typical' worker, ignoring the outlier." },
+                            { text: "Use Mode", correct: false, feedback: "Incorrect. No repeating values here." }
+                        ]
+                    }
+                ]
+            },
+            {
+                // LEVEL 2
+                topic: "Standard Deviation",
+                lesson: {
+                    title: "The Tale of Two Companies",
+                    slides: [
+                        `<h3 class="font-bold text-lg mb-2">Averages Hide Secrets</h3><p class="mb-4">Consider two small businesses. Both pay an <strong>average wage of $20/hr</strong>. They sound the same, right?</p>`,
+                        `<div class="bg-blue-50 p-3 rounded mb-2 border-l-4 border-blue-500"><h4 class="font-bold text-blue-800">Company A (Consistent)</h4><p class="text-sm">$20, $20, $20, $20. <br>Std Dev = 0. Predictable.</p></div><div class="bg-orange-50 p-3 rounded mb-2 border-l-4 border-orange-500"><h4 class="font-bold text-orange-800">Company B (Volatile)</h4><p class="text-sm">$5, $5, $35, $35. <br>Std Dev = 15. Huge spread.</p></div>`,
+                        `<p class="mb-2"><strong>Standard Deviation</strong> measures this "spread".</p><ul class="list-disc pl-4 text-sm space-y-2"><li>Company A: Tight cluster.</li><li>Company B: Wide variance.</li></ul><p class="mt-4 font-bold bg-yellow-100 p-2 rounded text-center">In Audit, High Spread = High Risk.</p>`
+                    ],
+                    renderInteractive: (container) => {
+                        container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-4">Interactive: Wage Spread</h4><div class="flex justify-center gap-4 mb-4"><button id="btn-safe" class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm font-bold border border-blue-300 hover:bg-blue-200">Company A</button><button id="btn-risky" class="px-3 py-1 bg-orange-100 text-orange-700 rounded text-sm font-bold border border-orange-300 hover:bg-orange-200">Company B</button></div><div class="h-32 bg-slate-50 border border-slate-200 rounded relative flex flex-col items-center justify-center overflow-hidden" id="dispersion-box"><div class="absolute h-full w-0.5 bg-slate-300 left-1/2"></div><div id="dots-container" class="w-full h-full relative"></div></div><p class="text-xs mt-2 text-slate-500" id="dispersion-text">Select a company to see how wages cluster around the $20 Mean.</p></div>`;
+                        const box = document.getElementById('dots-container');
+                        const txt = document.getElementById('dispersion-text');
+                        const drawWages = (wages, color) => {
+                            box.innerHTML = '';
+                            wages.forEach((wage, i) => {
+                                const diff = wage - 20; 
+                                const offset = diff * 5; // Reduced scale
+                                const dot = document.createElement('div');
+                                dot.className = `absolute w-6 h-6 rounded-full ${color} opacity-80 flex items-center justify-center text-[10px] text-white font-bold transition-all duration-500`;
+                                dot.style.left = `calc(50% + ${offset}px - 12px)`;
+                                dot.style.top = `${30 + (i * 15)}%`;
+                                dot.textContent = "$" + wage;
+                                box.appendChild(dot);
+                            });
+                        };
+                        document.getElementById('btn-safe').onclick = () => { drawWages([20, 20, 20, 20], 'bg-blue-500'); txt.textContent = "Company A: All at $20. Zero Risk."; };
+                        document.getElementById('btn-risky').onclick = () => { drawWages([5, 5, 35, 35], 'bg-orange-500'); txt.textContent = "Company B: $5 vs $35. High Volatility."; };
+                        drawWages([20, 20, 20, 20], 'bg-blue-500');
+                    }
+                },
+                challenges: [
+                    {
+                        title: "Supplier Volatility Audit",
+                        desc: "You are assessing two suppliers. Both average 5 days to deliver. <br><strong>Supplier A:</strong> Consistent (4-6 days). <br><strong>Supplier B:</strong> Erratic (1-9 days). <br><br>Which supplier poses a higher operational risk (Standard Deviation)?",
+                        chartType: "line",
+                        dataLabel: "Delivery Days",
+                        datasets: [
+                            { label: 'Supplier A (Consistent)', data: [5, 4, 6, 5, 5, 4, 6], borderColor: 'rgb(34, 197, 94)', tension: 0.1 },
+                            { label: 'Supplier B (Erratic)', data: [1, 9, 2, 8, 5, 1, 9], borderColor: 'rgb(239, 68, 68)', tension: 0.1 }
+                        ],
+                        labels: ["Ord 1", "Ord 2", "Ord 3", "Ord 4", "Ord 5", "Ord 6", "Ord 7"],
+                        options: [
+                            { text: "Supplier A", correct: false, feedback: "Incorrect. Supplier A is bunched tightly around the mean." },
+                            { text: "Both are equal", correct: false, feedback: "Incorrect. Same Mean does not equal same Risk." },
+                            { text: "Supplier B", correct: true, feedback: "Correct! Supplier B's data points are far from the mean. High volatility = High Risk." }
+                        ]
+                    },
+                    {
+                        title: "Inventory Cycle Count Accuracy",
+                        desc: "Compare the variance in inventory counts for two warehouses. <br><strong>Warehouse A:</strong> Counts are consistently off by exactly +1 or -1 unit. <br><strong>Warehouse B:</strong> Counts are off by +50 one day and -50 the next (Net Zero average). <br><br>Which warehouse has deeper control issues?",
+                        chartType: "bar",
+                        dataLabel: "Count Variance",
+                        datasets: [
+                            { label: 'Whse A', data: [1, -1, 1, -1, 1], backgroundColor: 'rgba(34, 197, 94, 0.5)' },
+                            { label: 'Whse B', data: [50, -50, 45, -45, 50], backgroundColor: 'rgba(239, 68, 68, 0.5)' }
+                        ],
+                        labels: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5"],
+                        options: [
+                            { text: "Warehouse A", correct: false, feedback: "Incorrect. Warehouse A has very small, predictable errors." },
+                            { text: "Warehouse B", correct: true, feedback: "Correct! Huge swings (+50/-50) indicate broken processes (theft? poor training?), even if they average out to zero." },
+                            { text: "Both are acceptable", correct: false, feedback: "Incorrect. High volatility in Warehouse B suggests a lack of control." }
+                        ]
+                    }
+                ]
+            },
+            {
+                // LEVEL 3
+                topic: "Frequency Tables",
+                lesson: {
+                    title: "Categorical Analysis & Contingency",
+                    slides: [
+                        `<h3 class="font-bold mb-2">When Math Fails</h3><p class="mb-2">You can't calculate the "Average" of text labels like "Sales Dept" or "Pass/Fail".</p><p>So, we count them instead using <strong>Frequency Tables</strong>.</p>`,
+                        `<h3 class="font-bold mb-2">How to Use a Contingency Table</h3><p class="text-sm mb-2">To find if a department is "Risky", we need the <strong>conditional probability</strong>.</p><ol class="list-decimal pl-4 text-sm space-y-2"><li><strong>Find the Row Total:</strong> Count everyone in that department (e.g., 100 people in Sales).</li><li><strong>Find the Target:</strong> Count the Errors in that department (e.g., 20 Errors).</li><li><strong>Divide:</strong> Target / Total = Rate (20 / 100 = 20%).</li></ol>`,
+                        `<div class="bg-blue-50 p-3 rounded"><p class="font-bold text-blue-800 text-sm">Compare!</p><p class="text-sm">If Sales has a 20% error rate and IT has a 5% error rate, you know where to audit next.</p></div>`
+                    ],
+                    renderInteractive: (container) => {
+                        container.innerHTML = `<div class="w-full max-w-sm"><h4 class="font-bold text-center mb-4">Interactive Cross-Tab</h4><table class="w-full text-sm border-collapse mb-4"><tr class="bg-slate-100"><th class="p-2 border">Dept</th><th class="p-2 border">Pass</th><th class="p-2 border">Fail</th><th class="p-2 border text-slate-400">Total</th></tr><tr class="hover:bg-blue-50 cursor-pointer transition-colors" id="row-sales" onclick="showRate('Sales', 20, 100)"><td class="p-2 border font-bold">Sales</td><td class="p-2 border text-center">80</td><td class="p-2 border text-center text-red-500 font-bold">20</td><td class="p-2 border text-center text-slate-500">100</td></tr><tr class="hover:bg-blue-50 cursor-pointer transition-colors" id="row-it" onclick="showRate('IT', 5, 100)"><td class="p-2 border font-bold">IT</td><td class="p-2 border text-center">95</td><td class="p-2 border text-center text-red-500 font-bold">5</td><td class="p-2 border text-center text-slate-500">100</td></tr></table><div id="rate-display" class="bg-slate-800 text-white p-3 rounded text-center text-xs hidden slide-up"><span class="font-bold text-emerald-400" id="rate-dept"></span> Error Rate: <span id="rate-val"></span>%<div class="text-[10px] text-slate-400 mt-1">Calculation: (Failures / Total) * 100</div></div><p class="text-xs text-center mt-3 text-slate-500">Click a row to calculate the conditional error rate.</p></div>`;
+                        window.showRate = (dept, fail, total) => {
+                            document.getElementById('rate-display').classList.remove('hidden');
+                            document.getElementById('rate-dept').textContent = dept;
+                            document.getElementById('rate-val').textContent = (fail/total * 100).toFixed(1);
+                        };
+                    }
+                },
+                challenges: [
+                    {
+                        title: "Tax Compliance Analysis",
+                        desc: "Analyze relationship between 'Department' (Sales vs R&D) and 'Filing Accuracy' (Error vs Correct). <br><br><strong>Instruction:</strong> Calculate the error rate for each department. (Errors / (Errors + Correct)). Which department is riskier?",
+                        chartType: "none",
+                        customVisual: `<table class="w-full text-sm text-center border"><thead class="bg-gray-100"><tr><th>Dept</th><th>Error</th><th>Correct</th></tr></thead><tbody><tr><td>Sales</td><td class="text-red-500 font-bold">15</td><td class="text-green-500">35</td></tr><tr><td>R&D</td><td class="text-red-500">5</td><td class="text-green-500">45</td></tr></tbody></table>`,
+                        options: [
+                            { text: "Sales is Riskier (30% Error Rate)", correct: true, feedback: "Correct! Sales: 15 / (15+35) = 15/50 = 30%. R&D: 5/50 = 10%. Sales is much higher." },
+                            { text: "R&D is Riskier (10% Error Rate)", correct: false, feedback: "Incorrect. R&D only has a 10% error rate (5/50)." },
+                            { text: "They are Equal", correct: false, feedback: "Incorrect. 15 errors vs 5 errors with the same sample size (50) makes Sales 3x riskier." }
+                        ]
+                    }
+                ]
+            },
+            {
+                // LEVEL 4
+                topic: "Variable Types",
+                lesson: lessonVariableTypes,
+                challenges: [
+                    {
+                        title: "Database Classification",
+                        desc: "Categorize the field 'Risk_Rating'. <br><br>Values: <strong>[Low, Medium, High, Critical]</strong>. <br><br>Since there is a clear hierarchy from Low to Critical, how should this be stored?",
+                        chartType: "none",
+                        customVisual: `
+                            <div class="flex items-end justify-center gap-2 h-40 bg-slate-50 border rounded p-4">
+                                <div class="w-12 bg-green-200 h-1/4 rounded-t flex items-center justify-center text-xs">Low</div>
+                                <div class="w-12 bg-yellow-200 h-2/4 rounded-t flex items-center justify-center text-xs">Med</div>
+                                <div class="w-12 bg-orange-200 h-3/4 rounded-t flex items-center justify-center text-xs">High</div>
+                                <div class="w-12 bg-red-200 h-full rounded-t flex items-center justify-center text-xs font-bold">Crit</div>
+                            </div>
+                            <p class="text-center text-xs mt-2 text-slate-500">Order implies rank/severity.</p>
+                        `,
+                        options: [
+                            { text: "Quantitative Continuous", correct: false, feedback: "Incorrect. It's not a measurement like height or dollars." },
+                            { text: "Qualitative Nominal", correct: false, feedback: "Incorrect. Nominal has no order (like Colors). This clearly has a rank." },
+                            { text: "Qualitative Ordinal", correct: true, feedback: "Correct! It describes a quality (Categorical) with a specific hierarchy (Ordinal)." }
+                        ]
+                    },
+                    {
+                        title: "Data Validation: Vendor Name",
+                        desc: "You are analyzing the field 'Vendor Name' (e.g., 'Amazon', 'Staples', 'Delta'). <br><br>How would you classify this variable for your analysis?",
+                        chartType: "none",
+                        customVisual: `<div class="p-4 text-center border rounded bg-slate-50 font-mono text-sm">["Amazon", "Staples", "Delta"]</div>`,
+                        options: [
+                            { text: "Qualitative Nominal", correct: true, feedback: "Correct! Names are categories (Qualitative) with no inherent mathematical order (Nominal)." },
+                            { text: "Qualitative Ordinal", correct: false, feedback: "Incorrect. Is 'Amazon' greater than 'Delta'? No, there is no natural rank." },
+                            { text: "Quantitative", correct: false, feedback: "Incorrect. You cannot do math on names." }
+                        ]
+                    }
+                ]
+            },
+            {
+                // LEVEL 5
+                topic: "Distributions & The 68-95-99 Rule",
+                lesson: lessonDistributions,
+                challenges: [
+                    {
+                        title: "Invoice Approval Times",
+                        desc: "90% of invoices are done in 1 day. 8% in 2 days. 2% take weeks. <br><br>The graph drops sharply to the right (long tail). What shape is this?",
+                        chartType: "bar",
+                        dataLabel: "Count",
+                        data: [90, 8, 1, 0.5, 0.2, 0.1],
+                        labels: ["1d", "2d", "3d", "4d", "5d", "6d"],
+                        options: [
+                            { text: "Normal Distribution", correct: false, feedback: "Incorrect. A Normal distribution would be symmetrical." },
+                            { text: "Exponential / Right Skewed", correct: true, feedback: "Correct! Rapid drop-off with a long tail to the right." },
+                            { text: "Uniform Distribution", correct: false, feedback: "Incorrect. Uniform is flat." }
+                        ]
+                    },
+                    {
+                        title: "Payroll Z-Score Audit",
+                        desc: "<strong>Scenario:</strong> Average salary is <strong>$60k</strong> with a Standard Deviation of <strong>$10k</strong>. <br><br>You find an employee earning <strong>$300k</strong>. <br><br>Calculate the Z-Score. Is this likely a valid salary for this grade?",
+                        chartType: "none",
+                        customVisual: `
+                            <div class="relative w-full h-64 bg-slate-50 border rounded flex items-end justify-center overflow-hidden">
+                                <canvas id="zScoreCanvas" width="400" height="250" class="absolute bottom-0"></canvas>
+                                <div class="absolute top-2 right-2 text-xs bg-red-100 text-red-800 p-1 rounded font-bold border border-red-200">Outlier: $300k</div>
+                            </div>
+                        `,
+                        renderCustom: () => {
+                            const cvs = document.getElementById('zScoreCanvas');
+                            if(!cvs) return;
+                            const ctx = cvs.getContext('2d');
+                            ctx.clearRect(0,0,cvs.width, cvs.height);
+                            
+                            const drawBell = (meanX, sigma) => {
+                                ctx.beginPath();
+                                ctx.moveTo(0, 250);
+                                for(let x = 0; x <= 400; x++) {
+                                    let y = 250 - (220 * Math.exp(-0.5 * Math.pow((x - meanX)/sigma, 2)));
+                                    ctx.lineTo(x, y);
+                                }
+                                ctx.fillStyle = "rgba(59, 130, 246, 0.2)";
+                                ctx.fill();
+                                ctx.strokeStyle = "#2563eb";
+                                ctx.stroke();
+                            };
+                            
+                            // Draw Mean Distribution
+                            drawBell(100, 30); // Center left to show outlier far right
+                            
+                            // Draw Mean Line
+                            ctx.beginPath();
+                            ctx.moveTo(100, 20); ctx.lineTo(100, 250);
+                            ctx.strokeStyle = "#64748b"; ctx.setLineDash([5,5]); ctx.stroke();
+                            ctx.fillStyle = "#333"; ctx.font = "10px sans-serif";
+                            ctx.fillText("Mean $60k", 75, 15);
+
+                            // Draw Outlier
+                            const outlierX = 350;
+                            ctx.beginPath();
+                            ctx.moveTo(outlierX, 20); ctx.lineTo(outlierX, 250);
+                            ctx.strokeStyle = "#ef4444"; ctx.setLineDash([]); ctx.lineWidth = 2; ctx.stroke();
+                            ctx.fillStyle = "#ef4444"; ctx.font="bold 12px sans-serif";
+                            ctx.fillText("You are here ($300k)", 280, 15);
+                            
+                            // Arrow
+                            ctx.beginPath();
+                            ctx.moveTo(100, 100); ctx.lineTo(340, 100);
+                            ctx.strokeStyle = "#000"; ctx.lineWidth=1; ctx.stroke();
+                            ctx.fillText("24 Standard Deviations away! (Huge)", 130, 90);
+                        },
+                        options: [
+                            { text: "Yes, Z = 2.4 (Normal)", correct: false, feedback: "Incorrect. (300-60)/10 = 24. That is massive." },
+                            { text: "No, Z = 24 (Impossible)", correct: true, feedback: "Correct! A Z-score of 24 is statistically impossible in a normal distribution. This is likely a keying error or fraud." },
+                            { text: "It's barely an outlier", correct: false, feedback: "Incorrect. Look at the graph!" }
+                        ]
+                    }
+                ]
+            },
+            {
+                // LEVEL 6
+                topic: "Correlation",
+                lesson: {
+                    title: "Connections between Variables",
+                    slides: [
+                         `<h3 class="font-bold mb-2">Dancing Variables</h3><p class="mb-4"><strong>Correlation</strong> measures how two numbers move together.</p>`,
+                        `<ul class="space-y-3 text-sm"><li class="flex items-center gap-2"><span class="bg-green-100 p-1 rounded">↗️</span> <strong>Positive:</strong> As X goes up, Y goes up (e.g., Ad Spend & Sales).</li><li class="flex items-center gap-2"><span class="bg-red-100 p-1 rounded">↘️</span> <strong>Negative:</strong> As X goes up, Y goes down (e.g., Safety Training & Accidents).</li><li class="flex items-center gap-2"><span class="bg-slate-100 p-1 rounded">🤷</span> <strong>Zero:</strong> No pattern (e.g., Shoe size & IQ).</li></ul>`,
+                        `<h3 class="font-bold mb-2 text-red-600"><i class="fa-solid fa-triangle-exclamation"></i> Warning: Correlation ≠ Causation</h3>
+                        <p class="mb-2 text-sm">Just because X and Y move together, doesn't mean X <em>causes</em> Y. They might both be caused by Z (a hidden variable).</p>
+                        <div class="bg-blue-50 p-2 rounded text-xs border border-blue-200">
+                            <strong>Example:</strong> Ice Cream Sales and Shark Attacks are highly correlated.<br>
+                            <strong>Why?</strong> Not because ice cream attracts sharks! <br><strong>Summer (Z)</strong> causes both to rise.
+                        </div>`
+                    ],
+                    renderInteractive: (container) => {
+                        container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-2">Interactive Scatter</h4><div class="flex justify-center gap-2 mb-2"><button class="text-xs bg-slate-200 px-2 py-1 rounded hover:bg-slate-300 transition-colors" onclick="setCorr('pos')">Positive ↗️</button><button class="text-xs bg-slate-200 px-2 py-1 rounded hover:bg-slate-300 transition-colors" onclick="setCorr('neg')">Negative ↘️</button><button class="text-xs bg-slate-200 px-2 py-1 rounded hover:bg-slate-300 transition-colors" onclick="setCorr('none')">None 🤷</button></div><div id="corr-canvas" class="h-32 bg-slate-50 border relative rounded shadow-inner"></div></div>`;
+                        window.setCorr = (type) => {
+                            const box = document.getElementById('corr-canvas');
+                            box.innerHTML = '';
+                            for(let i=0; i<30; i++) {
+                                let x = Math.random() * 100;
+                                let y;
+                                if(type === 'pos') y = x + (Math.random()*20 - 10);
+                                else if(type === 'neg') y = 100 - x + (Math.random()*20 - 10);
+                                else y = Math.random() * 100;
+                                const dot = document.createElement('div');
+                                dot.className = "absolute w-2 h-2 bg-blue-500 rounded-full";
+                                dot.style.left = x + '%';
+                                dot.style.bottom = y + '%';
+                                box.appendChild(dot);
+                            }
+                        };
+                        setTimeout(() => window.setCorr('pos'), 100);
+                    }
+                },
+                challenges: [
+                    {
+                        title: "Marketing Spend Audit",
+                        desc: "Marketing claims Ad Spend drives Revenue. <br><br>Plotting Spend (X) vs Revenue (Y) shows an upward trend. What do we call this?",
+                        chartType: "scatter",
+                        data: [{x:10,y:50},{x:15,y:75},{x:20,y:90},{x:25,y:120},{x:30,y:140},{x:35,y:165}],
+                        labels: "Spend vs Rev",
+                        options: [
+                            { text: "Positive Correlation", correct: true, feedback: "Correct! Upward slope means they move together." },
+                            { text: "Zero Correlation", correct: false, feedback: "Incorrect. Points form a line, not a cloud." },
+                            { text: "Negative Correlation", correct: false, feedback: "Incorrect. That would slope downwards." }
+                        ]
+                    },
+                    {
+                        title: "Causation Warning: Sunscreen",
+                        desc: "<strong>Scenario:</strong> You notice a strong correlation (0.85) between 'Sunscreen Sales' and 'Audit Errors'. <br><br>The Manager suggests banning sunscreen to reduce errors. Is this valid?",
+                        chartType: "none",
+                        customVisual: `
+                             <div class="relative w-full h-64 bg-slate-50 border rounded flex items-center justify-center">
+                                <canvas id="sunscreenChart" width="400" height="250"></canvas>
+                            </div>
+                        `,
+                        renderCustom: () => {
+                            const cvs = document.getElementById('sunscreenChart');
+                            if(!cvs) return;
+                            const ctx = cvs.getContext('2d');
+                            ctx.clearRect(0,0,cvs.width, cvs.height);
+                            
+                            // Axis
+                            ctx.beginPath();
+                            ctx.moveTo(40, 220); ctx.lineTo(380, 220); ctx.stroke(); // X
+                            ctx.moveTo(40, 220); ctx.lineTo(40, 20); ctx.stroke(); // Y
+                            
+                            // Labels
+                            ctx.fillStyle = "#333"; 
+                            ctx.font = "12px sans-serif";
+                            ctx.fillText("Sunscreen Sales 🧴", 150, 240);
+                            ctx.save();
+                            ctx.translate(20, 150);
+                            ctx.rotate(-Math.PI/2);
+                            ctx.fillText("Audit Errors 📉", 0, 0);
+                            ctx.restore();
+
+                            // Data points (Positive correlation)
+                            ctx.fillStyle = "#f59e0b";
+                            for(let i=0; i<20; i++) {
+                                let x = 50 + (i*15);
+                                let y = 220 - (50 + (i*8) + (Math.random()*20));
+                                ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
+                            }
+                        },
+                        options: [
+                            { text: "Yes, the correlation is strong", correct: false, feedback: "Incorrect. Correlation is not Causation. Banning sunscreen won't fix errors." },
+                            { text: "No, correlation does not imply causation", correct: true, feedback: "Correct! It is likely a spurious correlation caused by a third factor (e.g., Summer vacations leading to understaffing)." },
+                            { text: "Only if P-value < 0.01", correct: false, feedback: "Incorrect. Even a statistically significant correlation doesn't prove cause." }
+                        ]
+                    }
+                ]
+            },
+            {
+                // LEVEL 7
+                topic: "Linear Regression",
+                lesson: lessonLinearRegression,
+                challenges: [
+                    {
+                        title: "Payroll Substantive Analytic",
+                        desc: "You ran a regression on Payroll. <br><strong>Equation:</strong> Expense = $60,000 * (Headcount) + Fixed Costs.<br><strong>R-Squared:</strong> 0.92.<br><br>What does the '$60,000' represent?",
+                        chartType: "scatter",
+                        xAxisLabel: "Headcount",
+                        yAxisLabel: "Expense ($)",
+                        data: [
+                            {x:10, y:650}, {x:20, y:1250}, {x:30, y:1850},
+                            {x:40, y:2450}, {x:50, y:3100}, {x:60, y:3650},
+                            {x:70, y:4250}, {x:80, y:4850}, {x:90, y:5450},
+                            {x:100, y:6200}, {x:110, y:6650}, {x:120, y:7250}
+                        ],
+                        labels: "Headcount vs Expense",
+                        options: [
+                            { text: "The Average Annual Wage per Employee", correct: true, feedback: "Correct! The slope represents the variable cost added per unit (employee)." },
+                            { text: "The Fixed Costs of HR", correct: false, feedback: "Incorrect. Fixed costs are the Intercept (b), not the slope (m)." },
+                            { text: "Total Payroll Expense", correct: false, feedback: "Incorrect. That's the output (Y), not the coefficient." }
+                        ]
+                    },
+                    {
+                        title: "Utilities Expense Prediction",
+                        desc: "You model <strong>Utilities Expense</strong> based on <strong>Square Footage</strong>. <br>Predicted for Warehouse A: $5,000. <br>Actual Recorded: $12,000. <br><br>The difference ($7,000) is called the <strong>Residual</strong>. What does a large positive residual suggest?",
+                        chartType: "none",
+                        customVisual: `<div class="p-6 bg-white border-2 border-slate-200 rounded text-center"><div class="text-sm text-slate-500">Predicted</div><div class="text-xl font-bold text-slate-400">$5,000</div><div class="my-2 border-l-2 border-dashed h-8 mx-auto w-0 border-red-400"></div><div class="text-xl font-bold text-red-600">$12,000</div><div class="text-sm text-red-500">Actual (High Residual)</div></div>`,
+                        options: [
+                            { text: "The model is perfect", correct: false, feedback: "Incorrect. A perfect model implies Predicted = Actual (Residual = 0)." },
+                            { text: "Potential overstatement or waste", correct: true, feedback: "Correct! The actual expense is much higher than expected. This could be a leak, waste, or accounting error." },
+                            { text: "Understatement of liability", correct: false, feedback: "Incorrect. The expense is recorded *higher* than expected." }
+                        ]
+                    },
+                    {
+                        title: "Regression Residuals (Depreciation)",
+                        desc: "<strong>Model:</strong> Depreciation = 10% of Asset Cost. <br>Client has $50M in assets. Predicted Depr = $5M. Actual = $1M.<br><br>Why is the expense so much lower than predicted (Negative Residual)?",
+                        chartType: "none",
+                        customVisual: `<div class="p-6 bg-white border-2 border-slate-200 rounded text-center"><div class="text-sm text-slate-500">Predicted</div><div class="text-xl font-bold text-slate-400">$5.0M</div><div class="my-2 border-l-2 border-dashed h-8 mx-auto w-0 border-blue-400"></div><div class="text-xl font-bold text-blue-600">$1.0M</div><div class="text-sm text-blue-500">Actual (Low)</div></div>`,
+                        options: [
+                            { text: "Assets are fully depreciated", correct: true, feedback: "Correct! If assets are old and fully depreciated, they still show on the Balance Sheet (Cost) but generate $0 expense." },
+                            { text: "Assets were bought yesterday", correct: false, feedback: "Incorrect. New assets would generate partial depreciation, but 1/5th is a very specific drop. Fully depreciated is the classic audit explanation." },
+                            { text: "Depreciation rate increased", correct: false, feedback: "Incorrect. That would make Actual > Predicted." }
+                        ]
+                    }
+                ]
+            },
+            {
+                // LEVEL 8
+                topic: "Multiple Regression",
+                lesson: {
+                    title: "Predicting COGS (Multiple)",
+                    slides: [
+                        `<h3 class="font-bold text-lg mb-2 text-purple-600">Reality is Complex</h3><p class="mb-4">Payroll was simple. But <strong>Cost of Goods Sold (COGS)</strong> depends on many things.</p><ul class="list-disc pl-4 text-sm"><li>Units Sold</li><li>Material Prices (Inflation)</li><li>Shipping Rates</li></ul>`,
+                        `<h3 class="font-bold mb-2">Multiple Regression</h3><p class="mb-2"><strong>COGS = (A * Units) + (B * Price) + Fixed</strong></p><p class="text-sm bg-slate-100 p-2 rounded">This isolates the impact of <em>each</em> driver. If Units go up, but COGS stays flat, did we use cheaper materials?</p>`
+                    ],
+                    renderInteractive: (container) => {
+                         container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-2">Interactive: COGS Calculator</h4><div class="bg-slate-800 text-white p-4 rounded mb-4 font-mono">Predicted COGS: <span id="cogs-output" class="text-emerald-400 text-xl font-bold">$10,000</span></div><div class="space-y-4"><div><div class="flex justify-between text-xs mb-1"><span>Units Sold</span><span id="unit-val">1000</span></div><input type="range" min="0" max="2000" value="1000" id="unit-slider" class="w-full accent-blue-500"></div><div><div class="flex justify-between text-xs mb-1"><span>Material Cost ($)</span><span id="cost-val">10</span></div><input type="range" min="5" max="20" value="10" id="cost-slider" class="w-full accent-orange-500"></div></div><p class="text-xs text-slate-500 mt-2">Formula: (Units * Cost)</p></div>`;
+                        const unitSlider = document.getElementById('unit-slider');
+                        const costSlider = document.getElementById('cost-slider');
+                        const output = document.getElementById('cogs-output');
+                        function calc() {
+                            const u = unitSlider.value; const c = costSlider.value;
+                            document.getElementById('unit-val').textContent = u;
+                            document.getElementById('cost-val').textContent = "$" + c;
+                            output.textContent = "$" + (u * c).toLocaleString();
+                        }
+                        unitSlider.oninput = calc; costSlider.oninput = calc;
+                    }
+                },
+                challenges: [
+                    {
+                        title: "COGS Analytic Interpretation",
+                        desc: "You ran a Multiple Regression on COGS. <br><strong>Coefficients:</strong> <br>- Units Sold: +$50 <br>- Oil Price: +$200 <br>- Efficiency Upgrade: -$5,000. <br><br>What was the financial impact of the Efficiency Upgrade?",
+                        chartType: "none",
+                        customVisual: `
+                            <div class="flex flex-col items-center justify-center space-y-4 h-full">
+                                <div class="text-lg font-bold text-slate-700 border-b-2 border-slate-200 pb-1">Regression Equation</div>
+                                <div class="font-mono bg-slate-900 text-white p-4 rounded shadow-lg text-sm md:text-base">
+                                    <span class="text-slate-400">COGS = </span><br>
+                                    <span class="text-blue-400">(50 * Units)</span> + <br>
+                                    <span class="text-orange-400">(200 * Oil)</span> + <br>
+                                    <span class="text-red-400">(-5000 * Upgrade)</span>
+                                </div>
+                                <div class="text-xs text-slate-500 italic max-w-xs text-center">The equation isolates the impact of each variable.</div>
+                            </div>
+                        `,
+                        options: [
+                            { text: "Increased costs by $5,000", correct: false, feedback: "Incorrect. The coefficient is negative." },
+                            { text: "Saved $5,000 (Reduced Costs)", correct: true, feedback: "Correct! The negative coefficient means the upgrade lowered COGS, holding other factors constant." },
+                            { text: "No impact", correct: false, feedback: "Incorrect. The model assigns a significant negative value." }
+                        ]
+                    }
+                ]
+            },
+            {
+                // LEVEL 9
+                topic: "Experimental Design",
+                lesson: {
+                    title: "Experimental Design & P-Values",
+                    slides: [
+                        `<h3 class="font-bold text-lg mb-2 text-purple-600">Step 1: The Design</h3><p class="mb-4">You don't just "look at data". You design a trap for the truth.</p><ol class="list-decimal pl-4 space-y-2 text-sm"><li><strong>Question:</strong> "Will changing the Fraud Rule catch more bad guys?"</li><li><strong>Hypothesis:</strong> "Adding 'Bank Change' check will increase precision."</li></ol>`,
+                        `<h3 class="font-bold text-lg mb-2 text-purple-600">Step 2: The Setup</h3><div class="space-y-2 text-sm"><div class="bg-blue-50 p-2 rounded border border-blue-200"><strong>Independent Variable:</strong> The thing you change. <br>(e.g., The Fraud Rule Logic).</div><div class="bg-orange-50 p-2 rounded border border-orange-200"><strong>Dependent Variable:</strong> The thing you measure. <br>(e.g., % of true fraud caught).</div></div>`,
+                        `<h3 class="font-bold text-lg mb-2 text-purple-600">Step 3: The Verdict (P-Values)</h3><p class="mb-2">How do we know if we got lucky?</p><ul class="space-y-2 text-sm"><li><strong>P-Value:</strong> Probability it was just luck. <br><span class="font-bold text-emerald-600">Goal: < 0.05</span> (Less than 5% chance of luck).</li><li><strong>Confidence Interval:</strong> The range of truth. <br>If it crosses zero (e.g. -1% to +5%), we aren't sure.</li></ul>`
+                    ],
+                    renderInteractive: (container) => {
+                        container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-2">Interactive: A/B Test Simulator</h4><div class="bg-slate-50 p-2 rounded border border-slate-200 mb-2 h-40 relative flex items-end justify-center overflow-hidden"><div id="curve-a" class="absolute bottom-0 border-2 border-slate-400 w-32 h-32 rounded-full border-b-0" style="left: 20%; opacity: 0.5;"></div><div id="curve-b" class="absolute bottom-0 border-2 border-emerald-500 w-32 h-32 rounded-full border-b-0 transition-all duration-300" style="left: 20%; opacity: 0.8;"></div><div class="absolute bottom-2 text-xs text-slate-400 w-full text-center">Difference in Means</div></div><input type="range" min="0" max="100" value="0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 mb-2" id="effect-slider"><div class="flex justify-between items-center bg-slate-100 p-2 rounded"><div class="text-xs"><div class="text-slate-500">P-Value</div><div id="p-val-display" class="font-bold text-lg text-slate-700">0.99</div></div><div class="text-xs text-right"><div class="text-slate-500">Conclusion</div><div id="conclusion-display" class="font-bold text-slate-400">Not Significant</div></div></div><p class="text-[10px] text-slate-400 mt-2">Slide right to increase the effect size (difference). Watch P-value drop.</p></div>`;
+                        const slider = document.getElementById('effect-slider');
+                        const curveB = document.getElementById('curve-b');
+                        const pDisplay = document.getElementById('p-val-display');
+                        const cDisplay = document.getElementById('conclusion-display');
+                        slider.oninput = (e) => {
+                            const val = parseInt(e.target.value);
+                            curveB.style.left = (20 + (val/2)) + '%';
+                            let p = 1.0;
+                            if(val > 0) p = Math.exp(-val/20);
+                            if(p > 1) p = 1;
+                            pDisplay.textContent = p.toFixed(3);
+                            if(p < 0.05) {
+                                pDisplay.className = "font-bold text-lg text-emerald-600";
+                                cDisplay.textContent = "Significant! 🚀";
+                                cDisplay.className = "font-bold text-emerald-600";
+                            } else {
+                                pDisplay.className = "font-bold text-lg text-slate-700";
+                                cDisplay.textContent = "Not Significant 🤷";
+                                cDisplay.className = "font-bold text-slate-400";
+                            }
+                        }
+                    }
+                },
+                challenges: [
+                    {
+                        title: "Fraud Detection Rule Tuning",
+                        desc: "You are tuning a fraud detection rule. <br><br><strong>Control (A):</strong> Flag Invoices > $10k. (5% Precision)<br><strong>Variant (B):</strong> Flag > $7.5k AND New Vendor. (12% Precision)<br><br><strong>Stats:</strong> P-Value: 0.04 | CI: [2%, 12% Lift]",
+                        chartType: "none",
+                        customVisual: `<div class="flex flex-col items-center justify-center h-full space-y-4 w-full"><div class="grid grid-cols-2 gap-6 w-full max-w-md"><div class="bg-slate-100 p-4 rounded text-center border-2 border-slate-200"><div class="text-xs text-slate-500 uppercase font-bold mb-2">Rule A</div><div class="text-sm font-bold">5% Precision</div></div><div class="bg-emerald-50 p-4 rounded text-center border-2 border-emerald-400 shadow-md"><div class="text-xs text-emerald-700 uppercase font-bold mb-2">Rule B</div><div class="text-sm font-bold text-emerald-800">12% Precision</div></div></div><div class="bg-white border border-slate-200 p-3 rounded shadow-sm w-64 text-center"><div class="text-xs text-slate-400 uppercase mb-1">Statistical Test</div><div class="flex justify-between items-center text-sm"><span>P-Value:</span><span class="font-mono font-bold text-emerald-600">0.04</span></div><div class="text-[10px] text-slate-400 mt-1">Confidence Interval does NOT cross zero.</div></div></div>`,
+                        options: [
+                            { text: "Stick with Rule A (Not Significant)", correct: false, feedback: "Incorrect. P-Value is 0.04 (< 0.05). The improvement is real!" },
+                            { text: "Switch to Rule B (Significant)", correct: true, feedback: "Correct! The result is statistically significant (P < 0.05) and reduces false positives." },
+                            { text: "Result Inconclusive", correct: false, feedback: "Incorrect. We have a low P-value and a clear positive Confidence Interval." }
+                        ]
+                    },
+                    {
+                        title: "Audit Confirmation Response Rate",
+                        desc: "You test two ways to send audit confirmations. <br><br><strong>Method A (Mail):</strong> 15% Response. <br><strong>Method B (Portal):</strong> 45% Response. <br><strong>P-Value:</strong> 0.002. <br><br>Should we switch to the Portal for all clients?",
+                        chartType: "bar",
+                        dataLabel: "Response Rate %",
+                        data: [15, 45],
+                        labels: ["Mail (A)", "Portal (B)"],
+                        options: [
+                            { text: "No, P-value is too low", correct: false, feedback: "Incorrect. A very low P-value (0.002) means the difference is extremely significant." },
+                            { text: "Yes, result is statistically significant", correct: true, feedback: "Correct! P < 0.05 confirms the portal drives higher response rates, improving audit efficiency." },
+                            { text: "It was just random chance", correct: false, feedback: "Incorrect. The probability of this being chance is 0.2%." }
+                        ]
+                    }
+                ]
+            },
+            {
+                // LEVEL 10
+                topic: "Cluster Analysis",
+                lesson: {
+                    title: "Journal Entry Anomaly Detection",
+                    slides: [
+                        `<h3 class="font-bold text-lg mb-2 text-orange-600">Finding the Needle</h3><p class="mb-4">Auditors analyze millions of Journal Entries (JEs). You can't read them all.</p><p><strong>Cluster Analysis</strong> groups JEs by behavior (User, Time, Amount) to find anomalies.</p>`,
+                        `<h3 class="font-bold mb-2">The "Red Flag" Clusters</h3><ul class="space-y-2 text-sm"><li><strong>Cluster A:</strong> Auto-generated system entries (Safe).</li><li><strong>Cluster B:</strong> Standard payroll entries (Safe).</li><li><strong>Cluster C:</strong> Manual entries, posted on Sunday, round numbers (RISK!).</li></ul>`
+                    ],
+                    renderInteractive: (container) => {
+                         container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-2">Interactive: Spot the Anomaly</h4><canvas id="clusterCanvas" width="300" height="200" class="bg-slate-50 border border-slate-200 rounded mx-auto cursor-crosshair"></canvas><div class="flex justify-center gap-4 mt-2 text-xs"><div class="flex items-center gap-1"><span class="w-3 h-3 bg-blue-400 rounded-full"></span> System</div><div class="flex items-center gap-1"><span class="w-3 h-3 bg-red-500 rounded-full"></span> Manual/Weekend</div></div></div>`;
+                        const canvas = document.getElementById('clusterCanvas');
+                        const ctx = canvas.getContext('2d');
+                        function drawCluster(cx, cy, color, count, spread) {
+                            ctx.fillStyle = color;
+                            for(let i=0; i<count; i++) {
+                                const x = cx + (Math.random() - 0.5) * spread;
+                                const y = cy + (Math.random() - 0.5) * spread;
+                                ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+                            }
+                        }
+                        drawCluster(80, 100, "#60a5fa", 50, 60);
+                        drawCluster(200, 150, "#60a5fa", 40, 50);
+                        drawCluster(250, 40, "#ef4444", 10, 20);
+                        ctx.fillStyle = "#1e293b"; ctx.font = "10px sans-serif"; ctx.fillText("Anomalies?", 230, 20);
+                    }
+                },
+                challenges: [
+                    {
+                        title: "JE Risk Assessment",
+                        desc: "You used Cluster Analysis on the General Ledger. The algorithm grouped entries based on <strong>Amount</strong> (Y-axis) vs <strong>Day of Week</strong> (X-axis). <br><br>Which group represents the high-risk 'Manual Weekend Entries'?",
+                        chartType: "none",
+                        customVisual: `
+                            <div class="relative w-full h-64 bg-slate-50 border rounded flex items-center justify-center">
+                                <canvas id="jeClusterChart" width="400" height="250"></canvas>
+                                <div class="absolute bottom-2 right-2 text-xs text-slate-400">X: Day (Mon-Sun) | Y: Amount ($)</div>
+                            </div>
+                        `,
+                        renderCustom: () => {
+                            const cvs = document.getElementById('jeClusterChart');
+                            if(!cvs) return;
+                            const ctx = cvs.getContext('2d');
+                            ctx.clearRect(0,0,cvs.width, cvs.height);
+                            
+                            // Helper to draw cluster
+                            const drawC = (cx, cy, color, label) => {
+                                ctx.fillStyle = color;
+                                for(let i=0; i<15; i++) {
+                                    let rX = (Math.random()-0.5)*40;
+                                    let rY = (Math.random()-0.5)*40;
+                                    ctx.beginPath(); ctx.arc(cx+rX, cy+rY, 4, 0, 6.28); ctx.fill();
+                                }
+                                ctx.fillStyle = "#333"; ctx.font="bold 12px sans-serif"; ctx.fillText(label, cx-20, cy-30);
+                            };
+
+                            // Axis Lines
+                            ctx.beginPath(); ctx.moveTo(40, 220); ctx.lineTo(380, 220); ctx.stroke(); // X
+                            ctx.beginPath(); ctx.moveTo(40, 220); ctx.lineTo(40, 20); ctx.stroke(); // Y
+
+                            // Group A: System (Mid Amount, Weekdays)
+                            drawC(150, 120, "#60a5fa", "Group A"); // Mon-Wed
+                            
+                            // Group C: AP Clerk (Small Amount, Daily)
+                            drawC(200, 200, "#34d399", "Group C"); // Low Y
+                            
+                            // Group B: Risky (High Amount, Weekend/Far Right)
+                            drawC(320, 60, "#ef4444", "Group B"); // Sun, High $
+                        },
+                        options: [
+                            { text: "Group A", correct: false, feedback: "No, these are standard weekday entries." },
+                            { text: "Group B", correct: true, feedback: "Correct! High amounts posted on weekends (far right on X-axis) are classic fraud indicators." },
+                            { text: "Group C", correct: false, feedback: "No, small daily amounts are likely petty cash or AP." }
+                        ]
+                    },
+                    {
+                        title: "Credit Risk Clustering",
+                        desc: "You grouped customers based on <strong>Days to Pay</strong> (X) and <strong>Credit Usage %</strong> (Y). <br><br><strong>Group 1:</strong> Fast Pay, Low Usage. <br><strong>Group 2:</strong> Fast Pay, High Usage. <br><strong>Group 3:</strong> Slow Pay, High Usage. <br><br>Which group is the highest credit risk?",
+                        chartType: "none",
+                        customVisual: `
+                            <div class="relative w-full h-64 bg-slate-50 border rounded flex items-center justify-center">
+                                <canvas id="creditClusterChart" width="400" height="250"></canvas>
+                                <div class="absolute bottom-2 right-2 text-xs text-slate-400">X: Days to Pay | Y: Usage %</div>
+                            </div>
+                        `,
+                        renderCustom: () => {
+                            const cvs = document.getElementById('creditClusterChart');
+                            if(!cvs) return;
+                            const ctx = cvs.getContext('2d');
+                            ctx.clearRect(0,0,cvs.width, cvs.height);
+                            
+                            const drawC = (cx, cy, color, label) => {
+                                ctx.fillStyle = color;
+                                for(let i=0; i<18; i++) {
+                                    let rX = (Math.random()-0.5)*35;
+                                    let rY = (Math.random()-0.5)*35;
+                                    ctx.beginPath(); ctx.arc(cx+rX, cy+rY, 5, 0, 6.28); ctx.fill();
+                                }
+                                ctx.fillStyle = "#333"; ctx.font="bold 12px sans-serif"; ctx.fillText(label, cx-20, cy-30);
+                            };
+
+                            // Axis
+                            ctx.beginPath(); ctx.moveTo(40, 220); ctx.lineTo(380, 220); ctx.stroke();
+                            ctx.beginPath(); ctx.moveTo(40, 220); ctx.lineTo(40, 20); ctx.stroke();
+
+                            // Group 1: Safe (Low Days, Low Usage) - Bottom Left
+                            drawC(100, 180, "#3b82f6", "Group 1"); 
+                            
+                            // Group 2: Med (Low Days, High Usage) - Top Left
+                            drawC(100, 60, "#fbbf24", "Group 2"); 
+                            
+                            // Group 3: Risky (High Days, High Usage) - Top Right
+                            drawC(320, 50, "#ef4444", "Group 3");
+                        },
+                        options: [
+                            { text: "Group 1", correct: false, feedback: "Incorrect. Low usage and fast payments are ideal customers." },
+                            { text: "Group 2", correct: false, feedback: "Incorrect. High usage is risky, but they are paying quickly (Liquidity is good)." },
+                            { text: "Group 3", correct: true, feedback: "Correct! Slow payments combined with maxed-out credit (High Usage) is the classic predictor of default." }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // --- Functions ---
+
+        function initSidebar() {
+            const list = document.getElementById('nav-list');
+            list.innerHTML = '';
+            scenarios.forEach((s, i) => {
+                const item = document.createElement('div');
+                item.className = "cursor-pointer p-2 rounded text-sm text-slate-600 hover:bg-slate-100 transition-colors flex items-center";
+                item.innerHTML = `<span class="w-6 h-6 rounded-full bg-slate-200 text-xs flex items-center justify-center mr-2 text-slate-600 font-bold">${i+1}</span> ${s.topic}`;
+                item.id = `nav-item-${i}`;
+                item.onclick = () => jumpToLevel(i);
+                list.appendChild(item);
+            });
+            
+            // Calculate Total Possible Score
+            let total = 0;
+            scenarios.forEach(s => total += s.challenges.length);
+            state.totalPossibleScore = total;
+            document.getElementById('progress-display').textContent = `1/${scenarios.length}`;
+        }
+
+        function toggleInstructor() {
+            const btn = document.getElementById('instructor-btn');
+            const txt = document.getElementById('instructor-text');
+
+            if (state.instructorMode) {
+                // If on, just turn off
+                state.instructorMode = false;
+                txt.textContent = "Teacher Access";
+                btn.classList.remove('bg-emerald-100', 'text-emerald-700', 'border-emerald-500');
+                btn.classList.add('text-slate-500', 'hover:text-emerald-600');
+                
+                // Refresh view if in challenge
+                if(state.view === 'challenge') loadChallenge(state.currentLevel);
+                return;
+            }
+
+            // Show modal
+            document.getElementById('instructor-modal').classList.remove('hidden');
+            document.getElementById('instructor-pwd-input').value = '';
+            document.getElementById('instructor-pwd-input').focus();
+        }
+        
+        function closeInstructorModal() {
+            document.getElementById('instructor-modal').classList.add('hidden');
+        }
+
+        function submitInstructorPwd() {
+            const pwd = document.getElementById('instructor-pwd-input').value;
+            if (pwd === "teacher") {
+                state.instructorMode = true;
+                const btn = document.getElementById('instructor-btn');
+                const txt = document.getElementById('instructor-text');
+                txt.textContent = "Instructor Mode ON";
+                btn.classList.remove('text-slate-500', 'hover:text-emerald-600');
+                btn.classList.add('bg-emerald-100', 'text-emerald-700', 'border-emerald-500');
+                
+                // Refresh view if in challenge to show answers
+                if(state.view === 'challenge') loadChallenge(state.currentLevel);
+                closeInstructorModal();
+            } else {
+                const input = document.getElementById('instructor-pwd-input');
+                input.classList.add('border-red-500');
+                input.value = '';
+                input.placeholder = "Wrong Password";
+                setTimeout(() => {
+                    input.classList.remove('border-red-500');
+                    input.placeholder = "Password";
+                }, 2000);
+            }
+        }
+
+        function restartGame() {
+            state.score = 0;
+            state.currentLevel = 0;
+            state.currentChallenge = 0;
+            state.view = 'start';
+            state.instructorMode = false; // Reset instructor mode
+            
+            // Reset Sidebar UI
+            document.getElementById('instructor-text').textContent = "Teacher Access";
+            document.getElementById('instructor-btn').classList.remove('bg-emerald-100', 'text-emerald-700', 'border-emerald-500');
+            document.getElementById('instructor-btn').classList.add('text-slate-500', 'hover:text-emerald-600');
+
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('lesson-container').classList.add('hidden');
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            document.getElementById('score-display').textContent = '0';
+            document.getElementById('progress-display').textContent = `1/${scenarios.length}`;
+            
+            initSidebar(); // Refresh sidebar active states
+        }
+
+        function jumpToLevel(index) {
+            document.getElementById('start-screen').classList.add('hidden');
+            state.currentLevel = index;
+            state.currentChallenge = 0; // Always start level at first challenge
+            // Highlight nav
+            updateNavHighlight();
+            loadLesson(index);
+        }
+
+        function updateNavHighlight() {
+            // Reset all
+            for(let i=0; i<scenarios.length; i++) {
+                const el = document.getElementById(`nav-item-${i}`);
+                if(el) el.className = "cursor-pointer p-2 rounded text-sm text-slate-600 hover:bg-slate-100 transition-colors flex items-center";
+            }
+            // Active
+            const active = document.getElementById(`nav-item-${state.currentLevel}`);
+            if(active) active.className = "cursor-pointer p-2 rounded text-sm nav-active flex items-center shadow-md font-bold";
+        }
+
+        function startModule() {
+            document.getElementById('start-screen').classList.add('hidden');
+            jumpToLevel(0);
+        }
+
+        function loadLesson(index) {
+            state.view = 'lesson';
+            state.currentLevel = index;
+            state.lessonSlide = 0;
+            state.currentChallenge = 0; // Ensure we start fresh
+            updateNavHighlight();
+            
+            document.getElementById('lesson-container').classList.remove('hidden');
+            document.getElementById('game-container').classList.add('hidden');
+            
+            // UI Updates
+            document.getElementById('phase-display').textContent = "Concept Learning";
+            document.getElementById('phase-display').className = "text-sm font-bold text-blue-500";
+            document.getElementById('progress-display').textContent = `${index + 1}/${scenarios.length}`;
+            
+            const data = scenarios[index].lesson;
+            state.maxLessonSlides = data.slides.length;
+            document.getElementById('lesson-title').textContent = data.title;
+            
+            renderLessonSlide();
+            if(data.renderInteractive) {
+                // Small timeout to ensure DOM is ready/visible for Canvas drawing
+                setTimeout(() => {
+                    data.renderInteractive(document.getElementById('lesson-playground'));
+                }, 50);
+            }
+        }
+
+        function renderLessonSlide() {
+            const data = scenarios[state.currentLevel].lesson;
+            const contentArea = document.getElementById('lesson-content-area');
+            const scrollContainer = document.getElementById('lesson-content-scroll');
+            const nav = document.getElementById('lesson-nav');
+            const nextBtn = document.getElementById('lesson-next-btn');
+            const prevBtn = document.getElementById('lesson-prev-btn');
+            
+            if(state.lessonSlide === 0) contentArea.innerHTML = '';
+
+            const slideDiv = document.createElement('div');
+            slideDiv.className = "slide-up pb-4 border-b border-slate-100 last:border-0";
+            slideDiv.innerHTML = data.slides[state.lessonSlide];
+            contentArea.appendChild(slideDiv);
+            
+            // Scroll to bottom of content
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+
+            nav.classList.remove('hidden');
+            document.getElementById('lesson-step-counter').textContent = `${state.lessonSlide + 1}/${state.maxLessonSlides}`;
+            
+            // Button Logic
+            if (state.lessonSlide >= state.maxLessonSlides - 1) {
+                nextBtn.classList.add('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+            }
+            
+            if (state.lessonSlide === 0) {
+                prevBtn.classList.add('opacity-30', 'cursor-not-allowed');
+                prevBtn.disabled = true;
+            } else {
+                prevBtn.classList.remove('opacity-30', 'cursor-not-allowed');
+                prevBtn.disabled = false;
+            }
+        }
+
+        function nextLessonSlide() {
+            if (state.lessonSlide < state.maxLessonSlides - 1) {
+                state.lessonSlide++;
+                renderLessonSlide();
+            }
+        }
+
+        function prevLessonSlide() {
+            if (state.lessonSlide > 0) {
+                state.lessonSlide--;
+                const contentArea = document.getElementById('lesson-content-area');
+                contentArea.innerHTML = '';
+                const data = scenarios[state.currentLevel].lesson;
+                for(let i=0; i<=state.lessonSlide; i++) {
+                     const slideDiv = document.createElement('div');
+                     slideDiv.className = i === state.lessonSlide ? "slide-up pb-4 border-b border-slate-100 last:border-0" : "pb-4 border-b border-slate-100 last:border-0";
+                     slideDiv.innerHTML = data.slides[i];
+                     contentArea.appendChild(slideDiv);
+                }
+                
+                const nextBtn = document.getElementById('lesson-next-btn');
+                const prevBtn = document.getElementById('lesson-prev-btn');
+                document.getElementById('lesson-step-counter').textContent = `${state.lessonSlide + 1}/${state.maxLessonSlides}`;
+                
+                nextBtn.classList.remove('hidden');
+                if (state.lessonSlide === 0) {
+                    prevBtn.classList.add('opacity-30', 'cursor-not-allowed');
+                    prevBtn.disabled = true;
+                } else {
+                    prevBtn.classList.remove('opacity-30', 'cursor-not-allowed');
+                    prevBtn.disabled = false;
+                }
+            }
+        }
+
+        function goToChallenge() {
+            state.view = 'challenge';
+            document.getElementById('lesson-container').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('hidden');
+            document.getElementById('phase-display').textContent = "Audit Challenge";
+            document.getElementById('phase-display').className = "text-sm font-bold text-orange-500";
+            loadChallenge(state.currentLevel);
+        }
+
+        function loadChallenge(levelIndex) {
+            const levelData = scenarios[levelIndex];
+            // Access the specific challenge based on currentChallenge index
+            const data = levelData.challenges[state.currentChallenge];
+            
+            const feedbackPanel = document.getElementById('feedback-panel');
+            const optionsContainer = document.getElementById('options-container');
+            const visualContent = document.getElementById('visual-content');
+            const canvas = document.getElementById('mainChart');
+
+            feedbackPanel.classList.add('hidden');
+            optionsContainer.innerHTML = '';
+            document.getElementById('scenario-title').textContent = data.title;
+            document.getElementById('scenario-desc').innerHTML = data.desc;
+
+            // Destroy previous chart if exists
+            if (state.chartInstance) {
+                state.chartInstance.destroy();
+                state.chartInstance = null;
+            }
+
+            if (data.chartType === 'none') {
+                canvas.classList.add('hidden');
+                visualContent.classList.remove('hidden');
+                visualContent.innerHTML = data.customVisual;
+                // Hook for custom canvas rendering (Level 10)
+                if(data.renderCustom) {
+                    setTimeout(data.renderCustom, 100);
+                }
+            } else {
+                canvas.classList.remove('hidden');
+                visualContent.classList.add('hidden');
+                renderChart(data);
+            }
+
+            data.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                let baseClass = "w-full text-left p-4 rounded-lg border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all font-medium text-slate-700 bg-white shadow-sm flex items-center justify-between group";
+                
+                if (state.instructorMode && opt.correct) {
+                    baseClass += " instructor-reveal";
+                }
+
+                btn.className = baseClass;
+                btn.innerHTML = `<span>${opt.text}</span> <i class="fa-regular fa-circle text-slate-300 group-hover:text-emerald-500"></i>`;
+                btn.onclick = () => handleChoice(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function returnToLesson() {
+             loadLesson(state.currentLevel);
+        }
+        
+        function exitToMenu() {
+            document.getElementById('lesson-container').classList.add('hidden');
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            let config = {
+                type: data.chartType,
+                data: { labels: data.labels, datasets: [] },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: !!data.datasets } }
+                }
+            };
+
+            if (data.chartType === 'scatter') {
+                config.data.datasets = [{ label: data.labels, data: data.data, backgroundColor: 'rgb(37, 99, 235)' }];
+                
+                // Use dynamic labels if provided, else default
+                const xLabel = data.xAxisLabel || 'Ad Spend';
+                const yLabel = data.yAxisLabel || 'Revenue';
+
+                config.options.scales = { 
+                    x: { type: 'linear', position: 'bottom', title: {display: true, text: xLabel} }, 
+                    y: { title: {display: true, text: yLabel} } 
+                };
+            } else if (data.datasets) {
+                config.data.datasets = data.datasets;
+            } else {
+                config.data.datasets = [{ label: data.dataLabel, data: data.data, backgroundColor: 'rgba(16, 185, 129, 0.6)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: 1 }];
+            }
+            state.chartInstance = new Chart(ctx, config);
+        }
+
+        function handleChoice(optionIndex, btnElement) {
+            const currentLevelData = scenarios[state.currentLevel];
+            const currentChallenge = currentLevelData.challenges[state.currentChallenge];
+            const choice = currentChallenge.options[optionIndex];
+            const feedbackPanel = document.getElementById('feedback-panel');
+            const feedbackHeader = document.getElementById('feedback-header');
+            const feedbackText = document.getElementById('feedback-text');
+            const optionsContainer = document.getElementById('options-container');
+
+            Array.from(optionsContainer.children).forEach(b => {
+                b.disabled = true;
+                b.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+
+            feedbackPanel.classList.remove('hidden');
+            
+            if (choice.correct) {
+                fireConfetti();
+                state.score++;
+                document.getElementById('score-display').textContent = state.score;
+                btnElement.classList.remove('border-slate-200', 'bg-white', 'instructor-reveal');
+                btnElement.classList.add('bg-emerald-100', 'border-emerald-500', 'correct-anim');
+                btnElement.innerHTML = `<span>${choice.text}</span> <i class="fa-solid fa-circle-check text-emerald-600"></i>`;
+                feedbackHeader.innerHTML = `<i class="fa-solid fa-check-circle text-emerald-600"></i> <span class="text-emerald-700">Correct Decision</span>`;
+            } else {
+                btnElement.classList.remove('border-slate-200', 'bg-white', 'instructor-reveal');
+                btnElement.classList.add('bg-red-100', 'border-red-500', 'wrong-anim');
+                btnElement.innerHTML = `<span>${choice.text}</span> <i class="fa-solid fa-circle-xmark text-red-600"></i>`;
+                feedbackHeader.innerHTML = `<i class="fa-solid fa-circle-exclamation text-red-600"></i> <span class="text-red-700">Audit Error</span>`;
+            }
+            feedbackText.innerHTML = choice.feedback;
+
+            // Determine if next button goes to next CHALLENGE or next LEVEL
+            const nextBtn = document.getElementById('next-btn');
+            if (state.currentChallenge < currentLevelData.challenges.length - 1) {
+                nextBtn.innerHTML = `Next Challenge <i class="fa-solid fa-arrow-right ml-2"></i>`;
+            } else if (state.currentLevel < scenarios.length - 1) {
+                nextBtn.innerHTML = `Next Lesson <i class="fa-solid fa-forward ml-2"></i>`;
+            } else {
+                nextBtn.innerHTML = `View Final Score <i class="fa-solid fa-flag-checkered ml-2"></i>`;
+            }
+        }
+
+        // --- Simple Confetti Engine ---
+        function fireConfetti() {
+            const colors = ['#34d399', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+            for(let i=0; i<30; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animation = `confetti-fall ${Math.random() * 2 + 2}s linear`;
+                document.body.appendChild(conf);
+                // Cleanup
+                setTimeout(() => conf.remove(), 4000);
+            }
+        }
+
+        function nextStep() {
+            const currentLevelData = scenarios[state.currentLevel];
+            
+            // Check if there are more challenges in the current level
+            if (state.currentChallenge < currentLevelData.challenges.length - 1) {
+                state.currentChallenge++;
+                loadChallenge(state.currentLevel);
+            } else {
+                // No more challenges, go to next level
+                state.currentLevel++;
+                if (state.currentLevel < scenarios.length) {
+                    jumpToLevel(state.currentLevel);
+                } else {
+                    endModule();
+                }
+            }
+        }
+
+        function endModule() {
+            state.view = 'end';
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+            document.getElementById('final-score').textContent = state.score;
+            document.getElementById('total-questions').textContent = `/ ${state.totalPossibleScore}`;
+            
+            const msg = document.getElementById('final-message');
+            const feedback = document.getElementById('final-feedback');
+            
+            const percent = (state.score / state.totalPossibleScore) * 100;
+
+            if (percent >= 80) {
+                msg.textContent = "Data Science Ninja!";
+                msg.className = "text-emerald-500 font-bold text-xl mb-2";
+                feedback.innerHTML = "Incredible work. You mastered everything from basic stats to machine learning concepts like Clustering.";
+            } else if (percent >= 50) {
+                msg.textContent = "Solid Analyst";
+                msg.className = "text-blue-500 font-bold text-xl mb-2";
+                feedback.innerHTML = "Good job. You have a strong grasp of the basics. Review the Regression modules to level up.";
+            } else {
+                msg.textContent = "Keep Practicing";
+                msg.className = "text-orange-500 font-bold text-xl mb-2";
+                feedback.innerHTML = "Statistics is a language. The more you speak it, the better you get. Try the module again!";
+            }
+        }
+
+        // Init App
+        window.onload = () => {
+            initSidebar();
+        }
+    </script>
+</body>
+</html>
