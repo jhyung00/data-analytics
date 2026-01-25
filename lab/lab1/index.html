@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACCT Lab 1: Expense Audit Analytics</title>
+    <!-- Tailwind for Dashboard Styles -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Dashboard Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom Overrides */
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Modal Transitions */
+        .modal-active { opacity: 1 !important; pointer-events: auto !important; }
+        .modal-content-active { transform: scale(1) !important; }
+        
+        /* Smooth Fade In */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-700">
+
+<!-- LAB INSTRUCTIONS SECTION -->
+<div id="lab-instructions" class="fade-in">
+    
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-teal-900 to-slate-900 text-white py-12 px-4 shadow-lg border-b-4 border-amber-500">
+        <div class="max-w-5xl mx-auto text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-full mb-4 backdrop-blur-sm border border-white/20">
+                <i class="fa-solid fa-magnifying-glass-chart text-2xl text-teal-300"></i>
+            </div>
+            <h1 class="text-4xl font-bold tracking-tight mb-2">Expense Audit Analytics</h1>
+            <p class="text-teal-100 text-lg font-light">Policy Compliance, Budget Reconciliation & Fraud Detection</p>
+        </div>
+    </header>
+
+    <div class="max-w-5xl mx-auto px-6 py-10 -mt-8">
+
+        <!-- Scenario Card -->
+        <div class="bg-white rounded-xl shadow-md border border-slate-200 p-8 mb-8 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1.5 h-full bg-teal-600"></div>
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+                <div class="flex-1">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-briefcase text-teal-600"></i> Audit Engagement: TechGear Solutions
+                    </h3>
+                    <p class="text-slate-600 mb-3 leading-relaxed">
+                        <strong>Scenario:</strong> You are the Senior Auditor for TechGear's regional offices. Management is concerned about "Maverick Spending" (unapproved vendors) and employees exceeding policy limits.
+                    </p>
+                    <p class="text-slate-600 leading-relaxed">
+                        <strong>Goal:</strong> Validate the expense log against company policy and budget constraints using Excel.
+                    </p>
+                </div>
+                <div class="w-full md:w-auto flex-shrink-0">
+                    <a href="#" onclick="alert('In a real scenario, this would download the Excel file.'); return false;" class="flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition transform hover:-translate-y-0.5 w-full md:w-auto">
+                        <i class="fa-solid fa-file-excel"></i>
+                        Download Data
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Part 1: Policy Compliance -->
+        <div class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-3">
+                <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wide">Part 1</span>
+                Internal Control Testing
+            </h2>
+            <p class="text-slate-600 mb-6">Verify that individual expenses do not exceed authorized limits per category.</p>
+            
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Instructions -->
+                <div class="space-y-4">
+                    <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm hover:border-teal-400 transition group">
+                        <div class="flex justify-between items-start mb-2">
+                            <strong class="text-slate-800 group-hover:text-teal-700 transition">1. Retrieve Policy Limit</strong>
+                            <span class="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">XLOOKUP</span>
+                        </div>
+                        <p class="text-sm text-slate-600">Create column <strong>"Policy Limit"</strong>. Find the <em>MaxAllowed</em> amount from Table A based on the <em>ExpenseType</em>.</p>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm hover:border-teal-400 transition group">
+                        <div class="flex justify-between items-start mb-2">
+                            <strong class="text-slate-800 group-hover:text-teal-700 transition">2. Flag Excessive Spend</strong>
+                            <span class="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">IF</span>
+                        </div>
+                        <p class="text-sm text-slate-600">Create column <strong>"Audit Flag"</strong>. If <em>Amount</em> > <em>Policy Limit</em>, display <span class="text-red-600 font-bold">"Violation"</span>. Otherwise, display <span class="text-emerald-600 font-bold">"Compliant"</span>.</p>
+                    </div>
+                </div>
+
+                <!-- Table A -->
+                <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                    <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">Table A: Policy Limits</h4>
+                    <div class="overflow-hidden rounded-lg border border-slate-200">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-slate-100 text-slate-700">
+                                <tr>
+                                    <th class="px-4 py-2 text-left font-semibold">ExpenseType</th>
+                                    <th class="px-4 py-2 text-right font-semibold">MaxAllowed</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 bg-white">
+                                <tr><td class="px-4 py-2">Travel</td><td class="px-4 py-2 text-right text-mono">$1,500</td></tr>
+                                <tr><td class="px-4 py-2">Meals</td><td class="px-4 py-2 text-right text-mono">$200</td></tr>
+                                <tr><td class="px-4 py-2">Supplies</td><td class="px-4 py-2 text-right text-mono">$500</td></tr>
+                                <tr><td class="px-4 py-2">Training</td><td class="px-4 py-2 text-right text-mono">$2,500</td></tr>
+                                <tr><td class="px-4 py-2">Software</td><td class="px-4 py-2 text-right text-mono">$1,200</td></tr>
+                                <tr><td class="px-4 py-2">Consulting</td><td class="px-4 py-2 text-right text-mono">$3,000</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Part 2: Budgeting -->
+        <div class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-3">
+                <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wide">Part 2</span>
+                Budget Reconciliation
+            </h2>
+            <p class="text-slate-600 mb-6">Calculate total spend per department and check against the budget.</p>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                 <!-- Table B -->
+                 <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 order-2 lg:order-1">
+                    <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-3">Table B: Monthly Budgets</h4>
+                    <div class="overflow-hidden rounded-lg border border-slate-200">
+                        <table class="min-w-full text-sm">
+                            <thead class="bg-slate-100 text-slate-700">
+                                <tr>
+                                    <th class="px-4 py-2 text-left font-semibold">Department</th>
+                                    <th class="px-4 py-2 text-right font-semibold">Budget</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 bg-white">
+                                <tr><td class="px-4 py-2">IT</td><td class="px-4 py-2 text-right text-mono">$40,000</td></tr>
+                                <tr><td class="px-4 py-2">Finance</td><td class="px-4 py-2 text-right text-mono">$20,000</td></tr>
+                                <tr><td class="px-4 py-2">HR</td><td class="px-4 py-2 text-right text-mono">$15,000</td></tr>
+                                <tr><td class="px-4 py-2">Marketing</td><td class="px-4 py-2 text-right text-mono">$30,000</td></tr>
+                                <tr><td class="px-4 py-2">Operations</td><td class="px-4 py-2 text-right text-mono">$25,000</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="order-1 lg:order-2">
+                    <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm hover:border-teal-400 transition group h-full">
+                        <div class="flex justify-between items-start mb-2">
+                            <strong class="text-slate-800 group-hover:text-teal-700 transition">3. Department Spend vs. Budget</strong>
+                            <span class="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">SUMIFS</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-4">On a new summary sheet, calculate the Total Spend for each Department.</p>
+                        <div class="bg-amber-50 border border-amber-100 p-3 rounded text-sm text-amber-800">
+                            <strong>Goal:</strong> Compare the sum of total expenses for each department against each departmental monthly budget. Identify which departments are overspending.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Part 3: Matrix Analysis -->
+        <div class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-3">
+                <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wide">Part 3</span>
+                Matrix Analysis
+            </h2>
+            <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                <p class="text-slate-600 mb-6">Perform a two-way lookup to find specific budget allocations from a matrix.</p>
+                
+                <div class="mb-6">
+                    <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Table C: Historical Spend Matrix</h4>
+                    <div class="overflow-x-auto rounded-lg border border-slate-200">
+                        <table class="min-w-full text-sm text-center">
+                            <thead class="bg-slate-100 text-slate-700">
+                                <tr>
+                                    <th class="px-4 py-2 text-left bg-slate-200 border-r border-slate-300">Region \ Type</th>
+                                    <th class="px-4 py-2 font-semibold">Travel</th>
+                                    <th class="px-4 py-2 font-semibold">Meals</th>
+                                    <th class="px-4 py-2 font-semibold">Supplies</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 bg-white">
+                                <tr><td class="px-4 py-2 font-semibold text-left bg-slate-50 border-r border-slate-200">West</td><td>12500</td><td>4200</td><td>1500</td></tr>
+                                <tr><td class="px-4 py-2 font-semibold text-left bg-slate-50 border-r border-slate-200">East</td><td>8900</td><td>3100</td><td>1200</td></tr>
+                                <tr><td class="px-4 py-2 font-semibold text-left bg-slate-50 border-r border-slate-200">Central</td><td>5600</td><td>2800</td><td>900</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                    <div class="flex justify-between items-start mb-1">
+                        <strong class="text-slate-800">4. Two-Way Lookup</strong>
+                        <span class="text-xs font-mono bg-white text-slate-600 px-2 py-1 rounded border border-slate-200">INDEX & XMATCH</span>
+                    </div>
+                    <p class="text-sm text-slate-600">Create a lookup tool where you can type a <strong>Region</strong> and an <strong>Expense Type</strong>, and it returns the historical amount.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Part 4: Analytical Procedures -->
+        <div class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-3">
+                <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wide">Part 4</span>
+                Risk Assessment
+            </h2>
+            <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-slate-50 text-slate-700 border-b border-slate-200">
+                        <tr>
+                            <th class="px-6 py-4 text-left font-bold uppercase tracking-wider">Audit Inquiry</th>
+                            <th class="px-6 py-4 text-left font-bold uppercase tracking-wider">Function Hint</th>
+                            <th class="px-6 py-4 text-left font-bold uppercase tracking-wider w-40">Your Answer</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4"><strong>Q1:</strong> How many transactions were NOT Approved?</td>
+                            <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIF</span></td>
+                            <td class="px-6 py-4"><input type="text" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4"><strong>Q2:</strong> Total spent on "Travel" in the "West" Region?</td>
+                            <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">SUMIFS</span></td>
+                            <td class="px-6 py-4"><input type="text" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="$"></td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4"><strong>Q3:</strong> Average amount of expenses flagged "Violation"?</td>
+                            <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">AVERAGEIF</span></td>
+                            <td class="px-6 py-4"><input type="text" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="$"></td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4"><strong>Q4:</strong> High Risk: How many transactions with "Uber"?</td>
+                            <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIF</span></td>
+                            <td class="px-6 py-4"><input type="text" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4"><strong>Q5:</strong> How many transactions need Investigation? (See Part 5)</td>
+                            <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIF</span></td>
+                            <td class="px-6 py-4"><input type="text" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Part 5: Manager's Challenge -->
+        <div class="mb-16">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-3">
+                <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wide">Part 5</span>
+                The Manager's Challenge
+            </h2>
+            <div class="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-lg border border-indigo-100 shadow-sm">
+                <div class="flex justify-between items-start mb-3">
+                    <strong class="text-indigo-900 text-lg">5. Critical Risk Assessment</strong>
+                    <span class="text-xs font-mono bg-indigo-100 text-indigo-700 px-2 py-1 rounded border border-indigo-200">IF + AND</span>
+                </div>
+                <p class="text-slate-700 mb-4">Create a column <strong>"Critical Risk"</strong> to identify significant control weaknesses.</p>
+                <div class="bg-white p-4 rounded border border-indigo-100 text-sm text-slate-600 shadow-sm">
+                    Flag an expense as <strong class="text-red-600">"Investigate"</strong> if:
+                    <ul class="list-disc ml-5 mt-2 space-y-1">
+                        <li>The Expense is <strong>Not Approved</strong> (Approved = "No")</li>
+                        <li><strong>AND</strong> the Amount is greater than <strong>$1,000</strong>.</li>
+                    </ul>
+                    <p class="mt-3">Otherwise, mark it as <strong>"No Problem"</strong>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPLETION & SUBMISSION SECTION -->
+        <div class="p-8 bg-slate-50 border border-slate-200 rounded-xl text-center">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">🎉 Lab Completion & Submission</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8 text-left">
+                
+                <!-- Left: Submit (Step 1) -->
+                <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-700 mb-2 flex items-center gap-2">
+                            <span class="bg-blue-100 text-blue-700 w-6 h-6 inline-flex items-center justify-center rounded-full text-xs">1</span>
+                            Submit Assignment
+                        </h3>
+                        <p class="text-sm text-slate-600 mb-4">Ready to turn it in? Click below to get submission instructions and the solution password.</p>
+                    </div>
+                    <div class="mt-auto">
+                        <button onclick="showSubmitModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-sm transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                            Submit Assignment
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Self Check (Step 2) -->
+                <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm flex flex-col hover:shadow-md transition">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-700 mb-2 flex items-center gap-2">
+                            <span class="bg-teal-100 text-teal-700 w-6 h-6 inline-flex items-center justify-center rounded-full text-xs">2</span>
+                            Self-Check
+                        </h3>
+                        <p class="text-sm text-slate-600 mb-4">Use the password provided in Step 1 to verify your work against the solution dashboard.</p>
+                    </div>
+                    <div class="mt-auto">
+                        <div class="flex gap-2">
+                            <input type="password" id="password-input" placeholder="Enter Password" class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm">
+                            <button onclick="checkPassword()" class="bg-teal-800 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm flex items-center shadow-sm">
+                                Check Work
+                            </button>
+                        </div>
+                        <p id="error-msg" class="text-red-600 text-xs mt-2 hidden font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-circle-exclamation"></i> Incorrect password.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- HIDDEN DASHBOARD SECTION -->
+<div id="dashboard-section" class="hidden min-h-screen bg-slate-50">
+    
+    <!-- Navigation -->
+    <nav class="bg-teal-900 text-white sticky top-0 z-50 shadow-lg border-b border-teal-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="text-xl font-bold tracking-tight">Audit<span class="text-teal-400">Master</span></div>
+                    <div class="hidden md:block px-3 py-1 bg-teal-800/50 rounded text-xs text-teal-200 border border-teal-700 font-mono">Solution View</div>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="toggleDashboard()" class="px-3 py-2 rounded-md text-sm font-medium text-red-200 hover:bg-red-900/50 hover:text-white transition border border-red-900/50">Close View</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Answer Key Section -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-8">
+            <h3 class="text-xl font-bold text-slate-800 mb-4 border-b pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-check-double text-teal-600"></i> Official Answer Key
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm text-left">
+                    <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs tracking-wider">
+                        <tr>
+                            <th class="px-6 py-3 border-b">Question</th>
+                            <th class="px-6 py-3 border-b">Description</th>
+                            <th class="px-6 py-3 border-b text-right">Correct Answer</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4 font-bold text-slate-700">Q1</td>
+                            <td class="px-6 py-4 text-slate-600">Unapproved Transactions Count</td>
+                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">23</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4 font-bold text-slate-700">Q2</td>
+                            <td class="px-6 py-4 text-slate-600">Total West Region Travel Spend</td>
+                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">$6,443</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4 font-bold text-slate-700">Q3</td>
+                            <td class="px-6 py-4 text-slate-600">Average Violation Amount</td>
+                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">$2,410</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4 font-bold text-slate-700">Q4</td>
+                            <td class="px-6 py-4 text-slate-600">Transactions with 'Uber'</td>
+                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">6</td>
+                        </tr>
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4 font-bold text-slate-700">Q5</td>
+                            <td class="px-6 py-4 text-slate-600">Critical Risk Investigations</td>
+                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">9</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Dashboard Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-800">Policy Violations by Type</h3>
+                    <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded">Chart.js</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="violationChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-800">Departmental Spend vs Budget</h3>
+                    <span class="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded">Chart.js</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="budgetChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- SUBMISSION MODAL -->
+<div id="submit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center opacity-0 transition-opacity duration-300" onclick="if(event.target === this) closeSubmitModal()">
+    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full transform scale-95 transition-transform duration-300 m-4 relative">
+        <button onclick="closeSubmitModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        
+        <div class="text-center">
+            <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-check text-2xl text-teal-600"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">Ready to Submit!</h3>
+            <p class="text-slate-600 mb-6">Please follow these final steps to complete your assignment:</p>
+            
+            <div class="text-left bg-slate-50 p-5 rounded-lg border border-slate-200 mb-6 space-y-4">
+                <div class="flex items-start gap-3">
+                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">1</div>
+                    <p class="text-sm text-slate-700 leading-snug">Save your Excel file as <strong>.xlsx</strong> (Excel Workbook).</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">2</div>
+                    <div class="text-sm text-slate-700 leading-snug">
+                        Use password <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-mono font-bold select-all">expenselab</span> to check your work.
+                    </div>
+                </div>
+                 <div class="flex items-start gap-3">
+                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">3</div>
+                    <p class="text-sm text-slate-700 leading-snug">Upload the file to the <strong>Canvas Assignment</strong> page.</p>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeSubmitModal()" class="w-full bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-lg border border-slate-300 transition">
+                    Back
+                </button>
+                <button onclick="closeSubmitModal()" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-700 transition shadow-lg">
+                    Okay, Got It
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- DASHBOARD LOGIC ---
+    function checkPassword() {
+        const input = document.getElementById('password-input');
+        if(input.value === 'expenselab') {
+            toggleDashboard();
+            document.getElementById('error-msg').classList.add('hidden');
+        } else {
+            document.getElementById('error-msg').classList.remove('hidden');
+            input.classList.add('border-red-500');
+            input.classList.add('focus:ring-red-500');
+        }
+    }
+
+    function toggleDashboard() {
+        const lab = document.getElementById('lab-instructions');
+        const dash = document.getElementById('dashboard-section');
+        const input = document.getElementById('password-input');
+
+        if(dash.classList.contains('hidden')) {
+            dash.classList.remove('hidden');
+            lab.classList.add('hidden');
+            initCharts(); 
+        } else {
+            dash.classList.add('hidden');
+            lab.classList.remove('hidden');
+            // Reset state
+            input.value = '';
+            input.classList.remove('border-red-500', 'focus:ring-red-500');
+            document.getElementById('error-msg').classList.add('hidden');
+        }
+    }
+
+    // --- MODAL LOGIC ---
+    function showSubmitModal() {
+        const modal = document.getElementById('submit-modal');
+        const modalContent = modal.querySelector('div');
+        modal.classList.remove('hidden');
+        // Small delay to allow display:block to apply before opacity transition
+        setTimeout(() => {
+            modal.classList.add('modal-active');
+            modalContent.classList.add('modal-content-active');
+        }, 10);
+    }
+
+    function closeSubmitModal() {
+        const modal = document.getElementById('submit-modal');
+        const modalContent = modal.querySelector('div');
+        modal.classList.remove('modal-active');
+        modalContent.classList.remove('modal-content-active');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    // --- CHARTS ---
+    function initCharts() {
+        const ctx1 = document.getElementById('violationChart');
+        if(Chart.getChart(ctx1)) Chart.getChart(ctx1).destroy();
+        
+        new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: ['Travel', 'Meals', 'Supplies', 'Training'],
+                datasets: [{
+                    label: 'Count of Policy Violations',
+                    data: [12, 8, 4, 1],
+                    backgroundColor: '#f59e0b',
+                    borderRadius: 4
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        const ctx2 = document.getElementById('budgetChart');
+        if(Chart.getChart(ctx2)) Chart.getChart(ctx2).destroy();
+
+        new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: ['IT', 'Finance', 'HR', 'Marketing'],
+                datasets: [
+                    { label: 'Actual Spend', data: [42000, 19500, 14000, 31000], backgroundColor: '#0f766e', borderRadius: 4 },
+                    { label: 'Budget Limit', data: [40000, 20000, 15000, 30000], type: 'line', borderColor: '#ef4444', borderWidth: 2, pointBackgroundColor: '#ef4444' }
+                ]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+    
+    document.getElementById('password-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkPassword();
+    });
+</script>
+
+</body>
+</html>
