@@ -8,163 +8,159 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js for Dashboard Charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Lab Instruction Styles (Scoped to .lab-content to prevent conflicts with Tailwind) */
+        /* Lab Instruction Styles */
         :root {
-            --primary-color: #003366; /* University Blue */
+            --primary-color: #0f172a; /* Slate 900 */
             --secondary-color: #f8f9fa;
-            --accent-color: #d9534f;
-            --text-color: #333;
-            --success-color: #28a745;
-            --warning-bg: #fff3cd;
+            --accent-color: #2563eb; /* Blue 600 */
+            --text-color: #334155; /* Slate 700 */
+            --success-color: #10b981;
+            --warning-bg: #fffbeb;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
             line-height: 1.6;
             color: var(--text-color);
             margin: 0;
             padding: 0;
-            background-color: #f4f6f9;
+            background-color: #f1f5f9;
         }
         
         /* Container for Lab Instructions */
         .lab-container {
             max-width: 1024px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 40px auto;
+            padding: 40px;
             background-color: #ffffff;
-            box-shadow: 0 0 20px rgba(0,0,0,0.08);
-            margin-bottom: 40px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 12px;
+            margin-bottom: 60px;
         }
         
         header {
             background-color: var(--primary-color);
             color: white;
-            padding: 30px;
+            padding: 40px 20px;
             text-align: center;
-            border-bottom: 5px solid var(--accent-color);
+            background-image: linear-gradient(to right, #0f172a, #1e293b);
         }
-        h1 { margin: 0; font-size: 2.2rem; font-weight: 700; }
+        h1 { margin: 0; font-size: 2.5rem; font-weight: 700; letter-spacing: -0.025em; }
+        header p { margin-top: 10px; color: #94a3b8; font-size: 1.1rem; }
         
-        /* Scoped styles for headings inside lab container to avoid tailwind conflict */
+        /* Scoped styles for headings inside lab container */
         .lab-container h2 { 
-            color: var(--primary-color); 
-            border-left: 6px solid var(--accent-color); 
-            padding-left: 15px; 
-            margin-top: 40px; 
-            background: #e9ecef;
-            padding-top: 12px;
-            padding-bottom: 12px;
-            border-radius: 0 5px 5px 0;
+            color: #1e293b; 
+            border-left: 4px solid var(--accent-color); 
+            padding-left: 16px; 
+            margin-top: 48px; 
+            margin-bottom: 24px;
             font-size: 1.5rem;
-            display: block;
+            font-weight: 700;
         }
         .lab-container h3 { 
-            color: #555; 
-            margin-top: 25px; 
-            border-bottom: 1px solid #eee; 
-            padding-bottom: 8px;
+            color: #334155; 
+            margin-top: 0;
+            margin-bottom: 12px;
             font-size: 1.25rem;
-            display: block;
+            font-weight: 600;
         }
         
         .scenario-box {
-            background-color: #e8f4fd;
-            border: 1px solid #b6d4fe;
-            padding: 20px;
-            margin: 25px 0;
+            background-color: #eff6ff;
+            border: 1px solid #dbeafe;
+            padding: 24px;
+            margin: 32px 0;
             border-radius: 8px;
-            position: relative;
         }
+        
         .task-list {
             list-style-type: none;
             padding: 0;
         }
         .task-list li {
             background: #fff;
-            border: 1px solid #e0e0e0;
-            margin: 15px 0;
-            padding: 20px;
+            border: 1px solid #e2e8f0;
+            margin: 16px 0;
+            padding: 24px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
             position: relative;
-            display: block;
         }
         .task-list li:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border-color: var(--primary-color);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: var(--accent-color);
         }
         
         .level-badge {
             float: right;
-            font-size: 0.8em;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: bold;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-        .lvl-basic { background: #d1e7dd; color: #0f5132; }
-        .lvl-inter { background: #fff3cd; color: #856404; }
-        .lvl-adv { background: #f8d7da; color: #842029; }
+        .lvl-basic { background: #dcfce7; color: #15803d; }
+        .lvl-inter { background: #fef3c7; color: #b45309; }
+        .lvl-adv { background: #fee2e2; color: #b91c1c; }
 
         .function-tag {
             display: inline-block;
-            background-color: #003366;
+            background-color: #334155;
             color: #fff;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-family: 'Consolas', monospace;
-            font-size: 0.85em;
-            margin-bottom: 10px;
-            font-weight: bold;
-            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.8em;
+            margin-bottom: 12px;
+            font-weight: 600;
         }
-        .complex-tag { background-color: #6610f2; }
-        .audit-concept {
-            display: block;
-            margin-top: 10px;
-            font-style: italic;
-            color: #666;
-            font-size: 0.9em;
-            background: #f8f9fa;
-            padding: 8px;
-            border-radius: 4px;
-        }
+        .complex-tag { background-color: #7c3aed; }
+
         .download-btn {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             background-color: var(--accent-color);
             color: white;
-            padding: 15px 35px;
+            padding: 12px 28px;
             text-decoration: none;
-            font-weight: bold;
-            border-radius: 5px;
-            transition: background 0.3s;
-            font-size: 1.1em;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin: 20px 0;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+            margin: 10px 0;
         }
-        .download-btn:hover { background-color: #b02a37; transform: translateY(-1px); }
+        .download-btn:hover { 
+            background-color: #1d4ed8; 
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+        }
         
         /* Data Tables for Instructions */
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
-        .data-table th, .data-table td { border: 1px solid #dee2e6; padding: 10px; text-align: left; }
-        .data-table th { background-color: var(--primary-color); color: white; }
-        .data-table tr:nth-child(even) { background-color: #f2f2f2; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.95em; border-radius: 8px; overflow: hidden; }
+        .data-table th, .data-table td { border: 1px solid #e2e8f0; padding: 12px 16px; text-align: left; }
+        .data-table th { background-color: #f8fafc; color: #1e293b; font-weight: 600; }
+        .data-table tr:hover { background-color: #f8fafc; }
         
         .grid-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
+            gap: 24px;
+            margin-top: 24px;
         }
         @media (max-width: 768px) { .grid-container { grid-template-columns: 1fr; } }
         .reference-card {
-            background: white;
-            padding: 15px;
-            border: 1px solid #ddd;
+            background: #f8fafc;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
         }
 
@@ -183,9 +179,12 @@
             font-weight: 600;
         }
         #dashboard-section {
-            background-color: #f1f5f9; /* Slate 100 */
-            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
         }
+
+        /* Modal Transitions */
+        .modal-active { opacity: 1 !important; pointer-events: auto !important; }
+        .modal-content-active { transform: scale(1) !important; }
     </style>
 </head>
 <body>
@@ -202,16 +201,19 @@
         <div class="scenario-box">
             <h3>📊 Audit Engagement: TechGear Solutions</h3>
             <p><strong>Scenario:</strong> You are the Senior Auditor for TechGear. The client has provided their inventory listing. You must perform a full audit, starting with basic data validation and moving to complex risk modeling.</p>
-            <p><strong>Goal:</strong> Complete all 5 parts of the audit program.</p>
+            <p><strong>Goal:</strong> Complete all 5 parts of the audit program below using Excel.</p>
         </div>
 
         <div style="text-align: center;">
-            <a href="data/Inventory_Blank.xlsx" class="download-btn" download>📥 Download Inventory_Blank.xlsx</a>
+            <a href="#" onclick="alert('In a real scenario, this would download the Excel file.'); return false;" class="download-btn">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Download Inventory_Blank.xlsx
+            </a>
         </div>
 
         <!-- Part 1: Basic Logic -->
         <h2>Part 1: Internal Control Testing (Basic Logic)</h2>
-        <p>Perform standard control tests to flag simple issues.</p>
+        <p class="mb-4 text-slate-600">Perform standard control tests to flag simple inventory management issues.</p>
 
         <ul class="task-list">
             <li>
@@ -232,16 +234,16 @@
                 <span class="function-tag">NESTED IF</span>
                 <br>Create column <strong>"Stock Status"</strong>:
                 <ul>
-                    <li>If <em>EndingStock</em> > 60, display <strong>"Overstock"</strong>.</li>
-                    <li>If <em>EndingStock</em> < 5, display <strong>"Critical Low"</strong>.</li>
-                    <li>Otherwise, display <strong>"Normal"</strong>.</li>
+                    <li class="border-0 shadow-none p-0 m-2 bg-transparent text-sm text-slate-600 list-disc ml-6">If <em>EndingStock</em> > 60, display <strong>"Overstock"</strong>.</li>
+                    <li class="border-0 shadow-none p-0 m-2 bg-transparent text-sm text-slate-600 list-disc ml-6">If <em>EndingStock</em> < 5, display <strong>"Critical Low"</strong>.</li>
+                    <li class="border-0 shadow-none p-0 m-2 bg-transparent text-sm text-slate-600 list-disc ml-6">Otherwise, display <strong>"Normal"</strong>.</li>
                 </ul>
             </li>
         </ul>
 
         <!-- Part 2: Reconciliation -->
         <h2>Part 2: Inventory Roll-Forward (Reconciliation)</h2>
-        <p>Verify if the client's reported ending stock matches the transaction history.</p>
+        <p class="mb-4 text-slate-600">Verify if the client's reported ending stock matches the transaction history.</p>
         
         <ul class="task-list">
             <li>
@@ -260,13 +262,13 @@
 
         <!-- Part 3: Data Enrichment -->
         <h2>Part 3: Data Enrichment (Audit Setup)</h2>
-        <p>The client file is missing key classifications. Use the tables below to assign data.</p>
+        <p class="mb-4 text-slate-600">The client file is missing key classifications. Use the tables below to assign data.</p>
         
         <div class="grid-container">
             <!-- Wildcard Table -->
             <div class="reference-card">
                 <h4>📋 Table A: Product Master File</h4>
-                <p><em>(Copy this partial list. Assume the full list exists in the client's system.)</em></p>
+                <p class="text-sm text-slate-500 mb-2"><em>(Copy this partial list. Assume the full list exists in the client's system.)</em></p>
                 <table class="data-table">
                     <tr><th>Product Name</th><th>Dept Code</th></tr>
                     <tr><td>Laptop</td><td>HW-LAP</td></tr>
@@ -284,6 +286,7 @@
             <!-- Range Lookup Table -->
             <div class="reference-card">
                 <h4>📋 Table B: Rebates</h4>
+                <p class="text-sm text-slate-500 mb-2"><em>(Tiered rebate structure based on volume.)</em></p>
                 <table class="data-table">
                     <tr><th>Units Sold</th><th>Rebate %</th></tr>
                     <tr><td>0</td><td>0.0%</td></tr>
@@ -301,7 +304,7 @@
                 <strong>6. Assign Department Code (Exact Match)</strong><br>
                 <span class="function-tag">XLOOKUP</span>
                 <br>Create column <strong>"Dept Code"</strong>. Use XLOOKUP to match the <em>Product Name</em> against Table A to find the Department Code.
-                <br><em>Note:</em> Since Table A is a partial list, some items will return #N/A. Wrap your function in <strong>IFNA</strong> or use the `[if_not_found]` argument in XLOOKUP to display <strong>"Pending Audit"</strong>.
+                <br><span class="text-sm text-slate-500 italic">Note: Since Table A is a partial list, some items will return #N/A. Wrap your function in <strong>IFNA</strong> to display <strong>"Pending Audit"</strong>.</span>
             </li>
             <li>
                 <span class="level-badge lvl-inter">Intermediate</span>
@@ -313,7 +316,7 @@
 
         <!-- Part 4: Analytical Procedures -->
         <h2>Part 4: Analytical Procedures (Summary Stats)</h2>
-        <p>Create a "Summary Statistics" table to answer these audit inquiries.</p>
+        <p class="mb-4 text-slate-600">Create a "Summary Statistics" table to answer these audit inquiries.</p>
 
         <table class="data-table">
             <thead>
@@ -327,17 +330,17 @@
                 <tr>
                     <td><strong>Q1:</strong> How many items have a Cost Per Unit greater than $200?</td>
                     <td><span class="level-badge lvl-basic">Basic</span></td>
-                    <td><span class="function-tag">COUNTIF</span></td>
+                    <td><span class="function-tag">COUNTIFS</span></td>
                 </tr>
                 <tr>
                     <td><strong>Q2:</strong> What is the total Sales for the "Laptop" category (Name is exactly "Laptop")?</td>
                     <td><span class="level-badge lvl-basic">Basic</span></td>
-                    <td><span class="function-tag">SUMIF</span></td>
+                    <td><span class="function-tag">SUMIFS</span></td>
                 </tr>
                 <tr>
                     <td><strong>Q3:</strong> What is the average cost of items flagged as "Reorder" in your Action column?</td>
                     <td><span class="level-badge lvl-basic">Basic</span></td>
-                    <td><span class="function-tag">AVERAGEIF</span></td>
+                    <td><span class="function-tag">AVERAGEIFS</span></td>
                 </tr>
                 <tr>
                     <td><strong>Q4 (Risk):</strong> Sum of <em>TotalCost</em> for items where <strong>Cost > $100</strong> AND <strong>UnitsSold < 5</strong>.</td>
@@ -345,16 +348,22 @@
                     <td><span class="function-tag">SUMIFS</span></td>
                 </tr>
                 <tr>
-                    <td><strong>Q5 (Segment):</strong> Average <em>TotalSales</em> for items where Name contains <strong>"Gaming"</strong>.</td>
+                    <td>
+                      <strong>Q5 (Segment):</strong> Average <em>TotalSales</em> for items where the Name contains <strong>"Gaming"</strong>.
+                      <div class="hint-text text-xs text-gray-500 mt-1">
+                        Hint: Use <span class="function-tag">AVERAGEIFS</span> with a wildcard condition like <code>"*Gaming*"</code>
+                      </div>
+                    </td>
                     <td><span class="level-badge lvl-adv">Advanced</span></td>
                     <td><span class="function-tag">AVERAGEIFS</span></td>
-                </tr>
+                  </tr>
+                  
             </tbody>
         </table>
 
         <!-- Part 5: Advanced Modeling -->
         <h2>Part 5: The "Manager's Challenge"</h2>
-        <p>This final task combines logic and aggregation to assess departmental performance.</p>
+        <p class="mb-4 text-slate-600">This final task combines logic and aggregation to assess departmental performance.</p>
 
         <ul class="task-list">
             <li>
@@ -364,25 +373,52 @@
                 <br>
                 Create a column <strong>"Dept Assessment"</strong>.
                 <br><strong>Logic:</strong> Calculate the Total Sales for the <em>Dept Code</em> of the current row.
-                <ul>
-                    <li>If that Department's Total Sales > $50,000, mark as <strong>"Core Segment"</strong>.</li>
-                    <li>Otherwise, mark as <strong>"Non-Core"</strong>.</li>
+                <ul class="list-disc ml-6 mt-2 text-sm text-slate-600 border-0 shadow-none p-0">
+                    <li class="border-0 shadow-none p-0 m-1 bg-transparent">If that Department's Total Sales > $50,000, mark as <strong>"Core Segment"</strong>.</li>
+                    <li class="border-0 shadow-none p-0 m-1 bg-transparent">Otherwise, mark as <strong>"Non-Core"</strong>.</li>
                 </ul>
             </li>
         </ul>
 
-        <!-- Conclusion / Password Protect Dashboard Toggle -->
-        <div class="mt-8 p-6 bg-slate-100 border-t border-slate-300 rounded-lg text-center">
-            <h2 style="border:none; background:none; padding:0; margin:0 0 10px 0; color:#333;">🎉 Demo complete?</h2>
-            <p class="mb-4">Once you have finished your Excel work, enter the password to view the interactive solution dashboard.</p>
+        <!-- COMPLETION & SUBMISSION SECTION -->
+        <div class="mt-12 p-8 bg-slate-50 border border-slate-200 rounded-xl text-center">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">🎉 Lab Completion & Submission</h2>
             
-            <div class="max-w-xs mx-auto flex flex-col sm:flex-row gap-2 justify-center">
-                <input type="password" id="password-input" placeholder="Enter Password" class="px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full">
-                <button onclick="checkPassword()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow transition transform hover:scale-105 whitespace-nowrap">
-                    Unlock 📊
-                </button>
+            <div class="grid md:grid-cols-2 gap-8 text-left">
+                
+                <!-- Left: Submit (Step 1) -->
+                <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm flex flex-col">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-700 mb-2">Step 1: Submit Assignment</h3>
+                        <p class="text-sm text-slate-600 mb-4">Ready to turn it in? Click below to get submission instructions and the solution password.</p>
+                    </div>
+                    <div class="mt-auto">
+                        <button onclick="showSubmitModal()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                            Submit Assignment
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Self Check (Step 2) -->
+                <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm flex flex-col">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-700 mb-2">Step 2: Self-Check</h3>
+                        <p class="text-sm text-slate-600 mb-4">Use the password provided in Step 1 to verify your work against the solution dashboard.</p>
+                    </div>
+                    <div class="mt-auto">
+                        <div class="flex gap-2">
+                            <input type="password" id="password-input" placeholder="Enter Password" class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                            <button onclick="checkPassword()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                Check Work
+                            </button>
+                        </div>
+                        <p id="error-msg" class="text-red-600 text-xs mt-2 hidden font-bold">Incorrect password.</p>
+                    </div>
+                </div>
+
             </div>
-            <p id="error-msg" class="text-red-600 text-sm mt-2 hidden font-bold">Incorrect password. Please try again.</p>
         </div>
 
     </div>
@@ -392,18 +428,18 @@
 <div id="dashboard-section" class="hidden min-h-screen">
     
     <!-- Navigation -->
-    <nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-lg">
+    <nav class="bg-slate-900 text-white sticky top-0 z-50 shadow-lg border-b border-slate-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center gap-3">
-                    <div class="text-xl font-bold tracking-tight">TechGear<span class="text-blue-400">Audit</span></div>
-                    <div class="hidden md:block px-3 py-1 bg-slate-800 rounded text-xs text-slate-400 border border-slate-700">FY2025 Inventory Review</div>
+                    <div class="text-xl font-bold tracking-tight">TechGear<span class="text-blue-500">Audit</span></div>
+                    <div class="hidden md:block px-3 py-1 bg-slate-800 rounded text-xs text-slate-400 border border-slate-700 font-mono">FY2025 Inventory Review</div>
                 </div>
-                <div class="flex space-x-4">
+                <div class="flex space-x-2 md:space-x-4">
                     <button onclick="switchView('dashboard')" id="nav-dashboard" class="px-3 py-2 rounded-md text-sm font-medium bg-slate-800 text-white hover:bg-slate-700 transition">Dashboard</button>
-                    <button onclick="switchView('workpaper')" id="nav-workpaper" class="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition">Workpaper Detail</button>
-                    <button onclick="switchView('formulas')" id="nav-formulas" class="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition">Formula Logic</button>
-                    <button onclick="toggleDashboard()" class="px-3 py-2 rounded-md text-sm font-medium text-red-300 hover:bg-red-900 hover:text-white transition border border-red-900">Close</button>
+                    <button onclick="switchView('workpaper')" id="nav-workpaper" class="px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:bg-slate-700 hover:text-white transition">Workpaper</button>
+                    <button onclick="switchView('formulas')" id="nav-formulas" class="px-3 py-2 rounded-md text-sm font-medium text-slate-400 hover:bg-slate-700 hover:text-white transition">Logic</button>
+                    <button onclick="toggleDashboard()" class="px-3 py-2 rounded-md text-sm font-medium text-red-400 hover:bg-red-900/20 hover:text-red-300 transition border border-red-900/50 ml-2">Close</button>
                 </div>
             </div>
         </div>
@@ -423,45 +459,55 @@
             <!-- KPI Cards (Q1-Q5) -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <!-- Q1 -->
-                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 hover:shadow-md transition">
                     <div class="text-xs text-slate-500 uppercase font-bold tracking-wider">High Value Items</div>
                     <div class="mt-2 flex items-baseline gap-2">
                         <span class="text-3xl font-bold text-blue-700" id="kpi-q1">--</span>
-                        <span class="text-sm text-slate-400">Items > $200</span>
+                        <span class="text-xs text-slate-400">Items > $200</span>
                     </div>
-                    <div class="mt-1 text-xs text-slate-400">Q1 Result</div>
+                    <div class="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-blue-500 w-3/4"></div>
+                    </div>
                 </div>
                 <!-- Q2 -->
-                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 hover:shadow-md transition">
                     <div class="text-xs text-slate-500 uppercase font-bold tracking-wider">Laptop Sales</div>
                     <div class="mt-2 flex items-baseline gap-2">
                         <span class="text-3xl font-bold text-emerald-600" id="kpi-q2">--</span>
                     </div>
-                    <div class="mt-1 text-xs text-slate-400">Q2 Result (Exact Match)</div>
+                     <div class="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-emerald-500 w-full"></div>
+                    </div>
                 </div>
                 <!-- Q3 -->
-                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 hover:shadow-md transition">
                     <div class="text-xs text-slate-500 uppercase font-bold tracking-wider">Avg Cost (Reorder)</div>
                     <div class="mt-2 flex items-baseline gap-2">
                         <span class="text-3xl font-bold text-amber-600" id="kpi-q3">--</span>
                     </div>
-                    <div class="mt-1 text-xs text-slate-400">Q3 Result (Liquidity Risk)</div>
+                     <div class="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-amber-500 w-1/2"></div>
+                    </div>
                 </div>
                 <!-- Q4 -->
-                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 hover:shadow-md transition">
                     <div class="text-xs text-slate-500 uppercase font-bold tracking-wider">Obsolescence Risk</div>
                     <div class="mt-2 flex items-baseline gap-2">
                         <span class="text-3xl font-bold text-red-600" id="kpi-q4">--</span>
                     </div>
-                    <div class="mt-1 text-xs text-slate-400">Q4 Result (High Cost/Low Vol)</div>
+                     <div class="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-red-500 w-1/4"></div>
+                    </div>
                 </div>
                 <!-- Q5 -->
-                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200 hover:shadow-md transition">
                     <div class="text-xs text-slate-500 uppercase font-bold tracking-wider">Gaming Segment</div>
                     <div class="mt-2 flex items-baseline gap-2">
                         <span class="text-3xl font-bold text-indigo-600" id="kpi-q5">--</span>
                     </div>
-                    <div class="mt-1 text-xs text-slate-400">Q5 Result (Avg Sales)</div>
+                     <div class="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-indigo-500 w-2/3"></div>
+                    </div>
                 </div>
             </div>
 
@@ -469,24 +515,34 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Stock Status Chart -->
                 <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">Inventory Health Distribution</h3>
-                    <p class="text-sm text-slate-500 mb-4">Breakdown based on Internal Control Logic (Part 1)</p>
+                    <div class="flex justify-between items-center mb-4">
+                         <div>
+                            <h3 class="text-lg font-bold text-slate-800">Inventory Health Distribution</h3>
+                            <p class="text-sm text-slate-500">Breakdown based on Internal Control Logic (Part 1)</p>
+                         </div>
+                         <div class="bg-blue-50 text-blue-700 px-3 py-1 rounded text-xs font-bold">Chart.js</div>
+                    </div>
                     <div class="chart-container">
                         <canvas id="stockChart"></canvas>
                     </div>
-                    <div class="mt-4 p-3 bg-slate-50 rounded text-xs text-slate-500">
+                    <div class="mt-4 p-3 bg-slate-50 rounded text-xs text-slate-500 border border-slate-100">
                         <strong>Logic Used:</strong> Nested IF(>60 Overstock, <5 Critical).
                     </div>
                 </div>
 
                 <!-- Dept Assessment Chart -->
                 <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">Departmental Core Analysis</h3>
-                    <p class="text-sm text-slate-500 mb-4">Manager's Challenge: Segments vs $50k Threshold (Part 5)</p>
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Departmental Core Analysis</h3>
+                            <p class="text-sm text-slate-500">Manager's Challenge: Segments vs $50k Threshold (Part 5)</p>
+                        </div>
+                        <div class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded text-xs font-bold">Chart.js</div>
+                    </div>
                     <div class="chart-container">
                         <canvas id="deptChart"></canvas>
                     </div>
-                    <div class="mt-4 p-3 bg-slate-50 rounded text-xs text-slate-500">
+                    <div class="mt-4 p-3 bg-slate-50 rounded text-xs text-slate-500 border border-slate-100">
                         <strong>Logic Used:</strong> SUMIFS(Sales, Dept, CurrentDept) > 50,000.
                     </div>
                 </div>
@@ -501,13 +557,13 @@
                     <p class="text-sm text-slate-500">Detailed listing with applied audit formulas.</p>
                 </div>
                 <div class="flex gap-2">
-                    <select id="filter-status" class="bg-slate-50 border border-slate-300 text-sm rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                    <select id="filter-status" class="bg-slate-50 border border-slate-300 text-sm rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 outline-none">
                         <option value="all">All Stock Statuses</option>
                         <option value="Normal">Normal</option>
                         <option value="Overstock">Overstock</option>
                         <option value="Critical Low">Critical Low</option>
                     </select>
-                    <select id="filter-action" class="bg-slate-50 border border-slate-300 text-sm rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                    <select id="filter-action" class="bg-slate-50 border border-slate-300 text-sm rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500 outline-none">
                         <option value="all">All Actions</option>
                         <option value="Sufficient">Sufficient</option>
                         <option value="Reorder">Reorder</option>
@@ -550,12 +606,12 @@
                     <div class="space-y-4">
                         <div>
                             <span class="text-xs font-bold text-slate-500 uppercase">Action Flag</span>
-                            <code class="block mt-1 bg-slate-100 p-2 rounded text-sm text-slate-700 font-mono">=IF(F2 < 10, "Reorder", "Sufficient")</code>
+                            <code class="block mt-1 bg-slate-100 p-3 rounded text-sm text-slate-700 font-mono border border-slate-200">=IF(F2 < 10, "Reorder", "Sufficient")</code>
                             <p class="text-sm text-slate-500 mt-1">Identifies inventory falling below safety stock levels.</p>
                         </div>
                         <div>
                             <span class="text-xs font-bold text-slate-500 uppercase">Stock Status (Nested)</span>
-                            <code class="block mt-1 bg-slate-100 p-2 rounded text-sm text-slate-700 font-mono">=IF(F2 > 60, "Overstock", IF(F2 < 5, "Critical Low", "Normal"))</code>
+                            <code class="block mt-1 bg-slate-100 p-3 rounded text-sm text-slate-700 font-mono border border-slate-200">=IF(F2 > 60, "Overstock", IF(F2 < 5, "Critical Low", "Normal"))</code>
                             <p class="text-sm text-slate-500 mt-1">Categorizes inventory health into three buckets.</p>
                         </div>
                     </div>
@@ -567,12 +623,12 @@
                     <div class="space-y-4">
                         <div>
                             <span class="text-xs font-bold text-slate-500 uppercase">Reconciliation Check</span>
-                            <code class="block mt-1 bg-slate-100 p-2 rounded text-sm text-slate-700 font-mono">=IF((Beg + Purch - Sold) = End, "Verified", "Error")</code>
+                            <code class="block mt-1 bg-slate-100 p-3 rounded text-sm text-slate-700 font-mono border border-slate-200">=IF((Beg + Purch - Sold) = End, "Verified", "Error")</code>
                             <p class="text-sm text-slate-500 mt-1">Validates the Ending Stock figure provided by the client.</p>
                         </div>
                         <div>
                             <span class="text-xs font-bold text-slate-500 uppercase">Dept Code Lookup</span>
-                            <code class="block mt-1 bg-slate-100 p-2 rounded text-sm text-slate-700 font-mono">=XLOOKUP(Name, MasterTable[Name], MasterTable[Code], "Pending")</code>
+                            <code class="block mt-1 bg-slate-100 p-3 rounded text-sm text-slate-700 font-mono border border-slate-200">=XLOOKUP(Name, MasterTable[Name], MasterTable[Code], "Pending")</code>
                             <p class="text-sm text-slate-500 mt-1">Links individual items to their Department via Master File.</p>
                         </div>
                     </div>
@@ -584,11 +640,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <span class="text-xs font-bold text-slate-500 uppercase">Department Assessment Formula</span>
-                            <code class="block mt-1 bg-slate-100 p-2 rounded text-sm text-slate-700 font-mono">=IF(SUMIFS(TotalSales, DeptCol, CurrentDept) > 50000, "Core Segment", "Non-Core")</code>
+                            <code class="block mt-1 bg-slate-100 p-3 rounded text-sm text-slate-700 font-mono border border-slate-200">=IF(SUMIFS(TotalSales, DeptCol, CurrentDept) > 50000, "Core Segment", "Non-Core")</code>
                         </div>
                         <div class="flex items-center">
-                            <p class="text-sm text-slate-600">
-                                <strong class="text-slate-800">Logic Explained:</strong><br>
+                            <p class="text-sm text-slate-600 bg-purple-50 p-4 rounded border border-purple-100">
+                                <strong class="text-purple-900">Logic Explained:</strong><br>
                                 This formula doesn't just look at the <em>row</em>. It calculates the total sales for the <em>entire department</em> the item belongs to. If that department generates over $50k total, every item in that department gets flagged as "Core Segment".
                             </p>
                         </div>
@@ -598,6 +654,45 @@
         </div>
 
     </main>
+</div>
+
+<!-- SUBMISSION MODAL -->
+<div id="submit-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden z-50 flex items-center justify-center opacity-0 transition-opacity duration-300" onclick="if(event.target === this) closeSubmitModal()">
+    <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full transform scale-95 transition-transform duration-300 m-4">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">Ready to Submit!</h3>
+            <p class="text-slate-600 mb-6">Please follow these final steps to complete your assignment:</p>
+            
+            <div class="text-left bg-slate-50 p-5 rounded-lg border border-slate-200 mb-6 space-y-4">
+                <div class="flex items-start gap-3">
+                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">1</div>
+                    <p class="text-sm text-slate-700 leading-snug">Save your Excel file as <strong>.xlsx</strong> (Excel Workbook).</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">2</div>
+                    <div class="text-sm text-slate-700 leading-snug">
+                        Use password <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-mono font-bold">demo1</span> to check your work.
+                    </div>
+                </div>
+                 <div class="flex items-start gap-3">
+                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">3</div>
+                    <p class="text-sm text-slate-700 leading-snug">Upload the file to the <strong>Canvas Assignment</strong> page.</p>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeSubmitModal()" class="w-full bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-lg border border-slate-300 transition">
+                    Back
+                </button>
+                <button onclick="closeSubmitModal()" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-700 transition">
+                    Okay, Got It
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- JS Logic for Dashboard -->
@@ -633,6 +728,28 @@
             passwordInput.value = ''; // Reset password
             passwordInput.classList.remove('border-red-500', 'ring-red-200'); // Reset styles
         }
+    }
+
+    // --- MODAL LOGIC ---
+    function showSubmitModal() {
+        const modal = document.getElementById('submit-modal');
+        const modalContent = modal.querySelector('div');
+        modal.classList.remove('hidden');
+        // Small delay to allow display:block to apply before opacity transition
+        setTimeout(() => {
+            modal.classList.add('modal-active');
+            modalContent.classList.add('modal-content-active');
+        }, 10);
+    }
+
+    function closeSubmitModal() {
+        const modal = document.getElementById('submit-modal');
+        const modalContent = modal.querySelector('div');
+        modal.classList.remove('modal-active');
+        modalContent.classList.remove('modal-content-active');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
     }
 
     // --- DATA SIMULATION ---
@@ -690,12 +807,12 @@
         ['dashboard', 'workpaper', 'formulas'].forEach(v => {
             document.getElementById(`view-${v}`).classList.add('hidden');
             document.getElementById(`nav-${v}`).classList.remove('bg-slate-800', 'text-white');
-            document.getElementById(`nav-${v}`).classList.add('text-slate-300');
+            document.getElementById(`nav-${v}`).classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-700');
         });
         document.getElementById(`view-${viewName}`).classList.remove('hidden');
         const navBtn = document.getElementById(`nav-${viewName}`);
+        navBtn.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-700');
         navBtn.classList.add('bg-slate-800', 'text-white');
-        navBtn.classList.remove('text-slate-300');
     }
 
     function renderKPIs() {
@@ -750,7 +867,7 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center space-y-1">
                     <div class="status-pill ${statusColor}">${row.status}</div>
-                    <div class="text-xs ${actionColor} font-medium">${row.action}</div>
+                    <div class="text-xs ${actionColor} font-medium px-2 py-0.5 rounded inline-block">${row.action}</div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
                         ${row.auditFlag === 'Verified' ? '<span class="text-emerald-600 font-bold text-sm">✓ Verified</span>' : '<span class="text-red-600 font-bold text-sm">⚠ Error</span>'}
@@ -775,13 +892,15 @@
                     datasets: [{
                         data: Object.values(stockCounts),
                         backgroundColor: ['#f59e0b', '#ef4444', '#10b981'],
-                        borderWidth: 0
+                        borderWidth: 0,
+                        hoverOffset: 4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'right' } }
+                    plugins: { legend: { position: 'right', labels: { font: { family: 'Inter' } } } },
+                    cutout: '70%'
                 }
             });
         }
@@ -789,7 +908,7 @@
         // Dept Chart
         const deptLabels = Object.keys(deptSalesTotals);
         const deptValues = Object.values(deptSalesTotals);
-        const backgroundColors = deptValues.map(v => v > 50000 ? '#4338ca' : '#94a3b8');
+        const backgroundColors = deptValues.map(v => v > 50000 ? '#4f46e5' : '#cbd5e1');
 
         const ctxDept = document.getElementById('deptChart');
         if (ctxDept) {
@@ -801,15 +920,17 @@
                         label: 'Total Dept Sales ($)',
                         data: deptValues,
                         backgroundColor: backgroundColors,
-                        borderRadius: 4
+                        borderRadius: 6,
+                        barThickness: 'flex',
+                        maxBarThickness: 30
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { beginAtZero: true, grid: { display: true, color: '#f1f5f9' } },
-                        x: { grid: { display: false } }
+                        y: { beginAtZero: true, grid: { display: true, color: '#f1f5f9', drawBorder: false }, ticks: { font: { family: 'Inter' } } },
+                        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 10 }, maxRotation: 45, minRotation: 45 } }
                     },
                     plugins: { legend: { display: false } }
                 }
