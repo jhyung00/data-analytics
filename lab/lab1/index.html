@@ -382,6 +382,13 @@
             <h3 class="text-xl font-bold text-slate-800 mb-4 border-b pb-2 flex items-center gap-2">
                 <i class="fa-solid fa-check-double text-teal-600"></i> Official Answer Key
             </h3>
+
+            <!-- ADDED: Explanation Box -->
+            <div class="bg-blue-50 border border-blue-100 text-blue-800 px-4 py-3 rounded-md text-sm mb-4 flex items-start gap-2">
+                <i class="fa-solid fa-circle-info mt-0.5"></i>
+                <p><strong>Formula Context:</strong> "Table1" refers to the main <em>Expense_Data</em> sheet. The formula for Q6 refers to <em>Dept_Budget</em> column D, which compares (Total > Budget?) using a helper column you created.</p>
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm text-left">
                     <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs tracking-wider">
@@ -389,6 +396,7 @@
                             <th class="px-6 py-3 border-b">Question</th>
                             <th class="px-6 py-3 border-b">Description</th>
                             <th class="px-6 py-3 border-b text-right">Correct Answer</th>
+                            <th class="px-6 py-3 border-b font-mono">Excel Formula</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -396,31 +404,37 @@
                             <td class="px-6 py-4 font-bold text-slate-700">Q1</td>
                             <td class="px-6 py-4 text-slate-600">Unapproved Transactions Count</td>
                             <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">27</td>
+                            <td class="px-6 py-4 font-mono text-xs text-slate-500 break-all select-all">=COUNTIFS(Table1[Approved],"No")</td>
                         </tr>
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-bold text-slate-700">Q2</td>
                             <td class="px-6 py-4 text-slate-600">Total West Region Travel Spend</td>
                             <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">$3,179.70</td>
+                            <td class="px-6 py-4 font-mono text-xs text-slate-500 break-all select-all">=SUMIFS(Table1[Amount],Table1[ExpenseType],"Travel",Table1[Region],"West")</td>
                         </tr>
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-bold text-slate-700">Q3</td>
                             <td class="px-6 py-4 text-slate-600">Average Violation Amount</td>
                             <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">$2,253.27</td>
+                            <td class="px-6 py-4 font-mono text-xs text-slate-500 break-all select-all">=AVERAGEIFS(Table1[Amount],Table1[AuditFlag],"Violation")</td>
                         </tr>
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-bold text-slate-700">Q4</td>
                             <td class="px-6 py-4 text-slate-600">Transactions with 'Uber'</td>
                             <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">9</td>
+                            <td class="px-6 py-4 font-mono text-xs text-slate-500 break-all select-all">=COUNTIFS(Table1[Vendor],"Uber")</td>
                         </tr>
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-bold text-slate-700">Q5</td>
                             <td class="px-6 py-4 text-slate-600">Critical Risk Investigations</td>
                             <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">0</td>
+                            <td class="px-6 py-4 font-mono text-xs text-slate-500 break-all select-all">=COUNTIFS(Table1[Critical risk],"Investigate")</td>
                         </tr>
                          <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-bold text-slate-700">Q6</td>
                             <td class="px-6 py-4 text-slate-600">Departments Over Budget</td>
-                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">3</td>
+                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">2</td>
+                            <td class="px-6 py-4 font-mono text-xs text-slate-500 break-all select-all">=COUNTIFS(Dept_Budget!D:D,"TRUE")</td>
                         </tr>
                     </tbody>
                 </table>
@@ -506,7 +520,8 @@
 <script>
     // --- GOOGLE SHEETS SUBMISSION LOGIC ---
     
-
+    // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+    // Example: 'https://script.google.com/macros/s/AKfycbx.../exec'
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-HgAEc0gSm4DLORC9irk7_KEGgujyKUW7LWC08nvK9OkmoGG0Y78Emm0KtC3-YnOm/exec';
 
     function submitAnswers() {
@@ -637,10 +652,10 @@
         new Chart(ctx1, {
             type: 'bar',
             data: {
-                labels: ['Travel', 'Meals', 'Supplies', 'Training'],
+                labels: ['Travel', 'Meals', 'Supplies', 'Training', 'Software'],
                 datasets: [{
                     label: 'Count of Policy Violations',
-                    data: [12, 8, 4, 1],
+                    data: [8, 8, 7, 3, 9],
                     backgroundColor: '#f59e0b',
                     borderRadius: 4
                 }]
@@ -658,7 +673,7 @@
         const ctx2 = document.getElementById('budgetChart');
         if(Chart.getChart(ctx2)) Chart.getChart(ctx2).destroy();
 
-        // Updated Data: IT, Marketing, Operations are over budget (3 depts).
+        // Updated Data: Finance and HR are over budget.
         new Chart(ctx2, {
             type: 'bar',
             data: {
@@ -666,7 +681,7 @@
                 datasets: [
                     { 
                         label: 'Actual Spend', 
-                        data: [42000, 19500, 14000, 31000, 26500], 
+                        data: [24159.99, 23923.11, 21089.96, 19048.41, 16593.05], 
                         backgroundColor: function(context) {
                             const budget = [40000, 20000, 15000, 30000, 25000];
                             const index = context.dataIndex;
