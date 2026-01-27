@@ -395,27 +395,27 @@
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-bold text-slate-700">Q1</td>
                             <td class="px-6 py-4 text-slate-600">Unapproved Transactions Count</td>
-                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">23</td>
+                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">27</td>
                         </tr>
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-bold text-slate-700">Q2</td>
                             <td class="px-6 py-4 text-slate-600">Total West Region Travel Spend</td>
-                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">$6,443</td>
+                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">$3,179.70</td>
                         </tr>
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-bold text-slate-700">Q3</td>
                             <td class="px-6 py-4 text-slate-600">Average Violation Amount</td>
-                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">$2,410</td>
+                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">$2,253.27</td>
                         </tr>
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-bold text-slate-700">Q4</td>
                             <td class="px-6 py-4 text-slate-600">Transactions with 'Uber'</td>
-                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">6</td>
+                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">9</td>
                         </tr>
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-bold text-slate-700">Q5</td>
                             <td class="px-6 py-4 text-slate-600">Critical Risk Investigations</td>
-                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">9</td>
+                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">0</td>
                         </tr>
                          <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-bold text-slate-700">Q6</td>
@@ -471,15 +471,21 @@
                     <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">1</div>
                     <p class="text-sm text-slate-700 leading-snug">Save your Excel file as <strong>.xlsx</strong> (Excel Workbook).</p>
                 </div>
+                
+                 <!-- NEW: Zagmail Input -->
                 <div class="flex items-start gap-3">
                     <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">2</div>
+                    <div class="w-full">
+                         <label for="student-email" class="block text-sm text-slate-700 font-bold mb-1">Enter your Zagmail:</label>
+                         <input type="email" id="student-email" placeholder="username@zagmail.gonzaga.edu" class="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">3</div>
                     <div class="text-sm text-slate-700 leading-snug">
                         Use password <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-mono font-bold select-all">expenselab</span> to check your work.
                     </div>
-                </div>
-                 <div class="flex items-start gap-3">
-                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">3</div>
-                    <p class="text-sm text-slate-700 leading-snug">Upload the file to the <strong>Canvas Assignment</strong> page.</p>
                 </div>
             </div>
 
@@ -506,7 +512,16 @@
     function submitAnswers() {
         const btn = document.getElementById('submit-btn');
         const status = document.getElementById('submit-status');
+        const emailInput = document.getElementById('student-email');
         
+        // Simple Email Validation
+        if(!emailInput.value.includes('@') || !emailInput.value.includes('.')) {
+            alert('Please enter a valid Zagmail address before submitting.');
+            emailInput.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+            emailInput.focus();
+            return;
+        }
+
         // Show loading state
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
         btn.disabled = true;
@@ -515,6 +530,7 @@
 
         // Collect Data
         const formData = {
+            email: emailInput.value,
             q1: document.getElementById('q1').value,
             q2: document.getElementById('q2').value,
             q3: document.getElementById('q3').value,
@@ -642,7 +658,7 @@
         const ctx2 = document.getElementById('budgetChart');
         if(Chart.getChart(ctx2)) Chart.getChart(ctx2).destroy();
 
-        // Updated Data: IT, Marketing, Operations are over budget.
+        // Updated Data: IT, Marketing, Operations are over budget (3 depts).
         new Chart(ctx2, {
             type: 'bar',
             data: {
