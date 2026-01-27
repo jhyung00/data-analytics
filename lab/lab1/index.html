@@ -159,9 +159,10 @@
                             <strong class="text-slate-800 group-hover:text-teal-700 transition">3. Department Spend vs. Budget</strong>
                             <span class="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">SUMIFS</span>
                         </div>
-                        <p class="text-sm text-slate-600 mb-4">On a new summary sheet, calculate the Total Spend for each Department.</p>
+                        <p class="text-sm text-slate-600 mb-4">Go to the <strong>Dept_Budget</strong> sheet.</p>
+                        <p class="text-sm text-slate-600 mb-4">Add a new column titled <strong>"Total Spend"</strong>. Calculate the total expenses for each department from the main data sheet.</p>
                         <div class="bg-amber-50 border border-amber-100 p-3 rounded text-sm text-amber-800">
-                            <strong>Goal:</strong> Compare the sum of total expenses for each department against each departmental monthly budget. Identify which departments are overspending.
+                            <strong>Goal:</strong> Compare the "Total Spend" against the "Monthly Budget" to identify overspending departments.
                         </div>
                     </div>
                 </div>
@@ -175,7 +176,7 @@
                 Matrix Analysis
             </h2>
             <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-                <p class="text-slate-600 mb-6">Perform a two-way lookup to find specific budget allocations from a matrix.</p>
+                <p class="text-slate-600 mb-6">Perform a two-way lookup to find specific historical budget allocations from a matrix.</p>
                 
                 <div class="mb-6">
                     <h4 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Table C: Historical Spend Matrix</h4>
@@ -187,12 +188,27 @@
                                     <th class="px-4 py-2 font-semibold">Travel</th>
                                     <th class="px-4 py-2 font-semibold">Meals</th>
                                     <th class="px-4 py-2 font-semibold">Supplies</th>
+                                    <th class="px-4 py-2 font-semibold">Software</th>
+                                    <th class="px-4 py-2 font-semibold">Consulting</th>
+                                    <th class="px-4 py-2 font-semibold">Training</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-200 bg-white">
-                                <tr><td class="px-4 py-2 font-semibold text-left bg-slate-50 border-r border-slate-200">West</td><td>12500</td><td>4200</td><td>1500</td></tr>
-                                <tr><td class="px-4 py-2 font-semibold text-left bg-slate-50 border-r border-slate-200">East</td><td>8900</td><td>3100</td><td>1200</td></tr>
-                                <tr><td class="px-4 py-2 font-semibold text-left bg-slate-50 border-r border-slate-200">Central</td><td>5600</td><td>2800</td><td>900</td></tr>
+                                <tr>
+                                    <td class="px-4 py-2 font-semibold text-left bg-slate-50 border-r border-slate-200">West</td>
+                                    <td>12500</td><td>4200</td><td>1500</td><td>3200</td><td>5500</td>
+                                    <td>7500</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 font-semibold text-left bg-slate-50 border-r border-slate-200">East</td>
+                                    <td>8900</td><td>3100</td><td>1200</td><td>2800</td><td>4900</td>
+                                    <td>6200</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 font-semibold text-left bg-slate-50 border-r border-slate-200">Central</td>
+                                    <td>5600</td><td>2800</td><td>900</td><td>2100</td><td>3800</td>
+                                    <td>4800</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -200,64 +216,19 @@
 
                 <div class="bg-slate-50 p-4 rounded border border-slate-200">
                     <div class="flex justify-between items-start mb-1">
-                        <strong class="text-slate-800">4. Two-Way Lookup</strong>
+                        <strong class="text-slate-800">4. Historical Budget Lookup</strong>
                         <span class="text-xs font-mono bg-white text-slate-600 px-2 py-1 rounded border border-slate-200">INDEX & XMATCH</span>
                     </div>
-                    <p class="text-sm text-slate-600">Create a lookup tool where you can type a <strong>Region</strong> and an <strong>Expense Type</strong>, and it returns the historical amount.</p>
+                    <p class="text-sm text-slate-600">In the main <strong>Expense_Data</strong> table, create a column named <strong>"Budget Allocation"</strong>.</p>
+                    <p class="text-sm text-slate-600 mt-2">Use a two-way lookup to pull the correct historical amount from Table C based on the transaction's <strong>Region</strong> (Row) and <strong>Expense Type</strong> (Column).</p>
                 </div>
             </div>
         </div>
 
-        <!-- Part 4: Analytical Procedures -->
+        <!-- Part 4: Manager's Challenge (Moved) -->
         <div class="mb-12">
             <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-3">
                 <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wide">Part 4</span>
-                Risk Assessment
-            </h2>
-            <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-slate-50 text-slate-700 border-b border-slate-200">
-                        <tr>
-                            <th class="px-6 py-4 text-left font-bold uppercase tracking-wider">Audit Inquiry</th>
-                            <th class="px-6 py-4 text-left font-bold uppercase tracking-wider">Function Hint</th>
-                            <th class="px-6 py-4 text-left font-bold uppercase tracking-wider w-40">Your Answer</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <tr class="hover:bg-slate-50">
-                            <td class="px-6 py-4"><strong>Q1:</strong> How many transactions were NOT Approved?</td>
-                            <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIF</span></td>
-                            <td class="px-6 py-4"><input type="text" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
-                        </tr>
-                        <tr class="hover:bg-slate-50">
-                            <td class="px-6 py-4"><strong>Q2:</strong> Total spent on "Travel" in the "West" Region?</td>
-                            <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">SUMIFS</span></td>
-                            <td class="px-6 py-4"><input type="text" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="$"></td>
-                        </tr>
-                        <tr class="hover:bg-slate-50">
-                            <td class="px-6 py-4"><strong>Q3:</strong> Average amount of expenses flagged "Violation"?</td>
-                            <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">AVERAGEIF</span></td>
-                            <td class="px-6 py-4"><input type="text" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="$"></td>
-                        </tr>
-                        <tr class="hover:bg-slate-50">
-                            <td class="px-6 py-4"><strong>Q4:</strong> High Risk: How many transactions with "Uber"?</td>
-                            <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIF</span></td>
-                            <td class="px-6 py-4"><input type="text" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
-                        </tr>
-                        <tr class="hover:bg-slate-50">
-                            <td class="px-6 py-4"><strong>Q5:</strong> How many transactions need Investigation? (See Part 5)</td>
-                            <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIF</span></td>
-                            <td class="px-6 py-4"><input type="text" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Part 5: Manager's Challenge -->
-        <div class="mb-16">
-            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-3">
-                <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wide">Part 5</span>
                 The Manager's Challenge
             </h2>
             <div class="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-lg border border-indigo-100 shadow-sm">
@@ -274,6 +245,63 @@
                     </ul>
                     <p class="mt-3">Otherwise, mark it as <strong>"No Problem"</strong>.</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Part 5: Analytical Procedures (Renumbered) -->
+        <div class="mb-16">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center gap-3">
+                <span class="bg-teal-100 text-teal-800 text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wide">Part 5</span>
+                Risk Assessment
+            </h2>
+            <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                <!-- IMPORTANT: Form wrapper for easier data collection -->
+                <form id="audit-form" onsubmit="return false;">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-700 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-left font-bold uppercase tracking-wider">Audit Inquiry</th>
+                                <th class="px-6 py-4 text-left font-bold uppercase tracking-wider">Function Hint</th>
+                                <th class="px-6 py-4 text-left font-bold uppercase tracking-wider w-40">Your Answer</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-4"><strong>Q1:</strong> How many transactions were NOT Approved?</td>
+                                <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIFS</span></td>
+                                <td class="px-6 py-4"><input type="number" id="q1" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-4"><strong>Q2:</strong> Total spent on "Travel" in the "West" Region?</td>
+                                <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">SUMIFS</span></td>
+                                <td class="px-6 py-4"><input type="number" id="q2" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="$"></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-4"><strong>Q3:</strong> Average amount of expenses flagged "Violation"?</td>
+                                <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">AVERAGEIFS</span></td>
+                                <td class="px-6 py-4"><input type="number" id="q3" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="$"></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-4">
+                                    <div class="font-bold">Q4: High Risk - Transactions with "Uber"?</div>
+                                    <div class="text-xs text-slate-500 mt-1 italic">Why? Hard to verify/Personal nature.</div>
+                                </td>
+                                <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIFS</span></td>
+                                <td class="px-6 py-4"><input type="number" id="q4" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-4"><strong>Q5:</strong> How many transactions need Investigation? (From Part 4)</td>
+                                <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIFS</span></td>
+                                <td class="px-6 py-4"><input type="number" id="q5" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-4"><strong>Q6:</strong> How many departments exceeded their Monthly Budget?</td>
+                                <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIFS</span></td>
+                                <td class="px-6 py-4"><input type="number" id="q6" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </form>
             </div>
         </div>
 
@@ -389,6 +417,11 @@
                             <td class="px-6 py-4 text-slate-600">Critical Risk Investigations</td>
                             <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">9</td>
                         </tr>
+                         <tr class="hover:bg-slate-50">
+                            <td class="px-6 py-4 font-bold text-slate-700">Q6</td>
+                            <td class="px-6 py-4 text-slate-600">Departments Over Budget</td>
+                            <td class="px-6 py-4 text-right font-mono font-bold text-teal-700">3</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -454,15 +487,72 @@
                 <button onclick="closeSubmitModal()" class="w-full bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-lg border border-slate-300 transition">
                     Back
                 </button>
-                <button onclick="closeSubmitModal()" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-700 transition shadow-lg">
+                <!-- MODIFIED BUTTON: Calls submitAnswers() -->
+                <button id="submit-btn" onclick="submitAnswers()" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-700 transition shadow-lg flex items-center justify-center gap-2">
                     Okay, Got It
                 </button>
             </div>
+            <p id="submit-status" class="text-xs text-slate-500 mt-3 hidden"></p>
         </div>
     </div>
 </div>
 
 <script>
+    // --- GOOGLE SHEETS SUBMISSION LOGIC ---
+    
+
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-HgAEc0gSm4DLORC9irk7_KEGgujyKUW7LWC08nvK9OkmoGG0Y78Emm0KtC3-YnOm/exec';
+
+    function submitAnswers() {
+        const btn = document.getElementById('submit-btn');
+        const status = document.getElementById('submit-status');
+        
+        // Show loading state
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+        btn.disabled = true;
+        status.classList.remove('hidden');
+        status.innerText = "Submitting your answers to the instructor...";
+
+        // Collect Data
+        const formData = {
+            q1: document.getElementById('q1').value,
+            q2: document.getElementById('q2').value,
+            q3: document.getElementById('q3').value,
+            q4: document.getElementById('q4').value,
+            q5: document.getElementById('q5').value,
+            q6: document.getElementById('q6').value,
+            timestamp: new Date().toISOString()
+        };
+
+        // Note: 'no-cors' mode is used here to prevent CORS errors from Google. 
+        // This means we won't get a readable JSON response, but the post will reach the sheet.
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(() => {
+            // Because of no-cors, we assume success if no network error occurred
+            btn.innerHTML = 'Submitted!';
+            status.classList.add('text-green-600');
+            status.innerText = "Answers submitted successfully.";
+            setTimeout(closeSubmitModal, 1500);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            btn.innerHTML = 'Error';
+            status.classList.add('text-red-600');
+            status.innerText = "Failed to submit. Please check your internet.";
+            setTimeout(() => {
+                btn.innerHTML = 'Okay, Got It';
+                btn.disabled = false;
+            }, 2000);
+        });
+    }
+
     // --- DASHBOARD LOGIC ---
     function checkPassword() {
         const input = document.getElementById('password-input');
@@ -500,7 +590,13 @@
         const modal = document.getElementById('submit-modal');
         const modalContent = modal.querySelector('div');
         modal.classList.remove('hidden');
-        // Small delay to allow display:block to apply before opacity transition
+        
+        // Reset button state whenever modal opens
+        const btn = document.getElementById('submit-btn');
+        btn.innerHTML = 'Okay, Got It';
+        btn.disabled = false;
+        document.getElementById('submit-status').classList.add('hidden');
+
         setTimeout(() => {
             modal.classList.add('modal-active');
             modalContent.classList.add('modal-content-active');
@@ -546,13 +642,32 @@
         const ctx2 = document.getElementById('budgetChart');
         if(Chart.getChart(ctx2)) Chart.getChart(ctx2).destroy();
 
+        // Updated Data: IT, Marketing, Operations are over budget.
         new Chart(ctx2, {
             type: 'bar',
             data: {
-                labels: ['IT', 'Finance', 'HR', 'Marketing'],
+                labels: ['IT', 'Finance', 'HR', 'Marketing', 'Operations'],
                 datasets: [
-                    { label: 'Actual Spend', data: [42000, 19500, 14000, 31000], backgroundColor: '#0f766e', borderRadius: 4 },
-                    { label: 'Budget Limit', data: [40000, 20000, 15000, 30000], type: 'line', borderColor: '#ef4444', borderWidth: 2, pointBackgroundColor: '#ef4444' }
+                    { 
+                        label: 'Actual Spend', 
+                        data: [42000, 19500, 14000, 31000, 26500], 
+                        backgroundColor: function(context) {
+                            const budget = [40000, 20000, 15000, 30000, 25000];
+                            const index = context.dataIndex;
+                            const value = context.dataset.data[index];
+                            return value > budget[index] ? '#be123c' : '#0f766e'; // Red if over, Teal if under
+                        },
+                        borderRadius: 4 
+                    },
+                    { 
+                        label: 'Budget Limit', 
+                        data: [40000, 20000, 15000, 30000, 25000], 
+                        type: 'line', 
+                        borderColor: '#1e293b', 
+                        borderWidth: 2, 
+                        borderDash: [5, 5],
+                        pointBackgroundColor: '#1e293b' 
+                    }
                 ]
             },
             options: { 
