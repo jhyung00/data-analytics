@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Inc. Internal | FY25 Q1-Q2 Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS for Excel Generation -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&display=swap');
+        body { font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif; }
+        .apple-input { border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; width: 100%; transition: all 0.2s; font-size: 0.95rem; }
+        .apple-input:focus { border-color: #0071e3; outline: none; box-shadow: 0 0 0 3px rgba(0,113,227, 0.1); }
+        .apple-checkbox { width: 1.2em; height: 1.2em; accent-color: #0071e3; cursor: pointer; }
+        .modal { transition: opacity 0.25s ease; }
+        body.modal-active { overflow: hidden; }
+        
+        /* Custom File Upload */
+        .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; }
+        .file-upload-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+        
+        /* Task Card Hover */
+        .task-row:hover { background-color: #f8fafc; }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
+
+    <!-- Navbar -->
+    <header class="bg-[#1d1d1f] text-white p-4 flex justify-between items-center shadow-sm z-20">
+        <div class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.54-.83.9-1.67.9-2.42 0-.31-.02-.61-.06-.86-1 .07-2.19.78-2.86 1.84-.57.87-.82 2.1-.65 2.7 1.13.08 2.15-.49 2.67-1.26z"/></svg>
+            <span class="font-medium tracking-tight">Apple Finance <span class="text-gray-400 font-normal">| Internal Secure Mail</span></span>
+        </div>
+        <div class="flex items-center gap-4">
+             <!-- Instructor Key Trigger -->
+             <button onclick="instructorAccess()" class="text-gray-500 hover:text-white transition flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                <span class="text-xs">Instructor</span>
+            </button>
+            <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-white">SA</div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col pt-4">
+            <nav class="flex-1 px-2 space-y-1">
+                <a href="#" class="bg-blue-50 text-blue-600 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <svg class="text-blue-500 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    Inbox (1)
+                </a>
+                <a href="#" class="text-gray-600 hover:bg-gray-50 group flex items-center px-3 py-2 text-sm font-medium rounded-md">
+                    <svg class="text-gray-400 mr-3 flex-shrink-0 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    Sent
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Email Content -->
+        <main class="flex-1 flex flex-col overflow-hidden bg-white">
+            
+            <!-- Email Header -->
+            <div class="border-b border-gray-100 p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <h1 class="text-2xl font-bold text-gray-900">FY25 Q1-Q2 Performance Analysis (Response Required)</h1>
+                    <span class="text-sm text-gray-500">April 15, 2025</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold text-gray-600">LM</div>
+                        <div>
+                            <p class="font-semibold text-gray-900">Luca Maestri <span class="text-gray-500 font-normal">&lt;luca.m@apple.com&gt;</span></p>
+                            <p class="text-sm text-gray-500">To: Senior Financial Analysts</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Attachment Chip -->
+                    <button onclick="downloadXLSX()" class="group flex items-center gap-3 bg-gray-50 hover:bg-white border border-gray-200 hover:border-green-400 px-4 py-2 rounded-lg transition-all shadow-sm">
+                        <div class="bg-green-100 p-2 rounded text-green-700">
+                            <!-- Excel Icon -->
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h5v5h5v11H6zm2-9h8v2H8v-2zm0 4h8v2H8v-2z" style="display:none;"/><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 13.06L8.18 15.28H9.97L8.09 11.96L9.98 8.72H8.19L6.96 10.85L5.75 8.72H3.94L5.86 11.97L3.92 15.28H5.73ZM20.5 14.5V9.5H19V14.5ZM17.5 14.5V9.5H16V14.5ZM14.5 14.5V9.5H13V14.5ZM20.5 19.25V16H13V19.25ZM20.5 8H13V4.75H20.5Z"/></svg>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-sm font-medium text-gray-700 group-hover:text-green-700">Sales_Ledger_FY25.xlsx</p>
+                            <p class="text-xs text-gray-500">18 KB &bull; Click to Download</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scrollable Body -->
+            <div class="flex-1 overflow-y-auto p-8">
+                <div class="max-w-4xl mx-auto space-y-8">
+                    
+                    <div class="prose text-gray-700 max-w-none">
+                        <p class="text-lg">Team,</p>
+                        <p>We are closing the books on the first half of fiscal '25. I have attached the raw sales ledger above. Please perform a detailed Pivot Table analysis to break down the performance of our iPhone and Mac lines.</p>
+                        
+                        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 my-6">
+                            <h3 class="font-bold text-blue-800 text-lg mb-1">Analyst Task List (Requirements)</h3>
+                            <p class="text-sm text-blue-700 mb-3"><strong>Note:</strong> To ensure your workbook is clean and easy to audit, please create a <span class="font-bold underline">separate Pivot Table</span> for each task below (Tasks 3-10).</p>
+                            <ol class="list-decimal list-inside space-y-2 text-sm text-blue-900">
+                                <li><strong>Data Setup:</strong> Download the Excel file. Convert the range to an Excel Table and name it <strong>"AppleSales"</strong>.</li>
+                                <li><strong>Revenue Calculation:</strong> The source data is missing total values. Create a new column in the source data (not pivot) called <strong>"Revenue"</strong> using the formula: <code class="bg-blue-100 px-1 rounded">=Units * Unit_Price</code>.</li>
+                                <li><strong>Regional Analysis:</strong> Create a Pivot Table showing <strong>Total Revenue</strong> by <strong>Region</strong>.</li>
+                                <li><strong>Channel Volume:</strong> Show the <strong>Count of Transactions</strong> by <strong>Channel</strong>.</li>
+                                <li><strong>Pricing Strategy:</strong> Show the <strong>Average Unit_Price</strong> for each <strong>Product</strong>.</li>
+                                <li><strong>Profitability (Calculated Field):</strong> Calculate "Gross Profit" inside the Pivot Table using a Calculated Field. Formula: <code class="bg-blue-100 px-1 rounded">=Revenue - (Units * Unit_Cost)</code>.</li>
+                                <li><strong>Product Mix:</strong> Show <strong>Product</strong> vs <strong>Revenue</strong> as a <strong>% of Column Total</strong> to see market share.</li>
+                                <li><strong>Monthly Trends:</strong> Show <strong>Total Revenue</strong> grouped by <strong>Month</strong>.</li>
+                                <li><strong>Visual Audit:</strong> Apply a <strong>Red-White-Green</strong> Color Scale (Conditional Formatting) to the Profitability table (Task 6).</li>
+                                <li><strong>Audit Drill Down:</strong> Drill down into the <strong>"Americas"</strong> revenue figure in your Regional Analysis table (Task 3) to find the transaction count.</li>
+                            </ol>
+                        </div>
+
+                        <p>Once completed, please validate your key figures in the form below and attach your workbook.</p>
+                    </div>
+
+                    <!-- Input Form for Validation -->
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <h2 class="text-lg font-bold text-gray-900">Validation & Reporting Form</h2>
+                        </div>
+                        
+                        <div class="p-6">
+                            <!-- Tasks 1-5 -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-8">
+                                <!-- Task 1 -->
+                                <div class="task-row p-2 rounded transition">
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">1. Table Setup</label>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-gray-500">Converted to Table "AppleSales"?</span>
+                                        <input type="checkbox" id="ans_task1" class="apple-checkbox">
+                                    </div>
+                                </div>
+
+                                <!-- Task 2 -->
+                                <div class="task-row p-2 rounded transition">
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">2. Global Revenue Calculation</label>
+                                    <div class="flex items-center justify-between gap-4">
+                                        <span class="text-xs text-gray-500">Sum of new "Revenue" column</span>
+                                        <div class="relative flex-1">
+                                            <span class="absolute left-2 top-1.5 text-gray-400">$</span>
+                                            <input type="text" id="ans_task2" class="apple-input pl-6 text-right" placeholder="0">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Task 3 -->
+                                <div class="task-row p-2 rounded transition">
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">3. Regional Analysis</label>
+                                    <div class="flex items-center justify-between gap-4">
+                                        <span class="text-xs text-gray-500">Total Revenue for "Americas"</span>
+                                        <div class="relative flex-1">
+                                            <span class="absolute left-2 top-1.5 text-gray-400">$</span>
+                                            <input type="text" id="ans_task3" class="apple-input pl-6 text-right" placeholder="0">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Task 4 -->
+                                <div class="task-row p-2 rounded transition">
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">4. Channel Volume</label>
+                                    <div class="flex items-center justify-between gap-4">
+                                        <span class="text-xs text-gray-500">Count of "Online" Transactions</span>
+                                        <input type="number" id="ans_task4" class="apple-input w-24 text-right" placeholder="0">
+                                    </div>
+                                </div>
+
+                                <!-- Task 5 -->
+                                <div class="task-row p-2 rounded transition">
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">5. Pricing Strategy</label>
+                                    <div class="flex items-center justify-between gap-4">
+                                        <span class="text-xs text-gray-500">Average Price of "iPhone 17"</span>
+                                        <div class="relative flex-1">
+                                            <span class="absolute left-2 top-1.5 text-gray-400">$</span>
+                                            <input type="text" id="ans_task5" class="apple-input pl-6 text-right" placeholder="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-gray-100 my-4"></div>
+
+                            <!-- Tasks 6-10 -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                <!-- Task 6 -->
+                                <div class="task-row p-2 rounded transition">
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">6. Profitability (Calc Field)</label>
+                                    <div class="flex items-center justify-between gap-4">
+                                        <span class="text-xs text-gray-500">Total Gross Profit (Global)</span>
+                                        <div class="relative flex-1">
+                                            <span class="absolute left-2 top-1.5 text-gray-400">$</span>
+                                            <input type="text" id="ans_task6" class="apple-input pl-6 text-right" placeholder="0">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Task 7 -->
+                                <div class="task-row p-2 rounded transition">
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">7. Product Mix</label>
+                                    <div class="flex items-center justify-between gap-4">
+                                        <span class="text-xs text-gray-500">Revenue Share % for "iPhone 17"</span>
+                                        <div class="relative w-28">
+                                            <input type="text" id="ans_task7" class="apple-input pr-6 text-right" placeholder="0.0">
+                                            <span class="absolute right-2 top-1.5 text-gray-400">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Task 8 -->
+                                <div class="task-row p-2 rounded transition">
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">8. Monthly Trends</label>
+                                    <div class="flex items-center justify-between gap-4">
+                                        <span class="text-xs text-gray-500">Total Revenue for "March"</span>
+                                        <div class="relative flex-1">
+                                            <span class="absolute left-2 top-1.5 text-gray-400">$</span>
+                                            <input type="text" id="ans_task8" class="apple-input pl-6 text-right" placeholder="0">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                 <!-- Task 9 -->
+                                 <div class="task-row p-2 rounded transition">
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">9. Visual Audit</label>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs text-gray-500">Applied Heat Map (Color Scale)?</span>
+                                        <input type="checkbox" id="ans_task9" class="apple-checkbox">
+                                    </div>
+                                </div>
+
+                                <!-- Task 10 -->
+                                <div class="task-row p-2 rounded transition">
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">10. Audit Drill Down</label>
+                                    <div class="flex items-center justify-between gap-4">
+                                        <span class="text-xs text-gray-500">Count of rows in new Audit sheet</span>
+                                        <input type="number" id="ans_task10" class="apple-input w-24 text-right" placeholder="0">
+                                    </div>
+                                </div>
+                            </div>
+
+                             <!-- File Upload -->
+                             <div class="mt-8 bg-gray-50 border border-dashed border-gray-300 rounded-lg p-6 text-center">
+                                <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <label class="block text-sm font-medium text-gray-700 mb-2 mt-2">Attach Completed Excel Workbook</label>
+                                <div class="flex items-center justify-center gap-3">
+                                    <label class="file-upload-wrapper bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 font-medium py-1.5 px-4 rounded-lg cursor-pointer shadow-sm transition text-sm">
+                                        <span id="file-label">Select File...</span>
+                                        <input type="file" id="excelUpload" onchange="updateFileName(this)">
+                                    </label>
+                                    <span id="file-name" class="text-xs text-gray-500 italic">No file chosen</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Qualitative Analysis -->
+                    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                         <h2 class="text-lg font-bold text-gray-900 mb-2">Executive Summary</h2>
+                         <p class="text-sm text-gray-500 mb-3">Based on your analysis, why is the Americas region outperforming? Is it volume, pricing, or product mix? (2-3 sentences) <span class="font-medium text-gray-700">Provide key data points to back your argument.</span></p>
+                         <textarea id="analysis_text" class="w-full border border-gray-300 rounded-lg p-3 h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none" placeholder="The Americas region is driving profitability primarily due to..."></textarea>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Footer Action -->
+            <div class="bg-gray-50 border-t border-gray-200 p-4 flex justify-end">
+                <button onclick="openReplyModal()" class="bg-[#0071e3] hover:bg-[#0077ed] text-white font-medium py-2 px-6 rounded-lg shadow-sm transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+                    Reply All to Submit
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Reply/Grading Modal -->
+    <div id="replyModal" class="modal opacity-0 pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black bg-opacity-50" onclick="closeReplyModal()"></div>
+        <div class="bg-white w-full max-w-lg mx-4 rounded-xl shadow-2xl z-50 overflow-hidden transform scale-95 transition-transform duration-200" id="modalContainer">
+            <div class="bg-gray-900 px-6 py-4 flex justify-between items-center">
+                <h3 class="text-white font-semibold">Confirm Submission</h3>
+                <button onclick="closeReplyModal()" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+            
+            <div class="p-6">
+                <!-- Score Display -->
+                <div id="scoreArea" class="hidden text-center mb-6">
+                    <div class="inline-block p-4 rounded-full bg-blue-50 mb-2">
+                        <span id="scoreValue" class="text-4xl font-bold text-blue-600">0</span><span class="text-xl text-blue-400">/10</span>
+                    </div>
+                    <p class="text-sm text-gray-500">Validation Score</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Enter Your Name</label>
+                        <input type="text" id="studentName" class="apple-input" placeholder="Jane Doe">
+                    </div>
+                    
+                    <div class="bg-yellow-50 p-3 rounded-md border border-yellow-100 text-sm text-yellow-800">
+                        <p><strong>Important:</strong> Clicking "Send" generates your scorecard. You must upload <strong>BOTH</strong> the downloaded report and your Excel Workbook to Canvas for credit.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                <button onclick="closeReplyModal()" class="text-gray-600 font-medium hover:bg-gray-200 px-4 py-2 rounded-lg transition">Cancel</button>
+                <button onclick="submitAndDownload()" class="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-lg shadow-sm transition flex items-center gap-2">
+                    Send & Download Report
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Modal (Custom Prompt replacement) -->
+    <div id="passwordModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center">
+        <div class="absolute inset-0 bg-black bg-opacity-50" onclick="closePasswordModal()"></div>
+        <div class="bg-white p-6 rounded-lg shadow-xl z-10 w-80 transform scale-100 transition-all">
+            <h3 class="font-bold text-gray-800 mb-2">Instructor Access</h3>
+            <p id="passError" class="text-red-500 text-xs mb-2 hidden font-medium">Incorrect Password</p>
+            <input type="password" id="instructorPassInput" class="apple-input mb-4" placeholder="Enter Password" onkeypress="handlePassKeyPress(event)">
+            <div class="flex justify-end gap-2">
+                <button onclick="closePasswordModal()" class="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded font-medium">Cancel</button>
+                <button onclick="checkPassword()" class="px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 font-medium shadow-sm">Unlock</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructor Key Modal -->
+    <div id="instructorModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black bg-opacity-70" onclick="closeInstructor()"></div>
+        <div class="bg-white p-6 rounded-lg max-w-2xl w-full z-50 shadow-xl overflow-y-auto max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 sticky top-0 bg-white z-10 py-2 border-b">
+                 <h2 class="text-xl font-bold text-red-600 flex items-center gap-2">
+                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                     Instructor Solutions
+                 </h2>
+                 <button onclick="closeInstructor()" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+            </div>
+           
+            <!-- Numeric Key -->
+            <div class="space-y-2 text-sm font-mono bg-gray-100 p-4 rounded mb-6 border border-gray-200">
+                <h3 class="font-bold text-gray-700 border-b border-gray-300 pb-1 mb-2">Numeric Key</h3>
+                <div class="grid grid-cols-2 gap-x-8 gap-y-1">
+                    <p>1. Table Setup: <span class="font-bold text-green-700">Check</span></p>
+                    <p>2. Global Rev: <span class="font-bold text-blue-700">5,491,000</span></p>
+                    <p>3. Americas Rev: <span class="font-bold text-blue-700">3,226,000</span></p>
+                    <p>4. Online Tx: <span class="font-bold text-blue-700">7</span></p>
+                    <p>5. Avg Price: <span class="font-bold text-blue-700">1,100</span></p>
+                    <p>6. Gross Profit: <span class="font-bold text-blue-700">2,612,500</span></p>
+                    <p>7. iPhone Share: <span class="font-bold text-blue-700">66.1%</span></p>
+                    <p>8. March Rev: <span class="font-bold text-blue-700">486,000</span></p>
+                    <p>9. Heat Map: <span class="font-bold text-green-700">Check</span></p>
+                    <p>10. Audit Rows: <span class="font-bold text-blue-700">6</span></p>
+                </div>
+            </div>
+
+            <!-- Detailed Step-by-Step Guide -->
+            <div class="space-y-4">
+                <h3 class="font-bold text-gray-800 border-b border-gray-200 pb-2">Detailed Solution Steps</h3>
+                
+                <div class="space-y-3 text-sm text-gray-600">
+                    <div class="p-3 bg-gray-50 rounded border border-gray-100">
+                        <strong class="block text-gray-900 mb-1">Task 3: Regional Analysis</strong>
+                        <p>Insert > PivotTable. Drag <strong>Region</strong> to Rows and <strong>Revenue</strong> to Values.</p>
+                    </div>
+                    
+                    <div class="p-3 bg-gray-50 rounded border border-gray-100">
+                        <strong class="block text-gray-900 mb-1">Task 4: Channel Volume</strong>
+                        <p>Drag <strong>Channel</strong> to Rows and <strong>Channel</strong> (again) to Values. Ensure it says "Count of Channel". If it says Sum, click Value Field Settings > Count.</p>
+                    </div>
+
+                    <div class="p-3 bg-gray-50 rounded border border-gray-100">
+                        <strong class="block text-gray-900 mb-1">Task 5: Pricing Strategy</strong>
+                        <p>Drag <strong>Product</strong> to Rows and <strong>Unit_Price</strong> to Values. Right-click the values column > Summarize Values By > <strong>Average</strong>.</p>
+                    </div>
+
+                    <div class="p-3 bg-gray-50 rounded border border-gray-100">
+                        <strong class="block text-gray-900 mb-1">Task 6: Profitability (Calculated Field)</strong>
+                        <p>Click inside Pivot. Go to <em>PivotTable Analyze tab > Fields, Items & Sets > Calculated Field</em>. Name it "Gross Profit". Formula: <code>=Revenue - (Units * Unit_Cost)</code>.</p>
+                    </div>
+
+                    <div class="p-3 bg-gray-50 rounded border border-gray-100">
+                        <strong class="block text-gray-900 mb-1">Task 7: Product Mix (%)</strong>
+                        <p>Drag <strong>Product</strong> to Rows and <strong>Revenue</strong> to Values. Right-click a number in the column > <em>Show Values As > % of Column Total</em>.</p>
+                    </div>
+
+                    <div class="p-3 bg-gray-50 rounded border border-gray-100">
+                        <strong class="block text-gray-900 mb-1">Task 8: Monthly Trends</strong>
+                        <p>Drag <strong>Date</strong> to Rows. If Excel shows individual dates, Right-click any date cell > <strong>Group...</strong> > Select "Months".</p>
+                    </div>
+
+                     <div class="p-3 bg-gray-50 rounded border border-gray-100">
+                        <strong class="block text-gray-900 mb-1">Task 9: Visual Audit</strong>
+                        <p>Select the numbers in the Profit table (exclude Grand Total). Home > Conditional Formatting > Color Scales > Select Red-White-Green.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Executive Summary Key -->
+            <div class="space-y-2 mt-4 pt-4 border-t border-gray-200">
+                <h3 class="font-bold text-gray-800">Executive Summary Analysis (Key)</h3>
+                <div class="bg-blue-50 p-4 rounded text-sm text-gray-700 space-y-2">
+                    <p><strong>Core Drivers:</strong> Volume & Product Mix (Not Pricing).</p>
+                    <p><strong>Sample Answer:</strong> "The Americas region is outperforming primarily due to significantly higher <strong>Sales Volume</strong> (approx 2x other regions) and a superior <strong>Product Mix</strong>. They sold 2,300 units of the high-value <strong>iPhone 17</strong> ($1,100), whereas Greater China only sold 1,000. Additionally, Americas captured the entire high-margin <strong>Services</strong> segment."</p>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t sticky bottom-0 bg-white">
+                <button onclick="autoFillDemo()" class="w-full bg-blue-100 text-blue-700 py-3 rounded font-medium hover:bg-blue-200 transition">Auto-Fill Correct Answers (Demo Mode)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data in Array Format (Better for SheetJS)
+        // [Date, Region, Product, Channel, Units, Unit_Price, Unit_Cost]
+        const dataSet = [
+            ["Date", "Region", "Product", "Channel", "Units", "Unit_Price", "Unit_Cost"],
+            ["1/15/2025", "Americas", "iPhone 17", "Online", 500, 1100, 600],
+            ["1/18/2025", "Europe", "MacBook Air M4", "Retail Store", 200, 1300, 800],
+            ["1/22/2025", "Greater China", "iPhone 17", "Carrier", 1000, 1100, 600],
+            ["2/5/2025", "Americas", "Services", "Online", 5000, 30, 5],
+            ["2/10/2025", "Japan", "iPad Pro", "Retail Store", 150, 1000, 550],
+            ["2/14/2025", "Europe", "Wearables", "Online", 300, 400, 200],
+            ["2/20/2025", "Americas", "iPhone 17", "Retail Store", 400, 1100, 600],
+            ["3/1/2025", "Rest of Asia", "MacBook Air M4", "Carrier", 100, 1300, 800],
+            ["3/15/2025", "Americas", "Services", "Online", 5200, 30, 5],
+            ["3/20/2025", "Greater China", "iPad Pro", "Online", 200, 1000, 550],
+            ["4/2/2025", "Americas", "iPhone 17", "Carrier", 800, 1100, 600],
+            ["4/5/2025", "Europe", "Services", "Online", 3000, 35, 5],
+            ["4/10/2025", "Japan", "Wearables", "Retail Store", 500, 400, 200],
+            ["4/12/2025", "Americas", "MacBook Air M4", "Online", 300, 1300, 800],
+            ["4/15/2025", "Americas", "iPhone 17", "Retail Store", 600, 1100, 600]
+        ];
+
+        function downloadXLSX() {
+            // Create a workbook and worksheet using SheetJS
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(dataSet);
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Sales_Ledger");
+
+            // Write and download
+            XLSX.writeFile(wb, "Sales_Ledger_FY25.xlsx");
+        }
+
+        // Correct Answers Logic
+        const KEY = {
+            rev_total: 5491000,
+            rev_amer: 3226000,
+            count: 7,
+            price: 1100,
+            profit: 2612500,
+            share: 66.1,
+            rev_march: 486000,
+            audit_rows: 6
+        };
+
+        let calculatedScore = 0;
+
+        function updateFileName(input) {
+            const fileName = input.files[0] ? input.files[0].name : "No file chosen";
+            document.getElementById('file-name').innerText = fileName;
+        }
+
+        // Helper: Clean non-numeric chars except decimal
+        function cleanNumber(str) {
+            if (!str) return 0;
+            // Remove commmas, $ signs, spaces
+            let val = str.replace(/[^0-9.]/g, '');
+            return parseFloat(val) || 0;
+        }
+
+        // Helper: Check with 2% Leeway and handle % format
+        function checkAnswer(userStr, target, isPercent = false) {
+            let userVal = cleanNumber(userStr);
+            
+            // Handle percent inputs like 0.661 vs 66.1
+            if (isPercent) {
+                if (userVal < 1 && target > 1) userVal = userVal * 100;
+            }
+
+            // 2% Leeway calculation
+            const margin = target * 0.02;
+            const min = target - margin;
+            const max = target + margin;
+
+            return (userVal >= min && userVal <= max);
+        }
+
+        function calculateGrade() {
+            let score = 0;
+            
+            // Task 1: Checkbox
+            if (document.getElementById('ans_task1').checked) score++;
+
+            // Task 2: Global Rev
+            if (checkAnswer(document.getElementById('ans_task2').value, KEY.rev_total)) score++;
+
+            // Task 3: Americas Rev
+            if (checkAnswer(document.getElementById('ans_task3').value, KEY.rev_amer)) score++;
+
+            // Task 4: Online Count (Exact)
+            if (cleanNumber(document.getElementById('ans_task4').value) === KEY.count) score++;
+
+            // Task 5: Avg Price (Exact or slight margin)
+            if (checkAnswer(document.getElementById('ans_task5').value, KEY.price)) score++;
+
+            // Task 6: Profit
+            if (checkAnswer(document.getElementById('ans_task6').value, KEY.profit)) score++;
+
+            // Task 7: Share %
+            if (checkAnswer(document.getElementById('ans_task7').value, KEY.share, true)) score++;
+
+            // Task 8: March Rev
+            if (checkAnswer(document.getElementById('ans_task8').value, KEY.rev_march)) score++;
+
+            // Task 9: Checkbox
+            if (document.getElementById('ans_task9').checked) score++;
+
+            // Task 10: Audit Rows (Exact)
+            if (cleanNumber(document.getElementById('ans_task10').value) === KEY.audit_rows) score++;
+
+            return score;
+        }
+
+        function openReplyModal() {
+            calculatedScore = calculateGrade();
+            document.getElementById('scoreValue').innerText = calculatedScore;
+            document.getElementById('scoreArea').classList.remove('hidden');
+
+            const modal = document.getElementById('replyModal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            document.body.classList.add('modal-active');
+            
+            const container = document.getElementById('modalContainer');
+            container.classList.remove('scale-95');
+            container.classList.add('scale-100');
+        }
+
+        function closeReplyModal() {
+            const modal = document.getElementById('replyModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            document.body.classList.remove('modal-active');
+            
+            const container = document.getElementById('modalContainer');
+            container.classList.add('scale-95');
+            container.classList.remove('scale-100');
+        }
+
+        // New Logic for Custom Password Modal
+        function instructorAccess() {
+            document.getElementById('passwordModal').classList.remove('hidden');
+            document.getElementById('instructorPassInput').value = '';
+            document.getElementById('passError').classList.add('hidden');
+            // Timeout to ensure focus works after display block
+            setTimeout(() => document.getElementById('instructorPassInput').focus(), 100);
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.add('hidden');
+        }
+
+        function checkPassword() {
+            const pass = document.getElementById('instructorPassInput').value;
+            if (pass === "teacher") {
+                closePasswordModal();
+                document.getElementById('instructorModal').classList.remove('hidden');
+            } else {
+                document.getElementById('passError').classList.remove('hidden');
+            }
+        }
+        
+        function handlePassKeyPress(e) {
+            if (e.key === 'Enter') checkPassword();
+        }
+
+        function closeInstructor() {
+            document.getElementById('instructorModal').classList.add('hidden');
+        }
+
+        function autoFillDemo() {
+            document.getElementById('ans_task1').checked = true;
+            document.getElementById('ans_task2').value = "5,491,000";
+            document.getElementById('ans_task3').value = "3,226,000";
+            document.getElementById('ans_task4').value = "7";
+            document.getElementById('ans_task5').value = "1,100";
+            document.getElementById('ans_task6').value = "2,612,500";
+            document.getElementById('ans_task7').value = "66.1";
+            document.getElementById('ans_task8').value = "486,000";
+            document.getElementById('ans_task9').checked = true;
+            document.getElementById('ans_task10').value = "6";
+            closeInstructor();
+        }
+
+        function submitAndDownload() {
+            // Check if file is selected
+            if (!document.getElementById('excelUpload').files[0]) {
+                if(!confirm("Warning: You have not attached your Excel Workbook. Your instructor requires this file. Do you want to generate the report anyway?")) {
+                    return;
+                }
+            }
+
+            const name = document.getElementById('studentName').value || "Unknown Student";
+            const analysis = document.getElementById('analysis_text').value || "No analysis provided.";
+            const attachedFile = document.getElementById('excelUpload').files[0] ? document.getElementById('excelUpload').files[0].name : "No file attached";
+            
+            const content = `APPLE INC. PERFORMANCE REPORT
+-----------------------------
+Student Name: ${name}
+Date: ${new Date().toLocaleDateString()}
+Validation Score: ${calculatedScore}/10
+Attached File: ${attachedFile}
+
+SUBMITTED ANSWERS:
+1. Table Setup:    ${document.getElementById('ans_task1').checked ? "Yes" : "No"}
+2. Global Rev:     ${document.getElementById('ans_task2').value} (Correct: 5,491,000)
+3. Americas Rev:   ${document.getElementById('ans_task3').value} (Correct: 3,226,000)
+4. Online Tx:      ${document.getElementById('ans_task4').value} (Correct: 7)
+5. Avg Price:      ${document.getElementById('ans_task5').value} (Correct: 1,100)
+6. Gross Profit:   ${document.getElementById('ans_task6').value} (Correct: 2,612,500)
+7. iPhone Share:   ${document.getElementById('ans_task7').value}% (Correct: 66.1%)
+8. March Rev:      ${document.getElementById('ans_task8').value} (Correct: 486,000)
+9. Heat Map:       ${document.getElementById('ans_task9').checked ? "Yes" : "No"}
+10. Audit Rows:    ${document.getElementById('ans_task10').value} (Correct: 6)
+
+EXECUTIVE SUMMARY:
+${analysis}
+
+-----------------------------
+End of Report`;
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `${name.replace(/\s+/g, '_')}_Apple_Report.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            closeReplyModal();
+            alert("Report generated! \n\nIMPORTANT: Please upload BOTH this text report AND your Excel Workbook to Canvas.");
+        }
+    </script>
+</body>
+</html>
