@@ -82,7 +82,12 @@
                     <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm hover:border-teal-400 transition group">
                         <div class="flex justify-between items-start mb-2">
                             <strong class="text-slate-800 group-hover:text-teal-700 transition">1. Retrieve Policy Limit</strong>
-                            <span class="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">XLOOKUP</span>
+                            <div>
+                                <button onclick="this.nextElementSibling.classList.remove('hidden'); this.classList.add('hidden');" class="text-xs text-slate-400 hover:text-teal-600 font-medium transition focus:outline-none flex items-center gap-1">
+                                    <i class="fa-regular fa-eye"></i> Show Hint
+                                </button>
+                                <span class="hidden text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">XLOOKUP</span>
+                            </div>
                         </div>
                         <p class="text-sm text-slate-600">Create column <strong>"Policy Limit"</strong>. Find the <em>MaxAllowed</em> amount from Table A based on the <em>ExpenseType</em>.</p>
                     </div>
@@ -90,7 +95,12 @@
                     <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm hover:border-teal-400 transition group">
                         <div class="flex justify-between items-start mb-2">
                             <strong class="text-slate-800 group-hover:text-teal-700 transition">2. Flag Excessive Spend</strong>
-                            <span class="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">IF</span>
+                            <div>
+                                <button onclick="this.nextElementSibling.classList.remove('hidden'); this.classList.add('hidden');" class="text-xs text-slate-400 hover:text-teal-600 font-medium transition focus:outline-none flex items-center gap-1">
+                                    <i class="fa-regular fa-eye"></i> Show Hint
+                                </button>
+                                <span class="hidden text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">IF</span>
+                            </div>
                         </div>
                         <p class="text-sm text-slate-600">Create column <strong>"Audit Flag"</strong>. If <em>Amount</em> > <em>Policy Limit</em>, display <span class="text-red-600 font-bold">"Violation"</span>. Otherwise, display <span class="text-emerald-600 font-bold">"Compliant"</span>.</p>
                     </div>
@@ -157,7 +167,12 @@
                     <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm hover:border-teal-400 transition group h-full">
                         <div class="flex justify-between items-start mb-2">
                             <strong class="text-slate-800 group-hover:text-teal-700 transition">3. Department Spend vs. Budget</strong>
-                            <span class="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">SUMIFS</span>
+                            <div>
+                                <button onclick="this.nextElementSibling.classList.remove('hidden'); this.classList.add('hidden');" class="text-xs text-slate-400 hover:text-teal-600 font-medium transition focus:outline-none flex items-center gap-1">
+                                    <i class="fa-regular fa-eye"></i> Show Hint
+                                </button>
+                                <span class="hidden text-xs font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">SUMIFS</span>
+                            </div>
                         </div>
                         <p class="text-sm text-slate-600 mb-4">Go to the <strong>Dept_Budget</strong> sheet.</p>
                         <p class="text-sm text-slate-600 mb-4">Add a new column titled <strong>"Total Spend"</strong>. Calculate the total expenses for each department from the main data sheet.</p>
@@ -217,7 +232,12 @@
                 <div class="bg-slate-50 p-4 rounded border border-slate-200">
                     <div class="flex justify-between items-start mb-1">
                         <strong class="text-slate-800">4. Historical Budget Lookup</strong>
-                        <span class="text-xs font-mono bg-white text-slate-600 px-2 py-1 rounded border border-slate-200">INDEX & XMATCH</span>
+                        <div>
+                            <button onclick="this.nextElementSibling.classList.remove('hidden'); this.classList.add('hidden');" class="text-xs text-slate-400 hover:text-teal-600 font-medium transition focus:outline-none flex items-center gap-1">
+                                <i class="fa-regular fa-eye"></i> Show Hint
+                            </button>
+                            <span class="hidden text-xs font-mono bg-white text-slate-600 px-2 py-1 rounded border border-slate-200">INDEX & XMATCH</span>
+                        </div>
                     </div>
                     <p class="text-sm text-slate-600">In the main <strong>Expense_Data</strong> table, create a column named <strong>"Budget Allocation"</strong>.</p>
                     <p class="text-sm text-slate-600 mt-2">Use a two-way lookup to pull the correct historical amount from Table C based on the transaction's <strong>Region</strong> (Row) and <strong>Expense Type</strong> (Column).</p>
@@ -234,7 +254,12 @@
             <div class="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-lg border border-indigo-100 shadow-sm">
                 <div class="flex justify-between items-start mb-3">
                     <strong class="text-indigo-900 text-lg">5. Critical Risk Assessment</strong>
-                    <span class="text-xs font-mono bg-indigo-100 text-indigo-700 px-2 py-1 rounded border border-indigo-200">IF + AND</span>
+                    <div>
+                        <button onclick="this.nextElementSibling.classList.remove('hidden'); this.classList.add('hidden');" class="text-xs text-indigo-400 hover:text-indigo-600 font-medium transition focus:outline-none flex items-center gap-1">
+                            <i class="fa-regular fa-eye"></i> Show Hint
+                        </button>
+                        <span class="hidden text-xs font-mono bg-indigo-100 text-indigo-700 px-2 py-1 rounded border border-indigo-200">IF + AND</span>
+                    </div>
                 </div>
                 <p class="text-slate-700 mb-4">Create a column <strong>"Critical Risk"</strong> to identify significant control weaknesses.</p>
                 <div class="bg-white p-4 rounded border border-indigo-100 text-sm text-slate-600 shadow-sm">
@@ -268,17 +293,32 @@
                         <tbody class="divide-y divide-slate-100">
                             <tr class="hover:bg-slate-50">
                                 <td class="px-6 py-4"><strong>Q1:</strong> How many transactions were NOT Approved?</td>
-                                <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIFS</span></td>
+                                <td class="px-6 py-4">
+                                    <button onclick="this.nextElementSibling.classList.remove('hidden'); this.classList.add('hidden');" class="text-xs text-slate-400 hover:text-teal-600 font-medium transition focus:outline-none flex items-center gap-1">
+                                        <i class="fa-regular fa-eye"></i> Show Hint
+                                    </button>
+                                    <span class="hidden font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIFS</span>
+                                </td>
                                 <td class="px-6 py-4"><input type="number" id="q1" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
                             </tr>
                             <tr class="hover:bg-slate-50">
                                 <td class="px-6 py-4"><strong>Q2:</strong> Total spent on "Travel" in the "West" Region?</td>
-                                <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">SUMIFS</span></td>
+                                <td class="px-6 py-4">
+                                    <button onclick="this.nextElementSibling.classList.remove('hidden'); this.classList.add('hidden');" class="text-xs text-slate-400 hover:text-teal-600 font-medium transition focus:outline-none flex items-center gap-1">
+                                        <i class="fa-regular fa-eye"></i> Show Hint
+                                    </button>
+                                    <span class="hidden font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">SUMIFS</span>
+                                </td>
                                 <td class="px-6 py-4"><input type="number" id="q2" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="$"></td>
                             </tr>
                             <tr class="hover:bg-slate-50">
                                 <td class="px-6 py-4"><strong>Q3:</strong> Average amount of expenses flagged "Violation"?</td>
-                                <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">AVERAGEIFS</span></td>
+                                <td class="px-6 py-4">
+                                    <button onclick="this.nextElementSibling.classList.remove('hidden'); this.classList.add('hidden');" class="text-xs text-slate-400 hover:text-teal-600 font-medium transition focus:outline-none flex items-center gap-1">
+                                        <i class="fa-regular fa-eye"></i> Show Hint
+                                    </button>
+                                    <span class="hidden font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">AVERAGEIFS</span>
+                                </td>
                                 <td class="px-6 py-4"><input type="number" id="q3" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="$"></td>
                             </tr>
                             <tr class="hover:bg-slate-50">
@@ -286,17 +326,32 @@
                                     <div class="font-bold">Q4: High Risk - Transactions with "Uber"?</div>
                                     <div class="text-xs text-slate-500 mt-1 italic">Why? Hard to verify/Personal nature.</div>
                                 </td>
-                                <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIFS</span></td>
+                                <td class="px-6 py-4">
+                                    <button onclick="this.nextElementSibling.classList.remove('hidden'); this.classList.add('hidden');" class="text-xs text-slate-400 hover:text-teal-600 font-medium transition focus:outline-none flex items-center gap-1">
+                                        <i class="fa-regular fa-eye"></i> Show Hint
+                                    </button>
+                                    <span class="hidden font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIFS</span>
+                                </td>
                                 <td class="px-6 py-4"><input type="number" id="q4" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
                             </tr>
                             <tr class="hover:bg-slate-50">
                                 <td class="px-6 py-4"><strong>Q5:</strong> How many transactions need Investigation? (From Part 4)</td>
-                                <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIFS</span></td>
+                                <td class="px-6 py-4">
+                                    <button onclick="this.nextElementSibling.classList.remove('hidden'); this.classList.add('hidden');" class="text-xs text-slate-400 hover:text-teal-600 font-medium transition focus:outline-none flex items-center gap-1">
+                                        <i class="fa-regular fa-eye"></i> Show Hint
+                                    </button>
+                                    <span class="hidden font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIFS</span>
+                                </td>
                                 <td class="px-6 py-4"><input type="number" id="q5" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
                             </tr>
                             <tr class="hover:bg-slate-50">
                                 <td class="px-6 py-4"><strong>Q6:</strong> How many departments exceeded their Monthly Budget?</td>
-                                <td class="px-6 py-4"><span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIFS</span></td>
+                                <td class="px-6 py-4">
+                                    <button onclick="this.nextElementSibling.classList.remove('hidden'); this.classList.add('hidden');" class="text-xs text-slate-400 hover:text-teal-600 font-medium transition focus:outline-none flex items-center gap-1">
+                                        <i class="fa-regular fa-eye"></i> Show Hint
+                                    </button>
+                                    <span class="hidden font-mono text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">COUNTIFS</span>
+                                </td>
                                 <td class="px-6 py-4"><input type="number" id="q6" class="w-full px-3 py-1.5 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none placeholder-slate-400" placeholder="#"></td>
                             </tr>
                         </tbody>
@@ -469,63 +524,78 @@
 <!-- SUBMISSION MODAL -->
 <div id="submit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center opacity-0 transition-opacity duration-300" onclick="if(event.target === this) closeSubmitModal()">
     <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full transform scale-95 transition-transform duration-300 m-4 relative">
-        <button onclick="closeSubmitModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <button onclick="closeSubmitModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-10">
             <i class="fa-solid fa-xmark text-xl"></i>
         </button>
         
-        <div class="text-center">
-            <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fa-solid fa-check text-2xl text-teal-600"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-slate-800 mb-2">Ready to Submit!</h3>
-            <p class="text-slate-600 mb-6">Please follow these final steps to complete your assignment:</p>
-            
-            <div class="text-left bg-slate-50 p-5 rounded-lg border border-slate-200 mb-6 space-y-4">
-                <div class="flex items-start gap-3">
-                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">1</div>
-                    <p class="text-sm text-slate-700 leading-snug">Save your Excel file as <strong>.xlsx</strong> (Excel Workbook). </p>
+        <!-- View 1: Form -->
+        <div id="modal-form-view">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-teal-600"></i>
                 </div>
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">Submit Assignment</h3>
+                <p class="text-slate-600 mb-6">Please follow these final steps:</p>
                 
-                 <!-- Zagmail Input -->
-                <div class="flex items-start gap-3">
-                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">2</div>
-                    <div class="w-full">
-                         <label for="student-email" class="block text-sm text-slate-700 font-bold mb-1">Enter your Zagmail:</label>
-                         <input type="email" id="student-email" placeholder="username@zagmail.gonzaga.edu" class="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                <div class="text-left bg-slate-50 p-5 rounded-lg border border-slate-200 mb-6 space-y-4">
+                    <div class="flex items-start gap-3">
+                        <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">1</div>
+                        <p class="text-sm text-slate-700 leading-snug">Save your Excel file as <strong>.xlsx</strong> (Excel Workbook).</p>
+                    </div>
+                    
+                    <div class="flex items-start gap-3">
+                        <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">2</div>
+                        <div class="w-full">
+                             <label for="student-email" class="block text-sm text-slate-700 font-bold mb-1">Enter your Zagmail:</label>
+                             <input type="email" id="student-email" placeholder="username@zagmail.gonzaga.edu" class="w-full px-3 py-2 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">3</div>
+                        <div class="text-sm text-slate-700 leading-snug">
+                            Upload your <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-mono font-bold select-all">Excel file</span> to Canvas under the Lab 1 assignment.
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3">
+                        <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">4</div>
+                        <div class="text-sm text-slate-700 leading-snug">
+                            The solution password will be revealed <strong>after</strong> you submit.
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex items-start gap-3">
-                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">3</div>
-                    <div class="text-sm text-slate-700 leading-snug">
-                        Use password <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-mono font-bold select-all">expenselab</span> to check your work.
-                    </div>
+                <div class="flex gap-3">
+                    <button onclick="closeSubmitModal()" class="w-full bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-lg border border-slate-300 transition">
+                        Cancel
+                    </button>
+                    <button id="submit-btn" onclick="submitAnswers()" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-700 transition shadow-lg flex items-center justify-center gap-2">
+                        Submit & Get Password
+                    </button>
                 </div>
-                <div class="flex items-start gap-3">
-                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">4</div>
-                    <div class="text-sm text-slate-700 leading-snug">
-                        Upload your <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-mono font-bold select-all">Excel file</span> to Canvas under the Lab 1 assignment.
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <div class="bg-blue-100 text-blue-800 text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">5</div>
-                    <div class="text-sm text-slate-700 leading-snug">
-                        Click <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-mono font-bold select-all">OK, Got it</span> to send lab data to instructor.
-                    </div>
-                </div>
+                <p id="submit-status" class="text-xs text-slate-500 mt-3 hidden"></p>
             </div>
-
-            <div class="flex gap-3">
-                <button onclick="closeSubmitModal()" class="w-full bg-white hover:bg-slate-50 text-slate-700 font-bold py-3 px-4 rounded-lg border border-slate-300 transition">
-                    Back
-                </button>
-                <!-- MODIFIED BUTTON: Calls submitAnswers() -->
-                <button id="submit-btn" onclick="submitAnswers()" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-700 transition shadow-lg flex items-center justify-center gap-2">
-                    Okay, Got It
-                </button>
-            </div>
-            <p id="submit-status" class="text-xs text-slate-500 mt-3 hidden"></p>
         </div>
+
+        <!-- View 2: Success -->
+        <div id="modal-success-view" class="hidden text-center py-4">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                <i class="fa-solid fa-check text-2xl text-green-600"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-2">Submission Received!</h3>
+            <p class="text-slate-600 mb-6">You can now self-check your work.</p>
+            
+            <div class="bg-teal-50 border border-teal-200 rounded-lg p-6 mb-6">
+                <p class="text-sm text-teal-800 mb-2 uppercase tracking-wide font-semibold">Solution Password</p>
+                <div class="text-3xl font-mono font-bold text-teal-700 select-all">expenselab</div>
+            </div>
+
+            <button onclick="closeSubmitModal()" class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-700 transition shadow-lg">
+                Close & Check Work
+            </button>
+        </div>
+
     </div>
 </div>
 
@@ -533,7 +603,6 @@
     // --- GOOGLE SHEETS SUBMISSION LOGIC ---
     
     // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
-    // Example: 'https://script.google.com/macros/s/AKfycbx.../exec'
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-HgAEc0gSm4DLORC9irk7_KEGgujyKUW7LWC08nvK9OkmoGG0Y78Emm0KtC3-YnOm/exec';
 
     function submitAnswers() {
@@ -578,11 +647,9 @@
             body: JSON.stringify(formData)
         })
         .then(() => {
-            // Because of no-cors, we assume success if no network error occurred
-            btn.innerHTML = 'Submitted!';
-            status.classList.add('text-green-600');
-            status.innerText = "Answers submitted successfully.";
-            setTimeout(closeSubmitModal, 1500);
+            // SUCCESS: Switch to Success View
+            document.getElementById('modal-form-view').classList.add('hidden');
+            document.getElementById('modal-success-view').classList.remove('hidden');
         })
         .catch(error => {
             console.error('Error:', error);
@@ -590,7 +657,7 @@
             status.classList.add('text-red-600');
             status.innerText = "Failed to submit. Please check your internet.";
             setTimeout(() => {
-                btn.innerHTML = 'Okay, Got It';
+                btn.innerHTML = 'Submit & Get Password';
                 btn.disabled = false;
             }, 2000);
         });
@@ -632,13 +699,19 @@
     function showSubmitModal() {
         const modal = document.getElementById('submit-modal');
         const modalContent = modal.querySelector('div');
+        
+        // Reset View States
+        document.getElementById('modal-form-view').classList.remove('hidden');
+        document.getElementById('modal-success-view').classList.add('hidden');
+        
         modal.classList.remove('hidden');
         
         // Reset button state whenever modal opens
         const btn = document.getElementById('submit-btn');
-        btn.innerHTML = 'Okay, Got It';
+        btn.innerHTML = 'Submit & Get Password';
         btn.disabled = false;
         document.getElementById('submit-status').classList.add('hidden');
+        document.getElementById('submit-status').classList.remove('text-green-600', 'text-red-600');
 
         setTimeout(() => {
             modal.classList.add('modal-active');
