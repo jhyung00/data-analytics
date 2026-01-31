@@ -105,6 +105,8 @@
 
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             
+            const realAmount = acct.type === 'Expense' ? -amt : amt;
+
             data.push({
               id: i + 1000,
               Date: date.toISOString().split('T')[0],
@@ -115,7 +117,8 @@
               Department: isAnomaly && acct.name === 'Travel' ? 'Admin' : depts[Math.floor(Math.random() * depts.length)],
               Account: acct.name,
               Type: acct.type,
-              Amount: acct.type === 'Expense' ? -amt : amt,
+              Amount: realAmount,
+              AbsAmount: Math.abs(realAmount) // Added Absolute Amount
             });
           }
           return data;
@@ -134,9 +137,9 @@
             },
             {
                 id: 2,
-                title: "Expense Anomalies",
-                text: "We suspect fraudulent travel claims. Filter for 'Admin' department and 'Travel' account. Are there any unusually high total amounts in a specific Region?",
-                hint: "Filter Department: Admin, Account: Travel. Drag Region to Rows.",
+                title: "Expense Anomalies (Top N)",
+                text: "We suspect fraudulent travel claims. Use the Top N filter to find the 3 largest 'AbsAmount' entries for the Admin department. What is the value?",
+                hint: "Filter Dept: Admin. Use 'AbsAmount' in Values. Use Top 10 Filter on the Rows field.",
                 answer: "The 'North' region should show a significantly higher Travel expense (approx $45k anomaly)."
             },
             {
@@ -162,10 +165,10 @@
             },
             {
                 id: 6,
-                title: "Top N Analysis",
-                text: "Filter the Pivot Table to show only the Top 5 performing items based on Sum of Amount. Which is #1?",
-                hint: "Click the 'Top 10 Filter' button in the toolbar and enter '5'.",
-                answer: "The table will reduce to 5 rows. The top row is the answer."
+                title: "Big Spenders",
+                text: "Filter the Pivot Table to show only the Top 5 Accounts based on AbsAmount. Which Account has the highest total magnitude?",
+                hint: "Drag 'Account' to Rows. Drag 'AbsAmount' to Values. Click Top N Filter button.",
+                answer: "Usually Sales Revenue or Salaries, depending on the random generation."
             }
         ];
 
@@ -234,21 +237,24 @@
             // --- Helpers ---
             const getUniqueValues = (field) => Array.from(new Set(data.map(d => d[field]))).sort();
 
-            const calculateMetric = (rows, config, context) => {
-                if (!rows || rows.length === 0 || !config) return null; // Return null if no data or config
-                
-                const field = config.field;
-                const values = rows.map(r => Number(r[field]) || 0);
+            const calculateSingleMetricValue = (rows, configField, aggType) => {
+                 const values = rows.map(r => Number(r[configField]) || 0);
+                 if (values.length === 0) return 0;
 
-                let val = 0;
-                switch (config.agg) {
-                    case 'SUM': val = values.reduce((a, b) => a + b, 0); break;
-                    case 'COUNT': val = rows.length; break;
-                    case 'AVG': val = values.reduce((a, b) => a + b, 0) / rows.length; break;
-                    case 'MAX': val = Math.max(...values); break;
-                    case 'MIN': val = Math.min(...values); break;
-                    default: val = 0;
-                }
+                 switch (aggType) {
+                    case 'SUM': return values.reduce((a, b) => a + b, 0);
+                    case 'COUNT': return rows.length;
+                    case 'AVG': return values.reduce((a, b) => a + b, 0) / rows.length;
+                    case 'MAX': return Math.max(...values);
+                    case 'MIN': return Math.min(...values);
+                    default: return 0;
+                 }
+            };
+
+            const calculateMetric = (rows, config, context) => {
+                if (!rows || rows.length === 0 || !config) return null; 
+                
+                let val = calculateSingleMetricValue(rows, config.field, config.agg);
 
                 // Show Values As Logic
                 if (config.showAs === 'PCT_GRAND' && processedData.grandTotal) return (val / processedData.grandTotal) * 100;
@@ -296,15 +302,17 @@
 
                     // Top N Filter Logic (Applied to first row dimension)
                     if (topNFilter.enabled && fields[0] === pivotConfig.rows[0]) {
-                        const activeValue = pivotConfig.values[0]; // Use first value or nothing
-                        if (activeValue) {
-                            sortedKeys = sortedKeys.sort((a, b) => {
-                                // Simplified aggregation for sorting (always SUM for sorting logic here for simplicity)
-                                const valA = groups[a].reduce((acc, r) => acc + (Number(r[activeValue.field]) || 0), 0);
-                                const valB = groups[b].reduce((acc, r) => acc + (Number(r[activeValue.field]) || 0), 0);
-                                return topNFilter.mode === 'Top' ? valB - valA : valA - valB; 
-                            }).slice(0, topNFilter.n);
-                        }
+                        const activeValue = pivotConfig.values[0]; 
+                        
+                        // We use the aggregation logic of the active value field, or default to SUM of Amount if none selected
+                        const sortField = activeValue ? activeValue.field : 'Amount';
+                        const sortAgg = activeValue ? activeValue.agg : 'SUM';
+
+                        sortedKeys = sortedKeys.sort((a, b) => {
+                            const valA = calculateSingleMetricValue(groups[a], sortField, sortAgg);
+                            const valB = calculateSingleMetricValue(groups[b], sortField, sortAgg);
+                            return topNFilter.mode === 'Top' ? valB - valA : valA - valB; 
+                        }).slice(0, topNFilter.n);
                     }
 
                     return sortedKeys.map(key => ({
@@ -329,17 +337,29 @@
                 };
                 const colKeys = getColKeys();
 
-                // 4. Totals (using first value field for generic totals if multiple, but here we simplify to 1 active value mostly)
+                // 4. Totals (using first value field for generic totals if multiple)
                 const activeValue = pivotConfig.values[0]; 
                 let grandTotal = 0;
                 const colTotals = {};
                 colKeys.forEach(k => colTotals[k] = 0);
 
                 if (activeValue) {
-                    grandTotal = filtered.reduce((acc, r) => acc + (Number(r[activeValue.field]) || 0), 0);
+                    grandTotal = calculateSingleMetricValue(filtered, activeValue.field, activeValue.agg);
+                    
                     filtered.forEach(row => {
                         const key = pivotConfig.columns.length === 0 ? 'Total' : pivotConfig.columns.map(c => row[c]).join(' - ');
-                        if (colTotals[key] !== undefined) colTotals[key] += (Number(row[activeValue.field]) || 0);
+                        // This col total approximation is tricky with anything other than SUM/COUNT, but sufficient for this sim
+                        // For correct AVG/MIN/MAX totals per column, we'd need to re-aggregate the subset.
+                        // Let's do subset aggregation for correctness:
+                    });
+                    
+                    // Re-calculate Col Totals properly based on aggregation
+                    colKeys.forEach(k => {
+                        const colRows = filtered.filter(r => {
+                            if (pivotConfig.columns.length === 0) return true;
+                             return pivotConfig.columns.map(c => r[c]).join(' - ') === k;
+                        });
+                        colTotals[k] = calculateSingleMetricValue(colRows, activeValue.field, activeValue.agg);
                     });
                 }
 
@@ -526,7 +546,7 @@
                     return groups.map(group => {
                         let rawRowTotal = 0;
                         if(activeValue) {
-                            rawRowTotal = group.rows.reduce((acc, r) => acc + (Number(r[activeValue.field]) || 0), 0);
+                            rawRowTotal = calculateSingleMetricValue(group.rows, activeValue.field, activeValue.agg);
                         }
 
                         const cells = processedData.colKeys.map(colKey => {
@@ -638,9 +658,6 @@
                 const maxVal = Math.max(...values);
                 
                 // Determine scale domain
-                // If all positive: 0 to Max
-                // If all negative: Min to 0
-                // If mixed: Min to Max
                 const domainMin = minVal >= 0 ? 0 : minVal;
                 const domainMax = maxVal <= 0 ? 0 : maxVal;
                 const domainRange = domainMax - domainMin || 1; // Prevent div by zero
