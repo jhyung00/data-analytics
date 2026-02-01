@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Macros for Accountants | 50-Minute Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            800: '#001f3f',
+                            900: '#00152b',
+                        },
+                        gold: {
+                            400: '#FFDC00',
+                            500: '#F1C40F',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .step-card { transition: all 0.3s ease; border-left: 4px solid transparent; }
+        .step-card:hover { border-left: 4px solid #F1C40F; transform: translateX(5px); }
+        .formula-box { font-family: 'Consolas', 'Monaco', monospace; }
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-navy-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-file-excel text-gold-400 text-2xl"></i>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">ACCT 311: Automation Lab</h1>
+                    <p class="text-xs text-gray-400">Excel Macros & Audit Logic</p>
+                </div>
+            </div>
+            <div class="hidden md:flex space-x-4 text-sm font-semibold">
+                <span class="px-3 py-1 bg-navy-800 rounded border border-navy-800 text-gold-400"><i class="fa-regular fa-clock mr-2"></i>50 Mins</span>
+                <span class="px-3 py-1 bg-navy-800 rounded border border-navy-800 text-green-400"><i class="fa-solid fa-signal mr-2"></i>Beginner</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+
+        <!-- Intro Section -->
+        <section class="mb-10 bg-white p-8 rounded-lg shadow-md border-t-4 border-gold-500">
+            <h2 class="text-3xl font-bold text-navy-900 mb-4">Automate AP Cleaning + Flag Duplicates</h2>
+            
+            <!-- What is a Macro Context -->
+            <div class="mb-6 bg-blue-50 p-4 rounded-lg border-l-4 border-navy-800">
+                <h3 class="font-bold text-navy-900 mb-2"><i class="fa-solid fa-robot mr-2"></i>What is a Macro?</h3>
+                <p class="text-sm text-gray-700 mb-3">
+                    A Macro is like a <strong>digital recorder</strong> for Excel. It watches your mouse clicks and keystrokes, memorizes them, and saves them as a small program (VBA). You can then "replay" those steps instantly on new data.
+                </p>
+                <div class="text-sm text-gray-700">
+                    <span class="font-bold text-navy-800">Accounting Use Case:</span> Imagine you download a messy Accounts Payable report every Friday. Instead of spending 30 minutes formatting it manually (bolding, filtering, sorting), you press one button, and Excel does it in 3 seconds.
+                </div>
+            </div>
+
+            <p class="text-lg text-gray-600 mb-6">
+                In this lab, you will record a macro to clean a dataset, apply audit logic to find duplicates, and build a one-click exception report tool.
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-gray-50 p-4 rounded border border-gray-200">
+                    <h3 class="font-bold text-navy-800 mb-2"><i class="fa-solid fa-download mr-2"></i>Files</h3>
+                    <div class="flex flex-col space-y-2">
+                        <a href="#" class="block w-full text-center bg-navy-800 hover:bg-navy-900 text-white font-bold py-2 px-4 rounded transition opacity-50 cursor-not-allowed" title="Not available in preview">
+                            Download Student File (.xlsx)
+                        </a>
+                        <!-- Fallback if file missing -->
+                        <button onclick="copyDataset()" class="text-sm text-navy-800 hover:text-gold-500 underline text-left mt-2">
+                            No file? Copy Raw Data to Clipboard
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded border border-yellow-100">
+                    <h3 class="font-bold text-navy-800 mb-2"><i class="fa-solid fa-bullseye mr-2"></i>Objectives</h3>
+                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                        <li>Record a macro for formatting</li>
+                        <li>Automate Duplicate Detection</li>
+                        <li>Assign macros to buttons</li>
+                        <li>Understand basic VBA concepts</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Learning Path Steps -->
+        <div class="space-y-6">
+
+            <!-- Step 1: Setup -->
+            <div class="step-card bg-white rounded-lg shadow p-6">
+                <div class="flex items-center mb-4">
+                    <div class="bg-navy-800 text-gold-400 rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg mr-4">1</div>
+                    <h3 class="text-xl font-bold text-navy-900">Environment Setup</h3>
+                </div>
+                <div class="ml-14 space-y-4">
+                    <div class="flex items-start">
+                        <i class="fa-solid fa-check-circle text-green-600 mt-1 mr-3"></i>
+                        <div>
+                            <strong class="block text-gray-800">Turn on Developer Tab</strong>
+                            <p class="text-sm text-gray-600">File &rarr; Options &rarr; Customize Ribbon &rarr; Check box for <strong>"Developer"</strong> (on the right side).</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fa-solid fa-check-circle text-green-600 mt-1 mr-3"></i>
+                        <div>
+                            <strong class="block text-gray-800">Save as Macro-Enabled</strong>
+                            <p class="text-sm text-gray-600">File &rarr; Save As &rarr; Change file type to <strong>Excel Macro-Enabled Workbook (.xlsm)</strong></p>
+                        </div>
+                    </div>
+                    <!-- NEW: Pre-create sheet step -->
+                    <div class="flex items-start">
+                        <i class="fa-solid fa-plus-circle text-blue-600 mt-1 mr-3"></i>
+                        <div>
+                            <strong class="block text-gray-800">Create "Exceptions" Sheet</strong>
+                            <p class="text-sm text-gray-600">Create a new blank sheet and rename it exactly <strong>Exceptions</strong>. Leave it empty for now.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Record Macro -->
+            <div class="step-card bg-white rounded-lg shadow p-6">
+                <div class="flex items-center mb-4">
+                    <div class="bg-navy-800 text-gold-400 rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg mr-4">2</div>
+                    <h3 class="text-xl font-bold text-navy-900">Demo 1: The "Cleaning + Logic" Macro</h3>
+                </div>
+                <div class="ml-14">
+                    <p class="mb-4 text-gray-600">We will record a macro named <strong>Clean_AP_Report</strong>. This will format the data AND automatically add our audit formula.</p>
+                    
+                    <!-- Formula Copy Area (Prep) -->
+                    <div class="bg-blue-50 p-4 rounded mb-4 border border-blue-100">
+                        <strong class="text-navy-900 block mb-1 text-sm"><i class="fa-solid fa-clipboard-check mr-2"></i>Prep: Copy this formula logic (No Equals Sign!)</strong>
+                        <p class="text-xs text-gray-500 mb-2">We will type the <code>=</code> sign manually during the macro recording.</p>
+                        <div class="relative bg-white border border-gray-300 p-2 rounded">
+                            <!-- Removed the '=' to follow Best Practice -->
+                            <div id="auditFormulaText" class="formula-box text-xs text-gray-600 break-all pr-12">IF(COUNTIFS([Vendor],[@Vendor],[Amount],[@Amount])>1,"DUPLICATE","OK")</div>
+                            <button onclick="copyToClipboard('auditFormulaText')" class="absolute top-1 right-1 bg-navy-700 hover:bg-navy-600 text-white text-xs px-2 py-1 rounded">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-100 p-4 rounded border-l-4 border-navy-800 mb-4">
+                        <h4 class="font-bold text-sm text-navy-800 uppercase mb-2">Recording Checklist</h4>
+                        <p class="text-xs text-gray-500 mb-2 italic">Pro Tip: Don't click random cells! Follow exactly:</p>
+                        <ol class="list-decimal list-inside space-y-2 text-sm">
+                            <li><strong>Start Recording:</strong> Developer Tab &rarr; Record Macro. Name it <code>Clean_AP_Report</code>.</li>
+                            <li><strong>Bold Headers:</strong> Select Row 1 &rarr; Home &rarr; Bold.</li>
+                            <!-- Fixed: Use dynamic table creation, not fixed range highlighting -->
+                            <li><strong>Create Table:</strong> Click <strong>any single cell</strong> in the data (e.g., A1) &rarr; Press <strong>Ctrl + T</strong> &rarr; OK.</li>
+                            <!-- UPDATED: Changed from Currency to Number format to remove $ sign -->
+                            <li><strong>Number Format:</strong> Select 'Amount' column (E) &rarr; Home &rarr; Number (or click Comma Style).</li>
+                            <li><strong>Autofit:</strong> Select all columns (Ctrl+A) &rarr; Double click line between headers A and B.</li>
+                            <li><strong>Freeze Panes:</strong> View &rarr; Freeze Panes &rarr; Freeze Top Row.</li>
+                            <li><strong>Sort:</strong> Click inside table &rarr; Data &rarr; Sort (Vendor A-Z, Add Level: Amount Largest to Smallest).</li>
+                            <li class="font-bold text-navy-800 bg-yellow-100 p-1 rounded">Create Logic Column: Click cell G1 &rarr; Type "Dup_Flag".</li>
+                            <!-- Fixed: Type = first, then paste -->
+                            <li class="font-bold text-navy-800 bg-yellow-100 p-1 rounded">
+                                Paste Formula: Click G2 &rarr; <span class="text-red-600">Type <code>=</code></span> &rarr; Paste (Ctrl+V) &rarr; Enter.
+                            </li>
+                            <li><strong>Conditional Format:</strong> Select Column G &rarr; Home &rarr; Conditional Formatting &rarr; Highlight Cells &rarr; Text that Contains... "DUPLICATE" &rarr; OK.</li>
+                            <li><strong>STOP RECORDING:</strong> Developer Tab &rarr; Stop Recording.</li>
+                        </ol>
+                    </div>
+                    <button class="text-navy-800 text-sm font-semibold hover:underline" onclick="document.getElementById('test-macro-tip').classList.toggle('hidden')">
+                        <i class="fa-solid fa-vial mr-1"></i>How to test it?
+                    </button>
+                    <div id="test-macro-tip" class="hidden mt-2 p-3 bg-blue-50 text-blue-800 text-sm rounded">
+                        <p class="mb-2">Undo will <strong>not</strong> work on macros! To test, you must delete your data and paste the original raw data back.</p>
+                        <button onclick="copyDataset()" class="bg-navy-800 hover:bg-navy-900 text-white px-3 py-1 rounded text-xs transition border border-navy-800">
+                            <i class="fa-solid fa-copy mr-2"></i>Copy Raw Data for Testing
+                        </button>
+                        <p class="mt-2 text-xs">After pasting, go to <strong>Developer &rarr; Macros &rarr; Run</strong>.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Audit Logic -->
+            <div class="step-card bg-white rounded-lg shadow p-6">
+                <div class="flex items-center mb-4">
+                    <div class="bg-navy-800 text-gold-400 rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg mr-4">3</div>
+                    <h3 class="text-xl font-bold text-navy-900">Understanding the Logic</h3>
+                </div>
+                <div class="ml-14">
+                    <p class="mb-4 text-gray-600">Great job! Your macro now automatically inserts a complex audit formula. Let's understand what that formula actually does.</p>
+                    
+                    <div class="bg-navy-900 text-gold-400 p-4 rounded-lg shadow-inner mb-4">
+                        <div class="formula-box text-sm block break-all">=IF(COUNTIFS([Vendor],[@Vendor],[Amount],[@Amount])>1,"DUPLICATE","OK")</div>
+                    </div>
+                    
+                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-2">
+                        <li><strong>COUNTIFS:</strong> This counts rows where <em>both</em> criteria match.</li>
+                        <li><strong>Criteria 1:</strong> Does the Vendor match this row's Vendor?</li>
+                        <li><strong>Criteria 2:</strong> Does the Amount match this row's Amount?</li>
+                        <li><strong>>1:</strong> If it finds more than 1 match (itself + another one), it's a duplicate.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Step 4: Student Activity -->
+            <div class="step-card bg-white rounded-lg shadow p-6 border-2 border-gold-400">
+                <div class="flex items-center mb-4">
+                    <div class="bg-gold-400 text-navy-900 rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg mr-4">4</div>
+                    <h3 class="text-xl font-bold text-navy-900">Your Turn: The "Exception Report"</h3>
+                </div>
+                <div class="ml-14">
+                    <div class="bg-yellow-50 p-4 rounded mb-4">
+                        <h4 class="font-bold text-navy-800 mb-2">Challenge: Create Macro "Make_Exception_Report"</h4>
+                        <p class="text-sm text-gray-700 mb-2">Start recording, then perform these EXACT steps. <br><strong>Goal:</strong> Copy duplicates to the <em>existing</em> Exceptions sheet.</p>
+                        <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2">
+                            <li><strong>Filter:</strong> Click the arrow on header <code>Dup_Flag</code>. Uncheck "OK". Keep "DUPLICATE" checked.</li>
+                            <li><strong>Copy:</strong> Click inside the table. Press <strong>Ctrl + A</strong> twice to select the whole table. Press Ctrl + C.</li>
+                            <!-- UPDATED: Use existing sheet -->
+                            <li class="bg-yellow-100 p-1 rounded"><strong>Go to Destination:</strong> Click on the <strong>Exceptions</strong> sheet tab.</li>
+                            <li><strong>Select A1:</strong> Click cell A1.</li>
+                            <li><strong>Paste Values:</strong> Right-click cell A1 &rarr; Select <strong>Paste Values (123 icon)</strong>.</li>
+                            <li><strong>Stop Recording:</strong> Developer &rarr; Stop Recording.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Final Step: Button (UPDATED) -->
+                    <div class="bg-navy-50 p-4 rounded mb-4">
+                        <span class="text-sm font-bold text-navy-900 block mb-2"><i class="fa-solid fa-hand-pointer mr-2"></i>Final Step: Add the Button</span>
+                        <p class="text-sm text-gray-700 mb-2">
+                            Go back to your <strong>AP_Raw</strong> sheet.
+                        </p>
+                        <ol class="list-decimal list-inside text-sm text-gray-600 space-y-1">
+                            <li>Go to <strong>Developer &rarr; Insert &rarr; Button (Form Control)</strong>.</li>
+                            <li>Draw the button near the top of your data.</li>
+                            <li>Select <code>Make_Exception_Report</code> from the list &rarr; OK.</li>
+                            <li>Right-click the button &rarr; Edit Text &rarr; Rename to "Build Report".</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: The Real Test (New Data) -->
+            <div class="step-card bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+                <div class="flex items-center mb-4">
+                    <div class="bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg mr-4">5</div>
+                    <h3 class="text-xl font-bold text-navy-900">The Real Test: Next Month's Data</h3>
+                </div>
+                <div class="ml-14">
+                    <p class="mb-4 text-gray-600">
+                        The true power of a macro isn't cleaning <em>this</em> data—it's cleaning <strong>next month's</strong> data instantly.
+                    </p>
+                    
+                    <div class="bg-green-50 p-4 rounded mb-4 border border-green-200">
+                        <strong class="text-navy-900 block mb-2"><i class="fa-solid fa-calendar-days mr-2"></i>Scenario: It's February 1st</strong>
+                        <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2 mb-4">
+                            <li><strong>Reset:</strong> Delete ALL data in your <code>AP_Raw</code> sheet.</li>
+                            <!-- UPDATED: Clear instructions -->
+                            <li><strong>Clear Exceptions:</strong> Go to the <code>Exceptions</code> sheet and delete the old data (Select all & delete). <strong>Do NOT delete the sheet itself!</strong></li>
+                            <li><strong>Get New Data:</strong> Click the button below to copy the "February Data".</li>
+                            <li><strong>Paste:</strong> Paste it into cell A1 of <code>AP_Raw</code>.</li>
+                            <li><strong>Run:</strong> Click your macro buttons (Clean & Build Report).</li>
+                        </ol>
+
+                        <button onclick="copyMonth2()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded text-sm transition font-bold shadow-sm">
+                            <i class="fa-solid fa-paste mr-2"></i>Copy February Data (New!)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Debugging (NEW) -->
+            <div class="step-card bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+                <div class="flex items-center mb-4">
+                    <div class="bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg mr-4">6</div>
+                    <h3 class="text-xl font-bold text-navy-900">Did it Crash? (Debugging)</h3>
+                </div>
+                <div class="ml-14">
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-lg mb-4">
+                        <h4 class="font-bold text-red-800 mb-2"><i class="fa-solid fa-bug mr-2"></i>Common Error: "Subscript out of range"</h4>
+                        <p class="text-sm text-gray-700 mb-2">
+                            If you get <strong>Run-time error '9'</strong>, it usually means the macro is looking for a sheet that doesn't exist.
+                        </p>
+                        <p class="text-sm text-gray-700 mb-3">
+                            <strong>Did you delete the "Exceptions" sheet?</strong> The macro expects that sheet to be there waiting.
+                        </p>
+                        
+                        <strong class="block text-navy-900 text-sm mb-1">How to fix it:</strong>
+                        <ol class="list-decimal list-inside text-sm text-gray-700 space-y-1">
+                            <li>Click <strong>End</strong> on the error popup.</li>
+                            <li>Create a new blank sheet.</li>
+                            <li>Rename it exactly: <strong>Exceptions</strong></li>
+                            <li>Try pressing your button again.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Instructor Section -->
+        <div class="mt-12 pt-8 border-t border-gray-300">
+            <!-- Login Trigger -->
+            <div class="flex flex-col items-center justify-center" id="instructor-login-container">
+                <button onclick="toggleLoginInput()" class="text-gray-400 hover:text-navy-800 text-sm font-semibold focus:outline-none transition-colors duration-200">
+                    <i class="fa-solid fa-lock mr-2"></i>Instructor Access
+                </button>
+                
+                <!-- Password Input Field (Hidden Initially) -->
+                <div id="password-input-area" class="hidden mt-3 flex items-center space-x-2">
+                    <input type="password" id="instructorPass" placeholder="Enter Password" 
+                           class="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:border-navy-800"
+                           onkeypress="handleEnter(event)">
+                    <button onclick="checkPassword()" class="bg-navy-800 text-white text-sm px-3 py-1 rounded hover:bg-navy-900 transition">
+                        Unlock
+                    </button>
+                </div>
+                <p id="error-msg" class="text-red-500 text-xs mt-2 hidden">Incorrect password</p>
+            </div>
+
+            <!-- Instructor Content (Hidden by default) -->
+            <div id="instructor-panel" class="hidden mt-6 bg-navy-900 text-gray-300 p-6 rounded-lg shadow-xl animate-fade-in">
+                <div class="flex justify-between items-center border-b border-navy-700 pb-2 mb-4">
+                    <h3 class="text-gold-400 font-bold text-lg">Instructor Notes & Solutions</h3>
+                    <button onclick="lockInstructor()" class="text-gray-500 hover:text-white text-sm">
+                        <i class="fa-solid fa-lock mr-1"></i> Lock
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-bold text-white mb-2">Key Teaching Lines</h4>
+                        <ul class="list-disc list-inside text-sm space-y-2">
+                            <li>"Recording is not smart — it records EXACT clicks. If you click cell A5, it always goes to A5."</li>
+                            <li>"In audit, automation = consistency. The macro doesn't get tired or make typos."</li>
+                            <li>"We automate the boring steps (cleaning) so we can focus on judgment (investigating duplicates)."</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-white mb-2">Exit Ticket Questions</h4>
+                        <ul class="list-decimal list-inside text-sm space-y-2">
+                            <li>What does "Record Macro" actually do? (Translates clicks to VBA code)</li>
+                            <li>Why is .xlsm required? (Security/Macro storage)</li>
+                            <li>Name one accounting task you could automate? (Reconciliations, formatting monthly reports)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <h4 class="font-bold text-white mb-2">Solution Download</h4>
+                    <a href="#" class="inline-block bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-2 px-4 rounded text-sm transition opacity-50 cursor-not-allowed">
+                        <i class="fa-solid fa-file-shield mr-2"></i>Download Solution File (.xlsm)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Javascript -->
+    <script>
+        // Data with explicit Tabs (\t) for perfect Excel pasting
+        // UPDATED: Used underscores in Vendor names (e.g. Delta_Travel) to prevent Excel 
+        // from accidentally splitting columns if "Text-to-Columns" was previously set to "Space"
+        const rawDataTSV = `Date\tVendor\tInvoice\tDept\tAmount\tApproved
+1/5/2025\tStaples\tINV-1001\tIT\t125.5\tYes
+1/6/2025\tAmazon\tINV-1002\tOps\t1840\tYes
+1/6/2025\tAmazon\tINV-1002\tOps\t1840\tYes
+1/7/2025\tDelta_Travel\tINV-1003\tSales\t650\tNo
+1/8/2025\tOffice_Depot\tINV-1004\tAdmin\t210\tYes
+1/8/2025\tStaples\tINV-1005\tIT\t125.5\tYes
+1/9/2025\tAmazon\tINV-1006\tOps\t1840\tYes
+1/9/2025\tAmazon\tINV-1006\tOps\t1840\tYes
+1/10/2025\tDelta_Travel\tINV-1007\tSales\t650\tNo`;
+
+        // Month 2 Data (Totally different content, same structure)
+        const month2DataTSV = `Date\tVendor\tInvoice\tDept\tAmount\tApproved
+2/1/2025\tTesla_Inc\tINV-2001\tR&D\t5000\tYes
+2/2/2025\tSpaceX\tINV-2002\tOps\t12000\tYes
+2/2/2025\tSpaceX\tINV-2002\tOps\t12000\tYes
+2/3/2025\tMicrosoft\tINV-2003\tIT\t450\tYes
+2/4/2025\tApple_Store\tINV-2004\tAdmin\t2999\tYes
+2/5/2025\tTesla_Inc\tINV-2005\tR&D\t150\tYes
+2/5/2025\tSpaceX\tINV-2006\tOps\t500\tYes
+2/6/2025\tMicrosoft\tINV-2003\tIT\t450\tYes
+2/7/2025\tUber_Eats\tINV-2007\tAdmin\t45\tNo`;
+
+        // Copy to Clipboard (Robust Method)
+        function copyToClipboard(elementId) {
+            const textToCopy = document.getElementById(elementId).innerText;
+            copyText(textToCopy);
+        }
+
+        function copyDataset() {
+            copyText(rawDataTSV);
+            alert('Raw dataset copied! \n\n1. Open Excel\n2. Click cell A1\n3. Paste (Ctrl+V)\n\n(Columns will now align perfectly)');
+        }
+
+        function copyMonth2() {
+            copyText(month2DataTSV);
+            alert('February Data copied! \n\n1. Clear old data (keep headers if needed)\n2. Paste this into A1\n3. Run your Macros!');
+        }
+
+        function copyText(text) {
+            // Create temporary textarea
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = text;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            
+            try {
+                document.execCommand('copy');
+                if(!text.includes('\t')) { // Don't alert for the dataset, the main function handles that
+                    alert('Copied to clipboard!');
+                }
+            } catch (err) {
+                console.error('Failed to copy', err);
+                prompt("Ctrl+C to copy:", text);
+            }
+            
+            document.body.removeChild(tempTextArea);
+        }
+
+        // Instructor Login Logic
+        function toggleLoginInput() {
+            const inputArea = document.getElementById('password-input-area');
+            const panel = document.getElementById('instructor-panel');
+            
+            // If panel is already open, do nothing (user should use lock button inside)
+            if (!panel.classList.contains('hidden')) return;
+
+            inputArea.classList.toggle('hidden');
+            if (!inputArea.classList.contains('hidden')) {
+                document.getElementById('instructorPass').focus();
+            }
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') checkPassword();
+        }
+
+        function checkPassword() {
+            const pass = document.getElementById('instructorPass').value;
+            const errorMsg = document.getElementById('error-msg');
+            const inputArea = document.getElementById('password-input-area');
+            const panel = document.getElementById('instructor-panel');
+            const loginContainer = document.getElementById('instructor-login-container');
+
+            if (pass === 'teacher') {
+                // Success
+                errorMsg.classList.add('hidden');
+                inputArea.classList.add('hidden');
+                loginContainer.classList.add('hidden'); // Hide the login button entirely
+                panel.classList.remove('hidden');
+                // Scroll to panel
+                panel.scrollIntoView({ behavior: 'smooth' });
+                // Clear password
+                document.getElementById('instructorPass').value = '';
+            } else {
+                // Fail
+                errorMsg.classList.remove('hidden');
+                const input = document.getElementById('instructorPass');
+                input.classList.add('shake');
+                setTimeout(() => input.classList.remove('shake'), 500);
+            }
+        }
+
+        function lockInstructor() {
+            const panel = document.getElementById('instructor-panel');
+            const loginContainer = document.getElementById('instructor-login-container');
+            
+            panel.classList.add('hidden');
+            loginContainer.classList.remove('hidden');
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

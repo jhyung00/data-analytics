@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulldog Inc. - Advanced Pivot Table Challenge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .data-table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        th { position: sticky; top: 0; z-index: 10; }
+        
+        /* Pivot Simulation Styles */
+        .pivot-sim-cell {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pivot-sim-cell:hover {
+            background-color: #fce7f3; /* pink-100 */
+            outline: 2px solid #db2777; /* pink-600 */
+        }
+        .drill-through-sheet {
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+        /* Grouping Sim Styles */
+        .grouping-stage {
+            transition: all 0.5s ease;
+        }
+        .group-btn {
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); /* Sky to Blue */
+        }
+        .hint-box {
+            display: none;
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+            color: #78350f;
+        }
+        .insight-box {
+            background-color: #f8fafc;
+            border-left: 4px solid #64748b;
+            padding: 0.75rem;
+            font-size: 0.75rem;
+            color: #475569;
+            margin-top: 0.5rem;
+        }
+        .pivot-grid-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 0.25rem;
+        }
+        .pivot-grid-input {
+            width: 100%;
+            border-bottom: 2px solid #e2e8f0;
+            background: transparent;
+            font-size: 0.875rem;
+            padding: 0.25rem 0;
+            color: #334155;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .pivot-grid-input:focus {
+            border-bottom-color: #8b5cf6; /* Violet focus */
+            color: #5b21b6;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header: Vibrant Gradient -->
+    <header class="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white p-6 shadow-lg relative">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight flex items-center gap-2">
+                    <span>Bulldog Inc.</span> 
+                    <span class="text-2xl">🏭</span>
+                </h1>
+                <p class="text-violet-100 mt-1 font-medium">Fixed Asset Audit & Advanced Pivot Analysis</p>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <!-- Hidden Toolbar (Revealed after password) -->
+                <div id="instructorToolbar" class="hidden flex items-center gap-2 bg-white/20 backdrop-blur-sm p-1.5 rounded-lg border border-white/10 transition-all">
+                    <span class="text-[10px] uppercase font-bold text-violet-100 px-2">Instructor:</span>
+                    <button onclick="fillKey()" class="text-xs bg-emerald-500 hover:bg-emerald-400 text-white px-3 py-1.5 rounded shadow-sm font-bold transition">
+                        Show Answers
+                    </button>
+                    <button onclick="clearKey()" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded border border-white/10 transition">
+                        Clear
+                    </button>
+                    <button onclick="lockInstructorMode()" class="ml-1 p-1 text-violet-200 hover:text-white" title="Lock Controls">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- DISCRETE Instructor Access Button (Default) -->
+                <button onclick="openLockModal()" id="lockBtn" class="opacity-10 hover:opacity-100 transition-opacity duration-300 p-2 text-white rounded-full hover:bg-white/10" title="Instructor Access">
+                    <!-- Lock Icon -->
+                    <svg id="lockIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-6 space-y-8">
+
+        <!-- Scenario Section -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h2 class="text-xl font-bold text-slate-900 mb-2">The Scenario</h2>
+            <p class="mb-4 text-slate-600">
+                You are the Senior Financial Analyst for Bulldog Inc. It is <strong>Dec 31, 2026</strong>. 
+                The CFO is preparing for a board meeting and needs to verify our asset health. 
+                They require a dynamic report that allows them to "slice and dice" the data without calling IT.
+            </p>
+            <div class="bg-violet-50 border-l-4 border-violet-500 p-4 rounded-r">
+                <p class="font-semibold text-violet-900">Your Mission:</p>
+                <p class="text-violet-700 text-sm mt-1">
+                    Use the dataset below to answer audit questions. You must explicitly define the <strong>Filters, Columns, Rows, and Values</strong> for each analysis.
+                </p>
+            </div>
+        </section>
+
+        <!-- Data Section -->
+        <section>
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">Fixed Asset Register</h2>
+                    <p class="text-xs text-slate-500">150+ Assets Generated | Ref Date: 12/31/2026</p>
+                </div>
+                <button onclick="copyTable()" class="text-sm bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg transition flex items-center gap-2 font-medium shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    Copy Data to Clipboard
+                </button>
+            </div>
+            
+            <div class="data-table-container bg-white">
+                <table class="min-w-full text-xs text-left text-slate-600" id="mainTable">
+                    <thead class="text-violet-900 uppercase bg-violet-50 font-bold tracking-wider">
+                        <tr>
+                            <th class="px-4 py-3 bg-violet-50">Asset ID</th>
+                            <th class="px-4 py-3 bg-violet-50">Purchase Date</th>
+                            <th class="px-4 py-3 bg-violet-50">Asset Group</th>
+                            <th class="px-4 py-3 bg-violet-50">Sub-Category</th>
+                            <th class="px-4 py-3 bg-violet-50">Asset Details (Model)</th>
+                            <th class="px-4 py-3 bg-violet-50 text-right">Orig. Cost ($)</th>
+                            <th class="px-4 py-3 bg-violet-50 text-right">Salvage Value ($)</th>
+                            <th class="px-4 py-3 bg-violet-50 text-center">Useful Life (Yrs)</th>
+                            <th class="px-4 py-3 bg-violet-50 text-center">Years Remaining</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-slate-100">
+                        <!-- Javascript will populate this -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SIMULATION 1: Drill Through (Pink Theme) -->
+        <section class="bg-pink-50 border border-pink-100 rounded-xl p-6 shadow-sm">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="bg-pink-500 text-white rounded-lg p-2 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-pink-900">Simulation 1: The "Drill Through" Audit</h2>
+            </div>
+            <p class="text-sm text-pink-800 mb-4 font-medium">
+                <strong>Concept:</strong> Don't hunt for data. <strong>Double Click</strong> a number in a Pivot Table to auto-generate a sheet with the source records.
+            </p>
+            <div class="bg-white rounded-lg shadow-md p-4 max-w-2xl mx-auto border border-pink-100">
+                <p class="text-[10px] text-pink-400 uppercase font-bold mb-2 text-center tracking-widest">Try it: Double Click the 'Vehicles' Total Cost</p>
+                <table class="w-full text-sm border-collapse mb-2">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 text-xs uppercase">
+                            <th class="border-b border-slate-200 p-2 text-left">Row Labels</th>
+                            <th class="border-b border-slate-200 p-2 text-right">Sum of Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-slate-700">
+                        <tr><td class="border-b border-slate-100 p-2">IT Infrastructure</td><td class="border-b border-slate-100 p-2 text-right">$125,000</td></tr>
+                        <tr class="group">
+                            <td class="border-b border-slate-100 p-2 font-bold text-pink-700 group-hover:bg-pink-50">Vehicles</td>
+                            <td class="border-b border-slate-100 p-2 text-right font-bold text-pink-700 pivot-sim-cell" title="Double Click to Drill Through" ondblclick="triggerDrillThrough()">$840,000</td>
+                        </tr>
+                        <tr><td class="p-2 font-bold">Grand Total</td><td class="p-2 text-right font-bold">$965,000</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="drillThroughResult" class="drill-through-sheet mt-6 bg-white rounded-lg shadow-xl overflow-hidden border border-emerald-500">
+                <div class="bg-emerald-50 px-4 py-2 border-b border-emerald-100 flex justify-between items-center">
+                    <span class="text-xs font-bold text-emerald-800 uppercase flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Excel Status: New Sheet Created (Sheet 2)
+                    </span>
+                    <button onclick="closeDrill()" class="text-emerald-400 hover:text-red-500 font-bold transition">&times;</button>
+                </div>
+                <div class="p-4">
+                    <p class="text-sm text-slate-600 mb-2 font-medium">Detailed transactions for <strong class="text-pink-600">Vehicles</strong>:</p>
+                    <table class="w-full text-xs text-left text-slate-600">
+                        <thead class="bg-slate-50 font-bold text-slate-400 uppercase">
+                            <tr><th class="p-2">Asset ID</th><th class="p-2">Sub-Category</th><th class="p-2">Model</th><th class="p-2 text-right">Cost</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr><td class="p-2">BD-1042</td><td class="p-2">Executive</td><td class="p-2">Tesla Model S</td><td class="p-2 text-right">$85,000</td></tr>
+                            <tr><td class="p-2">BD-1045</td><td class="p-2">Logistics</td><td class="p-2">Ford F-150</td><td class="p-2 text-right">$45,000</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SIMULATION 2: Grouping (Sky Blue Theme) -->
+        <section class="bg-sky-50 border border-sky-100 rounded-xl p-6 shadow-sm">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="bg-sky-500 text-white rounded-lg p-2 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-sky-900">Simulation 2: The Power of Grouping</h2>
+            </div>
+            <p class="text-sm text-sky-800 mb-4 font-medium">
+                <strong>Concept:</strong> Raw dates are messy. Pivot Tables group them automatically. Notice how the individual dates below map to the Quarters on the right.
+            </p>
+            <div class="grid md:grid-cols-2 gap-8 items-center max-w-4xl mx-auto">
+                <!-- Before State -->
+                <div class="bg-white rounded-lg shadow-md p-4 relative border border-sky-100">
+                    <h4 class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Pivot with Raw Dates</h4>
+                    <div id="group-before" class="text-sm text-slate-600 space-y-1 h-32 overflow-y-auto p-2 scrollbar-thin">
+                        <!-- Accurate Math: Q1 -->
+                        <div class="flex justify-between border-l-4 border-emerald-400 pl-3 bg-emerald-50/50 rounded-r py-1 mb-1"><span>Jan 15, 2026</span> <span class="font-mono">$12,000</span></div>
+                        <div class="flex justify-between border-l-4 border-emerald-400 pl-3 bg-emerald-50/50 rounded-r py-1"><span>Feb 10, 2026</span> <span class="font-mono">$8,800</span></div>
+                        <div class="text-right text-[10px] text-emerald-600 font-bold mb-3">Sum: $20,800</div>
+                        
+                        <!-- Accurate Math: Q2 -->
+                        <div class="flex justify-between border-l-4 border-blue-400 pl-3 bg-blue-50/50 rounded-r py-1 mb-1"><span>Apr 05, 2026</span> <span class="font-mono">$10,000</span></div>
+                        <div class="flex justify-between border-l-4 border-blue-400 pl-3 bg-blue-50/50 rounded-r py-1"><span>May 20, 2026</span> <span class="font-mono">$5,400</span></div>
+                        <div class="text-right text-[10px] text-blue-600 font-bold">Sum: $15,400</div>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <div class="text-center relative z-10">
+                    <div class="absolute inset-0 bg-white/50 blur-xl rounded-full z-0"></div>
+                    <button onclick="triggerGrouping()" class="relative z-10 group-btn text-white px-8 py-3 rounded-full shadow-lg transform transition hover:scale-105 hover:shadow-sky-300/50 font-bold flex items-center justify-center gap-2 mx-auto">
+                        <span>Right Click & Group</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                    </button>
+                    <p class="text-xs text-sky-600 mt-2 font-medium">Group dates into Quarters</p>
+                </div>
+
+                <!-- After State -->
+                <div class="bg-white rounded-lg shadow-md p-4 relative group-target opacity-50 filter blur-[2px] transition-all duration-700 border border-sky-100" id="group-after-container">
+                    <h4 class="text-[10px] font-bold text-indigo-400 uppercase mb-2 tracking-widest">Pivot Grouped by Quarter (Clean)</h4>
+                    <div class="text-sm text-slate-800 space-y-2 p-2 h-32">
+                        <div class="flex justify-between font-bold border-b border-slate-100 pb-1 text-xs uppercase text-slate-400"><span>Row Labels</span> <span>Sum</span></div>
+                        <div class="flex justify-between items-center py-1 border-b border-slate-50"><span class="flex items-center gap-2 font-medium"><span class="text-[10px] text-slate-300">▼</span> Qtr 1</span> <span class="font-bold text-emerald-600 font-mono">$20,800</span></div>
+                        <div class="flex justify-between items-center py-1 border-b border-slate-50"><span class="flex items-center gap-2 font-medium"><span class="text-[10px] text-slate-300">▼</span> Qtr 2</span> <span class="font-bold text-blue-600 font-mono">$15,400</span></div>
+                        <div class="flex justify-between items-center py-1"><span class="flex items-center gap-2 text-slate-400"><span class="text-[10px]">▶</span> Qtr 3</span> <span class="text-slate-400 font-mono">$32,000</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analysis Questions -->
+        <section class="grid md:grid-cols-2 gap-6">
+            
+            <!-- Q1 (Pink Accent) -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-pink-500 hover:shadow-md transition">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-pink-100 text-pink-700 text-xs font-bold px-2 py-1 rounded">Q1</span>
+                        <h3 class="font-bold text-slate-900">Replacement Budgeting</h3>
+                    </div>
+                    <button onclick="toggleHint('hint1')" class="text-amber-500 hover:text-amber-600 text-xs font-bold flex items-center gap-1 uppercase tracking-wide">💡 Hint</button>
+                </div>
+                <div id="hint1" class="hint-box">
+                    <strong>Steps:</strong> Drag <strong>Years Remaining</strong> to Rows. <strong>Orig. Cost</strong> to Values. Filter Rows -> Less Than 2.
+                </div>
+                <p class="text-slate-600 text-sm">How much money do we need to replace assets expiring in < 2 years?</p>
+                <div class="insight-box">
+                    <strong>Business Insight:</strong> Prevents cash flow surprises by forecasting imminent replacement costs.
+                </div>
+                
+                <div class="bg-slate-50/50 border border-slate-100 rounded-lg p-4 mt-4 grid grid-cols-2 gap-3">
+                    <div><label class="pivot-grid-label block">Filters</label><input type="text" id="q1-filter" class="pivot-grid-input" placeholder="?"></div>
+                    <div><label class="pivot-grid-label block">Columns</label><input type="text" id="q1-col" class="pivot-grid-input" placeholder="?"></div>
+                    <div><label class="pivot-grid-label block">Rows</label><input type="text" id="q1-row" class="pivot-grid-input" placeholder="?"></div>
+                    <div><label class="pivot-grid-label block">Values</label><input type="text" id="q1-val" class="pivot-grid-input" placeholder="?"></div>
+                </div>
+            </div>
+
+            <!-- Q2 (Indigo Accent) -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-indigo-500 hover:shadow-md transition">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded">Q2</span>
+                        <h3 class="font-bold text-slate-900">Depreciation Expense</h3>
+                    </div>
+                    <button onclick="toggleHint('hint2')" class="text-amber-500 hover:text-amber-600 text-xs font-bold flex items-center gap-1 uppercase tracking-wide">💡 Hint</button>
+                </div>
+                <div id="hint2" class="hint-box">
+                    <strong>Steps:</strong> Excel Column: <code>=(Cost-Salvage)/Life</code>. Refresh. Drag to Values.
+                </div>
+                <p class="text-slate-600 text-sm">Calculate Annual Depreciation and sum by Group.</p>
+                <div class="insight-box">
+                    <strong>Business Insight:</strong> Calculates tax shield & P&L impact. Higher depreciation = lower net profit.
+                </div>
+
+                <div class="bg-slate-50/50 border border-slate-100 rounded-lg p-4 mt-4 grid grid-cols-2 gap-3">
+                    <div><label class="pivot-grid-label block">Filters</label><input type="text" id="q2-filter" class="pivot-grid-input" placeholder="?"></div>
+                    <div><label class="pivot-grid-label block">Columns</label><input type="text" id="q2-col" class="pivot-grid-input" placeholder="?"></div>
+                    <div><label class="pivot-grid-label block">Rows</label><input type="text" id="q2-row" class="pivot-grid-input" placeholder="?"></div>
+                    <div><label class="pivot-grid-label block">Values</label><input type="text" id="q2-val" class="pivot-grid-input" placeholder="?"></div>
+                </div>
+            </div>
+
+            <!-- Q3 (Violet Accent) - Renumbered from Q6 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-violet-500 hover:shadow-md transition">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-violet-100 text-violet-700 text-xs font-bold px-2 py-1 rounded">Q3</span>
+                        <h3 class="font-bold text-slate-900">The Audit (Drill Through)</h3>
+                    </div>
+                    <button onclick="toggleHint('hint3')" class="text-amber-500 hover:text-amber-600 text-xs font-bold flex items-center gap-1 uppercase tracking-wide">💡 Hint</button>
+                </div>
+                <div id="hint3" class="hint-box">
+                    <strong>Steps:</strong> Double-click Total Cost for Heavy Equipment.
+                </div>
+                <p class="text-slate-600 text-sm">How do you see specific rows for <strong>Heavy Equipment</strong>?</p>
+                
+                <div class="insight-box">
+                    <strong>Business Insight:</strong> Critical for fraud detection. Verifies if source rows justify the totals.
+                </div>
+
+                <div class="bg-slate-50/50 border border-slate-100 rounded-lg p-4 mt-4 grid grid-cols-2 gap-3">
+                     <div><label class="pivot-grid-label block">Rows</label><input type="text" id="q3-row" class="pivot-grid-input" placeholder="?"></div>
+                    <div><label class="pivot-grid-label block">Values</label><input type="text" id="q3-val" class="pivot-grid-input" placeholder="?"></div>
+                    <div class="col-span-2"><label class="pivot-grid-label block">Action</label><input type="text" id="q3-action" class="pivot-grid-input" placeholder="What do you click?"></div>
+                </div>
+            </div>
+
+            <!-- Q4 (Purple Accent) - Renumbered from Q7 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500 hover:shadow-md transition">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded">Q4</span>
+                        <h3 class="font-bold text-slate-900">Cost Distribution (%)</h3>
+                    </div>
+                    <button onclick="toggleHint('hint4')" class="text-amber-500 hover:text-amber-600 text-xs font-bold flex items-center gap-1 uppercase tracking-wide">💡 Hint</button>
+                </div>
+                <div id="hint4" class="hint-box">
+                    <strong>Steps:</strong> Right-click Values -> Show Values As -> % of Grand Total.
+                </div>
+                <p class="text-slate-600 text-sm">What % of total capital is in each Group?</p>
+                <div class="insight-box">
+                    <strong>Business Insight:</strong> Identifies risk concentration. High % in one area = high exposure.
+                </div>
+
+                <div class="bg-slate-50/50 border border-slate-100 rounded-lg p-4 mt-4 grid grid-cols-2 gap-3">
+                    <div><label class="pivot-grid-label block">Rows</label><input type="text" id="q4-row" class="pivot-grid-input" placeholder="?"></div>
+                    <div><label class="pivot-grid-label block">Values</label><input type="text" id="q4-val" class="pivot-grid-input" placeholder="?"></div>
+                    <div class="col-span-2"><label class="pivot-grid-label block">Setting (Show Values As)</label><input type="text" id="q4-setting" class="pivot-grid-input" placeholder="?"></div>
+                    <div class="col-span-2">
+                        <label class="pivot-grid-label block">Chart Choice</label>
+                        <select id="q4-chart" class="w-full text-sm border-b-2 border-slate-200 bg-transparent py-1 outline-none text-slate-600"><option value="">Select Chart...</option><option value="pie">Pie/Donut</option><option value="column">Clustered Column</option></select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Q5 (Sky Accent) - Renumbered from Q8 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-sky-500 hover:shadow-md transition">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-sky-100 text-sky-700 text-xs font-bold px-2 py-1 rounded">Q5</span>
+                        <h3 class="font-bold text-slate-900">Price Brackets</h3>
+                    </div>
+                    <button onclick="toggleHint('hint5')" class="text-amber-500 hover:text-amber-600 text-xs font-bold flex items-center gap-1 uppercase tracking-wide">💡 Hint</button>
+                </div>
+                <div id="hint5" class="hint-box">
+                    <strong>Steps:</strong> Drag Cost to Rows. Right-click -> Group -> By 25000.
+                </div>
+                <p class="text-slate-600 text-sm">Group assets into cost buckets of $25,000.</p>
+                <div class="insight-box">
+                    <strong>Business Insight:</strong> Creates a histogram to analyze cost frequency & set approval policies.
+                </div>
+
+                <div class="bg-slate-50/50 border border-slate-100 rounded-lg p-4 mt-4 grid grid-cols-2 gap-3">
+                    <div><label class="pivot-grid-label block">Rows (Group)</label><input type="text" id="q5-row" class="pivot-grid-input" placeholder="?"></div>
+                    <div><label class="pivot-grid-label block">Values</label><input type="text" id="q5-val" class="pivot-grid-input" placeholder="?"></div>
+                </div>
+            </div>
+
+            <!-- Q6 (Fuchsia Accent) - Renumbered from Q9 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-fuchsia-500 hover:shadow-md transition">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-fuchsia-100 text-fuchsia-700 text-xs font-bold px-2 py-1 rounded">Q6</span>
+                        <h3 class="font-bold text-slate-900">Value Retention</h3>
+                    </div>
+                    <button onclick="toggleHint('hint6')" class="text-amber-500 hover:text-amber-600 text-xs font-bold flex items-center gap-1 uppercase tracking-wide">💡 Hint</button>
+                </div>
+                <div id="hint6" class="hint-box">
+                    <strong>Steps:</strong> Pivot Analyze -> Fields, Items & Sets -> Calculated Field.
+                </div>
+                <p class="text-slate-600 text-sm">
+                    Create <strong>Calculated Field</strong> "Retention %" (Salvage / Cost).
+                </p>
+                <div class="insight-box">
+                    <strong>Business Insight:</strong> Dynamic ratios help compare investment efficiency across categories.
+                </div>
+
+                <div class="bg-slate-50/50 border border-slate-100 rounded-lg p-4 mt-4 grid grid-cols-2 gap-3">
+                    <div class="col-span-2"><label class="pivot-grid-label block">Values (Calculated Field)</label><input type="text" id="q6-val" class="pivot-grid-input" placeholder="Name?"></div>
+                    <div class="col-span-2"><label class="pivot-grid-label block">Formula</label><input type="text" id="q6-formula" class="pivot-grid-input" placeholder="?"></div>
+                </div>
+            </div>
+
+            <!-- Q7: Slicers (Orange Accent) - Renumbered from Q10 -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-500 md:col-span-2 hover:shadow-md transition">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded">Q7</span>
+                        <h3 class="font-bold text-slate-900">Dashboarding (Slicers)</h3>
+                    </div>
+                    <button onclick="toggleHint('hint7')" class="text-amber-500 hover:text-amber-600 text-xs font-bold flex items-center gap-1 uppercase tracking-wide">💡 Hint</button>
+                </div>
+                <div id="hint7" class="hint-box">
+                    <strong>Steps:</strong> PivotTable Analyze -> Insert Slicer.
+                </div>
+                <p class="text-slate-600 text-sm mb-2">
+                    Create buttons to filter by <strong>Asset Group</strong> and <strong>Sub-Category</strong>.
+                </p>
+                <div class="insight-box mb-4">
+                    <strong>Business Insight:</strong> Turns static sheets into interactive Dashboards for executives.
+                </div>
+
+                <div class="bg-slate-50/50 border border-slate-100 rounded-lg p-4 mt-4">
+                    <label class="pivot-grid-label block">Which Fields?</label>
+                    <input type="text" id="q7-action" class="pivot-grid-input" placeholder="?">
+                </div>
+            </div>
+
+        </section>
+
+        <!-- NEW PRO TIP: Report Filter Pages (Cyan Theme) -->
+        <section class="bg-cyan-50 border border-cyan-100 rounded-xl p-6 shadow-sm mt-8 transition hover:shadow-md">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="bg-cyan-500 text-white rounded-lg p-2 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                </div>
+                <h2 class="text-lg font-bold text-cyan-900">Pro Tip: Mass Report Generation</h2>
+            </div>
+            
+            <p class="text-sm text-cyan-800 mb-4 font-medium">
+                <strong>The "Hidden" Feature:</strong> What if the CEO wants 5 separate tabs—one for each Asset Group? 
+                Instead of copying & pasting 5 times, use <strong>Show Report Filter Pages</strong>.
+            </p>
+
+            <div class="grid md:grid-cols-2 gap-8 items-center max-w-4xl mx-auto bg-white p-6 rounded-lg border border-cyan-100 shadow-sm">
+                
+                <!-- Left: The Setup -->
+                <div class="space-y-4">
+                    <div class="text-xs uppercase font-bold text-slate-400 tracking-wider">1. The Setup</div>
+                    <div class="border border-slate-200 rounded p-3 bg-slate-50">
+                        <div class="text-[10px] text-slate-400 mb-1 uppercase font-bold">Pivot Table Field List</div>
+                        <div class="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                            <span class="bg-cyan-100 text-cyan-700 px-2 py-0.5 rounded text-xs border border-cyan-200">Filter Area</span>
+                            <span>Asset Group</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 italic">
+                        Menu Path: <span class="font-semibold text-cyan-700">PivotTable Analyze > Options > Show Report Filter Pages...</span>
+                    </p>
+                    <button onclick="triggerFilterPages()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded shadow-lg shadow-cyan-200 transition transform active:scale-95 flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        Run "Show Report Filter Pages"
+                    </button>
+                </div>
+
+                <!-- Right: The Result Animation -->
+                <div class="relative h-32 bg-slate-100 rounded border border-slate-200 flex flex-col justify-end overflow-hidden">
+                    <div class="absolute top-2 left-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider">Excel Workbook Tabs</div>
+                    
+                    <!-- Original Tab -->
+                    <div class="flex items-end px-2 gap-1" id="tab-container">
+                        <div class="bg-white px-4 py-2 rounded-t-lg border-t border-l border-r border-slate-300 text-xs font-bold text-cyan-700 shadow-sm z-10">Master Pivot</div>
+                        <!-- Generated tabs will appear here -->
+                    </div>
+                    <div class="h-1 bg-white border-t border-slate-300 w-full z-20"></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Final Creative Challenge (Dark Mode Gradient) -->
+        <section class="bg-gradient-to-br from-slate-800 via-indigo-900 to-violet-900 rounded-2xl p-8 text-white shadow-2xl mt-8 border border-white/10 relative overflow-hidden">
+            <!-- Decorative circle -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-violet-500/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+
+            <div class="flex items-center gap-3 mb-4 relative z-10">
+                <span class="bg-amber-400 text-slate-900 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg shadow-amber-400/20">Final Mission</span>
+                <h2 class="text-3xl font-bold tracking-tight">The Analyst's Choice</h2>
+            </div>
+            
+            <p class="text-slate-300 mb-8 max-w-3xl relative z-10 text-lg leading-relaxed">
+                The CEO is walking into the meeting in 5 minutes. They want <strong>ONE</strong> final insight that we haven't discussed yet. 
+                <br>
+                <span class="text-violet-200">Come up with a unique business question, design the Pivot Table & Chart, and explain why it matters.</span>
+            </p>
+
+            <div class="bg-white/95 backdrop-blur text-slate-800 rounded-xl p-6 shadow-xl relative z-10">
+                <div class="grid md:grid-cols-2 gap-8">
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-violet-600 uppercase mb-2 tracking-wider">1. Your Business Question</label>
+                        <input type="text" id="final-q" class="w-full border-b-2 border-slate-200 focus:border-violet-500 outline-none py-2 text-xl font-semibold placeholder-slate-300 transition text-slate-800 bg-transparent" placeholder="e.g., Which region has the oldest fleet?">
+                    </div>
+
+                    <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase mb-4 tracking-wider">2. Pivot Table Design</h4>
+                        <div class="grid grid-cols-2 gap-5">
+                            <div><label class="pivot-grid-label block">Rows</label><input type="text" id="final-row" class="pivot-grid-input" placeholder="Field?"></div>
+                            <div><label class="pivot-grid-label block">Columns</label><input type="text" id="final-col" class="pivot-grid-input" placeholder="Field?"></div>
+                            <div class="col-span-2"><label class="pivot-grid-label block">Values (Math)</label><input type="text" id="final-val" class="pivot-grid-input" placeholder="Sum/Count/Avg...?"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase mb-4 tracking-wider">3. Visualization & Impact</h4>
+                        <div class="space-y-5">
+                            <div>
+                                <label class="pivot-grid-label block">Chart Choice</label>
+                                <select id="final-chart" class="w-full text-sm border-b-2 border-slate-200 bg-transparent py-1 outline-none text-slate-700 font-medium cursor-pointer">
+                                    <option value="">Select Chart...</option>
+                                    <option value="column">Clustered Column (Comparison)</option>
+                                    <option value="line">Line (Trend)</option>
+                                    <option value="pie">Pie (Composition)</option>
+                                    <option value="scatter">Scatter (Correlation)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="pivot-grid-label block">Why does this matter?</label>
+                                <textarea id="final-insight" rows="2" class="w-full bg-transparent border-b-2 border-slate-200 text-sm outline-none resize-none text-slate-700" placeholder="This insight helps us..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Instructor Password Modal (NEW) -->
+        <div id="passwordModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 transition-opacity duration-300">
+            <div class="bg-white p-6 rounded-2xl shadow-2xl w-80 transform scale-100 transition-transform duration-300">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-800">Instructor Access</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-red-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-xs text-slate-500 mb-2">Enter password to unlock answer key.</p>
+                <input type="password" id="instructorPwd" class="w-full border-2 border-slate-200 p-2 rounded-lg mb-4 focus:border-violet-500 focus:outline-none" placeholder="Password" onkeyup="if(event.key === 'Enter') checkPassword()">
+                <button onclick="checkPassword()" class="w-full bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 rounded-lg transition">Unlock</button>
+                <p id="pwdError" class="text-red-500 text-xs mt-2 hidden text-center">Incorrect password.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="text-center py-8 text-slate-400 text-sm font-medium">
+        &copy; 2024 Bulldog Inc. Educational Material.
+    </footer>
+
+    <script>
+        // --- Reference Date ---
+        const REF_DATE = new Date("2026-12-31");
+
+        // --- Rich Data Hierarchy ---
+        const assetHierarchy = {
+            "Vehicles": { "Executive Fleet": ["Volvo XC90", "BMW X5", "Tesla Model S"], "Sales Fleet": ["Ford Fusion", "Toyota Camry"], "Logistics": ["Ford F-150", "Mercedes Sprinter"] },
+            "IT Infrastructure": { "End User": ["MacBook Pro 16", "Dell Latitude"], "Data Center": ["Dell PowerEdge", "Cisco Switch"], "Peripherals": ["4K Monitor", "Polycom"] },
+            "Real Estate": { "HQ": ["Building A", "Building B"], "Warehouses": ["Nevada Ctr", "Ohio Hub"], "Retail": ["LA Flagship", "NY Showroom"] },
+            "Machinery": { "Assembly": ["Robotic Arm", "Conveyor"], "Packaging": ["Auto-Boxer", "Label Printer"], "Testing": ["Stress Chamber"] },
+            "Heavy Equipment": { "Construction": ["CAT Excavator", "Bobcat"], "Power": ["Diesel Gen", "Solar Array"], "Handling": ["Toyota Forklift"] },
+            "Fixtures": { "Lighting": ["LED Array"], "Security": ["CCTV Network"] }
+        };
+
+        const rowCount = 150; 
+        const tableBody = document.getElementById('tableBody');
+
+        function formatMoney(amount) {
+            return '$' + amount.toFixed(0).replace(/\d(?=(\d{3})+$)/g, '$&,');
+        }
+
+        function randomDate(start, end) {
+            return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+        }
+
+        const getRandKey = (obj) => Object.keys(obj)[Math.floor(Math.random() * Object.keys(obj).length)];
+        const getRandArr = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+        // Generate Data
+        let dataRows = "";
+        
+        for (let i = 0; i < rowCount; i++) {
+            const group = getRandKey(assetHierarchy);
+            const subCategory = getRandKey(assetHierarchy[group]);
+            const model = getRandArr(assetHierarchy[group][subCategory]);
+
+            let minCost, maxCost, minLife, maxLife;
+            switch(group) {
+                case "Vehicles": minCost=25000; maxCost=95000; minLife=5; maxLife=8; break;
+                case "IT Infrastructure": minCost=1200; maxCost=15000; minLife=3; maxLife=5; break;
+                case "Real Estate": minCost=500000; maxCost=5000000; minLife=25; maxLife=40; break;
+                case "Machinery": minCost=50000; maxCost=250000; minLife=7; maxLife=15; break;
+                case "Heavy Equipment": minCost=40000; maxCost=180000; minLife=10; maxLife=20; break;
+                case "Fixtures": minCost=2000; maxCost=25000; minLife=10; maxLife=15; break;
+                default: minCost=1000; maxCost=5000; minLife=3; maxLife=5;
+            }
+
+            const cost = Math.floor(Math.random() * (maxCost - minCost) + minCost);
+            const salvagePct = 0.05 + (Math.random() * 0.15); 
+            const salvage = Math.floor(cost * salvagePct);
+            const life = Math.floor(Math.random() * (maxLife - minLife) + minLife);
+
+            const purchaseDate = randomDate(new Date(2012, 0, 1), new Date(2026, 9, 1));
+            const purchaseStr = purchaseDate.toISOString().split('T')[0];
+
+            const msPerYear = 1000 * 60 * 60 * 24 * 365.25;
+            const ageInMs = REF_DATE - purchaseDate;
+            const ageInYears = ageInMs / msPerYear;
+
+            let yearsRemaining = life - ageInYears;
+            if (yearsRemaining < 0) yearsRemaining = 0;
+            const displayRemaining = yearsRemaining.toFixed(1);
+
+            let remainingClass = "text-slate-600";
+            if (yearsRemaining <= 1.5) remainingClass = "text-red-600 font-bold bg-red-50 px-2 rounded";
+            else if (yearsRemaining > 5) remainingClass = "text-emerald-600 font-bold";
+
+            const assetID = `BD-${1000 + i}`;
+
+            dataRows += `
+                <tr class="hover:bg-violet-50/50 transition duration-150">
+                    <td class="px-4 py-3 font-mono text-xs text-slate-500">${assetID}</td>
+                    <td class="px-4 py-3">${purchaseStr}</td>
+                    <td class="px-4 py-3 font-medium text-slate-700">${group}</td>
+                    <td class="px-4 py-3 text-slate-500">${subCategory}</td>
+                    <td class="px-4 py-3 text-slate-900 font-medium">${model}</td>
+                    <td class="px-4 py-3 text-right text-slate-700 font-mono">${formatMoney(cost)}</td>
+                    <td class="px-4 py-3 text-right text-slate-500 font-mono">${formatMoney(salvage)}</td>
+                    <td class="px-4 py-3 text-center">${life}</td>
+                    <td class="px-4 py-3 text-center ${remainingClass}">${displayRemaining}</td>
+                </tr>
+            `;
+        }
+
+        tableBody.innerHTML = dataRows;
+
+        // Copy Function
+        function copyTable() {
+            const table = document.getElementById("mainTable");
+            let range, selection;
+            if (document.createRange && window.getSelection) {
+                range = document.createRange();
+                selection = window.getSelection();
+                selection.removeAllRanges();
+                try {
+                    range.selectNodeContents(table);
+                    selection.addRange(range);
+                } catch (e) {
+                    range.selectNode(table);
+                    selection.addRange(range);
+                }
+                document.execCommand("copy");
+                alert("Data copied! Paste into cell A1 of your spreadsheet.");
+                selection.removeAllRanges();
+            }
+        }
+
+        // --- Simulator 1 (Drill) Functions ---
+        function triggerDrillThrough() {
+            const sheet = document.getElementById('drillThroughResult');
+            sheet.style.display = 'block';
+            sheet.scrollIntoView({behavior: 'smooth'});
+        }
+
+        function closeDrill() {
+            document.getElementById('drillThroughResult').style.display = 'none';
+        }
+
+        // --- Simulator 2 (Grouping) Functions ---
+        function triggerGrouping() {
+            const container = document.getElementById('group-after-container');
+            container.classList.remove('opacity-50', 'filter', 'blur-[2px]');
+            container.classList.add('ring-4', 'ring-sky-200');
+            setTimeout(() => {
+                container.classList.remove('ring-4', 'ring-sky-200');
+            }, 1000);
+        }
+
+        // --- Simulator 3 (Filter Pages) Functions ---
+        function triggerFilterPages() {
+            const container = document.getElementById('tab-container');
+            // Reset if already run
+            if(container.children.length > 1) {
+                container.innerHTML = '<div class="bg-white px-4 py-2 rounded-t-lg border-t border-l border-r border-slate-300 text-xs font-bold text-cyan-700 shadow-sm z-10">Master Pivot</div>';
+            }
+            
+            const tabs = ["Vehicles", "IT Infra", "Real Estate", "Machinery", "Heavy Equip"];
+            
+            tabs.forEach((tab, index) => {
+                setTimeout(() => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-200 px-3 py-1.5 rounded-t border-t border-l border-r border-slate-300 text-[10px] text-slate-600 font-medium transform translate-y-full transition-transform duration-300 ease-out';
+                    div.innerText = tab;
+                    container.appendChild(div);
+                    
+                    // Trigger animation frame
+                    requestAnimationFrame(() => {
+                        div.classList.remove('translate-y-full');
+                    });
+                }, index * 200); // Stagger animations
+            });
+        }
+
+        // --- Hint System ---
+        function toggleHint(id) {
+            const el = document.getElementById(id);
+            if (el.style.display === 'block') el.style.display = 'none';
+            else el.style.display = 'block';
+        }
+
+        // --- Instructor Key Functions ---
+        const keyData = {
+            'q1-filter': 'Years Remaining (< 2)',
+            'q1-col': '(None)',
+            'q1-row': 'Years Remaining',
+            'q1-val': 'Sum of Orig. Cost',
+            
+            'q2-filter': '',
+            'q2-col': '',
+            'q2-row': 'Asset Group',
+            'q2-val': 'Sum of Annual Depr (Calc)',
+            
+            'q3-row': 'Asset Group (Heavy Equipment)',
+            'q3-val': 'Sum of Orig. Cost',
+            'q3-action': 'Double Click the Value Cell',
+            
+            'q4-filter': '',
+            'q4-col': '',
+            'q4-row': 'Asset Group',
+            'q4-val': 'Sum of Orig. Cost',
+            'q4-setting': '% of Grand Total',
+            'q4-chart': 'pie',
+            
+            'q5-row': 'Orig. Cost',
+            'q5-val': 'Count of Asset ID',
+            
+            'q6-val': 'Retention %',
+            'q6-formula': '= Salvage / Orig. Cost',
+            
+            'q7-action': 'Asset Group, Sub-Category',
+
+            // Final Challenge Example
+            'final-q': '(Example) Are expensive assets lasting longer?',
+            'final-row': 'Asset Group',
+            'final-col': '(None)',
+            'final-val': 'Avg Cost & Avg Life',
+            'final-chart': 'scatter',
+            'final-insight': 'Helps validate if higher spending actually correlates with better durability.'
+        };
+
+        // Track state
+        let instructorModeActive = false;
+
+        function toggleInstructorMode() {
+            const btn = document.getElementById('lockBtn');
+            const icon = document.getElementById('lockIcon');
+
+            if (!instructorModeActive) {
+                // Open Modal
+                openLockModal();
+            } else {
+                // Try to clear/lock
+                if (confirm("Clear answers and lock answer key?")) {
+                    instructorModeActive = false;
+                    clearKey();
+                    
+                    // Change icon back to Closed Lock
+                    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />';
+                    btn.classList.add('opacity-10');
+                    btn.classList.remove('opacity-100', 'bg-white/20');
+                    btn.title = "Instructor Access";
+                }
+            }
+        }
+
+        // Modal Functions
+        function openLockModal() {
+            document.getElementById('passwordModal').classList.remove('hidden');
+            document.getElementById('instructorPwd').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('passwordModal').classList.add('hidden');
+            document.getElementById('pwdError').classList.add('hidden');
+            document.getElementById('instructorPwd').value = '';
+        }
+
+        function checkPassword() {
+            const pwd = document.getElementById('instructorPwd').value;
+            
+            if (pwd === 'bulldog') {
+                closeModal();
+                // Reveal Toolbar, Hide Lock Button
+                document.getElementById('lockBtn').classList.add('hidden');
+                document.getElementById('instructorToolbar').classList.remove('hidden');
+            } else {
+                document.getElementById('pwdError').classList.remove('hidden');
+            }
+        }
+
+        function lockInstructorMode() {
+            // Hide Toolbar, Show Lock Button, Clear Answers
+            clearKey();
+            document.getElementById('instructorToolbar').classList.add('hidden');
+            document.getElementById('lockBtn').classList.remove('hidden');
+        }
+
+        function fillKey() {
+            for (const [id, value] of Object.entries(keyData)) {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = value;
+                    el.classList.add('font-bold', 'text-violet-700');
+                    el.classList.remove('placeholder-slate-300');
+                }
+            }
+        }
+
+        function clearKey() {
+            for (const id of Object.keys(keyData)) {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = '';
+                    el.classList.remove('font-bold', 'text-violet-700');
+                    el.classList.add('placeholder-slate-300');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

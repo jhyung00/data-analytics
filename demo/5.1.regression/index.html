@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regression Lab: Advanced Audit</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Custom Icon Components
+        const DownloadIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        );
+        const LockIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        );
+        const ChevronDown = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        );
+        const ChevronUp = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+        );
+        const KeyIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+        );
+        const AlertIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+        );
+        const DatabaseIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        );
+
+        const App = () => {
+            const [showReasoning, setShowReasoning] = useState(false);
+            const [isTeacher, setIsTeacher] = useState(false);
+            const [showLoginModal, setShowLoginModal] = useState(false);
+            const [passwordInput, setPasswordInput] = useState("");
+            const [loginError, setLoginError] = useState(false);
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if (passwordInput === "teacher") {
+                    setIsTeacher(true);
+                    setShowLoginModal(false);
+                    setLoginError(false);
+                } else {
+                    setLoginError(true);
+                }
+            };
+
+            // Navy Theme Constants
+            const theme = {
+                headerBg: "bg-[#0f172a]", // Slate 900
+                headerText: "text-white",
+                accent: "text-blue-400",
+                primaryBtn: "bg-blue-600 hover:bg-blue-700",
+                cardBorder: "border-slate-200",
+                sectionTitle: "text-[#0f172a]",
+                numberBadge: "bg-[#0f172a]",
+                highlight: "bg-blue-50 text-blue-900"
+            };
+
+            return (
+                <div className="min-h-screen pb-12 bg-slate-50">
+                    {/* Header */}
+                    <header className={`${theme.headerBg} border-b border-slate-800 shadow-md sticky top-0 z-10`}>
+                        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 bg-white/10 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-inner border border-white/10">
+                                    <span className="font-serif">R</span>
+                                </div>
+                                <div>
+                                    <h1 className={`text-xl font-bold ${theme.headerText} tracking-tight`}>Regression Lab</h1>
+                                    <p className={`text-xs ${theme.accent} font-medium uppercase tracking-wider`}>Advanced Audit Analytics</p>
+                                </div>
+                            </div>
+                            
+                            <a 
+                                href="data/Revenue_Audit_Workbook.xlsx" 
+                                className={`flex items-center gap-2 ${theme.primaryBtn} text-white px-4 py-2 rounded-md transition-all font-medium text-sm shadow-lg shadow-blue-900/20 transform active:scale-95 border border-blue-500/30`}
+                            >
+                                <DownloadIcon />
+                                <span>Download Workbook</span>
+                            </a>
+                        </div>
+                    </header>
+
+                    <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        
+                        {/* LEFT COLUMN: Context & Hints */}
+                        <div className="lg:col-span-4 space-y-6">
+                            
+                            {/* Case Background Card */}
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                <h2 className={`text-sm font-bold ${theme.sectionTitle} uppercase tracking-wide mb-3 flex items-center gap-2`}>
+                                    <span className="w-1 h-4 bg-blue-600 rounded-full"></span>
+                                    Case Background
+                                </h2>
+                                <p className="text-slate-600 mb-4 text-sm leading-relaxed">
+                                    You are part of an audit analytics team reviewing monthly financial and operational data from a subscription-based tech firm. The dataset spans from <strong>January 2025</strong> through <strong>December 2029</strong>.
+                                </p>
+                                <div className="space-y-3">
+                                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                        <h3 className="text-xs font-semibold text-slate-800 mb-1">Key Event 1: Freemium Campaign</h3>
+                                        <p className="text-xs text-slate-500">May 2025 – March 2026 (Months 5–15). Added ~2,000 non-paying users/month.</p>
+                                    </div>
+                                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                        <h3 className="text-xs font-semibold text-slate-800 mb-1">Key Event 2: Price Hike</h3>
+                                        <p className="text-xs text-slate-500">Jan 2028 (Month 37). Prices increased by 20% across all tiers.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Data Dictionary Card */}
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                <h2 className={`text-sm font-bold ${theme.sectionTitle} uppercase tracking-wide mb-3 flex items-center gap-2`}>
+                                    <DatabaseIcon />
+                                    Data Dictionary
+                                </h2>
+                                <div className="space-y-3 text-sm">
+                                    <div className="border-b border-slate-100 pb-2">
+                                        <span className="font-mono text-xs text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">AvgPlanTier</span>
+                                        <p className="text-slate-600 mt-1 text-xs">
+                                            Average subscription tier of active users.
+                                            <br/>
+                                            <span className="italic text-slate-400">1 = Basic, 2 = Standard, 3 = Premium</span>
+                                        </p>
+                                    </div>
+                                    <div className="border-b border-slate-100 pb-2">
+                                        <span className="font-mono text-xs text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">MarketingSpend</span>
+                                        <p className="text-slate-600 mt-1 text-xs">Estimated monthly expenditure on marketing campaigns.</p>
+                                    </div>
+                                    <div>
+                                        <span className="font-mono text-xs text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">ChurnRate</span>
+                                        <p className="text-slate-600 mt-1 text-xs">Percentage of subscribers who cancel their subscription in a given month.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* RIGHT COLUMN: Instructions */}
+                        <div className="lg:col-span-8 space-y-8">
+                            
+                            <div>
+                                <h2 className={`text-2xl font-bold ${theme.sectionTitle} mb-6 flex items-center gap-2`}>
+                                    <span className={`flex items-center justify-center w-8 h-8 rounded-full ${theme.numberBadge} text-white text-sm shadow-md`}>1</span>
+                                    Lab Instructions
+                                </h2>
+
+                                <div className="space-y-8 pl-4 border-l-2 border-slate-200">
+                                    
+                                    {/* Step 1 */}
+                                    <div className="relative group">
+                                        <div className="absolute -left-[25px] top-0 w-4 h-4 rounded-full bg-slate-200 group-hover:bg-blue-500 transition-colors border-2 border-white"></div>
+                                        <h3 className="text-lg font-bold text-slate-800 mb-2">1. Initial Scatterplot & Regression</h3>
+                                        <ul className="list-disc list-inside text-slate-600 space-y-1 ml-1 marker:text-blue-500">
+                                            <li>Create a scatterplot of <span className="mono bg-slate-100 px-1 py-0.5 rounded text-xs text-pink-600 border border-slate-200">Revenue_Original</span> vs. <span className="mono bg-slate-100 px-1 py-0.5 rounded text-xs text-pink-600 border border-slate-200">Subscribers_Original</span>.</li>
+                                            <li>Run a simple linear regression using original data. Record the R².</li>
+                                            <li>Describe the effect of the freemium campaign and pricing lag.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* Step 2 */}
+                                    <div className="relative group">
+                                        <div className="absolute -left-[25px] top-0 w-4 h-4 rounded-full bg-slate-200 group-hover:bg-blue-500 transition-colors border-2 border-white"></div>
+                                        <h3 className="text-lg font-bold text-slate-800 mb-2">2. Data Normalization</h3>
+                                        <p className="text-slate-600 mb-2">Create two new columns:</p>
+                                        <ul className="list-disc list-inside text-slate-600 space-y-2 ml-1 marker:text-blue-500">
+                                            <li><span className="mono bg-slate-100 px-1 py-0.5 rounded text-xs text-pink-600 border border-slate-200">Subscribers_Normalized</span>: Subtract 2,000 freemium users from Months 5–15.</li>
+                                            <li><span className="mono bg-slate-100 px-1 py-0.5 rounded text-xs text-pink-600 border border-slate-200">Revenue_Normalized</span>: Adjust revenue from Months 1–36 upward by 20% to align with later pricing.</li>
+                                        </ul>
+
+                                        {/* Inserted Logic */}
+                                        <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-4 shadow-sm">
+                                            <h4 className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
+                                                <AlertIcon /> Reasoning for Adjustments
+                                            </h4>
+                                            <div className="space-y-4 text-sm text-slate-700">
+                                                <div>
+                                                    <p className="font-semibold text-blue-800 mb-1 text-xs uppercase tracking-wide">Why subtract 2,000 freemium users?</p>
+                                                    <p className="leading-relaxed">Those users didn’t pay. If left in the count, X is inflated while Y (revenue) isn’t, biasing the revenue-per-subscriber slope downward. Removing them isolates the "paying" base.</p>
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold text-blue-800 mb-1 text-xs uppercase tracking-wide">Why scale pre-2028 revenue by 20%?</p>
+                                                    <p className="leading-relaxed">A structural break occurs at Month 37. The same customer base yields 20% more revenue solely due to price. Scaling early revenue by 1.20 aligns the entire series to "constant currency" terms.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Step 3 */}
+                                    <div className="relative group">
+                                        <div className="absolute -left-[25px] top-0 w-4 h-4 rounded-full bg-slate-200 group-hover:bg-blue-500 transition-colors border-2 border-white"></div>
+                                        <h3 className="text-lg font-bold text-slate-800 mb-2">3. Normalized Regression</h3>
+                                        <ul className="list-disc list-inside text-slate-600 space-y-1 ml-1 marker:text-blue-500">
+                                            <li>Re-run the regression using your new normalized columns.</li>
+                                            <li>Report the new R². Did the model improve?</li>
+                                            <li>Create a scatterplot using normalized values.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* Step 4 */}
+                                    <div className="relative group">
+                                        <div className="absolute -left-[25px] top-0 w-4 h-4 rounded-full bg-slate-200 group-hover:bg-blue-500 transition-colors border-2 border-white"></div>
+                                        <h3 className="text-lg font-bold text-slate-800 mb-2">4. Multiple Regression</h3>
+                                        <p className="text-slate-600 mb-2">Extend to a multiple regression using these predictors:</p>
+                                        <div className="flex flex-wrap gap-2 mb-3">
+                                            <span className="mono bg-blue-50 px-2 py-1 rounded text-xs text-blue-700 font-medium border border-blue-100">Subscribers_Normalized</span>
+                                            <span className="mono bg-blue-50 px-2 py-1 rounded text-xs text-blue-700 font-medium border border-blue-100">AvgPlanTier</span>
+                                            <span className="mono bg-blue-50 px-2 py-1 rounded text-xs text-blue-700 font-medium border border-blue-100">MarketingSpend</span>
+                                            <span className="mono bg-blue-50 px-2 py-1 rounded text-xs text-blue-700 font-medium border border-blue-100">ChurnRate</span>
+                                        </div>
+                                        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-3">
+                                            <p className="text-xs text-yellow-800">
+                                                <strong>Note:</strong> Refer to the Data Dictionary for the definitions of <code>AvgPlanTier</code> and <code>ChurnRate</code>.
+                                            </p>
+                                        </div>
+                                        <ul className="list-disc list-inside text-slate-600 ml-1 marker:text-blue-500">
+                                            <li>Report the new R². How much did accuracy improve?</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* Step 5 */}
+                                    <div className="relative group">
+                                        <div className="absolute -left-[25px] top-0 w-4 h-4 rounded-full bg-slate-200 group-hover:bg-blue-500 transition-colors border-2 border-white"></div>
+                                        <h3 className="text-lg font-bold text-slate-800 mb-2">5. Residual Analysis</h3>
+                                        <ul className="list-disc list-inside text-slate-600 space-y-1 ml-1 marker:text-blue-500">
+                                            <li>Calculate residuals and standardize them using Z-scores.</li>
+                                            <li>Use Conditional Formatting to highlight Z-scores > 2 or &lt; -2.</li>
+                                        </ul>
+                                    </div>
+
+                                    {/* Step 6 */}
+                                    <div className="relative group">
+                                        <div className="absolute -left-[25px] top-0 w-4 h-4 rounded-full bg-slate-200 group-hover:bg-blue-500 transition-colors border-2 border-white"></div>
+                                        <h3 className="text-lg font-bold text-slate-800 mb-2">6. Audit Memo</h3>
+                                        <p className="text-slate-600 mb-2">Write a 1-page memo summarizing findings. Include:</p>
+                                        <ul className="list-disc list-inside text-slate-600 space-y-1 ml-1 marker:text-blue-500">
+                                            <li>Chart: Actual (Normalized) vs. Predicted Revenue.</li>
+                                            <li>Chart: Residuals or Z-scores over time.</li>
+                                            <li>Summary of findings and specific audit implications.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* INSTRUCTOR AREA */}
+                            <div className="pt-12 border-t border-slate-200">
+                                {!isTeacher ? (
+                                    <div className="flex justify-end">
+                                        <button 
+                                            onClick={() => setShowLoginModal(true)}
+                                            className="group flex items-center gap-2 text-slate-400 hover:text-slate-600 transition-colors text-sm font-medium"
+                                        >
+                                            <span>Instructor Access</span>
+                                            <div className="p-2 rounded-full bg-slate-200 group-hover:bg-slate-300 transition-colors">
+                                                <LockIcon />
+                                            </div>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="bg-slate-100 border border-slate-300 rounded-xl p-6 animate-fadeIn shadow-inner">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h2 className="text-xl font-bold text-[#0f172a] flex items-center gap-2">
+                                                <KeyIcon /> Answer Key
+                                            </h2>
+                                            <span className="text-xs bg-green-100 text-green-800 border border-green-200 px-2 py-1 rounded font-bold uppercase">Unlocked</span>
+                                        </div>
+                                        
+                                        <div className="space-y-6">
+                                            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                                                <h3 className="font-bold text-[#0f172a] mb-2">Step 1: Unadjusted Data Analysis</h3>
+                                                <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
+                                                    <li>Scatterplot reveals clear distortion during the freemium period.</li>
+                                                    <li><strong>R² ≈ 0.88</strong> (Simple Regression).</li>
+                                                    <li>Revenue is understated in Months 5–15 (non-paying subs) and Months 1–36 (pre-price hike).</li>
+                                                </ul>
+                                            </div>
+
+                                            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                                                <h3 className="font-bold text-[#0f172a] mb-2">Step 2 & 3: Normalization & New Regression</h3>
+                                                <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
+                                                    <li>After removing 2,000 users (M5-15) and scaling revenue by 1.2x (M1-36), the revenue-per-subscriber ratio stabilizes.</li>
+                                                    <li><strong>R² remains ≈ 0.88</strong>, but the visual fit is significantly better, correcting the "dipping" slope bias caused by the freemium users.</li>
+                                                </ul>
+                                            </div>
+
+                                            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                                                <h3 className="font-bold text-[#0f172a] mb-2">Step 4: Multiple Regression</h3>
+                                                <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
+                                                    <li>Predictors added: AvgPlanTier, MarketingSpend, ChurnRate.</li>
+                                                    <li><strong>R² increases to 0.969</strong>.</li>
+                                                    <li>High predictive accuracy suggests these operational metrics are material to revenue generation.</li>
+                                                </ul>
+                                            </div>
+
+                                            <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                                                <h3 className="font-bold text-[#0f172a] mb-2">Step 5 & 6: Residuals & Memo</h3>
+                                                <ul className="list-disc list-inside text-sm text-slate-700 space-y-1">
+                                                    <li>Z-scores > 2 or &lt; -2 indicate potential misstatements or one-off events requiring documentation.</li>
+                                                    <li><strong>Audit Conclusion:</strong> Unadjusted financials were materially distorted by promotional activity and legacy pricing. The multi-factor model confirms revenue validity, but outliers flagged by Z-scores require substantive testing.</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                        </div>
+                    </main>
+
+                    {/* Login Modal */}
+                    {showLoginModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+                            <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 transform transition-all scale-100">
+                                <div className="text-center mb-6">
+                                    <div className="mx-auto bg-slate-100 w-12 h-12 rounded-full flex items-center justify-center text-slate-600 mb-3">
+                                        <LockIcon />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-slate-800">Instructor Verification</h3>
+                                    <p className="text-sm text-slate-500">Enter the password to access the answer key.</p>
+                                </div>
+                                <form onSubmit={handleLogin}>
+                                    <input 
+                                        type="password" 
+                                        value={passwordInput}
+                                        onChange={(e) => setPasswordInput(e.target.value)}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none mb-3 transition-colors ${loginError ? 'border-red-300 focus:ring-red-200 bg-red-50' : 'border-slate-300 focus:ring-blue-200'}`}
+                                        placeholder="Password"
+                                        autoFocus
+                                    />
+                                    {loginError && <p className="text-xs text-red-500 mb-3 text-center">Incorrect password. Please try again.</p>}
+                                    <div className="flex gap-3">
+                                        <button 
+                                            type="button" 
+                                            onClick={() => { setShowLoginModal(false); setLoginError(false); setPasswordInput(""); }}
+                                            className="flex-1 px-4 py-2 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg font-medium text-sm transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button 
+                                            type="submit" 
+                                            className="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium text-sm transition-colors shadow-md"
+                                        >
+                                            Unlock
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

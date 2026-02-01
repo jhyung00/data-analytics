@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Query Accounting ETL | Beginner 4-File</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .timeline-line {
+            position: absolute;
+            left: 24px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #e2e8f0;
+            z-index: 0;
+        }
+
+        .step-card {
+            transition: all 0.2s ease;
+        }
+        .step-card:hover {
+            border-color: #3b82f6;
+            transform: translateX(4px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden">
+
+    <!-- Mobile Overlay (Backdrop) -->
+    <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-20 hidden transition-opacity md:hidden glass"></div>
+
+    <!-- Sidebar Navigation -->
+    <!-- Added: fixed positioning for mobile, transform logic for drawer effect, md:relative for desktop -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 shadow-xl z-30 transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0">
+        <div class="p-6 border-b border-slate-700 flex justify-between items-center">
+            <div>
+                <h1 class="font-bold text-xl tracking-tight"><i class="fa-solid fa-table-pivot text-emerald-400 mr-2"></i>PQ Academy</h1>
+                <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Beginner 4-File Lab</p>
+            </div>
+            <!-- Mobile Close Button -->
+            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white">
+                <i class="fa-solid fa-times text-lg"></i>
+            </button>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1">
+                <li>
+                    <button onclick="showSection('overview'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-slate-800 border-l-4 border-transparent hover:border-emerald-400 transition-all flex items-center bg-slate-800 border-emerald-400" id="btn-overview">
+                        <i class="fa-solid fa-map w-6"></i> Setup & Outcomes
+                    </button>
+                </li>
+                <li>
+                    <button onclick="showSection('dataset'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-slate-800 border-l-4 border-transparent hover:border-emerald-400 transition-all flex items-center" id="btn-dataset">
+                        <i class="fa-solid fa-database w-6"></i> Dataset Context
+                    </button>
+                </li>
+                <li>
+                    <button onclick="showSection('day1'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-slate-800 border-l-4 border-transparent hover:border-emerald-400 transition-all flex items-center" id="btn-day1">
+                        <i class="fa-solid fa-wand-magic-sparkles w-6"></i> Part 1: Clean
+                    </button>
+                </li>
+                <li>
+                    <button onclick="showSection('day2'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-slate-800 border-l-4 border-transparent hover:border-emerald-400 transition-all flex items-center" id="btn-day2">
+                        <i class="fa-solid fa-network-wired w-6"></i> Part 2: Merge & Report
+                    </button>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="p-4 border-t border-slate-700 flex justify-between items-center">
+            <div class="text-xs text-slate-500">v3.1</div>
+            <!-- Tiny Hidden Key -->
+            <button onclick="openPasswordModal()" class="text-slate-700 hover:text-amber-400 transition-colors p-1" title="Instructor Access">
+                <i class="fa-solid fa-key text-[10px]"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto relative w-full bg-slate-50">
+        
+        <!-- HEADER -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-10 px-4 md:px-8 py-4 flex justify-between items-center shadow-sm">
+            <div class="flex items-center gap-3">
+                <!-- Mobile Toggle Button -->
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-600 hover:text-slate-900 focus:outline-none">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <div>
+                    <h2 class="text-lg md:text-2xl font-bold text-slate-800 truncate max-w-[200px] md:max-w-none" id="page-title">Course Setup</h2>
+                    <p class="text-xs md:text-sm text-slate-500 hidden md:block">Beginner Mode (Zero Formulas)</p>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold border border-blue-200 whitespace-nowrap">2 Parts</span>
+            </div>
+        </header>
+
+        <!-- CONTENT SECTIONS -->
+        <div class="p-4 md:p-8 max-w-4xl mx-auto space-y-6 md:space-y-8 pb-20">
+
+            <!-- SECTION: OVERVIEW -->
+            <section id="overview" class="content-section block animate-fade-in">
+                
+                <!-- Setup Card -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-8 mb-6">
+                    <h3 class="text-xl font-bold mb-4 text-slate-800">Part 0: Pre-Class Setup</h3>
+                    <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6">
+                        <p class="text-amber-800 text-sm font-semibold">
+                            <i class="fa-solid fa-stopwatch mr-2"></i>Time required: 2 minutes
+                        </p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 shrink-0">1</div>
+                            <div>
+                                <h4 class="font-bold">Download Data</h4>
+                                <p class="text-slate-600 text-sm">Download the 4 individual CSV files from the <strong>Dataset Context</strong> tab.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 shrink-0">2</div>
+                            <div>
+                                <h4 class="font-bold">Initialize Excel</h4>
+                                <p class="text-slate-600 text-sm">Open Excel &rarr; Create new blank workbook &rarr; Save as <code class="bg-slate-100 px-1 rounded border break-all">PQ_ETL_Lab.xlsx</code>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Learning Outcomes Card -->
+                <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-5 md:p-8">
+                    <h3 class="text-xl font-bold mb-6 text-slate-800">Learning Outcomes</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Card 1 -->
+                        <div class="bg-white p-5 rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-emerald-600 mb-2">"T" in ETL (Transform)</h4>
+                            <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
+                                <li>Trim/Clean text</li>
+                                <li>Replace Values (Standardization)</li>
+                                <li>Change Data Type (Date/Decimal)</li>
+                            </ul>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="bg-white p-5 rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-blue-600 mb-2">"E/L" in ETL (Extract/Load)</h4>
+                            <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
+                                <li>Import multiple tables</li>
+                                <li>Merge queries (Joins)</li>
+                                <li>Expand fields</li>
+                            </ul>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="bg-white p-5 rounded-lg border border-slate-200">
+                            <h4 class="font-bold text-purple-600 mb-2">Controls Mindset</h4>
+                            <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
+                                <li>Duplicates check (Payment risk)</li>
+                                <li>PO match check (Procurement control)</li>
+                                <li>Unmapped vendor check (Fraud risk)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: DATASET -->
+            <section id="dataset" class="content-section hidden animate-fade-in">
+                
+                <!-- Intro -->
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 md:p-6 mb-8 rounded-r-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-blue-800 text-lg">Download Beginner Materials</h3>
+                        <p class="text-blue-700 text-sm mt-1">
+                            Click "Download All" to get the 4 CSV files tailored for this specific script.
+                        </p>
+                    </div>
+                    <button onclick="downloadAllFiles()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition-colors">
+                        Download All (4 Files)
+                    </button>
+                </div>
+
+                <!-- Context Cards -->
+                <div class="space-y-6">
+                    
+                    <!-- File 1 -->
+                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2">
+                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-file-csv text-emerald-500 mr-2"></i>Raw_AP_Transactions.csv</h4>
+                            <button onclick="downloadFile('raw_ap')" class="self-start md:self-auto text-xs font-bold text-blue-600 hover:underline border border-blue-100 bg-blue-50 px-3 py-1 rounded">Download</button>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3 font-semibold">The Messy Operational Data</p>
+                        <div class="text-sm text-slate-600 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-slate-50 p-3 rounded">
+                                <span class="uppercase text-xs font-bold text-slate-400 block mb-1">Why it's messy</span>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>Inconsistent Vendors (Staples vs STAPLES)</li>
+                                    <li>Varying Dept names (Fin, Finance)</li>
+                                    <li>Mixed Payment Terms & Dates</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded">
+                                <span class="uppercase text-xs font-bold text-slate-400 block mb-1">Student Job</span>
+                                <p>Turn this into a standardized, analysis-ready AP table.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File 2 -->
+                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2">
+                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-map-location-dot text-blue-500 mr-2"></i>Vendor_Alias_Map.csv</h4>
+                            <button onclick="downloadFile('alias')" class="self-start md:self-auto text-xs font-bold text-blue-600 hover:underline border border-blue-100 bg-blue-50 px-3 py-1 rounded">Download</button>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3 font-semibold">The "Translation Table"</p>
+                        <div class="text-sm text-slate-600">
+                            <p class="mb-2">Connects messy text to official names (e.g., <code>UPS 0039</code> &rarr; <code>United Parcel Service</code>).</p>
+                            <p class="bg-blue-50 p-2 rounded inline-block text-blue-800 text-xs font-bold">Student Job: Merge to get Clean Names.</p>
+                        </div>
+                    </div>
+
+                    <!-- File 3 -->
+                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2">
+                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-database text-amber-500 mr-2"></i>Vendor_Master.csv</h4>
+                            <button onclick="downloadFile('vendor_master')" class="self-start md:self-auto text-xs font-bold text-blue-600 hover:underline border border-blue-100 bg-blue-50 px-3 py-1 rounded">Download</button>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3 font-semibold">The Official Vendor Master</p>
+                        <div class="text-sm text-slate-600">
+                            <p class="mb-2">Contains <code>VendorID</code>, <code>Category</code>, and default terms. Only joins once names are clean.</p>
+                            <p class="bg-amber-50 p-2 rounded inline-block text-amber-800 text-xs font-bold">Student Job: Attach ID & Category.</p>
+                        </div>
+                    </div>
+
+                    <!-- File 4 -->
+                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2">
+                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-receipt text-red-500 mr-2"></i>Purchase_Orders.csv</h4>
+                            <button onclick="downloadFile('po')" class="self-start md:self-auto text-xs font-bold text-blue-600 hover:underline border border-blue-100 bg-blue-50 px-3 py-1 rounded">Download</button>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-3 font-semibold">The "Control Test" Table</p>
+                        <div class="text-sm text-slate-600">
+                            <p class="mb-2">PO Register with approved amounts. Used for the 3-way match logic.</p>
+                            <p class="bg-red-50 p-2 rounded inline-block text-red-800 text-xs font-bold">Student Job: Compare Invoice Amount vs PO Amount.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- SECTION: PART 1 -->
+            <section id="day1" class="content-section hidden animate-fade-in">
+                <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-2">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-800">Part 1: Clean AP Table</h3>
+                        <p class="text-slate-600">Steps 1 - 11</p>
+                    </div>
+                    <div class="text-right">
+                         <span class="text-xs bg-slate-200 px-2 py-1 rounded text-slate-600 font-mono">AP_Raw</span>
+                    </div>
+                </div>
+
+                <div class="relative pl-10 space-y-6">
+                    <div class="timeline-line"></div>
+
+                    <!-- Step 1 -->
+                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">1</div>
+                        <h4 class="font-bold text-slate-800 mb-2">Import Raw Data</h4>
+                        <p class="text-sm text-slate-700">Excel Ribbon &rarr; Data &rarr; Get Data &rarr; From Text/CSV.</p>
+                        <p class="text-sm text-slate-700">Select <code>Raw_AP_Transactions.csv</code> &rarr; <strong>Transform Data</strong>.</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">2</div>
+                        <h4 class="font-bold text-slate-800 mb-2">Rename Query</h4>
+                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
+                            <li>Right-click query name &rarr; Rename.</li>
+                            <li>New Name: <code class="bg-slate-100 px-1 rounded font-bold">AP_Raw</code></li>
+                        </ul>
+                    </div>
+
+                    <!-- Step 3-6 -->
+                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">3</div>
+                        <h4 class="font-bold text-slate-800 mb-2">Clean Text & Numbers</h4>
+                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
+                            <li><strong>Vendor:</strong> Transform &rarr; Format &rarr; Trim, then Clean.</li>
+                            <li><strong>Amount:</strong> Replace Values <code>$</code> with (blank). Replace <code>,</code> with (blank).</li>
+                            <li><strong>Amount:</strong> Transform &rarr; Data Type &rarr; Decimal Number.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Step 7 -->
+                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">7</div>
+                        <h4 class="font-bold text-slate-800 mb-2">Fix Dates</h4>
+                        <p class="text-sm text-slate-700"><strong>InvoiceDate:</strong> Click Type Icon &rarr; Using Locale &rarr; Date (English US).</p>
+                        <p class="text-xs text-slate-500 mt-1 italic">Handles mixed formats like 1/15/2023 and 2023-01-16.</p>
+                    </div>
+
+                    <!-- Step 8-9 -->
+                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">8</div>
+                        <h4 class="font-bold text-slate-800 mb-2">Standardize Dept & Terms</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div class="bg-slate-50 p-2 rounded">
+                                <span class="font-bold block mb-1">Dept (Replace Values)</span>
+                                Finance &rarr; FIN<br>
+                                Fin &rarr; FIN<br>
+                                Operations/Ops &rarr; OPS<br>
+                                Warehouse &rarr; WH
+                            </div>
+                            <div class="bg-slate-50 p-2 rounded">
+                                <span class="font-bold block mb-1">Terms (Replace Values)</span>
+                                NET30/Net30 &rarr; Net 30<br>
+                                DOR &rarr; Due on receipt<br>
+                                NET15 &rarr; Net 15
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 10-11 -->
+                    <div class="relative z-10 step-card bg-slate-100 p-4 rounded-lg border-2 border-slate-300 border-dashed">
+                        <div class="absolute -left-10 bg-slate-700 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md"><i class="fa-solid fa-flag"></i></div>
+                        <h4 class="font-bold text-slate-700 mb-2">Checkpoint & Save</h4>
+                        <ul class="text-sm text-slate-600 space-y-1 mb-2">
+                            <li><i class="fa-regular fa-square-check mr-1"></i> Dates are actual Dates (calendar icon).</li>
+                            <li><i class="fa-regular fa-square-check mr-1"></i> Amount is Decimal (1.2 icon).</li>
+                            <li><i class="fa-regular fa-square-check mr-1"></i> Depts are FIN/OPS/WH/IT.</li>
+                        </ul>
+                        <p class="text-sm font-bold text-slate-800">Close & Load To... &rarr; Only Create Connection.</p>
+                    </div>
+                </div>
+            </section>
+
+             <!-- SECTION: PART 2 -->
+             <section id="day2" class="content-section hidden animate-fade-in">
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold text-slate-800">Part 2: Merge & Report</h3>
+                    <p class="text-slate-600">Steps 12 - 22</p>
+                </div>
+
+                <div class="relative pl-10 space-y-6">
+                    <div class="timeline-line"></div>
+
+                    <!-- Step 12-14 -->
+                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">12</div>
+                        <h4 class="font-bold text-slate-800 mb-2">Merge Alias Map</h4>
+                        <ol class="list-decimal list-inside text-sm text-slate-700 space-y-1">
+                            <li>Open <code>AP_Raw</code>. New Source &rarr; <code>Vendor_Alias_Map.csv</code>.</li>
+                            <li><strong>Important:</strong> Transform &rarr; Use First Row as Headers (if needed).</li>
+                            <li>Clean <code>VendorRaw</code> (Trim/Clean).</li>
+                            <li><strong>Merge Queries:</strong> AP_Raw (Vendor) ↔ Alias (VendorRaw). Join: Left Outer.</li>
+                            <li>Expand: <code>VendorName_Clean</code> only.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Step 15-16 -->
+                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">15</div>
+                        <h4 class="font-bold text-slate-800 mb-2">Merge Vendor Master</h4>
+                        <p class="text-sm text-slate-700 mb-2">New Source &rarr; <code>Vendor_Master.csv</code>. Clean name.</p>
+                        <p class="text-sm text-slate-700"><strong>Merge:</strong> AP_Raw (VendorName_Clean) ↔ Master (VendorName_Clean). Left Outer.</p>
+                        <p class="text-sm text-slate-700">Expand: <code>VendorID</code>, <code>Category</code>.</p>
+                    </div>
+
+                    <!-- Step 17-19 -->
+                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">17</div>
+                        <h4 class="font-bold text-slate-800 mb-2">PO Match Logic</h4>
+                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
+                            <li>New Source &rarr; <code>Purchase_Orders.csv</code>.</li>
+                            <li>Merge into AP_Raw on <code>PO_Number</code>. Expand <code>PO_Amount</code>.</li>
+                            <li><strong>Conditional Column (POMatchStatus):</strong>
+                                <ul class="pl-6 mt-1 text-xs bg-slate-50 p-2 rounded border font-mono">
+                                    <li>If PO_Amount is null -> No PO</li>
+                                    <li>Else if Amount equals PO_Amount -> Match</li>
+                                    <li>Else -> Mismatch</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Step 20 -->
+                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">20</div>
+                        <h4 class="font-bold text-slate-800 mb-2">Duplicate Check (Duplicate Strategy)</h4>
+                        <ol class="list-decimal list-inside text-sm text-slate-700 space-y-1">
+                            <li>Right-click <code>AP_Raw</code> &rarr; <strong>Duplicate</strong> (Do NOT use Reference).</li>
+                            <li>Rename new query to <code>DupCounts</code>.</li>
+                            <li>Keep VendorName_Clean, Amount. Remove Others.</li>
+                            <li><strong>Group By:</strong> VendorName_Clean, Amount. Operation: Count Rows.</li>
+                            <li>Go back to AP_Raw. Merge <code>DupCounts</code> in. Expand Count.</li>
+                            <li>Conditional Column <code>DuplicateFlag</code>: If Count > 1 then TRUE else FALSE.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Step 21-22 -->
+                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">21</div>
+                        <h4 class="font-bold text-slate-800 mb-2">Exception Report & Output</h4>
+                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
+                            <li>Right-click AP_Raw &rarr; Reference &rarr; Rename <code>Exception_Report</code>.</li>
+                            <li>Conditional Column <code>ExceptionFlag</code>: Catch null Vendors, Mismatches, or Duplicates. Filter to keep Exceptions.</li>
+                            <li>Rename AP_Raw to <code>Clean_AP_Transactions</code>.</li>
+                            <li><strong>Close & Load To:</strong> Load both as Tables on New Worksheets.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+             <!-- SECTION: INSTRUCTOR KEY -->
+             <section id="instructor" class="content-section hidden animate-fade-in">
+                <div class="bg-slate-900 text-white p-4 md:p-6 rounded-t-lg flex justify-between items-center">
+                    <h3 class="text-lg md:text-xl font-bold"><i class="fa-solid fa-lock mr-2 text-amber-400"></i>Instructor Script</h3>
+                    <button onclick="lockInstructor()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded">Lock Section</button>
+                </div>
+                <div class="bg-white border border-slate-200 p-4 md:p-8 rounded-b-lg shadow-sm">
+                    <div class="prose max-w-none text-sm text-slate-700">
+                        <h4 class="font-bold text-lg mb-4 text-slate-900">Step-by-Step Instructor Guide (No Missed Steps)</h4>
+                        
+                        <div class="bg-slate-100 p-4 rounded mb-6 border-l-4 border-slate-400">
+                            <strong>Part 0 — Setup:</strong>
+                            <ol class="list-decimal pl-5 mt-2 space-y-1">
+                                <li>Unzip dataset to one folder.</li>
+                                <li>Open Excel &rarr; Blank Workbook &rarr; Save as <code>PQ_ETL_Lab.xlsx</code>.</li>
+                            </ol>
+                        </div>
+
+                        <h5 class="font-bold text-blue-800 mt-4 mb-2 border-b border-blue-200 pb-1">Part 1: Clean (50 min)</h5>
+                        <ul class="space-y-3 mb-6">
+                            <li><strong>1. Import:</strong> Data &rarr; Get Data &rarr; CSV &rarr; <code>Raw_AP_Transactions.csv</code> &rarr; Transform.</li>
+                            <li><strong>2. Rename:</strong> Query name to <code>AP_Raw</code>.</li>
+                            <li><strong>3. Vendor:</strong> Transform &rarr; Format &rarr; Trim, then Clean.</li>
+                            <li><strong>4. Amount:</strong> Replace Values <code>$</code> &rarr; (blank). Replace <code>,</code> &rarr; (blank). Data Type &rarr; Decimal Number.</li>
+                            <li><strong>5. Date:</strong> Data Type &rarr; Date (Use Locale if needed).</li>
+                            <li><strong>6. Dept:</strong> Replace Values (Fin&rarr;FIN, Ops&rarr;OPS, Warehouse&rarr;WH).</li>
+                            <li><strong>7. Terms:</strong> Replace Values (NET30&rarr;Net 30, DOR&rarr;Due on receipt).</li>
+                            <li><strong>8. Save:</strong> Close & Load To... &rarr; Only Create Connection.</li>
+                        </ul>
+
+                        <h5 class="font-bold text-blue-800 mt-4 mb-2 border-b border-blue-200 pb-1">Part 2: Merge & Report (50 min)</h5>
+                        <ul class="space-y-3">
+                            <li><strong>9. Alias Map:</strong> New Source CSV &rarr; <code>Vendor_Alias_Map.csv</code>. Use First Row Headers. Clean VendorRaw.</li>
+                            <li><strong>10. Merge 1:</strong> AP_Raw (Vendor) &#8596; Alias (VendorRaw). Expand <code>VendorName_Clean</code>.</li>
+                            <li><strong>11. Master:</strong> New Source CSV &rarr; <code>Vendor_Master.csv</code>. Clean VendorName.</li>
+                            <li><strong>12. Merge 2:</strong> AP_Raw (Clean Name) &#8596; Master (Clean Name). Expand ID, Category.</li>
+                            <li><strong>13. POs:</strong> New Source CSV &rarr; <code>Purchase_Orders.csv</code>. Merge on PO_Number. Expand Amount.</li>
+                            <li><strong>14. Logic:</strong> Add Conditional Col <code>POMatchStatus</code> (Match/Mismatch/No PO).</li>
+                            <li><strong>15. Duplicates:</strong> Right-click AP_Raw &rarr; <strong>Duplicate</strong>. Group By (Vendor+Amount). Merge back.</li>
+                            <li><strong>16. Exception Report:</strong> Reference AP_Raw. Filter for Mismatches/Nulls.</li>
+                            <li><strong>17. Final Load:</strong> Load AP_Raw and Exception_Report as Tables.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+    
+    <!-- PASSWORD MODAL -->
+    <div id="password-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+            <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fa-solid fa-lock text-amber-500 mr-2"></i>Instructor Access</h3>
+            <p class="text-xs text-slate-500 mb-3">Enter the password to view the answer key.</p>
+            <input type="password" id="instructor-pass" class="w-full border p-2 rounded mb-4 text-sm focus:border-amber-400 focus:outline-none" placeholder="Password">
+            <div class="flex justify-end gap-2">
+                <button onclick="closePasswordModal()" class="text-slate-500 hover:bg-slate-100 px-3 py-1 rounded text-sm">Cancel</button>
+                <button onclick="checkPassword()" class="bg-slate-800 text-white px-3 py-1 rounded hover:bg-slate-700 text-sm">Unlock</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script>
+        // --- 1. Mobile & Navigation Logic ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            // If class -translate-x-full is present, sidebar is hidden on mobile (default state). 
+            // Removing it slides it in.
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Close sidebar automatically when a link is clicked on mobile
+        function closeSidebarMobile() {
+            // Only act if we are in mobile mode (window width < 768px matches tailwind 'md')
+            if (window.innerWidth < 768) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('mobile-overlay');
+                
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('bg-slate-800', 'border-emerald-400', 'border-amber-400', 'text-amber-400'));
+            
+            const btn = document.getElementById('btn-' + id);
+            if(btn) {
+                 if(id === 'instructor') {
+                    btn.classList.add('bg-slate-800', 'border-amber-400', 'text-amber-400');
+                } else {
+                    btn.classList.add('bg-slate-800', 'border-emerald-400');
+                }
+            }
+
+            const titles = {
+                'overview': 'Course Overview & Outcomes',
+                'dataset': 'Dataset Context',
+                'day1': 'Part 1: Clean AP Table',
+                'day2': 'Part 2: Merge & Report',
+                'instructor': 'Instructor Restricted Area'
+            };
+            document.getElementById('page-title').innerText = titles[id];
+        }
+
+        // --- 2. Instructor Lock/Unlock Logic ---
+        function openPasswordModal() {
+            document.getElementById('password-modal').classList.remove('hidden');
+            document.getElementById('instructor-pass').value = '';
+            document.getElementById('instructor-pass').focus();
+        }
+
+        function closePasswordModal() {
+            document.getElementById('password-modal').classList.add('hidden');
+        }
+
+        function checkPassword() {
+            const pass = document.getElementById('instructor-pass').value;
+            if (pass === 'teacher') {
+                closePasswordModal();
+                showSection('instructor');
+                closeSidebarMobile(); // Close sidebar if opened on mobile
+            } else {
+                alert("Incorrect password.");
+                document.getElementById('instructor-pass').value = '';
+                document.getElementById('instructor-pass').focus();
+            }
+        }
+        
+        // Allow Enter key to submit
+        document.getElementById('instructor-pass').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+
+        function lockInstructor() {
+            showSection('overview');
+        }
+
+        // --- 3. Data Generation Logic (Exact User Uploads) ---
+        const datasets = {
+            raw_ap: `InvoiceID,InvoiceDate,Vendor,Amount,GL_Account,Dept,PaymentTerms,PO_Number,Status
+AP-1001,2025-01-28, Spokane Water Dept ,620.40,6100,IT,NET30,PO-7808,Pending
+AP-1002,01/10/2025,Acme Logistics,450.00,6100,IT,NET15,PO-7802,Posted
+AP-1003,01/24/2025,United Parcel Service,450.00,6300,Warehouse,Net 15,PO-7810,Pending
+AP-1004,01/27/2025,Spokane Water Dept,$250.00,6500,IT,NET15,PO-7804,Posted
+AP-1005,2025-01-11, OMEGA AIR ,"1,245.00",7000,Ops,NET45,,Pending
+AP-1006,01/08/2025,GlobexSoft,72.18,6100,IT,NET45,PO-7807,Pending
+AP-1007,01/27/2025,United Parcel Service,$36.17,6100,Ops,NET45,,Posted
+AP-1008,01/29/2025,Spokane Water Dept,$89.99,7000,Operations,Net30,PO-7810,Posted
+AP-1009,01/12/2025,Staples,72.18,6100,Fin,Due on receipt,PO-7804,Pending
+AP-1010,01/11/2025,Omega Air,89.99,6300,Warehouse,Net 15,PO-7810,Posted
+AP-1011,01/03/2025,Acme Logistix,$1980.00,6300,FIN,NET30,PO-7804,Pending
+AP-1012,2025-01-20,STAPLES,$72.18,6800,OPS,Due on receipt,PO-7810,Pending
+AP-1013,01/24/2025,GlobexSoft,450.00,6100,IT,Net45,,Posted
+AP-1014,01/05/2025,OmegaAir,$89.99,6100,Warehouse,Net 30,PO-7809,Posted
+AP-1015,01/04/2025,Omega Air,89.99,6500,WH,NET15,PO-7801,Posted
+AP-1016,01/09/2025,Globex Software,1980.00,7200,IT,NET15,PO-7808,Pending
+AP-1017,01/24/2025,Beta Consulting,3000.00,7000,Fin,NET45,PO-7810,Posted
+AP-1018,2025-01-20,City of Spokane Water,1245.00,6800,Operations,Net 15,PO-7803,Posted
+AP-1019,01/24/2025,Amazon Marketplace,99.00,7200,Ops,NET30,PO-7807,Pending
+AP-1020,01/03/2025,UPS 0039,450.00,6500,IT,Net 15,PO-7809,Pending
+AP-1021,01/17/2025,UPS 0039,1980.00,6300,IT,Net 30,PO-7808,Posted
+AP-1022,2025-01-20,Staples Inc,72.18,7200,Finance,Net 30,PO-7802,Pending
+AP-1023,01/06/2025,Spokane Water Dept,450.00,6300,Operations,NET15,,Posted
+AP-1024,01/08/2025,Beta Consulting,$3,000.00,6100,Warehouse,NET45,,Posted
+AP-1025,01/24/2025,AMAZON MKTPLACE,$125.50,6500,WH,NET45,PO-7801,Pending
+AP-1026,01/09/2025,Acme Logistix,36.17,6800,Fin,NET15,PO-7802,Pending
+AP-1027,01/26/2025,U.P.S.,1980.00,6800,IT,NET30,,Posted
+AP-1028,2025-01-08,Amazon Marketplace,$99.00,6500,Operations,Net30,PO-7804,Posted
+AP-1029,01/15/2025,Staples,1245.00,6100,Fin,NET30,PO-7805,Posted
+AP-1030,01/05/2025,"Staples, Inc.",450.00,6500,Operations,NET45,PO-7809,Pending`,
+
+            alias: `VendorRaw,VendorName_Clean
+STAPLES,Staples
+Staples Inc,Staples
+"Staples, Inc.",Staples
+OmegaAir,Omega Air
+OMEGA AIR,Omega Air
+City of Spokane Water,City Water Utility
+Spokane Water Dept,City Water Utility
+Amazon Marketplace,Amazon Marketplace
+AMAZON MKTPLACE,Amazon Marketplace
+ACME LOGISTICS,Acme Logistics
+Acme Logistix,Acme Logistics
+Beta Consulting,Beta Consulting LLC
+BETA CONSULTING LLC,Beta Consulting LLC
+GlobexSoft,Globex Software
+GLOBEX SOFTWARE,Globex Software
+UPS 0039,United Parcel Service
+U.P.S.,United Parcel Service`,
+
+            vendor_master: `VendorID,VendorName_Clean,Category,Default_GL,Default_Terms
+V001,Staples,Office Supplies,6100,Net 30
+V002,Omega Air,Travel,7200,Net 15
+V003,City Water Utility,Utilities,6300,Due on receipt
+V004,Amazon Marketplace,Office Supplies,6100,Net 30
+V005,Acme Logistics,Freight,6500,Net 30
+V006,Beta Consulting LLC,Professional Services,7000,Net 45
+V007,Globex Software,Software,6800,Net 30
+V008,United Parcel Service,Freight,6500,Net 30`,
+
+            po: `PO_Number,PO_Date,VendorName_Clean,PO_Amount
+PO-7801,01/25/2025,Omega Air,125.5
+PO-7802,01/09/2025,Acme Logistics,36.17
+PO-7803,01/23/2025,City Water Utility,1245.0
+PO-7804,01/03/2025,Omega Air,99.0
+PO-7805,01/08/2025,Staples,1245.0
+PO-7806,01/19/2025,Amazon Marketplace,125.5
+PO-7807,01/09/2025,Amazon Marketplace,99.0
+PO-7808,01/27/2025,United Parcel Service,1980.0
+PO-7809,01/24/2025,Staples,450.0
+PO-7810,01/10/2025,Globex Software,3000.0`
+        };
+
+        function downloadFile(key) {
+            const content = datasets[key];
+            const filenames = {
+                'raw_ap': 'Raw_AP_Transactions.csv',
+                'alias': 'Vendor_Alias_Map.csv',
+                'vendor_master': 'Vendor_Master.csv',
+                'po': 'Purchase_Orders.csv'
+            };
+            
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filenames[key]);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function downloadAllFiles() {
+            const keys = Object.keys(datasets);
+            let delay = 0;
+            keys.forEach(key => {
+                setTimeout(() => downloadFile(key), delay);
+                delay += 500; 
+            });
+            alert("Starting 4 file downloads... Check your download folder.");
+        }
+
+        // Initialize view
+        showSection('overview');
+
+    </script>
+</body>
+</html>
