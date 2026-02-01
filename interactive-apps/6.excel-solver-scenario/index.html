@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Master: Solver & Scenarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- BASE EXCEL STYLES --- */
+        .excel-grid {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 0.85rem;
+            background: white;
+            cursor: default;
+        }
+        .excel-grid th {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            padding: 4px 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
+        }
+        .excel-grid td {
+            border: 1px solid #e5e7eb;
+            padding: 4px 12px;
+            color: #1f2937;
+            white-space: nowrap;
+            position: relative;
+        }
+        /* Row Headers (1, 2, 3...) */
+        .excel-row-header {
+            background-color: #f3f4f6;
+            font-weight: 600;
+            color: #6b7280;
+            text-align: center;
+            width: 30px;
+            border-right: 2px solid #d1d5db !important;
+        }
+        /* Highlight specific cells */
+        .cell-highlight {
+            background-color: #fffbeb !important; /* amber-50 */
+            border: 2px solid #f59e0b !important; /* amber-500 */
+        }
+        .cell-input {
+            background-color: #fff;
+            color: #1d4ed8; /* blue-700 */
+        }
+        .cell-formula {
+            background-color: #f8fafc;
+            color: #333;
+        }
+        .cell-objective {
+            background-color: #dcfce7 !important; /* green-100 */
+            border: 2px solid #16a34a !important; /* green-600 */
+            font-weight: bold;
+        }
+        
+        /* Tutorial Highlights */
+        .tutorial-highlight {
+            box-shadow: 0 0 0 4px #3b82f6 !important; /* blue-500 ring */
+            z-index: 50;
+            background-color: #eff6ff !important; /* blue-50 */
+        }
+
+        /* --- SOLVER DIALOG STYLES --- */
+        .solver-window {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f0f0;
+            border: 1px solid #999;
+            box-shadow: 4px 4px 15px rgba(0,0,0,0.15);
+            border-radius: 4px;
+        }
+        .solver-header {
+            background: white;
+            padding: 6px 10px;
+            font-size: 11px;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* --- UI COMPONENTS --- */
+        .module-item {
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+        .module-item:hover {
+            background-color: #f3f4f6;
+        }
+        .module-item.active {
+            background-color: #eff6ff; /* blue-50 */
+            border-left-color: #2563eb; /* blue-600 */
+            color: #1e3a8a;
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        canvas {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col font-sans overflow-hidden">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Navbar -->
+    <nav class="bg-slate-900 text-white px-5 py-3 shadow-lg flex justify-between items-center z-10 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="bg-green-600 p-2 rounded-lg shadow-green-900/50 shadow-lg transform rotate-3">
+                <i class="fas fa-table-cells text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-wide leading-tight">Excel Master</h1>
+                <p class="text-xs text-slate-400 font-medium">Solver Optimization & Scenario Analysis</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <button onclick="downloadPracticeFile()" class="group flex items-center gap-2 px-4 py-2 bg-green-700 hover:bg-green-600 text-white rounded text-sm transition-all border border-green-600 shadow-sm hover:shadow-md">
+                <i class="fas fa-file-excel group-hover:scale-110 transition-transform"></i>
+                <span>Download Tutorial File</span>
+            </button>
+            <div class="h-8 w-px bg-slate-700"></div>
+            <div class="text-right">
+                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Progress</div>
+                <div class="font-mono font-bold text-green-400 text-lg" id="progress-text">1/1</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Left Sidebar: Modules -->
+        <div class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0 z-20 shadow-md">
+            <div class="p-4 border-b border-gray-100 bg-gray-50">
+                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Course Curriculum</h3>
+            </div>
+            <div id="module-list" class="flex-1 overflow-y-auto py-2">
+                <!-- Modules injected here -->
+            </div>
+        </div>
+
+        <!-- Center/Right: Workspace -->
+        <div class="flex-1 flex flex-col relative bg-gray-100">
+            
+            <!-- VIEW 1: LESSON (Slides) -->
+            <div id="lesson-view" class="hidden absolute inset-0 bg-white p-8 overflow-y-auto flex flex-col items-center">
+                <div class="max-w-3xl w-full pt-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span id="lesson-badge" class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wide">Concept</span>
+                        <h2 id="lesson-title" class="text-3xl font-bold text-slate-800"></h2>
+                    </div>
+                    <div id="lesson-content" class="prose prose-slate max-w-none text-slate-600 leading-relaxed bg-slate-50 p-8 rounded-xl border border-slate-200 shadow-sm">
+                        <!-- Content injected -->
+                    </div>
+                    <div class="mt-8 flex justify-end">
+                        <button onclick="nextItem()" class="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg shadow-lg font-bold text-sm transition-transform hover:scale-105 flex items-center gap-2">
+                            Next Module <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: SIMULATION (Split Pane) -->
+            <div id="simulation-view" class="flex flex-1 overflow-hidden hidden">
+                
+                <!-- Left: Spreadsheet View -->
+                <div class="w-7/12 flex flex-col border-r border-gray-300 bg-gray-100 overflow-hidden relative">
+                    <!-- Toolbar -->
+                    <div class="p-2 border-b border-gray-200 bg-white flex gap-4 items-center shadow-sm z-10 px-4">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                        </div>
+                        <div class="h-4 w-px bg-gray-300 mx-2"></div>
+                        <span class="font-mono text-xs text-slate-500 font-bold" id="sheet-name">Sheet1</span>
+                        <div class="flex-1"></div>
+                        <span id="sim-task-badge" class="text-[10px] uppercase font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded">Task: Set Objective</span>
+                    </div>
+                    
+                    <!-- Grid Container -->
+                    <div class="flex-1 overflow-auto p-6 flex flex-col gap-6 bg-slate-100 relative">
+                        <div class="bg-white shadow-md border border-gray-300 rounded overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table id="data-table" class="excel-grid"></table>
+                            </div>
+                        </div>
+                        
+                        <!-- Helper Text for the Grid -->
+                        <div id="grid-helper" class="bg-yellow-50 border border-yellow-200 p-3 rounded text-sm text-yellow-800 flex items-start gap-2 hidden">
+                            <i class="fas fa-lightbulb mt-0.5"></i>
+                            <p id="grid-helper-text">Note: Gross Profit is calculated as (Price - Cost) * Quantity.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Interaction Pane (Solver/Scenarios) -->
+                <div class="w-5/12 flex flex-col bg-white border-l border-gray-200 z-10 shadow-xl">
+                    <div class="p-6 flex-1 overflow-y-auto">
+                        <h3 id="sim-title" class="text-xl font-bold text-slate-800 mb-2"></h3>
+                        <p id="sim-desc" class="text-slate-600 text-sm mb-6 leading-relaxed border-b border-gray-100 pb-4"></p>
+
+                        <!-- DYNAMIC INTERACTION AREA -->
+                        <div id="interaction-area" class="space-y-4">
+                            <!-- Injected buttons/controls go here -->
+                        </div>
+
+                        <!-- Feedback Area (Only used for Quizzes) -->
+                        <div id="feedback-area" class="hidden mt-6 p-4 rounded-lg border animate-slide-in">
+                            <div class="flex items-start gap-3">
+                                <div id="feedback-icon" class="text-xl mt-1"></div>
+                                <div>
+                                    <h4 id="feedback-title" class="font-bold text-sm"></h4>
+                                    <p id="feedback-msg" class="text-sm mt-1"></p>
+                                    <button onclick="nextItem()" id="feedback-next-btn" class="mt-3 px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded hover:bg-slate-700 hidden">Continue</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- VIEW 3: COMPLETION -->
+            <div id="completion-view" class="hidden absolute inset-0 bg-white flex items-center justify-center p-8 z-30">
+                <div class="text-center max-w-lg animate-slide-in">
+                    <div class="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-5xl shadow-xl transform hover:scale-110 transition-transform">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <h2 class="text-4xl font-extrabold text-slate-900 mb-4">Mastery Achieved!</h2>
+                    <p class="text-slate-600 mb-8 text-lg">You have successfully configured Solver models and performed Scenario Analysis.</p>
+                    <div class="flex justify-center gap-4">
+                        <button onclick="location.reload()" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition-colors">
+                            Review Course
+                        </button>
+                        <button onclick="downloadCapstonePractice()" class="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold shadow-lg transition-transform hover:-translate-y-1">
+                            <i class="fas fa-file-download mr-2"></i> Download Capstone Practice File
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- DATA MODELS ---
+
+        // 1. Goal Seek Model (Break-Even) - NEW
+        const goalSeekData = {
+            name: "Break_Even",
+            headers: ["", "A", "B"],
+            rows: [
+                { id: 1, cells: ["Item", "Value"] },
+                { id: 2, cells: ["Price", "$50"] },
+                { id: 3, cells: ["Cost", "$30"] },
+                { id: 4, cells: ["Quantity", "100"] }, // Changing cell
+                { id: 5, cells: ["Fixed Costs", "$5,000"] },
+                { id: 6, cells: ["Profit", "-$3,000"] } // Formula: (50-30)*100 - 5000 = 2000 - 5000 = -3000
+            ],
+            highlights: {
+                "B6": "cell-objective",
+                "B4": "cell-input"
+            }
+        };
+
+        // 2. Solver Model: Product Mix (Manufacturing)
+        const solverData = {
+            name: "Production_Plan",
+            headers: ["", "A", "B", "C", "D", "E", "F"], // Added Column F
+            rows: [
+                { id: 1, cells: ["Parameters", "Standard", "Deluxe", "", "Total", "Limit"] }, // Row 1
+                { id: 2, cells: ["Unit Price", "$45.00", "$75.00", "", "", ""] },
+                { id: 3, cells: ["Unit Cost", "$25.00", "$40.00", "", "", ""] },
+                { id: 4, cells: ["Unit Margin", "$20.00", "$35.00", "", "", ""] }, // Calculated
+                { id: 5, cells: ["", "", "", "", "", ""] }, // Spacer
+                { id: 6, cells: ["Quantity (Make)", "0", "0", "", "", ""] }, // Variable Cells (B6, C6)
+                { id: 7, cells: ["", "", "", "", "", ""] }, // Spacer
+                { id: 8, cells: ["Labor Hrs/Unit", "2.0", "4.0", "", "0", "2,000"] }, // Constraint 1
+                { id: 9, cells: ["Machine Hrs", "1.5", "1.5", "", "0", "1,200"] }, // Constraint 2
+                { id: 10, cells: ["Total Profit", "", "", "", "$0.00", ""] } // Objective (E10)
+            ],
+            highlights: {
+                "E10": "cell-objective", // Objective
+                "B6": "cell-input",      // Variable
+                "C6": "cell-input",      // Variable
+                "E8": "cell-formula",    // Constraint LHS
+                "E9": "cell-formula"     // Constraint LHS
+            }
+        };
+
+        // 3. Scenario Model: Budget (Forecasting)
+        const scenarioData = {
+            name: "Budget_2024",
+            headers: ["", "A", "B", "C"],
+            rows: [
+                { id: 1, cells: ["INPUTS", "Values", "Notes"] },
+                { id: 2, cells: ["Sales Growth", "5%", "Base Case"] },
+                { id: 3, cells: ["COGS %", "40%", "Of Sales"] },
+                { id: 4, cells: ["", "", ""] },
+                { id: 5, cells: ["INCOME STATEMENT", "Year 1", "Year 2 (Proj)"] },
+                { id: 6, cells: ["Revenue", "$1,000,000", "$1,050,000"] },
+                { id: 7, cells: ["COGS", "(400,000)", "(420,000)"] },
+                { id: 8, cells: ["Gross Profit", "600,000", "630,000"] },
+                { id: 9, cells: ["Fixed Ops", "(250,000)", "(250,000)"] },
+                { id: 10, cells: ["Net Income", "$350,000", "$380,000"] }
+            ],
+            formulas: {
+                "C6": "=B6*(1+B2)",       // Rev Year 2 = Rev Year 1 * (1 + Growth)
+                "C7": "=-C6*B3",          // COGS = -Rev * COGS %
+                "C8": "=C6+C7",           // Gross Profit
+                "C10": "=C8+C9"           // Net Income
+            },
+            scenarios: {
+                base: { growth: "5%", cogs: "40%", rev: "$1,050,000", cost: "(420,000)", gp: "630,000", ni: "$380,000", note: "Base Case" },
+                best: { growth: "15%", cogs: "38%", rev: "$1,150,000", cost: "(437,000)", gp: "713,000", ni: "$463,000", note: "Best Case (Boom)" },
+                worst: { growth: "-10%", cogs: "45%", rev: "$900,000", cost: "(405,000)", gp: "495,000", ni: "$245,000", note: "Recession" }
+            }
+        };
+
+        // --- COURSE SEQUENCE ---
+        const sequence = [
+            // 1. SOLVER INTRO
+            {
+                type: 'lesson',
+                title: "What is Solver?",
+                content: `
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Beyond simple formulas</h3>
+                    <p class="mb-4">Standard formulas (like SUM or IF) calculate a result from inputs. But what if you know the result you want (e.g., "Maximize Profit") and need Excel to find the inputs for you?</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <h4 class="font-bold text-blue-800 mb-2"><i class="fas fa-bullseye mr-2"></i>Goal Seek</h4>
+                            <p class="text-sm">Finds <strong>one</strong> input to reach a specific target.</p>
+                            <p class="text-xs text-slate-500 mt-2">Example: "What price do I charge to break even?"</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                            <h4 class="font-bold text-green-800 mb-2"><i class="fas fa-network-wired mr-2"></i>Solver</h4>
+                            <p class="text-sm">Finds <strong>many</strong> inputs to Maximize/Minimize a result, subject to <strong>constraints</strong>.</p>
+                            <p class="text-xs text-slate-500 mt-2">Example: "How many of Product A & B should I make to Maximize Profit without running out of labor?"</p>
+                        </div>
+                    </div>
+                    
+                    <p>In this module, we will act as the Production Manager. We need to decide the optimal manufacturing mix.</p>
+                `
+            },
+            // 2. GOAL SEEK (Added)
+            {
+                type: 'goal-seek', // Custom type for Goal Seek UI
+                title: "Goal Seek: Break-Even",
+                desc: "We are currently losing money ($3,000 loss). We need to find exactly how many units to sell to Break Even ($0 Profit). Configure the Goal Seek parameters.",
+                taskBadge: "Goal Seek Practice",
+                data: goalSeekData,
+                options: [
+                    {
+                        label: "Option A",
+                        setCell: "B6", toValue: "0", changeCell: "B4",
+                        text: "Set Cell B6 (Profit) to 0 by changing B4 (Qty)",
+                        correct: true,
+                        feedback: "Correct! Goal Seek will iterate values in B4 until B6 equals 0."
+                    },
+                    {
+                        label: "Option B",
+                        setCell: "B4", toValue: "0", changeCell: "B6",
+                        text: "Set Cell B4 (Qty) to 0 by changing B6 (Profit)",
+                        correct: false,
+                        feedback: "Incorrect. B6 is a formula; you cannot just 'change' it directly. You must change the input (Qty)."
+                    },
+                     {
+                        label: "Option C",
+                        setCell: "B6", toValue: "5000", changeCell: "B4",
+                        text: "Set Cell B6 (Profit) to 5000 by changing B4 (Qty)",
+                        correct: false,
+                        feedback: "Incorrect. We want to Break Even, which means Profit should be 0, not equal to Fixed Costs."
+                    }
+                ]
+            },
+            // 3. SOLVER CONFIGURATION (Objective)
+            {
+                type: 'solver-quiz',
+                title: "Solver: Set Objective",
+                desc: "We want to maximize our Total Profit. Look at the spreadsheet on the left. Which cell represents our final Goal (Objective)? And which cells can we actually change (Decision Variables)?",
+                taskBadge: "Step 1: Define Objective",
+                data: solverData,
+                options: [
+                    {
+                        label: "Option A",
+                        obj: "E10", to: "Max", change: "B6:C6",
+                        text: "Max Profit (E10) by changing Qty (B6:C6)",
+                        correct: true,
+                        feedback: "Correct! We want to maximize the calculated Profit in E10 by adjusting the production quantities in B6 and C6."
+                    },
+                    {
+                        label: "Option B",
+                        obj: "E10", to: "Max", change: "B2:C2",
+                        text: "Max Profit (E10) by changing Prices (B2:C2)",
+                        correct: false,
+                        feedback: "Incorrect. The market sets the prices (B2:C2). We can only control how many units we produce."
+                    },
+                    {
+                        label: "Option C",
+                        obj: "E8", to: "Min", change: "B6:C6",
+                        text: "Minimize Labor (E8) by changing Qty (B6:C6)",
+                        correct: false,
+                        feedback: "Incorrect. While minimizing labor is good, our primary business goal here is to maximize Profit."
+                    }
+                ]
+            },
+            // 4. SOLVER CONSTRAINTS
+            {
+                type: 'solver-quiz',
+                title: "Solver: Adding Constraints",
+                desc: "We cannot produce infinite units. We have limited Labor Hours (2,000) and Machine Hours (1,200). Select the correct constraint logic.",
+                taskBadge: "Step 2: Add Constraints",
+                data: solverData,
+                options: [
+                    {
+                        label: "Option A",
+                        obj: "E8 = F8", to: "", change: "",
+                        text: "Total Labor (E8) must EQUAL Limit (F8)",
+                        correct: false,
+                        feedback: "Incorrect. We don't HAVE to use every single hour. We just can't exceed the limit."
+                    },
+                    {
+                        label: "Option B",
+                        obj: "E8 <= F8", to: "", change: "",
+                        text: "Total Labor (E8) <= Limit (F8)",
+                        correct: true,
+                        feedback: "Correct! The resources used (Column E) must be less than or equal to the resources available (Column F)."
+                    },
+                    {
+                        label: "Option C",
+                        obj: "B6 >= F8", to: "", change: "",
+                        text: "Quantity (B6) >= Limit (F8)",
+                        correct: false,
+                        feedback: "Incorrect. Production quantity cannot be greater than the resource limit."
+                    }
+                ]
+            },
+            // 5. SCENARIO INTRO
+            {
+                type: 'lesson',
+                title: "Scenario Manager",
+                content: `
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Preparing for the Unknown</h3>
+                    <p class="mb-4">Accounting isn't just about recording the past; it's about forecasting the future. But the future is uncertain.</p>
+                    
+                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm my-6">
+                        <ul class="space-y-4">
+                            <li class="flex items-start gap-3">
+                                <div class="bg-yellow-100 p-2 rounded text-yellow-700 mt-1"><i class="fas fa-layer-group"></i></div>
+                                <div>
+                                    <strong class="text-slate-800">Scenarios</strong>
+                                    <p class="text-sm text-slate-600">Sets of input values saved under a name (e.g., "Best Case"). Allows you to swap multiple inputs instantly.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <div class="bg-purple-100 p-2 rounded text-purple-700 mt-1"><i class="fas fa-table"></i></div>
+                                <div>
+                                    <strong class="text-slate-800">Sensitivity Analysis</strong>
+                                    <p class="text-sm text-slate-600">Observing how sensitive your Net Income is to changes in Sales Growth or Costs.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <p>Next, we will use an interactive dashboard to test how a Recession vs. a Boom affects our Budgeted Net Income.</p>
+                `
+            },
+            // 6. MECHANICS OF SCENARIO PLANNING (Interactive Walkthrough)
+            {
+                type: 'scenario-walkthrough',
+                title: "Walkthrough: Building the 'Best Case'",
+                desc: "Follow the steps below to create a 'Best Case' scenario. Watch the grid on the left to see which cells are being referenced.",
+                taskBadge: "Guided Tutorial",
+                data: scenarioData,
+                steps: [
+                    {
+                        stepInfo: "Step 1 of 7",
+                        title: "Formula 1: Revenue Projection",
+                        text: "First, look at Year 2 Revenue (<strong>C6</strong>). <br>It isn't a fixed number. It calculates Year 1 Revenue (<strong>B6</strong>) multiplied by the Growth Rate (<strong>B2</strong>).<br><br>Formula: <code>=B6*(1+B2)</code>",
+                        highlights: ["C6", "B6", "B2"],
+                        showFormulas: true,
+                        dialog: `
+                            <div class="bg-blue-50 border border-blue-200 p-4 rounded text-sm text-blue-900 shadow-sm">
+                                <strong class="block mb-2 text-blue-700"><i class="fas fa-calculator"></i> The Logic</strong>
+                                <p>This link is vital. If we change the <strong>Growth Input (B2)</strong> later in our Scenario Manager, this revenue cell will automatically recalculate.</p>
+                            </div>
+                        `
+                    },
+                    {
+                        stepInfo: "Step 2 of 7",
+                        title: "Formula 2: Variable Costs",
+                        text: "Next is Cost of Goods Sold (<strong>C7</strong>). <br>This is a variable expense. It takes the new Revenue (<strong>C6</strong>) and multiplies it by the COGS % (<strong>B3</strong>).<br><br>Formula: <code>=-C6*B3</code>",
+                        highlights: ["C7", "C6", "B3"],
+                        showFormulas: true,
+                        dialog: `
+                            <div class="bg-blue-50 border border-blue-200 p-4 rounded text-sm text-blue-900 shadow-sm">
+                                <strong class="block mb-2 text-blue-700"><i class="fas fa-link"></i> The Chain Reaction</strong>
+                                <p>See the chain? Changing <strong>Growth (B2)</strong> changes Revenue, which <em>then</em> changes COGS. Everything flows down.</p>
+                            </div>
+                        `
+                    },
+                    {
+                        stepInfo: "Step 3 of 7",
+                        title: "Formula 3: The Bottom Line",
+                        text: "Finally, Net Income (<strong>C10</strong>). <br>This sums up Gross Profit (<strong>C8</strong>) and Fixed Expenses (<strong>C9</strong>). This is our 'Result Cell'—the final number we care about.<br><br>Formula: <code>=C8+C9</code>",
+                        highlights: ["C10", "C8", "C9"],
+                        showFormulas: true,
+                        dialog: `
+                            <div class="bg-green-50 border border-green-200 p-4 rounded text-sm text-green-900 shadow-sm">
+                                <strong class="block mb-2 text-green-700"><i class="fas fa-flag-checkered"></i> The Goal</strong>
+                                <p>When we run the Scenario Report, Excel will watch this cell (C10) to tell us if we made a profit or loss in each case.</p>
+                            </div>
+                        `
+                    },
+                    {
+                        stepInfo: "Step 4 of 7",
+                        title: "Preparation: Naming Cells",
+                        text: "<strong>Crucial Step:</strong> Typing cell addresses like $B$2 is confusing. <br>We name cell B2 'Sales_Growth' and B3 'COGS_Pct' using the Name Box. Now our formulas are easier to read.",
+                        highlights: ["B2", "B3", "C10"],
+                        showFormulas: false,
+                        dialog: `
+                            <div class="w-full max-w-xs mx-auto">
+                                <div class="mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider text-left">Excel Name Box</div>
+                                <div class="bg-white border border-gray-300 shadow-sm rounded-sm p-1 flex items-center gap-2 mb-4">
+                                    <div class="flex-1 font-mono text-sm text-slate-800 px-2 py-1 bg-blue-50 border border-blue-200 rounded">Sales_Growth</div>
+                                    <div class="text-xs text-gray-400">Press Enter</div>
+                                </div>
+                                <div class="bg-yellow-50 border border-yellow-100 p-3 rounded text-xs text-yellow-800 text-left shadow-sm">
+                                    <strong>Why do this?</strong><br>
+                                    <div class="mt-2 grid grid-cols-2 gap-2">
+                                        <div class="opacity-50">
+                                            <div class="text-[10px] uppercase font-bold">Without Names</div>
+                                            =B6*(1+B2)
+                                        </div>
+                                        <div class="font-bold text-green-700">
+                                            <div class="text-[10px] uppercase font-bold text-green-600">With Names</div>
+                                            =B6*(1+Sales_Growth)
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        stepInfo: "Step 5 of 7",
+                        title: "Define Changing Cells",
+                        text: "Now open Scenario Manager and add a new scenario named 'Best Case'. Select the <strong>Variable Cells</strong> (Inputs) that will change. In this model, that is Growth (B2) and COGS (B3).",
+                        highlights: ["B2", "B3"],
+                        showFormulas: false,
+                        dialog: `
+                            <div class="solver-window p-0 overflow-hidden relative shadow-md">
+                                <div class="solver-header bg-white border-b border-gray-300">
+                                    <span class="font-bold text-xs">Edit Scenario</span>
+                                    <i class="fas fa-times text-xs text-gray-400"></i>
+                                </div>
+                                <div class="p-3 space-y-3 bg-[#f0f0f0] text-[10px]">
+                                    <div>
+                                        <label class="block mb-1 text-slate-600">Scenario name:</label>
+                                        <div class="border border-gray-400 bg-white px-2 py-1 w-full font-bold text-blue-800">Best Case</div>
+                                    </div>
+                                    <div>
+                                        <label class="block mb-1 text-slate-600">Changing cells:</label>
+                                        <div class="border border-gray-400 bg-white px-2 py-1 w-full flex justify-between items-center">
+                                            <span class="font-mono text-slate-700">Sales_Growth, COGS_Pct</span>
+                                            <i class="fas fa-arrow-up text-xs bg-gray-100 p-0.5 border border-gray-300 rounded-sm"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-[#f0f0f0] p-2 flex justify-end gap-2">
+                                    <button class="bg-white border border-gray-400 px-3 py-0.5 rounded-sm shadow-sm text-[10px] hover:bg-gray-50">OK</button>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        stepInfo: "Step 6 of 7",
+                        title: "Enter Scenario Values",
+                        text: "Next, Excel asks for the specific values. Since we named our cells in Step 1, Excel nicely displays 'Sales_Growth' instead of '$B$2'. Enter <strong>0.15</strong> (15%) and <strong>0.38</strong> (38%).",
+                        highlights: ["B2", "B3"],
+                        showFormulas: false,
+                        dialog: `
+                            <div class="solver-window p-0 overflow-hidden relative shadow-md">
+                                <div class="solver-header bg-white border-b border-gray-300">
+                                    <span class="font-bold text-xs">Scenario Values</span>
+                                    <i class="fas fa-times text-xs text-gray-400"></i>
+                                </div>
+                                <div class="p-3 space-y-2 bg-[#f0f0f0] text-[10px]">
+                                    <p class="mb-1 text-slate-600">Enter values for each of the changing cells.</p>
+                                    <div class="flex items-center gap-2">
+                                        <label class="w-1/3 text-right truncate text-slate-600 font-bold">Sales_Growth:</label>
+                                        <div class="border border-gray-400 bg-white px-2 py-1 w-2/3 font-bold text-blue-800">0.15</div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label class="w-1/3 text-right truncate text-slate-600 font-bold">COGS_Pct:</label>
+                                        <div class="border border-gray-400 bg-white px-2 py-1 w-2/3 font-bold text-blue-800">0.38</div>
+                                    </div>
+                                </div>
+                                 <div class="bg-[#f0f0f0] p-2 flex justify-center gap-2">
+                                    <button class="bg-white border border-gray-400 px-3 py-0.5 rounded-sm shadow-sm border-blue-400 ring-1 ring-blue-200 text-[10px]">OK</button>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        stepInfo: "Step 7 of 7",
+                        title: "Generate Summary",
+                        text: "Finally, click 'Summary'. Select Net_Income (C10) as the <strong>Result Cell</strong>. Excel will generate a new sheet comparing 'Base Case' vs 'Best Case' side-by-side.",
+                        highlights: ["C10"],
+                        showFormulas: false,
+                        dialog: `
+                            <div class="solver-window p-0 overflow-hidden relative shadow-md">
+                                <div class="solver-header bg-white border-b border-gray-300">
+                                    <span class="font-bold text-xs">Scenario Summary</span>
+                                    <i class="fas fa-times text-xs text-gray-400"></i>
+                                </div>
+                                <div class="p-3 space-y-3 bg-[#f0f0f0] text-[10px]">
+                                    <div class="flex gap-4">
+                                        <label class="flex items-center gap-1"><input type="radio" checked> Scenario summary</label>
+                                    </div>
+                                    <div>
+                                        <label class="block mb-1 text-slate-600">Result cells:</label>
+                                        <div class="border border-gray-400 bg-white px-2 py-1 w-full flex justify-between items-center">
+                                            <span class="font-mono text-slate-700">Net_Income</span>
+                                            <i class="fas fa-arrow-up text-xs bg-gray-100 p-0.5 border border-gray-300 rounded-sm"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                 <div class="bg-[#f0f0f0] p-2 flex justify-end gap-2">
+                                    <button class="bg-white border border-gray-400 px-3 py-0.5 rounded-sm shadow-sm border-blue-400 ring-1 ring-blue-200 text-[10px]">OK</button>
+                                </div>
+                            </div>
+                        `
+                    }
+                ]
+            },
+            // 7. SCENARIO PLAYGROUND
+            {
+                type: 'scenario-playground',
+                title: "Interactive: Budget Scenarios",
+                desc: "Explore the different scenarios below. Notice how changing the 'Growth' and 'COGS' assumptions instantly updates the entire Income Statement.",
+                taskBadge: "Interactive Analysis",
+                data: scenarioData,
+                question: "What is the Net Income in the 'Recession' (Worst Case) scenario?",
+                options: [
+                     { text: "$380,000", correct: false, feedback: "That represents the Base Case." },
+                     { text: "$463,000", correct: false, feedback: "That represents the Best Case (Boom)." },
+                     { text: "$245,000", correct: true, feedback: "Correct! In a recession, sales drop and costs rise, squeezing Net Income to $245k." }
+                ]
+            },
+            // 8. CAPSTONE PROJECT
+            {
+                type: 'lesson',
+                title: "Capstone Project",
+                content: `
+                    <div class="bg-white p-6 border-l-4 border-indigo-600 shadow-sm mb-6">
+                        <h3 class="text-2xl font-extrabold text-slate-800 mb-2">Final Challenge</h3>
+                        <p class="text-slate-600 mb-4">You have learned the mechanics. Now it's time to apply them to new, real-world problems. Download the blank Practice File below to start your challenge.</p>
+                        <button onclick="downloadCapstonePractice()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg font-bold text-sm transition-transform hover:-translate-y-1 flex items-center gap-2">
+                            <i class="fas fa-file-excel text-lg"></i> Download Capstone Practice File
+                        </button>
+                        <p class="text-xs text-slate-500 mt-2 italic">Note: File includes two separate sheets (Shipping & Marketing) ready for you to solve.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Problem 1 -->
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center font-bold text-xl"><i class="fas fa-truck"></i></div>
+                                <h4 class="font-bold text-slate-800 text-lg">Problem 1: Logistics Optimization</h4>
+                            </div>
+                            <p class="text-sm text-slate-600 mb-4 leading-relaxed">
+                                <strong>Context:</strong> Global Logistics Inc. has warehouses in New York and Los Angeles. They need to supply clients in Boston, Chicago, and Miami.
+                            </p>
+                            <ul class="space-y-2 text-sm text-slate-700 bg-white p-4 rounded border border-gray-100 mb-4">
+                                <li><strong>Goal:</strong> Minimize Total Shipping Cost.</li>
+                                <li><strong>Constraints:</strong> 
+                                    <ul class="list-disc ml-5 mt-1 text-xs text-slate-500">
+                                        <li>Total shipped from each warehouse <= Supply limit.</li>
+                                        <li>Total received by each client >= Demand required.</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <div class="text-xs font-mono bg-gray-200 text-gray-600 p-3 rounded border border-gray-300">
+                                <i class="fas fa-hammer mr-1"></i> Your Task: Use Solver to find the optimal shipment quantities.
+                            </div>
+                        </div>
+
+                        <!-- Problem 2 -->
+                        <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                             <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center font-bold text-xl"><i class="fas fa-bullhorn"></i></div>
+                                <h4 class="font-bold text-slate-800 text-lg">Problem 2: Marketing Budget</h4>
+                            </div>
+                            <p class="text-sm text-slate-600 mb-4 leading-relaxed">
+                                <strong>Context:</strong> You are managing a $50,000 ad campaign. The market is volatile, and Cost Per Click (CPC) fluctuates.
+                            </p>
+                            <ul class="space-y-2 text-sm text-slate-700 bg-white p-4 rounded border border-gray-100 mb-4">
+                                <li><strong>Goal:</strong> Forecast <strong>Total Profit</strong> under 3 scenarios.</li>
+                                <li><strong>Scenarios:</strong> 
+                                    <ul class="list-disc ml-5 mt-1 text-xs text-slate-500">
+                                        <li><strong>Viral:</strong> Low CPC ($1.50), High Conv (6%)</li>
+                                        <li><strong>Standard:</strong> CPC ($2.50), Conv (4%)</li>
+                                        <li><strong>Flop:</strong> High CPC ($4.00), Low Conv (2%)</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <div class="text-xs font-mono bg-gray-200 text-gray-600 p-3 rounded border border-gray-300">
+                                <i class="fas fa-hammer mr-1"></i> Your Task: Build these 3 cases in Scenario Manager and generate a Summary.
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        // --- STATE ---
+        let currentIndex = 0;
+        let activeScenario = 'base';
+        let currentWalkthroughStep = 0;
+
+        // --- CORE FUNCTIONS ---
+        function init() {
+            renderModuleList();
+            loadItem(0);
+            animateConfetti(); // Initialize canvas
+        }
+
+        function renderModuleList() {
+            const list = document.getElementById('module-list');
+            list.innerHTML = '';
+            
+            sequence.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = `module-item px-5 py-4 cursor-pointer flex items-center gap-3 ${idx === currentIndex ? 'active' : ''}`;
+                
+                let icon = 'fa-circle';
+                if(item.type === 'lesson') icon = 'fa-book-open';
+                if(item.type === 'solver-quiz') icon = 'fa-calculator';
+                if(item.type === 'scenario-playground') icon = 'fa-chart-line';
+                if(item.type === 'scenario-walkthrough') icon = 'fa-shoe-prints';
+                if(item.title === 'Capstone Project') icon = 'fa-graduation-cap';
+                if(item.type === 'goal-seek') icon = 'fa-crosshairs';
+
+                div.innerHTML = `
+                    <i class="fas ${icon} text-xs ${idx === currentIndex ? 'text-blue-600' : 'text-slate-300'}"></i>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${item.type.replace('-quiz','').replace('-playground','').replace('-walkthrough', ' Walkthrough').replace('-seek', '')}</div>
+                        <div class="text-sm font-medium text-slate-700">${item.title}</div>
+                    </div>
+                `;
+                div.onclick = () => loadItem(idx);
+                list.appendChild(div);
+            });
+            document.getElementById('progress-text').innerText = `${currentIndex + 1}/${sequence.length}`;
+        }
+
+        function loadItem(index) {
+            currentIndex = index;
+            renderModuleList();
+            
+            const item = sequence[index];
+            const views = ['lesson-view', 'simulation-view', 'completion-view'];
+            views.forEach(v => document.getElementById(v).classList.add('hidden'));
+
+            if (item.type === 'lesson') {
+                document.getElementById('lesson-view').classList.remove('hidden');
+                document.getElementById('lesson-title').innerText = item.title;
+                document.getElementById('lesson-content').innerHTML = item.content;
+            } 
+            else {
+                // Shared logic for solver-quiz, scenario-playground, and scenario-walkthrough
+                document.getElementById('simulation-view').classList.remove('hidden');
+                document.getElementById('sim-title').innerText = item.title;
+                document.getElementById('sim-desc').innerText = item.desc;
+                document.getElementById('sim-task-badge').innerText = item.taskBadge || "Task";
+                document.getElementById('sheet-name').innerText = item.data.name;
+
+                // Reset Feedback Area
+                document.getElementById('feedback-area').classList.add('hidden');
+                
+                // Render Table
+                // Pass false initially, renderInteractionArea will trigger updates if needed
+                renderExcelTable(item.data, false); 
+
+                // Render Interactions
+                if (item.type === 'scenario-walkthrough') {
+                    currentWalkthroughStep = 0; // Reset
+                }
+                renderInteractionArea(item);
+            }
+        }
+
+        function renderExcelTable(data, showFormulas = false) {
+            const table = document.getElementById('data-table');
+            table.innerHTML = '';
+            
+            // Header Row (A, B, C...)
+            const thead = document.createElement('thead');
+            const rowHeader = document.createElement('tr');
+            
+            // Corner
+            const corner = document.createElement('th');
+            corner.className = "w-8 border-r-2 border-gray-300 bg-gray-100";
+            rowHeader.appendChild(corner);
+
+            data.headers.forEach((h, i) => {
+                if (i===0) return; // Skip empty first index used for corner alignment
+                const th = document.createElement('th');
+                th.innerText = h;
+                rowHeader.appendChild(th);
+            });
+            thead.appendChild(rowHeader);
+            table.appendChild(thead);
+
+            // Body
+            const tbody = document.createElement('tbody');
+            data.rows.forEach(row => {
+                const tr = document.createElement('tr');
+                
+                // Row Number (1, 2, 3...)
+                const rowNum = document.createElement('td');
+                rowNum.className = "excel-row-header";
+                rowNum.innerText = row.id;
+                tr.appendChild(rowNum);
+
+                row.cells.forEach((cellContent, cellIndex) => {
+                    const td = document.createElement('td');
+                    
+                    // Determine Cell Address (e.g., B6)
+                    const colLetter = data.headers[cellIndex + 1]; // +1 due to offset
+                    const cellAddress = colLetter ? colLetter + row.id : null;
+                    
+                    // Assign ID to ALL cells for highlighting logic
+                    if (cellAddress) {
+                        td.id = `cell-${cellAddress}`;
+                    }
+
+                    // Content Logic: Check for Formula
+                    if (showFormulas && data.formulas && data.formulas[cellAddress]) {
+                        td.innerText = data.formulas[cellAddress];
+                        td.classList.add("text-blue-600", "font-mono", "text-[10px]", "bg-blue-50");
+                    } else {
+                        td.innerText = cellContent;
+                    }
+
+                    // Apply styling from data model
+                    if (data.highlights && data.highlights[cellAddress]) {
+                        td.className = data.highlights[cellAddress];
+                    }
+
+                    // Bold first column labels
+                    if (cellIndex === 0) td.style.fontWeight = 'bold';
+                    if (cellIndex === 0) td.style.backgroundColor = '#fafafa';
+
+                    // Update values if Scenario Mode
+                    if (data.name === "Budget_2024" && cellAddress && !showFormulas) {
+                        updateScenarioCell(cellAddress, td);
+                    }
+
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+        }
+
+        function updateScenarioCell(address, element) {
+            // Mapping for dynamic updates based on current scenario
+            const vals = sequence[currentIndex].data.scenarios?.[activeScenario];
+            // If in walkthrough mode, force 'base' scenario initially or logic specific
+            // But reuse 'base' is fine for tutorial start
+            const safeVals = vals || sequence[currentIndex].data.scenarios['base'];
+
+            if (!safeVals) return;
+
+            if (address === 'B2') element.innerText = safeVals.growth;
+            if (address === 'B3') element.innerText = safeVals.cogs;
+            if (address === 'C2') element.innerText = safeVals.note;
+            if (address === 'C6') element.innerText = safeVals.rev;
+            if (address === 'C7') element.innerText = safeVals.cost;
+            if (address === 'C8') element.innerText = safeVals.gp;
+            if (address === 'C10') {
+                element.innerText = safeVals.ni;
+                element.classList.add('transition-colors', 'duration-500');
+            }
+        }
+
+        function updateGridHighlights(cellIds) {
+            // Clear custom highlights
+            document.querySelectorAll('.tutorial-highlight').forEach(el => {
+                el.classList.remove('tutorial-highlight');
+            });
+            
+            // Add new
+            if (cellIds) {
+                cellIds.forEach(id => {
+                    const cell = document.getElementById('cell-' + id);
+                    if(cell) {
+                        cell.classList.add('tutorial-highlight');
+                    }
+                });
+            }
+        }
+
+        function renderInteractionArea(item) {
+            const container = document.getElementById('interaction-area');
+            container.innerHTML = '';
+
+            if (item.type === 'scenario-walkthrough') {
+                const step = item.steps[currentWalkthroughStep];
+                
+                // RE-RENDER TABLE if formula mode changed
+                renderExcelTable(item.data, step.showFormulas);
+
+                // Highlight Grid Cells for this step
+                updateGridHighlights(step.highlights);
+
+                // Create Content
+                const wrapper = document.createElement('div');
+                wrapper.className = "flex flex-col h-full animate-slide-in";
+                
+                wrapper.innerHTML = `
+                    <div class="mb-4">
+                        <span class="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded uppercase tracking-wider">${step.stepInfo}</span>
+                        <h4 class="text-lg font-bold text-slate-800 mt-2">${step.title}</h4>
+                        <p class="text-sm text-slate-600 mt-1">${step.text}</p>
+                    </div>
+                    
+                    <div class="bg-slate-50 border border-slate-200 rounded p-4 mb-6 flex-1 flex items-center justify-center">
+                        <div class="transform scale-100 origin-center w-full">
+                            ${step.dialog}
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between border-t border-gray-100 pt-4 mt-auto">
+                        <button id="prev-step-btn" class="px-4 py-2 text-sm text-slate-500 font-bold hover:text-slate-800 ${currentWalkthroughStep === 0 ? 'invisible' : ''}">
+                            <i class="fas fa-arrow-left mr-2"></i> Back
+                        </button>
+                        <button id="next-step-btn" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow-lg text-sm font-bold transition-transform hover:scale-105">
+                            ${currentWalkthroughStep === item.steps.length - 1 ? 'Finish' : 'Next Step <i class="fas fa-arrow-right ml-2"></i>'}
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(wrapper);
+
+                // Bind Events
+                const prevBtn = wrapper.querySelector('#prev-step-btn');
+                const nextBtn = wrapper.querySelector('#next-step-btn');
+
+                if (prevBtn) {
+                    prevBtn.onclick = () => {
+                        if (currentWalkthroughStep > 0) {
+                            currentWalkthroughStep--;
+                            renderInteractionArea(item);
+                        }
+                    };
+                }
+
+                if (nextBtn) {
+                    nextBtn.onclick = () => {
+                        if (currentWalkthroughStep < item.steps.length - 1) {
+                            currentWalkthroughStep++;
+                            renderInteractionArea(item);
+                        } else {
+                            nextItem();
+                        }
+                    };
+                }
+
+                return; // Exit as we handled this type
+            }
+
+            if (item.type === 'goal-seek') {
+                // Goal Seek specific dialog
+                 item.options.forEach((opt, idx) => {
+                    const btn = document.createElement('div');
+                    btn.className = "solver-window cursor-pointer hover:shadow-lg transition-all transform hover:-translate-y-0.5 group bg-gray-50 mb-3";
+                    btn.onclick = () => handleAnswer(opt, btn, item);
+
+                    const content = `
+                        <div class="solver-header group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                            <span class="font-bold">Goal Seek</span>
+                            <i class="fas fa-times text-xs"></i>
+                        </div>
+                        <div class="p-3 text-xs space-y-2 text-slate-700">
+                             <div class="flex items-center gap-2 justify-between">
+                                <span>Set cell:</span>
+                                <div class="bg-white border border-gray-300 px-2 py-0.5 w-16 font-mono text-right ${opt.setCell === 'B6' ? 'text-green-600 font-bold' : ''}">${opt.setCell}</div>
+                            </div>
+                            <div class="flex items-center gap-2 justify-between">
+                                <span>To value:</span>
+                                <div class="bg-white border border-gray-300 px-2 py-0.5 w-16 font-mono text-right">${opt.toValue}</div>
+                            </div>
+                            <div class="flex items-center gap-2 justify-between">
+                                <span>By changing cell:</span>
+                                <div class="bg-white border border-gray-300 px-2 py-0.5 w-16 font-mono text-right">${opt.changeCell}</div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-200 p-2 text-center text-xs text-gray-500 italic border-t border-gray-300">
+                            ${opt.text}
+                        </div>
+                    `;
+                    btn.innerHTML = content;
+                    container.appendChild(btn);
+                });
+                return;
+            }
+
+            // ... Existing Logic for other types ...
+            if (item.type === 'solver-quiz') {
+                // Render Fake Solver Dialog Buttons
+                item.options.forEach((opt, idx) => {
+                    const btn = document.createElement('div');
+                    btn.className = "solver-window cursor-pointer hover:shadow-lg transition-all transform hover:-translate-y-0.5 group bg-gray-50 mb-3";
+                    btn.onclick = () => handleAnswer(opt, btn, item);
+
+                    const content = `
+                        <div class="solver-header group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                            <span class="font-bold">Solver Parameters</span>
+                            <i class="fas fa-times text-xs"></i>
+                        </div>
+                        <div class="p-3 text-xs space-y-2 text-slate-700">
+                            <div class="flex items-center gap-2">
+                                <span class="w-20 text-right">Set Objective:</span>
+                                <div class="bg-white border border-gray-300 px-2 py-0.5 w-24 font-mono ${opt.obj === 'E10' ? 'text-green-600 font-bold' : ''}">${opt.obj}</div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-20 text-right">To:</span>
+                                <div class="flex gap-2">
+                                    <label class="flex items-center gap-1"><input type="radio" checked disabled> ${opt.to || 'Max'}</label>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-20 text-right">By Changing:</span>
+                                <div class="bg-white border border-gray-300 px-2 py-0.5 w-24 font-mono">${opt.change || ''}</div>
+                            </div>
+                            ${opt.text.includes('Limit') ? `<div class="mt-2 border-t pt-1 font-mono text-[10px]">${opt.obj}</div>` : ''}
+                        </div>
+                        <div class="bg-gray-200 p-2 text-center text-xs text-gray-500 italic border-t border-gray-300">
+                            ${opt.text}
+                        </div>
+                    `;
+                    btn.innerHTML = content;
+                    container.appendChild(btn);
+                });
+            } 
+            else if (item.type === 'scenario-playground') {
+                // Scenario Buttons
+                const btnContainer = document.createElement('div');
+                btnContainer.className = "flex gap-2 mb-6";
+                ['worst', 'base', 'best'].forEach(scen => {
+                    const btn = document.createElement('button');
+                    let label = scen.charAt(0).toUpperCase() + scen.slice(1);
+                    if(scen === 'worst') label = "Recession";
+                    if(scen === 'best') label = "Boom";
+                    
+                    btn.className = `flex-1 py-2 px-3 rounded text-sm font-bold border transition-colors ${activeScenario === scen ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-slate-600 border-gray-300 hover:bg-gray-50'}`;
+                    btn.innerText = label;
+                    btn.onclick = () => {
+                        activeScenario = scen;
+                        renderInteractionArea(item); // Re-render buttons state
+                        renderExcelTable(item.data); // Update table
+                    };
+                    btnContainer.appendChild(btn);
+                });
+                container.appendChild(btnContainer);
+
+                // Quiz Question below buttons
+                const qBlock = document.createElement('div');
+                qBlock.innerHTML = `<p class="font-bold text-slate-800 mb-3 text-sm"><i class="fas fa-question-circle text-blue-500 mr-2"></i>${item.question}</p>`;
+                
+                item.options.forEach(opt => {
+                    const optBtn = document.createElement('button');
+                    optBtn.className = "w-full text-left p-3 rounded border border-gray-200 mb-2 text-sm hover:bg-slate-50 transition-colors";
+                    optBtn.innerHTML = opt.text;
+                    optBtn.onclick = () => handleAnswer(opt, optBtn, item);
+                    qBlock.appendChild(optBtn);
+                });
+                container.appendChild(qBlock);
+            }
+        }
+
+        function handleAnswer(opt, btnElement, item) {
+            const fbArea = document.getElementById('feedback-area');
+            const fbTitle = document.getElementById('feedback-title');
+            const fbMsg = document.getElementById('feedback-msg');
+            const fbIcon = document.getElementById('feedback-icon');
+            const nextBtn = document.getElementById('feedback-next-btn');
+
+            fbArea.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'text-red-800', 'bg-green-50', 'border-green-200', 'text-green-800');
+
+            if (opt.correct) {
+                fbArea.classList.add('bg-green-50', 'border-green-200', 'text-green-800');
+                fbIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                fbTitle.innerText = "Correct!";
+                nextBtn.classList.remove('hidden');
+                
+                // If interactive buttons, highlight specific one
+                if (btnElement) {
+                   btnElement.classList.add('ring-2', 'ring-green-500', 'bg-green-50');
+                }
+            } else {
+                fbArea.classList.add('bg-red-50', 'border-red-200', 'text-red-800');
+                fbIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                fbTitle.innerText = "Try Again";
+                nextBtn.classList.add('hidden');
+            }
+            fbMsg.innerText = opt.feedback;
+        }
+
+        function nextItem() {
+            if (currentIndex < sequence.length - 1) {
+                loadItem(currentIndex + 1);
+            } else {
+                // Course Complete
+                document.getElementById('simulation-view').classList.add('hidden');
+                document.getElementById('lesson-view').classList.add('hidden');
+                document.getElementById('completion-view').classList.remove('hidden');
+                document.getElementById('progress-text').innerText = "100%";
+                fireConfetti();
+            }
+        }
+
+        function downloadPracticeFile() {
+             // 1. Goal Seek Data
+             const goalSeekArr = [
+                ["GOAL SEEK: BREAK-EVEN ANALYSIS", ""],
+                ["Find Quantity to reach Profit $0", ""],
+                [],
+                ["Item", "Value"],
+                ["Price", 50],
+                ["Cost", 30],
+                ["Quantity", 100],
+                ["Fixed Costs", 5000],
+                ["Profit", { f: "(B5-B6)*B7 - B8" }] 
+             ];
+
+             // 2. Solver Data
+             const solverArr = [
+                ["Product", "Price", "Cost", "Margin", "Labor Hrs", "Machine Hrs"],
+                ["Standard", 45, 25, 20, 2.0, 1.5],
+                ["Deluxe", 75, 40, 35, 4.0, 1.5],
+                [],
+                ["CONSTRAINTS", "Total Available"],
+                ["Labor Hours", 2000],
+                ["Machine Hours", 1200]
+            ];
+
+            // 3. Scenario Data
+            const scenarioArr = [
+                ["INPUTS", "Values", "Notes"],
+                ["Sales Growth", 0.05, "Base Case"],
+                ["COGS %", 0.40, "Of Sales"],
+                [],
+                ["INCOME STATEMENT", "Year 1", "Year 2 (Proj)"],
+                ["Revenue", 1000000, { f: "B6*(1+B2)" }],
+                ["COGS", -400000, { f: "-C6*B3" }],
+                ["Gross Profit", { f: "B6+B7" }, { f: "C6+C7" }],
+                ["Fixed Ops", -250000, -250000],
+                ["Net Income", { f: "B8+B9" }, { f: "C8+C9" }]
+            ];
+
+            // Create workbook and sheets
+            const wb = XLSX.utils.book_new();
+            const wsGoal = XLSX.utils.aoa_to_sheet(goalSeekArr);
+            const wsSolver = XLSX.utils.aoa_to_sheet(solverArr);
+            const wsScenario = XLSX.utils.aoa_to_sheet(scenarioArr);
+
+            // Add sheets to workbook
+            XLSX.utils.book_append_sheet(wb, wsGoal, "Goal_Seek_Model");
+            XLSX.utils.book_append_sheet(wb, wsSolver, "Solver_Model");
+            XLSX.utils.book_append_sheet(wb, wsScenario, "Scenario_Model");
+
+            // Write file
+            XLSX.writeFile(wb, "Solver_Scenarios_Tutorial.xlsx");
+        }
+        
+        function downloadCapstonePractice() {
+            // SHEET 1: SOLVER CAPSTONE (Logistics) - BLANK PRACTICE
+            const capstoneSolver = [
+                ["PROBLEM 1: LOGISTICS OPTIMIZATION", "", "", "", "", "", ""],
+                ["Minimize shipping costs from Warehouses to Clients", "", "", "", "", "", ""],
+                [],
+                ["SHIPPING COSTS (Per Unit)", "Boston", "Chicago", "Miami", "SUPPLY"],
+                ["NY Warehouse", 5, 8, 12, 100],
+                ["LA Warehouse", 15, 10, 6, 100],
+                [],
+                ["DEMAND", 40, 80, 50, ""],
+                [],
+                ["--- DECISION VARIABLES (Shipments) ---", "", "", "", "", "", ""],
+                ["Shipments", "Boston", "Chicago", "Miami", "Total Shipped", "Constraint"],
+                // Zeroed out shipments for practice
+                ["NY Warehouse", 0, 0, 0, { f: "SUM(B12:D12)" }, "<= 100"],
+                ["LA Warehouse", 0, 0, 0, { f: "SUM(B13:D13)" }, "<= 100"],
+                ["Total Received", { f: "SUM(B12:B13)" }, { f: "SUM(C12:C13)" }, { f: "SUM(D12:D13)" }, "", ""],
+                ["Constraint", ">= 40", ">= 80", ">= 50", "", ""],
+                [],
+                // Formula included but result will be 0 initially
+                ["TOTAL COST", { f: "SUMPRODUCT(B5:D6, B12:D13)" }, "", "", "", "", ""],
+                ["Instructions:", "Use Solver to find optimal shipments (B12:D13) to minimize Total Cost.", "", "", "", "", ""]
+            ];
+
+            // SHEET 2: SCENARIO CAPSTONE (Marketing) - BLANK PRACTICE
+            const capstoneScenario = [
+                ["PROBLEM 2: MARKETING BUDGET FORECAST", "", "", "", ""],
+                ["Compare Viral, Standard, and Flop scenarios", "", "", "", ""],
+                [],
+                ["INPUTS", "Values", "Name Range"],
+                ["Budget", 50000, "Ad_Budget"],
+                ["CPC (Cost Per Click)", 2.50, "CPC_Input"],
+                ["Conv Rate", 0.04, "Conv_Rate"],
+                ["Avg Order Value", 100, "AOV"],
+                [],
+                ["MODEL", "Formulas", ""],
+                ["Traffic (Clicks)", { f: "B5/B6" }, "=Budget/CPC"],
+                ["Total Sales (#)", { f: "B11*B7" }, "=Traffic*Conv"],
+                ["Revenue ($)", { f: "B12*B8" }, "=Sales*AOV"],
+                ["Total Profit", { f: "B13-B5" }, "=Revenue-Budget"],
+                [],
+                ["Instructions:", "1. Name the input cells (B5:B8) and result cell (B14).", "", "", ""],
+                ["", "2. Use Scenario Manager to create Viral, Standard, and Flop cases.", "", "", ""],
+                ["", "3. Generate a Summary Report to compare profits.", "", "", ""]
+            ];
+
+            const wb = XLSX.utils.book_new();
+            const ws1 = XLSX.utils.aoa_to_sheet(capstoneSolver);
+            const ws2 = XLSX.utils.aoa_to_sheet(capstoneScenario);
+
+            XLSX.utils.book_append_sheet(wb, ws1, "Logistics_Solver_Practice");
+            XLSX.utils.book_append_sheet(wb, ws2, "Marketing_Scenarios_Practice");
+
+            // Updated filename as requested
+            XLSX.writeFile(wb, "Whatifs_Capston_Practice_File.xlsx");
+        }
+
+        // --- VISUALS ---
+        function animateConfetti() {
+            // Simple confetti implementation
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            let w = window.innerWidth;
+            let h = window.innerHeight;
+            canvas.width = w;
+            canvas.height = h;
+
+            const particles = [];
+            for(let i=0; i<100; i++) {
+                particles.push({
+                    x: Math.random()*w, y: Math.random()*h - h,
+                    c: ['#22c55e', '#3b82f6', '#eab308'][Math.floor(Math.random()*3)],
+                    s: Math.random()*5+2, d: Math.random()*2+1
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0,0,w,h);
+                particles.forEach(p => {
+                    p.y += p.d;
+                    if(p.y > h) p.y = -10;
+                    ctx.fillStyle = p.c;
+                    ctx.fillRect(p.x, p.y, p.s, p.s);
+                });
+                requestAnimationFrame(draw);
+            }
+            
+            window.fireConfetti = () => {
+                requestAnimationFrame(draw);
+            }
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>

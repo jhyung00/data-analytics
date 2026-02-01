@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Master: Data Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- BASE EXCEL STYLES --- */
+        .excel-grid {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 0.85rem;
+            background: white;
+            cursor: default;
+        }
+        .excel-grid th {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            padding: 4px 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
+        }
+        .excel-grid td {
+            border: 1px solid #e5e7eb;
+            padding: 4px 12px;
+            color: #1f2937;
+            white-space: nowrap;
+            position: relative;
+        }
+        /* Row Headers (1, 2, 3...) */
+        .excel-row-header {
+            background-color: #f3f4f6;
+            font-weight: 600;
+            color: #6b7280;
+            text-align: center;
+            width: 30px;
+            border-right: 2px solid #d1d5db !important;
+        }
+        
+        /* Analysis Specific Highlights */
+        .highlight-data {
+            background-color: #dbeafe !important; /* blue-100 */
+            border: 2px solid #2563eb !important; /* blue-600 */
+        }
+        .highlight-bins {
+            background-color: #fce7f3 !important; /* pink-100 */
+            border: 2px solid #db2777 !important; /* pink-600 */
+        }
+        .highlight-output {
+            background-color: #dcfce7 !important; /* green-100 */
+            border: 2px dashed #16a34a !important; /* green-600 */
+        }
+
+        /* --- TOOLPAK DIALOG STYLES --- */
+        .dialog-window {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f0f0;
+            border: 1px solid #999;
+            box-shadow: 4px 4px 15px rgba(0,0,0,0.15);
+            border-radius: 4px;
+            width: 100%;
+            max-width: 320px;
+        }
+        .dialog-header {
+            background: white;
+            padding: 6px 10px;
+            font-size: 11px;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .dialog-body {
+            padding: 12px;
+            font-size: 11px;
+            color: #333;
+        }
+        .dialog-input-group {
+            margin-bottom: 8px;
+        }
+        .dialog-label {
+            display: block;
+            margin-bottom: 2px;
+        }
+        .dialog-input {
+            width: 100%;
+            border: 1px solid #aaa;
+            padding: 2px 4px;
+            background: white;
+        }
+        .dialog-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+
+        /* --- UI COMPONENTS --- */
+        .module-item {
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+        .module-item:hover {
+            background-color: #f3f4f6;
+        }
+        .module-item.active {
+            background-color: #eff6ff; /* blue-50 */
+            border-left-color: #2563eb; /* blue-600 */
+            color: #1e3a8a;
+        }
+
+        /* Result Overlays (Simulating Excel Output) */
+        .result-overlay {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 20;
+            padding: 10px;
+            font-size: 0.75rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Simple Bar Chart CSS */
+        .bar-container { display: flex; align-items: flex-end; height: 100px; gap: 4px; border-left: 1px solid #333; border-bottom: 1px solid #333; padding: 5px; }
+        .bar { background-color: #3b82f6; width: 20px; transition: height 0.5s; }
+        
+        /* Skewness Animation Styles */
+        .skew-chart-container {
+            position: relative;
+            height: 120px;
+            background-color: #f8fafc;
+            border-bottom: 2px solid #64748b;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .hist-bar {
+            position: absolute;
+            bottom: 0;
+            width: 9%;
+            margin-left: 0.5%;
+            background-color: #cbd5e1; /* slate-300 */
+            border-top: 1px solid #94a3b8;
+            border-radius: 2px 2px 0 0;
+        }
+
+        .boxplot-layer {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0;
+            /* Animation logic moved to class below */
+        }
+
+        /* Skew Animation Keyframes (Moved from inline script) */
+        @keyframes verticalToHorizontal {
+            0% {
+                opacity: 0;
+                transform: translate(20px, -40px) rotate(-90deg) scale(0.5);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(20px, -40px) rotate(-90deg) scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(0, 0) rotate(0deg) scale(1);
+            }
+        }
+        
+        .animate-rotate-in {
+            animation: verticalToHorizontal 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .bp-horiz-line {
+            position: absolute;
+            top: 30px;
+            height: 2px;
+            background-color: #334155; /* slate-700 */
+        }
+
+        .bp-horiz-box {
+            position: absolute;
+            top: 15px;
+            height: 30px;
+            background-color: rgba(147, 197, 253, 0.5); /* blue-300 transparent */
+            border: 2px solid #2563eb; /* blue-600 */
+        }
+
+        .bp-horiz-median {
+            position: absolute;
+            top: 15px;
+            height: 30px;
+            width: 2px;
+            background-color: #1e40af; /* blue-800 */
+        }
+
+        .bp-horiz-mean {
+            position: absolute;
+            top: 20px;
+            font-weight: bold;
+            color: #dc2626; /* red-600 */
+            font-size: 16px;
+            line-height: 1;
+            text-shadow: 0 0 2px white;
+        }
+
+        canvas {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col font-sans overflow-hidden">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Navbar -->
+    <nav class="bg-slate-900 text-white px-5 py-3 shadow-lg flex justify-between items-center z-10 shrink-0">
+        <div class="flex items-center gap-4">
+            <div class="bg-indigo-600 p-2 rounded-lg shadow-indigo-900/50 shadow-lg transform rotate-3">
+                <i class="fas fa-chart-simple text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-wide leading-tight">Excel Master</h1>
+                <p class="text-xs text-slate-400 font-medium">Data Analysis Toolpak & Charts</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <button onclick="downloadPracticeFile()" class="group flex items-center gap-2 px-4 py-2 bg-indigo-700 hover:bg-indigo-600 text-white rounded text-sm transition-all border border-indigo-600 shadow-sm hover:shadow-md">
+                <i class="fas fa-file-csv group-hover:scale-110 transition-transform"></i>
+                <span>Download Practice Data</span>
+            </button>
+            <div class="h-8 w-px bg-slate-700"></div>
+            <div class="text-right">
+                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Module</div>
+                <div class="font-mono font-bold text-indigo-400 text-lg" id="progress-text">1/1</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Left Sidebar: Modules -->
+        <div class="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0 z-20 shadow-md">
+            <div class="p-4 border-b border-gray-100 bg-gray-50">
+                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Curriculum</h3>
+            </div>
+            <div id="module-list" class="flex-1 overflow-y-auto py-2">
+                <!-- Modules injected here -->
+            </div>
+        </div>
+
+        <!-- Center/Right: Workspace -->
+        <div class="flex-1 flex flex-col relative bg-gray-100">
+            
+            <!-- VIEW 1: LESSON (Slides) -->
+            <div id="lesson-view" class="hidden absolute inset-0 bg-white p-8 overflow-y-auto flex flex-col items-center">
+                <div class="max-w-3xl w-full pt-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span id="lesson-badge" class="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase tracking-wide">Concept</span>
+                        <h2 id="lesson-title" class="text-3xl font-bold text-slate-800"></h2>
+                    </div>
+                    <div id="lesson-content" class="prose prose-slate max-w-none text-slate-600 leading-relaxed bg-slate-50 p-8 rounded-xl border border-slate-200 shadow-sm">
+                        <!-- Content injected -->
+                    </div>
+                    <div class="mt-8 flex justify-end">
+                        <button onclick="nextItem()" class="px-8 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg shadow-lg font-bold text-sm transition-transform hover:scale-105 flex items-center gap-2">
+                            Next Module <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: SIMULATION (Split Pane) -->
+            <div id="simulation-view" class="flex flex-1 overflow-hidden hidden">
+                
+                <!-- Left: Spreadsheet View -->
+                <div class="w-7/12 flex flex-col border-r border-gray-300 bg-gray-100 overflow-hidden relative">
+                    <!-- Toolbar -->
+                    <div class="p-2 border-b border-gray-200 bg-white flex gap-4 items-center shadow-sm z-10 px-4">
+                        <div class="flex gap-2">
+                            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                        </div>
+                        <div class="h-4 w-px bg-gray-300 mx-2"></div>
+                        <span class="font-mono text-xs text-slate-500 font-bold" id="sheet-name">Sheet1</span>
+                        <div class="flex-1"></div>
+                        <span id="sim-task-badge" class="text-[10px] uppercase font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded">Analysis Mode</span>
+                    </div>
+                    
+                    <!-- Grid Container -->
+                    <div class="flex-1 overflow-auto p-6 flex flex-col gap-6 bg-slate-100 relative">
+                        <div class="bg-white shadow-md border border-gray-300 rounded overflow-hidden relative">
+                            <div class="overflow-x-auto">
+                                <table id="data-table" class="excel-grid"></table>
+                            </div>
+                            
+                            <!-- Result Overlays will be injected here -->
+                            <div id="result-overlay-container"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Interaction Pane -->
+                <div class="w-5/12 flex flex-col bg-white border-l border-gray-200 z-10 shadow-xl">
+                    <div class="p-6 flex-1 overflow-y-auto">
+                        <h3 id="sim-title" class="text-xl font-bold text-slate-800 mb-2"></h3>
+                        <p id="sim-desc" class="text-slate-600 text-sm mb-6 leading-relaxed border-b border-gray-100 pb-4"></p>
+
+                        <!-- DYNAMIC INTERACTION AREA -->
+                        <div id="interaction-area" class="space-y-4 flex flex-col items-center">
+                            <!-- Injected buttons/controls go here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- VIEW 3: COMPLETION -->
+            <div id="completion-view" class="hidden absolute inset-0 bg-white flex items-center justify-center p-8 z-30">
+                <div class="text-center max-w-lg animate-slide-in">
+                    <div class="w-24 h-24 bg-gradient-to-br from-indigo-400 to-indigo-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-5xl shadow-xl transform hover:scale-110 transition-transform">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h2 class="text-4xl font-extrabold text-slate-900 mb-4">Analysis Complete!</h2>
+                    <p class="text-slate-600 mb-8 text-lg">You have mastered the Data Analysis Toolpak essentials.</p>
+                    <div class="flex justify-center gap-4">
+                        <button onclick="location.reload()" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition-colors">
+                            Restart
+                        </button>
+                        <button onclick="downloadCapstone()" class="px-6 py-3 bg-indigo-900 hover:bg-indigo-800 text-white rounded-lg font-bold shadow-lg transition-transform hover:-translate-y-1">
+                            <i class="fas fa-file-excel mr-2"></i> Download Capstone Challenge
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- ANIMATION HELPER FUNCTION (Moved to Global Scope) ---
+        window.playSkewAnimation = function() {
+            const right = document.getElementById('bp-right');
+            const left = document.getElementById('bp-left');
+            
+            if (right && left) {
+                // Reset
+                right.classList.remove('animate-rotate-in');
+                left.classList.remove('animate-rotate-in');
+                right.style.opacity = '0';
+                left.style.opacity = '0';
+                
+                // Trigger Reflow
+                void right.offsetWidth;
+                
+                // Add Animation Class
+                right.classList.add('animate-rotate-in');
+                left.classList.add('animate-rotate-in');
+            }
+        };
+
+        // --- DATA MODELS ---
+
+        // 1. Employee Salary Data (for Desc Stats & Boxplot)
+        const salaryData = {
+            name: "Employee_Salaries",
+            headers: ["", "A", "B", "C", "D"],
+            rows: [
+                { id: 1, cells: ["ID", "Dept", "Salary", "Bonus"] },
+                { id: 2, cells: ["101", "Sales", "45,000", "5,000"] },
+                { id: 3, cells: ["102", "IT", "72,000", "2,000"] },
+                { id: 4, cells: ["103", "Sales", "48,000", "6,000"] },
+                { id: 5, cells: ["104", "HR", "52,000", "3,500"] },
+                { id: 6, cells: ["105", "IT", "68,000", "2,000"] },
+                { id: 7, cells: ["106", "Sales", "42,000", "4,500"] },
+                { id: 8, cells: ["107", "Admin", "38,000", "1,000"] },
+                { id: 9, cells: ["108", "IT", "125,000", "10,000"] }, // Outlier
+                { id: 10, cells: ["109", "Sales", "47,000", "5,500"] },
+                { id: 11, cells: ["110", "HR", "55,000", "3,000"] }
+            ],
+            highlights: {}
+        };
+
+        // 2. Customer Age Data (for Histogram)
+        const ageData = {
+            name: "Customer_Demographics",
+            headers: ["", "A", "B", "C", "D", "E"],
+            rows: [
+                { id: 1, cells: ["CustID", "Age", "", "Bins", "Frequency"] },
+                { id: 2, cells: ["C001", "19", "", "20", ""] },
+                { id: 3, cells: ["C002", "25", "", "30", ""] },
+                { id: 4, cells: ["C003", "45", "", "40", ""] },
+                { id: 5, cells: ["C004", "32", "", "50", ""] },
+                { id: 6, cells: ["C005", "22", "", "60", ""] },
+                { id: 7, cells: ["C006", "28", "", "", ""] },
+                { id: 8, cells: ["C007", "55", "", "", ""] },
+                { id: 9, cells: ["C008", "38", "", "", ""] },
+                { id: 10, cells: ["C009", "21", "", "", ""] },
+                { id: 11, cells: ["C010", "41", "", "", ""] }
+            ],
+            highlights: {}
+        };
+
+        // 3. Regression Data
+        const regressionData = {
+            name: "Marketing_ROI",
+            headers: ["", "A", "B", "C"],
+            rows: [
+                { id: 1, cells: ["Month", "Ad Spend (X)", "Sales (Y)"] },
+                { id: 2, cells: ["Jan", "1000", "15000"] },
+                { id: 3, cells: ["Feb", "1200", "18000"] },
+                { id: 4, cells: ["Mar", "1500", "21000"] },
+                { id: 5, cells: ["Apr", "1800", "24500"] },
+                { id: 6, cells: ["May", "2000", "27000"] },
+                { id: 7, cells: ["Jun", "2200", "30000"] },
+                { id: 8, cells: ["Jul", "2500", "32500"] },
+                { id: 9, cells: ["Aug", "2800", "36000"] },
+                { id: 10, cells: ["Sep", "3000", "38500"] },
+                { id: 11, cells: ["Oct", "3200", "41000"] }
+            ],
+            highlights: {}
+        };
+
+        // --- COURSE SEQUENCE ---
+        const sequence = [
+            // 1. INTRO
+            {
+                type: 'lesson',
+                title: "The Analysis Toolpak",
+                content: `
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Unlock Hidden Powers</h3>
+                    <p class="mb-4">Excel has a powerful hidden add-in called the <strong>Data Analysis Toolpak</strong>. It performs complex statistical engineering without writing a single formula.</p>
+                    
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 shadow-sm">
+                        <h4 class="font-bold text-yellow-800 mb-2 text-sm"><i class="fas fa-key mr-2"></i>How to Enable It (One-Time Setup)</h4>
+                        <ol class="list-decimal ml-5 text-sm text-yellow-900 space-y-2">
+                            <li>Go to <strong>File > Options</strong> (or Excel Options).</li>
+                            <li>Select <strong>Add-ins</strong> on the left sidebar.</li>
+                            <li>At the bottom, look for "Manage: Excel Add-ins" and click the <strong>Go...</strong> button.</li>
+                            <li>Check the box for <strong>Analysis Toolpak</strong> and click OK.</li>
+                            <li>You will now see a <strong>Data Analysis</strong> button on the far right of your <strong>Data</strong> tab.</li>
+                        </ol>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                            <h4 class="font-bold text-indigo-800 mb-2"><i class="fas fa-magnifying-glass-chart mr-2"></i>Descriptive Statistics</h4>
+                            <p class="text-sm">Instantly calculates Mean, Median, Mode, Standard Deviation, Skewness, and more for a dataset.</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                            <h4 class="font-bold text-purple-800 mb-2"><i class="fas fa-chart-bar mr-2"></i>Histograms</h4>
+                            <p class="text-sm">Automatically counts data frequencies into "bins" (groups) to show distribution patterns.</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-100 col-span-2">
+                            <h4 class="font-bold text-green-800 mb-2"><i class="fas fa-chart-line mr-2"></i>Regression</h4>
+                            <p class="text-sm">Predict future outcomes (like Sales) based on input variables (like Ad Spend).</p>
+                        </div>
+                    </div>
+                `
+            },
+            // 2. DESCRIPTIVE STATS WALKTHROUGH
+            {
+                type: 'analysis-walkthrough',
+                title: "Descriptive Statistics",
+                desc: "We want a quick summary of Employee Salaries (Column C). Instead of typing =AVERAGE, =MEDIAN, etc., let's get it all at once.",
+                data: salaryData,
+                steps: [
+                    {
+                        info: "Select Input",
+                        text: "In the Input Range box, we select the Salary column (C1:C11). Note that we check 'Labels in first row' so Excel knows C1 is a header.",
+                        highlight: ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11"],
+                        class: "highlight-data",
+                        dialog: {
+                            title: "Descriptive Statistics",
+                            inputs: [
+                                { label: "Input Range:", val: "$C$1:$C$11" },
+                                { label: "Grouped By:", radio: ["Columns", "Rows"], active: 0 },
+                                { label: "Labels in first row", check: true }
+                            ]
+                        }
+                    },
+                    {
+                        info: "Configure Output",
+                        text: "We choose where to put the table (Output Range: E1) and make sure 'Summary statistics' is checked.",
+                        highlight: ["E1"],
+                        class: "highlight-output",
+                        dialog: {
+                            title: "Descriptive Statistics",
+                            inputs: [
+                                { label: "Output Options:", radio: ["Output Range", "New Worksheet"], active: 0, val: "$E$1" },
+                                { label: "Summary statistics", check: true },
+                                { label: "Confidence Level", check: false }
+                            ]
+                        }
+                    },
+                    {
+                        info: "Review Results",
+                        text: "Excel generates a comprehensive table. Notice the 'Mean' ($59,200) vs 'Median' ($49,600). The large difference suggests an outlier is skewing the average.",
+                        resultType: "table",
+                        resultContent: [
+                            ["Mean", "59,200"],
+                            ["Standard Error", "8,124"],
+                            ["Median", "49,600"],
+                            ["Mode", "#N/A"],
+                            ["Standard Deviation", "25,685"],
+                            ["Minimum", "38,000"],
+                            ["Maximum", "125,000"],
+                            ["Count", "10"]
+                        ],
+                        dialog: { hide: true }
+                    }
+                ]
+            },
+            // 3. HISTOGRAM WALKTHROUGH
+            {
+                type: 'analysis-walkthrough',
+                title: "Creating a Histogram",
+                desc: "We want to see the age distribution of our customers. We have defined 'Bins' (Groups) in column D: 20s, 30s, 40s, etc.",
+                data: ageData,
+                steps: [
+                    {
+                        info: "Inputs & Bins",
+                        text: "Input Range is our Customer Ages (B2:B11). <br>Bin Range is our defined cut-off points (D2:D6).",
+                        highlight: ["B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11", "D2", "D3", "D4", "D5", "D6"],
+                        class: "highlight-bins",
+                        dialog: {
+                            title: "Histogram",
+                            inputs: [
+                                { label: "Input Range:", val: "$B$2:$B$11" },
+                                { label: "Bin Range:", val: "$D$2:$D$6" },
+                                { label: "Labels", check: false }
+                            ]
+                        }
+                    },
+                    {
+                        info: "Chart Output",
+                        text: "We select cell E2 for the output table and check 'Chart Output' to visualize the frequency.",
+                        highlight: ["E2"],
+                        class: "highlight-output",
+                        dialog: {
+                            title: "Histogram",
+                            inputs: [
+                                { label: "Output Range:", val: "$E$2" },
+                                { label: "Cumulative Percentage", check: false },
+                                { label: "Chart Output", check: true }
+                            ]
+                        }
+                    },
+                    {
+                        info: "Distribution View",
+                        text: "The result shows most customers are in the '20' and '30' bins (younger demographic).",
+                        resultType: "histogram",
+                        resultContent: [
+                            { bin: "20", freq: 2 },
+                            { bin: "30", freq: 4 },
+                            { bin: "40", freq: 2 },
+                            { bin: "50", freq: 2 },
+                            { bin: "More", freq: 0 }
+                        ],
+                        dialog: { hide: true }
+                    }
+                ]
+            },
+            // 4. BOXPLOT LESSON
+            {
+                type: 'lesson',
+                title: "Box & Whisker Plots",
+                content: `
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Spotting Outliers & Skewness</h3>
+                    <p class="mb-4">A <strong>Box & Whisker Plot</strong> (or Boxplot) visualizes the distribution of data. In Excel, these are vertical by default.</p>
+                    
+                    <div class="flex flex-col md:flex-row gap-8 items-start mb-6">
+                        
+                        <!-- VERTICAL BOXPLOT (EXCEL STYLE) - FIXED ALIGNMENT -->
+                        <div class="bg-white p-4 border border-gray-200 rounded-lg shadow-sm flex gap-4">
+                            <div class="relative w-24 h-64 border-l-2 border-b-2 border-gray-400 bg-gray-50">
+                                <!-- Upper Whisker: top-4 (16px) to top-16 (64px) -->
+                                <div class="absolute left-1/2 top-4 h-12 w-0.5 bg-slate-800 transform -translate-x-1/2"></div>
+                                <!-- Top Bar (Max): top-4 (16px) -->
+                                <div class="absolute left-1/4 right-1/4 top-4 h-0.5 bg-slate-800"></div>
+                                
+                                <!-- The Box (IQR): top-16 (64px) height-24 (96px) -> Ends at 160px -->
+                                <div class="absolute left-2 right-2 top-16 h-24 bg-blue-100 border-2 border-blue-600 z-10 flex items-center justify-center">
+                                    <!-- Mean Marker (x) -->
+                                    <div class="text-slate-800 text-xl font-bold -mt-4 relative z-20" title="Mean">×</div>
+                                </div>
+                                
+                                <!-- Median Line: top-28 (112px) -->
+                                <div class="absolute left-2 right-2 top-28 h-0.5 bg-blue-800 z-20"></div>
+
+                                <!-- Lower Whisker: top-40 (160px) to bottom-8 (32px from bot -> 224px) -->
+                                <!-- Height = 224 - 160 = 64px -->
+                                <div class="absolute left-1/2 top-40 h-16 w-0.5 bg-slate-800 transform -translate-x-1/2"></div>
+                                <!-- Bottom Bar (Min): bottom-8 (224px) -->
+                                <div class="absolute left-1/4 right-1/4 bottom-8 h-0.5 bg-slate-800"></div>
+
+                                <!-- Outlier Dot: top-1 (4px) -->
+                                <div class="absolute left-1/2 top-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white shadow-sm transform -translate-x-1/2" title="Outlier"></div>
+                            </div>
+                            
+                            <!-- Precise Labels -->
+                            <div class="relative h-64 w-32 text-xs text-slate-500 font-mono">
+                                <div class="absolute top-0 text-red-500 font-bold flex items-center gap-1">← Outlier <span class="text-[10px] opacity-50">(4px)</span></div>
+                                <div class="absolute top-4 flex items-center gap-1">← Max <span class="text-[10px] opacity-50">(16px)</span></div>
+                                <div class="absolute top-16 flex items-center gap-1">← Q3 (75%) <span class="text-[10px] opacity-50">(64px)</span></div>
+                                <div class="absolute top-24 text-slate-800 font-bold flex items-center gap-1">← Mean (×)</div>
+                                <div class="absolute top-28 text-blue-800 font-bold flex items-center gap-1">← Median <span class="text-[10px] opacity-50">(112px)</span></div>
+                                <div class="absolute top-40 flex items-center gap-1">← Q1 (25%) <span class="text-[10px] opacity-50">(160px)</span></div>
+                                <div class="absolute bottom-8 flex items-center gap-1">← Min <span class="text-[10px] opacity-50">(224px)</span></div>
+                            </div>
+                        </div>
+
+                        <!-- SKEWNESS GUIDE (ANIMATED) -->
+                        <div class="flex-1 space-y-4">
+                            <div class="bg-indigo-50 p-4 rounded border border-indigo-100">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h4 class="font-bold text-indigo-900 text-sm">Interpreting Skewness</h4>
+                                    <button onclick="playSkewAnimation()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded shadow transition-transform active:scale-95">
+                                        <i class="fas fa-play mr-1"></i> Watch Animation
+                                    </button>
+                                </div>
+                                
+                                <!-- Right Skewed Animation Container -->
+                                <div class="skew-chart-container bg-white border border-slate-300 relative h-32">
+                                    <div class="absolute top-1 left-2 text-[10px] font-bold text-slate-500 z-20">Right Skewed (Positive)</div>
+                                    <!-- Histogram -->
+                                    <div class="hist-bar" style="left:5%; height:20%"></div>
+                                    <div class="hist-bar" style="left:15%; height:60%"></div>
+                                    <div class="hist-bar" style="left:25%; height:80%"></div>
+                                    <div class="hist-bar" style="left:35%; height:50%"></div>
+                                    <div class="hist-bar" style="left:45%; height:30%"></div>
+                                    <div class="hist-bar" style="left:55%; height:20%"></div>
+                                    <div class="hist-bar" style="left:65%; height:15%"></div>
+                                    <div class="hist-bar" style="left:75%; height:10%"></div>
+                                    <div class="hist-bar" style="left:85%; height:5%"></div>
+                                    
+                                    <!-- Rotating Boxplot -->
+                                    <div id="bp-right" class="boxplot-layer opacity-0">
+                                        <div class="w-full h-full relative">
+                                            <!-- Whisker -->
+                                            <div class="absolute top-8 left-[10%] right-[10%] h-0.5 bg-slate-700"></div>
+                                            <!-- Box -->
+                                            <div class="absolute top-4 left-[15%] w-[30%] h-8 bg-blue-200 border-2 border-blue-600 opacity-80"></div>
+                                            <!-- Median -->
+                                            <div class="absolute top-4 left-[25%] h-8 w-0.5 bg-blue-900"></div>
+                                            <!-- Mean -->
+                                            <div class="absolute top-5 left-[35%] font-bold text-red-600 text-lg leading-none">×</div>
+                                        </div>
+                                    </div>
+                                    <div class="absolute bottom-1 right-2 text-[10px] text-red-600 font-bold z-20">Mean > Median</div>
+                                </div>
+
+                                <!-- Left Skewed Animation Container -->
+                                <div class="skew-chart-container bg-white border border-slate-300 relative h-32">
+                                    <div class="absolute top-1 left-2 text-[10px] font-bold text-slate-500 z-20">Left Skewed (Negative)</div>
+                                    <!-- Histogram -->
+                                    <div class="hist-bar" style="left:5%; height:5%"></div>
+                                    <div class="hist-bar" style="left:15%; height:10%"></div>
+                                    <div class="hist-bar" style="left:25%; height:15%"></div>
+                                    <div class="hist-bar" style="left:35%; height:20%"></div>
+                                    <div class="hist-bar" style="left:45%; height:30%"></div>
+                                    <div class="hist-bar" style="left:55%; height:50%"></div>
+                                    <div class="hist-bar" style="left:65%; height:80%"></div>
+                                    <div class="hist-bar" style="left:75%; height:60%"></div>
+                                    <div class="hist-bar" style="left:85%; height:20%"></div>
+
+                                    <!-- Rotating Boxplot -->
+                                    <div id="bp-left" class="boxplot-layer opacity-0">
+                                        <div class="w-full h-full relative">
+                                            <!-- Whisker -->
+                                            <div class="absolute top-8 left-[10%] right-[10%] h-0.5 bg-slate-700"></div>
+                                            <!-- Box -->
+                                            <div class="absolute top-4 left-[55%] w-[30%] h-8 bg-blue-200 border-2 border-blue-600 opacity-80"></div>
+                                            <!-- Median -->
+                                            <div class="absolute top-4 left-[75%] h-8 w-0.5 bg-blue-900"></div>
+                                            <!-- Mean -->
+                                            <div class="absolute top-5 left-[65%] font-bold text-red-600 text-lg leading-none">×</div>
+                                        </div>
+                                    </div>
+                                    <div class="absolute bottom-1 left-2 text-[10px] text-red-600 font-bold z-20">Mean < Median</div>
+                                </div>
+                            </div>
+                            
+                            <p class="text-xs text-slate-600 italic mt-2">
+                                <strong>Tip:</strong> Click "Watch Animation" to see how the vertical box plot rotates to match the distribution curve.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            // 5. REGRESSION (NEW)
+            {
+                type: 'analysis-walkthrough',
+                title: "Regression Analysis",
+                desc: "We want to see if our Ad Spend (X) actually drives Sales (Y). Regression helps us predict Sales based on Spend and checks how strong the relationship is.",
+                data: regressionData,
+                steps: [
+                    {
+                        info: "Select Input Y (Target)",
+                        text: "First, select the Dependent Variable (Y). This is the outcome we want to predict: <strong>Sales</strong> (C1:C11).",
+                        highlight: ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11"],
+                        class: "highlight-data",
+                        dialog: {
+                            title: "Regression",
+                            inputs: [
+                                { label: "Input Y Range:", val: "$C$1:$C$11" },
+                                { label: "Input X Range:", val: "" },
+                                { label: "Labels", check: true }
+                            ]
+                        }
+                    },
+                    {
+                        info: "Select Input X (Predictor)",
+                        text: "Next, select the Independent Variable (X). This is the input driving the change: <strong>Ad Spend</strong> (B1:B11).",
+                        highlight: ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11"],
+                        class: "highlight-bins",
+                        dialog: {
+                            title: "Regression",
+                            inputs: [
+                                { label: "Input Y Range:", val: "$C$1:$C$11" },
+                                { label: "Input X Range:", val: "$B$1:$B$11" },
+                                { label: "Labels", check: true }
+                            ]
+                        }
+                    },
+                    {
+                        info: "Interpret Results",
+                        text: "<strong>R Square (0.99)</strong>: Extremely strong relationship. 99% of Sales variance is explained by Ads.<br><strong>Coefficient (11.8)</strong>: For every $1 spent on Ads, Sales increase by ~$11.80.",
+                        resultType: "table",
+                        resultContent: [
+                            ["Multiple R", "0.998"],
+                            ["R Square", "0.996"],
+                            ["Adjusted R Square", "0.995"],
+                            ["Standard Error", "520.1"],
+                            ["Observations", "10"],
+                            ["Intercept", "3150.5"],
+                            ["Ad Spend (X)", "11.82"]
+                        ],
+                        dialog: { hide: true }
+                    }
+                ]
+            },
+            // 6. CAPSTONE
+            {
+                type: 'lesson',
+                title: "Capstone Challenge",
+                content: `
+                    <div class="bg-indigo-50 border-l-4 border-indigo-600 p-6 shadow-sm">
+                        <h3 class="text-2xl font-bold text-indigo-900 mb-2">Data Analyst Certification</h3>
+                        <p class="text-indigo-800 mb-4">You have been provided with raw sales data from a retail chain. Your task is to analyze performance and distribution.</p>
+                        
+                        <div class="bg-white p-4 rounded border border-indigo-200 text-sm space-y-3 mb-6">
+                            <p><strong>Task 1:</strong> Use Descriptive Statistics on the 'Daily Sales' column. Identify the Mean and Skewness.</p>
+                            <p><strong>Task 2:</strong> Create a Histogram for 'Customer Age' using bins of 10 years (20, 30, 40...).</p>
+                            <p><strong>Task 3:</strong> Create a Box & Whisker plot for 'Profit Margin' to identify underperforming stores (outliers).</p>
+                            <p><strong>Task 4:</strong> Run a Regression to predict 'Daily Sales' (Y) based on 'Ad Spend' (X). What is the R Square?</p>
+                        </div>
+
+                        <button onclick="downloadCapstone()" class="px-6 py-3 bg-indigo-700 hover:bg-indigo-800 text-white rounded-lg shadow font-bold flex items-center gap-2 transition-transform hover:-translate-y-1">
+                            <i class="fas fa-download"></i> Download Challenge File
+                        </button>
+                    </div>
+                `
+            }
+        ];
+
+        // --- STATE ---
+        let currentIndex = 0;
+        let currentStep = 0; // For walkthroughs
+
+        // --- CORE FUNCTIONS ---
+        function init() {
+            renderModuleList();
+            loadItem(0);
+            animateConfetti();
+        }
+
+        function renderModuleList() {
+            const list = document.getElementById('module-list');
+            list.innerHTML = '';
+            
+            sequence.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = `module-item px-5 py-4 cursor-pointer flex items-center gap-3 ${idx === currentIndex ? 'active' : ''}`;
+                
+                let icon = 'fa-circle';
+                if(item.type === 'lesson') icon = 'fa-book-open';
+                if(item.type === 'analysis-walkthrough') icon = 'fa-magnifying-glass-chart';
+
+                div.innerHTML = `
+                    <i class="fas ${icon} text-xs ${idx === currentIndex ? 'text-indigo-600' : 'text-slate-300'}"></i>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${item.type.replace('-walkthrough','')}</div>
+                        <div class="text-sm font-medium text-slate-700">${item.title}</div>
+                    </div>
+                `;
+                div.onclick = () => loadItem(idx);
+                list.appendChild(div);
+            });
+            document.getElementById('progress-text').innerText = `${currentIndex + 1}/${sequence.length}`;
+        }
+
+        function loadItem(index) {
+            currentIndex = index;
+            currentStep = 0; // Reset step for new module
+            renderModuleList();
+            
+            const item = sequence[index];
+            const views = ['lesson-view', 'simulation-view', 'completion-view'];
+            views.forEach(v => document.getElementById(v).classList.add('hidden'));
+
+            if (item.type === 'lesson') {
+                document.getElementById('lesson-view').classList.remove('hidden');
+                document.getElementById('lesson-title').innerText = item.title;
+                document.getElementById('lesson-content').innerHTML = item.content;
+            } 
+            else if (item.type === 'analysis-walkthrough') {
+                document.getElementById('simulation-view').classList.remove('hidden');
+                document.getElementById('sim-title').innerText = item.title;
+                document.getElementById('sim-desc').innerText = item.desc;
+                document.getElementById('sheet-name').innerText = item.data.name;
+                
+                renderExcelTable(item.data);
+                renderWalkthroughStep(item);
+            }
+        }
+
+        function renderExcelTable(data) {
+            const table = document.getElementById('data-table');
+            table.innerHTML = '';
+            document.getElementById('result-overlay-container').innerHTML = ''; // Clear overlays
+            
+            // Header
+            const thead = document.createElement('thead');
+            const rowHeader = document.createElement('tr');
+            const corner = document.createElement('th');
+            corner.className = "w-8 border-r-2 border-gray-300 bg-gray-100";
+            rowHeader.appendChild(corner);
+
+            data.headers.forEach((h, i) => {
+                if (i===0) return;
+                const th = document.createElement('th');
+                th.innerText = h;
+                rowHeader.appendChild(th);
+            });
+            thead.appendChild(rowHeader);
+            table.appendChild(thead);
+
+            // Body
+            const tbody = document.createElement('tbody');
+            data.rows.forEach(row => {
+                const tr = document.createElement('tr');
+                const rowNum = document.createElement('td');
+                rowNum.className = "excel-row-header";
+                rowNum.innerText = row.id;
+                tr.appendChild(rowNum);
+
+                row.cells.forEach((cellContent, cellIndex) => {
+                    const td = document.createElement('td');
+                    td.innerText = cellContent;
+                    
+                    const colLetter = data.headers[cellIndex + 1];
+                    const cellAddress = colLetter ? colLetter + row.id : null;
+                    if(cellAddress) td.id = `cell-${cellAddress}`;
+
+                    // Bold first row
+                    if (row.id === 1) td.style.fontWeight = 'bold';
+
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+        }
+
+        function renderWalkthroughStep(item) {
+            const step = item.steps[currentStep];
+            const container = document.getElementById('interaction-area');
+            container.innerHTML = '';
+
+            // 1. Highlight Cells
+            document.querySelectorAll('.highlight-data, .highlight-output, .highlight-bins').forEach(el => {
+                el.classList.remove('highlight-data', 'highlight-output', 'highlight-bins');
+            });
+            if (step.highlight) {
+                step.highlight.forEach(id => {
+                    const el = document.getElementById(`cell-${id}`);
+                    if (el) el.classList.add(step.class || 'highlight-data');
+                });
+            }
+
+            // 2. Render Results (if any)
+            if (step.resultType === 'table') {
+                renderResultTable(step.resultContent);
+            } else if (step.resultType === 'histogram') {
+                renderHistogramResult(step.resultContent);
+            }
+
+            // 3. Render Dialog (if not hidden)
+            if (!step.dialog.hide) {
+                const dialogHTML = buildDialogHTML(step.dialog);
+                container.innerHTML = dialogHTML;
+            }
+
+            // 4. Instructions & Navigation
+            const navBlock = document.createElement('div');
+            navBlock.className = "w-full mt-4 p-4 bg-slate-50 border-t border-gray-200";
+            navBlock.innerHTML = `
+                <div class="mb-4">
+                    <span class="text-xs font-bold text-indigo-600 uppercase tracking-widest">${step.info}</span>
+                    <p class="text-sm text-slate-700 mt-1">${step.text}</p>
+                </div>
+                <div class="flex justify-between">
+                    <button id="prev-btn" class="text-slate-400 hover:text-slate-600 text-sm font-bold ${currentStep === 0 ? 'invisible' : ''}"><i class="fas fa-arrow-left"></i> Back</button>
+                    <button id="next-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm font-bold shadow transition-transform hover:scale-105">
+                        ${currentStep === item.steps.length - 1 ? 'Finish Module' : 'Next Step <i class="fas fa-arrow-right ml-1"></i>'}
+                    </button>
+                </div>
+            `;
+            container.appendChild(navBlock);
+
+            // Bind events
+            document.getElementById('next-btn').onclick = () => {
+                if (currentStep < item.steps.length - 1) {
+                    currentStep++;
+                    renderWalkthroughStep(item);
+                } else {
+                    if (currentIndex < sequence.length - 1) {
+                        loadItem(currentIndex + 1);
+                    } else {
+                        // All done
+                        document.getElementById('simulation-view').classList.add('hidden');
+                        document.getElementById('completion-view').classList.remove('hidden');
+                        document.getElementById('progress-text').innerText = "100%";
+                        fireConfetti();
+                    }
+                }
+            };
+            document.getElementById('prev-btn').onclick = () => {
+                if(currentStep > 0) {
+                    currentStep--;
+                    renderWalkthroughStep(item);
+                }
+            };
+        }
+
+        function buildDialogHTML(config) {
+            let inputsHTML = '';
+            if (config.inputs) {
+                config.inputs.forEach(inp => {
+                    if (inp.val !== undefined) {
+                        inputsHTML += `
+                            <div class="dialog-input-group">
+                                <label class="dialog-label">${inp.label}</label>
+                                <div class="flex gap-1">
+                                    <input type="text" class="dialog-input" value="${inp.val}" readonly>
+                                    <button class="bg-gray-200 border border-gray-400 px-2 text-xs"><i class="fas fa-arrow-up"></i></button>
+                                </div>
+                            </div>`;
+                    } else if (inp.radio) {
+                        inputsHTML += `
+                            <div class="dialog-input-group border p-1 bg-white mb-2">
+                                <label class="dialog-label mb-1">${inp.label}</label>
+                                ${inp.radio.map((r, i) => `
+                                    <div class="flex items-center gap-2">
+                                        <input type="radio" ${i === inp.active ? 'checked' : ''} disabled> <span class="text-[10px]">${r}</span>
+                                        ${(i === inp.active && inp.val) ? `<span class="ml-auto font-mono bg-gray-100 px-1 border">${inp.val}</span>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>`;
+                    } else if (inp.check !== undefined) {
+                        inputsHTML += `
+                            <div class="dialog-checkbox">
+                                <input type="checkbox" ${inp.check ? 'checked' : ''} disabled> <span class="text-[10px]">${inp.label}</span>
+                            </div>`;
+                    }
+                });
+            }
+
+            return `
+                <div class="dialog-window animate-slide-in">
+                    <div class="dialog-header">
+                        <span class="font-bold">${config.title}</span>
+                        <i class="fas fa-times text-gray-400"></i>
+                    </div>
+                    <div class="dialog-body">
+                        ${inputsHTML}
+                        <div class="flex justify-end gap-2 mt-4">
+                            <button class="bg-white border border-gray-400 px-3 py-0.5 rounded-sm shadow-sm text-[10px] ring-1 ring-blue-300">OK</button>
+                            <button class="bg-white border border-gray-400 px-3 py-0.5 rounded-sm shadow-sm text-[10px]">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderResultTable(rows) {
+            const container = document.getElementById('result-overlay-container');
+            let rowsHTML = rows.map(r => `
+                <tr>
+                    <td class="border border-gray-300 px-2 py-0.5 font-bold bg-gray-50">${r[0]}</td>
+                    <td class="border border-gray-300 px-2 py-0.5 text-right">${r[1]}</td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="result-overlay" style="top: 40px; right: 20px;">
+                    <table class="border-collapse text-xs">
+                        ${rowsHTML}
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderHistogramResult(data) {
+            const container = document.getElementById('result-overlay-container');
+            
+            // Generate Bars
+            let barsHTML = data.map(d => `
+                <div class="flex flex-col items-center">
+                    <div class="bar" style="height: ${d.freq * 20}px;"></div>
+                    <div class="text-[9px] mt-1">${d.bin}</div>
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="result-overlay" style="top: 50px; right: 10px; width: 250px;">
+                    <strong class="block mb-2 text-center">Frequency Distribution</strong>
+                    <div class="bar-container bg-white">
+                        ${barsHTML}
+                    </div>
+                    <div class="text-center text-[10px] mt-1 text-gray-500">Age Groups</div>
+                </div>
+            `;
+        }
+
+        // --- DOWNLOADS ---
+        function downloadPracticeFile() {
+            // Sheet 1: Employee Salaries
+            const salaryData = [
+                ["ID", "Department", "Salary", "Bonus", "Years_Exp"],
+                [101, "Sales", 45000, 5000, 2],
+                [102, "IT", 72000, 2000, 5],
+                [103, "Sales", 48000, 6000, 3],
+                [104, "HR", 52000, 3500, 4],
+                [105, "IT", 68000, 2000, 4],
+                [106, "Sales", 42000, 4500, 1],
+                [107, "Admin", 38000, 1000, 1],
+                [108, "IT", 125000, 10000, 12],
+                [109, "Sales", 47000, 5500, 3],
+                [110, "HR", 55000, 3000, 5]
+            ];
+
+            // Sheet 2: Customer Ages (Histogram)
+            const ageData = [
+                ["CustomerID", "Age", "Bins"],
+                ["C001", 19, 20],
+                ["C002", 25, 30],
+                ["C003", 45, 40],
+                ["C004", 32, 50],
+                ["C005", 22, 60],
+                ["C006", 28, ""],
+                ["C007", 55, ""],
+                ["C008", 38, ""],
+                ["C009", 21, ""],
+                ["C010", 41, ""]
+            ];
+
+            // Sheet 3: Regression Data (NEW)
+            const regData = [
+                ["Month", "Ad Spend (X)", "Sales (Y)"],
+                ["Jan", 1000, 15000],
+                ["Feb", 1200, 18000],
+                ["Mar", 1500, 21000],
+                ["Apr", 1800, 24500],
+                ["May", 2000, 27000],
+                ["Jun", 2200, 30000],
+                ["Jul", 2500, 32500],
+                ["Aug", 2800, 36000],
+                ["Sep", 3000, 38500],
+                ["Oct", 3200, 41000]
+            ];
+
+            const wb = XLSX.utils.book_new();
+            const ws1 = XLSX.utils.aoa_to_sheet(salaryData);
+            const ws2 = XLSX.utils.aoa_to_sheet(ageData);
+            const ws3 = XLSX.utils.aoa_to_sheet(regData);
+
+            XLSX.utils.book_append_sheet(wb, ws1, "Salaries");
+            XLSX.utils.book_append_sheet(wb, ws2, "Histogram_Data");
+            XLSX.utils.book_append_sheet(wb, ws3, "Regression_Data");
+
+            XLSX.writeFile(wb, "Data_Analysis_Tutorial.xlsx");
+        }
+
+        function downloadCapstone() {
+            // Sheet 1: Raw Sales Data
+            const rawData = [
+                ["Date", "Store", "Daily Sales", "Profit Margin", "Customer Age", "Ad Spend"],
+                ["2024-01-01", "North", 1200, 0.15, 34, 100],
+                ["2024-01-01", "South", 950, 0.12, 22, 80],
+                ["2024-01-01", "East", 2100, 0.18, 45, 150],
+                ["2024-01-02", "North", 1150, 0.14, 31, 95],
+                ["2024-01-02", "South", 800, 0.10, 19, 75],
+                ["2024-01-02", "East", 2200, 0.19, 52, 160],
+                ["2024-01-03", "North", 1300, 0.16, 28, 110],
+                ["2024-01-03", "South", 200, -0.05, 21, 50], // Outlier
+                ["2024-01-03", "East", 2050, 0.17, 48, 145],
+                ["", "", "", "", "", ""],
+                ["Instructions:", "1. Run Descriptive Stats on 'Daily Sales'.", "", "", "", ""],
+                ["", "2. Create a Histogram for 'Customer Age'.", "", "", "", ""],
+                ["", "3. Create Boxplot for 'Profit Margin' to find the outlier.", "", "", "", ""],
+                ["", "4. Run Regression to predict 'Daily Sales' using 'Ad Spend'.", "", "", "", ""]
+            ];
+
+            const wb = XLSX.utils.book_new();
+            const ws1 = XLSX.utils.aoa_to_sheet(rawData);
+            XLSX.utils.book_append_sheet(wb, ws1, "Capstone_Raw_Data");
+            XLSX.writeFile(wb, "Data_Analysis_Capstone.xlsx");
+        }
+
+        // --- VISUALS ---
+        function animateConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            let w = window.innerWidth;
+            let h = window.innerHeight;
+            canvas.width = w;
+            canvas.height = h;
+
+            const particles = [];
+            for(let i=0; i<100; i++) {
+                particles.push({
+                    x: Math.random()*w, y: Math.random()*h - h,
+                    c: ['#6366f1', '#a855f7', '#ec4899'][Math.floor(Math.random()*3)],
+                    s: Math.random()*5+2, d: Math.random()*2+1
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0,0,w,h);
+                particles.forEach(p => {
+                    p.y += p.d;
+                    if(p.y > h) p.y = -10;
+                    ctx.fillStyle = p.c;
+                    ctx.fillRect(p.x, p.y, p.s, p.s);
+                });
+                requestAnimationFrame(draw);
+            }
+            
+            window.fireConfetti = () => {
+                requestAnimationFrame(draw);
+            }
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>
