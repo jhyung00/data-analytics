@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel Pivot Simulator - Student Edition</title>
+    <title>Excel Pivot Simulator - Student Edition (v2)</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
@@ -40,6 +37,25 @@
         .no-select {
             user-select: none;
         }
+        .resizer {
+            cursor: ns-resize;
+            height: 6px;
+            background: #e5e7eb;
+            border-top: 1px solid #d1d5db;
+            border-bottom: 1px solid #d1d5db;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .resizer:hover {
+            background: #d1d5db;
+        }
+        .resizer-handle {
+            width: 30px;
+            height: 3px;
+            background: #9ca3af;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body class="bg-gray-100 h-screen overflow-hidden">
@@ -56,11 +72,8 @@
             Activity: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
             Filter: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
             Download: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>,
-            Trash2: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>,
             GripVertical: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>,
-            ChevronDown: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>,
             X: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 18"/></svg>,
-            Plus: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>,
             Calculator: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>,
             Settings: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
             BarChart: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>,
@@ -71,14 +84,15 @@
             ArrowRight: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         };
 
-        // --- Mock Data Generator ---
+        // --- Mock Data Generator (Improved) ---
         const generateData = () => {
           const regions = ['North', 'South', 'East', 'West'];
           const depts = ['Sales', 'Marketing', 'R&D', 'Admin'];
+          
           const accounts = [
             { name: 'Sales Revenue', type: 'Revenue' },
             { name: 'Service Revenue', type: 'Revenue' },
-            { name: 'Salaries', type: 'Expense' },
+            { name: 'Salaries', type: 'Expense' }, // Now in all depts
             { name: 'Advertising', type: 'Expense' },
             { name: 'Rent', type: 'Expense' },
             { name: 'Software', type: 'Expense' },
@@ -89,22 +103,36 @@
           const data = [];
           const startDate = new Date('2023-01-01');
 
-          for (let i = 0; i < 500; i++) {
+          // Increased data points from 500 to 2500 for better density
+          for (let i = 0; i < 2500; i++) {
             const date = new Date(startDate);
             date.setDate(startDate.getDate() + Math.floor(Math.random() * 730)); // 2 years
             
-            let isAnomaly = false;
-            if (i % 97 === 0) isAnomaly = true;
-
             const acct = accounts[Math.floor(Math.random() * accounts.length)];
+            
+            // Logic to make departments more realistic based on Account
+            let dept;
+            if (acct.name === 'Sales Revenue') dept = Math.random() > 0.9 ? 'Marketing' : 'Sales';
+            else if (acct.name === 'Advertising') dept = 'Marketing';
+            else if (acct.name === 'Rent') dept = 'Admin';
+            else if (acct.name === 'Consulting') dept = Math.random() > 0.5 ? 'R&D' : 'Admin';
+            else dept = depts[Math.floor(Math.random() * depts.length)]; // Salaries, Travel, Software, etc.
+
             let amt = Math.floor(Math.random() * 10000) + 100;
             
-            if (isAnomaly && acct.name === 'Travel' && Math.random() > 0.5) {
+            // Anomaly Logic (Travel Anomaly in North Region / Admin Dept)
+            // Triggering slightly more often but still rare-ish (approx 20 anomalies)
+            let isAnomaly = false;
+            if (acct.name === 'Travel' && Math.random() > 0.98) {
+                isAnomaly = true;
                 amt = 45000; 
             }
 
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            
+            const region = isAnomaly ? 'North' : regions[Math.floor(Math.random() * regions.length)];
+            // If anomaly, force dept to Admin
+            const finalDept = isAnomaly ? 'Admin' : dept;
+
             const realAmount = acct.type === 'Expense' ? -amt : amt;
 
             data.push({
@@ -113,19 +141,18 @@
               Year: date.getFullYear(),
               Quarter: `Q${Math.floor(date.getMonth() / 3) + 1}`,
               Month: monthNames[date.getMonth()],
-              Region: isAnomaly && acct.name === 'Travel' ? 'North' : regions[Math.floor(Math.random() * regions.length)],
-              Department: isAnomaly && acct.name === 'Travel' ? 'Admin' : depts[Math.floor(Math.random() * depts.length)],
+              Region: region,
+              Department: finalDept,
               Account: acct.name,
               Type: acct.type,
               Amount: realAmount,
-              AbsAmount: Math.abs(realAmount) // Added Absolute Amount
+              AbsAmount: Math.abs(realAmount)
             });
           }
           return data;
         };
 
         const INITIAL_DATA = generateData();
-        const DEFAULT_VALUE_FIELD = { field: 'Amount', agg: 'SUM', showAs: 'NORMAL' };
 
         const AUDIT_QUESTIONS = [
             {
@@ -133,13 +160,13 @@
                 title: "Revenue Trends",
                 text: "Using a Line Chart, analyze the 'Sales Revenue' trend over the 'Quarters' for 2023 and 2024. Are there any seasonal dips?",
                 hint: "Drag Year and Quarter to Rows/Columns. Filter Account to 'Sales Revenue'.",
-                answer: "There are likely dips in Q1/Q2 depending on random generation, but look for consistency."
+                answer: "Look for consistency in quarters across years."
             },
             {
                 id: 2,
                 title: "Expense Anomalies (Top N)",
                 text: "We suspect fraudulent travel claims. Use the Top N filter to find the 3 largest 'AbsAmount' entries for the Admin department. What is the value?",
-                hint: "Filter Dept: Admin. Use 'AbsAmount' in Values. Use Top 10 Filter on the Rows field.",
+                hint: "Filter Dept: Admin. Use 'AbsAmount' in Values. Use Top 10 Filter on the Rows field (filtering by ID or Account).",
                 answer: "The 'North' region should show a significantly higher Travel expense (approx $45k anomaly)."
             },
             {
@@ -147,28 +174,28 @@
                 title: "Department Ratios",
                 text: "Show the 'Salaries' expense as a % of the Grand Total for each Department. Which department consumes the most budget?",
                 hint: "Filter Account: Salaries. Rows: Department. Value Settings: % of Grand Total.",
-                answer: "Typically Sales or R&D will be highest, check the exact percentage in the table."
+                answer: "Compare the % values. Sales or R&D usually highest due to headcount simulation."
             },
             {
                 id: 4,
                 title: "Regional Performance",
                 text: "Compare 'Service Revenue' across Regions. Use a Pie Chart to visualize the share of each region.",
                 hint: "Filter Account: Service Revenue. Rows: Region. Chart Type: Pie.",
-                answer: "The pie chart will show the distribution. Look for the largest slice."
+                answer: "The pie chart will show the distribution."
             },
             {
                 id: 5,
                 title: "Audit Sample",
                 text: "Find the MAX single transaction amount for 'Consulting' in the East region.",
                 hint: "Filters: Region=East, Account=Consulting. Change Value Aggregation from SUM to MAX.",
-                answer: "The table will display the single highest transaction value instead of the sum."
+                answer: "The table will display the single highest transaction value."
             },
             {
                 id: 6,
                 title: "Big Spenders",
                 text: "Filter the Pivot Table to show only the Top 5 Accounts based on AbsAmount. Which Account has the highest total magnitude?",
                 hint: "Drag 'Account' to Rows. Drag 'AbsAmount' to Values. Click Top N Filter button.",
-                answer: "Usually Sales Revenue or Salaries, depending on the random generation."
+                answer: "Usually Sales Revenue or Salaries."
             }
         ];
 
@@ -191,6 +218,10 @@
             // Layout Options
             const [showSubtotals, setShowSubtotals] = useState(true);
             const [grandTotalMode, setGrandTotalMode] = useState('ROWS_AND_COLS');
+            
+            // Sidebar Resizer State
+            const [dropZoneHeight, setDropZoneHeight] = useState(300); // Initial height of the bottom 4 boxes
+            const isResizing = useRef(false);
 
             // Filters & Slicers
             const [activeFilters, setActiveFilters] = useState({});
@@ -277,7 +308,7 @@
 
             // --- Processing Engine ---
             const processedData = useMemo(() => {
-                // 1. Filter Data (Unified Filter State)
+                // 1. Filter Data
                 let filtered = data.filter(row => {
                     return Object.entries(activeFilters).every(([field, selectedValues]) => {
                         if (!selectedValues || selectedValues.length === 0) return true;
@@ -300,11 +331,9 @@
 
                     let sortedKeys = Object.keys(groups).sort();
 
-                    // Top N Filter Logic (Applied to first row dimension)
+                    // Top N Filter Logic
                     if (topNFilter.enabled && fields[0] === pivotConfig.rows[0]) {
                         const activeValue = pivotConfig.values[0]; 
-                        
-                        // We use the aggregation logic of the active value field, or default to SUM of Amount if none selected
                         const sortField = activeValue ? activeValue.field : 'Amount';
                         const sortAgg = activeValue ? activeValue.agg : 'SUM';
 
@@ -337,7 +366,7 @@
                 };
                 const colKeys = getColKeys();
 
-                // 4. Totals (using first value field for generic totals if multiple)
+                // 4. Totals
                 const activeValue = pivotConfig.values[0]; 
                 let grandTotal = 0;
                 const colTotals = {};
@@ -346,14 +375,6 @@
                 if (activeValue) {
                     grandTotal = calculateSingleMetricValue(filtered, activeValue.field, activeValue.agg);
                     
-                    filtered.forEach(row => {
-                        const key = pivotConfig.columns.length === 0 ? 'Total' : pivotConfig.columns.map(c => row[c]).join(' - ');
-                        // This col total approximation is tricky with anything other than SUM/COUNT, but sufficient for this sim
-                        // For correct AVG/MIN/MAX totals per column, we'd need to re-aggregate the subset.
-                        // Let's do subset aggregation for correctness:
-                    });
-                    
-                    // Re-calculate Col Totals properly based on aggregation
                     colKeys.forEach(k => {
                         const colRows = filtered.filter(r => {
                             if (pivotConfig.columns.length === 0) return true;
@@ -385,7 +406,6 @@
                 newConfig.values = newConfig.values.filter(v => v.field !== field);
 
                 if (area === 'values') {
-                    // Default new value to Sum
                     newConfig.values.push({ field, agg: 'SUM', showAs: 'NORMAL' });
                 } else {
                     if (field === 'Date' && area === 'rows') {
@@ -410,15 +430,15 @@
                 });
             };
 
-            // Slicer Dragging
-            const handleSlicerDragStart = (e, field) => {
-                const pos = slicerPositions[field] || {x: 50, y: 50};
-                dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
-                setIsDraggingSlicer(field);
-            };
-
+            // Resizer Logic
             useEffect(() => {
                 const handleMouseMove = (e) => {
+                    if (isResizing.current) {
+                        const newHeight = window.innerHeight - e.clientY;
+                        if (newHeight > 100 && newHeight < window.innerHeight - 200) {
+                            setDropZoneHeight(newHeight);
+                        }
+                    }
                     if (isDraggingSlicer) {
                         setSlicerPositions(prev => ({
                             ...prev,
@@ -426,11 +446,14 @@
                         }));
                     }
                 };
-                const handleMouseUp = () => setIsDraggingSlicer(null);
-                if (isDraggingSlicer) {
-                    window.addEventListener('mousemove', handleMouseMove);
-                    window.addEventListener('mouseup', handleMouseUp);
-                }
+                const handleMouseUp = () => {
+                    isResizing.current = false;
+                    setIsDraggingSlicer(null);
+                    document.body.style.cursor = 'default';
+                };
+                
+                window.addEventListener('mousemove', handleMouseMove);
+                window.addEventListener('mouseup', handleMouseUp);
                 return () => {
                     window.removeEventListener('mousemove', handleMouseMove);
                     window.removeEventListener('mouseup', handleMouseUp);
@@ -465,7 +488,6 @@
 
             const confirmSlicers = () => {
                 setActiveSlicerFields(tempSlicerSelection);
-                // Assign default positions for new slicers
                 setSlicerPositions(prev => {
                     const nextPos = {...prev};
                     tempSlicerSelection.forEach((f, i) => {
@@ -652,52 +674,33 @@
                 const dataPoints = getChartData(processedData.rowGroups);
                 if (dataPoints.length === 0) return <div className="flex items-center justify-center h-full text-gray-400">No data</div>;
 
-                // Domain Calculation for Scaling
                 const values = dataPoints.map(d => d.value);
                 const minVal = Math.min(...values);
                 const maxVal = Math.max(...values);
-                
-                // Determine scale domain
                 const domainMin = minVal >= 0 ? 0 : minVal;
                 const domainMax = maxVal <= 0 ? 0 : maxVal;
-                const domainRange = domainMax - domainMin || 1; // Prevent div by zero
+                const domainRange = domainMax - domainMin || 1; 
 
                 const W = 600, H = 300, P = 40;
-                
                 let chartSvg = null;
 
                 if (chartType === 'Bar') {
                     const barW = (W - P*2) / dataPoints.length;
-                    // Zero line position
                     const zeroY = H - P - ((0 - domainMin) / domainRange) * (H - 2*P);
 
                     chartSvg = (
                         <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full bg-white border shadow-sm">
-                            {/* Zero Line */}
                             <line x1={P} y1={zeroY} x2={W-P} y2={zeroY} stroke="#999" strokeWidth="1" />
-                            {/* Grid Lines (Simple) */}
                             <line x1={P} y1={P} x2={P} y2={H-P} stroke="#ccc" />
-                            
                             {dataPoints.map((d, i) => {
                                 const valRatio = (d.value - domainMin) / domainRange;
                                 const barH = Math.abs(d.value / domainRange) * (H - 2*P);
-                                // Y Position depends on if positive or negative
                                 let yPos;
-                                if (d.value >= 0) {
-                                    yPos = H - P - valRatio * (H - 2*P);
-                                } else {
-                                    yPos = zeroY;
-                                }
-                                
+                                if (d.value >= 0) yPos = H - P - valRatio * (H - 2*P);
+                                else yPos = zeroY;
                                 return (
                                     <g key={i}>
-                                        <rect 
-                                            x={P + i*barW + 5} 
-                                            y={yPos} 
-                                            width={Math.max(barW-10, 2)} 
-                                            height={barH} 
-                                            fill={d.value >= 0 ? "#107C41" : "#D13438"} 
-                                        >
+                                        <rect x={P + i*barW + 5} y={yPos} width={Math.max(barW-10, 2)} height={barH} fill={d.value >= 0 ? "#107C41" : "#D13438"} >
                                             <title>{d.label}: {Math.round(d.value)}</title>
                                         </rect>
                                         <text x={P + i*barW + barW/2} y={H-P+15} textAnchor="middle" fontSize="8" fill="#666">{d.label.length > 8 ? d.label.slice(0,6)+'..' : d.label}</text>
@@ -707,8 +710,6 @@
                         </svg>
                     );
                 } else if (chartType === 'Pie') {
-                    // Pie charts only really work with absolute magnitude or positive values usually. 
-                    // We'll use absolute for visualization if mixed.
                     let total = dataPoints.reduce((s,d) => s + Math.abs(d.value), 0) || 1;
                     let acc = 0;
                     const cx = W/2, cy = H/2, r = Math.min(W-P*2, H-P*2)/2;
@@ -741,15 +742,11 @@
                          const y = H - P - (valRatio * (H - 2*P));
                          return `${P + i * stepX},${y}`;
                      }).join(' ');
-                     
-                     // Zero line
                      const zeroY = H - P - ((0 - domainMin) / domainRange) * (H - 2*P);
 
                      chartSvg = (
                          <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full bg-white border shadow-sm">
-                             {/* Zero Line */}
                              <line x1={P} y1={zeroY} x2={W-P} y2={zeroY} stroke="#ccc" strokeDasharray="4" />
-                             
                              <polyline points={points} fill="none" stroke="#107C41" strokeWidth="2" />
                              {dataPoints.map((d, i) => {
                                  const valRatio = (d.value - domainMin) / domainRange;
@@ -783,7 +780,7 @@
                             <div className="flex items-center space-x-2">
                                 <Icons.Grid className="w-5 h-5 opacity-80" />
                                 <span className="font-semibold text-lg">Excel Simulator</span>
-                                <span className="text-xs bg-green-700 px-2 py-0.5 rounded border border-green-600">Student Lab</span>
+                                <span className="text-xs bg-green-700 px-2 py-0.5 rounded border border-green-600">Student Lab v2</span>
                             </div>
                             <div className="text-xs flex items-center space-x-4">
                                 {instructorMode ? <span className="text-yellow-300 font-bold flex gap-1 bg-black/20 px-2 py-1 rounded"><Icons.Key size={12}/> Instructor Mode Active</span> :
@@ -992,23 +989,38 @@
                             )}
                         </div>
 
-                        {/* Pivot Fields Panel (Right Side) */}
+                        {/* Pivot Fields Panel (Right Side - Resizable) */}
                         {activeScreen === 'PIVOT' && (
                             <div className="w-72 bg-white border-l border-gray-300 flex flex-col shadow-xl z-20">
                                 <div className="bg-gray-100 p-2 font-semibold text-sm border-b text-gray-700 flex justify-between items-center">
                                     <span>PivotTable Fields</span>
                                     <Icons.Settings size={14} className="text-gray-400 cursor-pointer"/>
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-2 border-b bg-white">
+                                
+                                {/* Top: Field List (Dynamic Height) */}
+                                <div className="flex-1 overflow-y-auto p-2 bg-white min-h-[100px]">
                                     <div className="text-[10px] font-bold text-gray-400 uppercase mb-2">Drag fields to areas below</div>
-                                    {Object.keys(data[0]).filter(k => k!=='id').map(field => (
+                                    {Object.keys(data[0]).map(field => (
                                         <div key={field} draggable onDragStart={(e) => handleDragStart(e, field)} className="flex items-center space-x-2 p-1.5 mb-1 hover:bg-gray-100 border border-transparent hover:border-gray-200 cursor-grab text-sm rounded transition-colors active:cursor-grabbing no-select">
                                             <Icons.GripVertical size={12} className="text-gray-300" />
                                             <span>{field}</span>
                                         </div>
                                     ))}
                                 </div>
-                                <div className="h-[400px] bg-gray-50 grid grid-rows-2 grid-cols-2 gap-1 p-1 border-t border-gray-200">
+
+                                {/* Resizer Handle */}
+                                <div 
+                                    className="resizer" 
+                                    onMouseDown={(e) => {
+                                        isResizing.current = true; 
+                                        document.body.style.cursor = 'ns-resize';
+                                    }}
+                                >
+                                    <div className="resizer-handle"></div>
+                                </div>
+
+                                {/* Bottom: Drop Zones (Resizable Height) */}
+                                <div style={{ height: dropZoneHeight }} className="bg-gray-50 grid grid-rows-2 grid-cols-2 gap-1 p-1 border-t border-gray-200 shrink-0">
                                     {['filters', 'columns', 'rows', 'values'].map(area => (
                                         <div key={area} onDragOver={e => e.preventDefault()} onDrop={e => handleDrop(e, area)} className="bg-white border border-gray-300 rounded flex flex-col overflow-hidden">
                                             <div className="text-[10px] font-bold text-gray-500 p-1 border-b uppercase bg-gray-50">{area}</div>
@@ -1085,7 +1097,7 @@
                             <div className="bg-white rounded-lg shadow-xl p-6 w-80 text-sm">
                                 <h3 className="font-bold mb-4 border-b pb-2">Insert Slicers</h3>
                                 <div className="h-60 overflow-y-auto border p-2 mb-4 rounded bg-gray-50">
-                                    {Object.keys(data[0]).filter(k => k!=='id').map(field => (
+                                    {Object.keys(data[0]).map(field => (
                                         <label key={field} className="flex items-center space-x-2 mb-1 cursor-pointer hover:bg-gray-100 p-1 rounded">
                                             <input 
                                                 type="checkbox" 
