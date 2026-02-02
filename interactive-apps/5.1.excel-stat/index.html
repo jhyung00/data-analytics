@@ -423,7 +423,7 @@
                 <ul class="text-xs space-y-1">
                     <li><strong>Z = 0:</strong> Exactly Average.</li>
                     <li><strong>Z = +2:</strong> High (Top 2.5%).</li>
-                    <li><strong>Z = +4:</strong> <span class="text-red-500 font-bold">Suspicious!</span> (One in 15,000).</li>
+                    <li><strong>Z = +3:</strong> <span class="text-red-500 font-bold">Suspicious!</span> (Very rare outlier).</li>
                 </ul>`
             ],
             renderInteractive: (container) => {
@@ -517,22 +517,105 @@
                 `<h3 class="font-bold text-lg mb-2 text-blue-600">R-Squared (Goodness of Fit)</h3><p class="mb-2">How trustworthy is the line?</p><p class="mb-2"><strong>R² (R-Squared)</strong> tells you how well the line fits the data (0 to 1).</p><ul class="list-disc pl-4 text-sm"><li><strong>R² = 1.0:</strong> Perfect fit.</li><li><strong>R² > 0.8:</strong> Strong audit evidence.</li><li><strong>R² < 0.5:</strong> Weak relationship. Don't rely on it.</li></ul>`
             ],
             renderInteractive: (container) => {
-                container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-2">Interactive: Fit the Line</h4><canvas id="regCanvas" width="300" height="200" class="bg-white border border-slate-200 rounded mx-auto"></canvas><input type="range" min="0" max="100" value="50" class="w-full mt-2" id="slope-slider"><p class="text-xs text-slate-500 mt-1">Adjust slope (Average Wage) to fit the headcount data.</p></div>`;
-                const canvas = document.getElementById('regCanvas');
-                const ctx = canvas.getContext('2d');
-                const slider = document.getElementById('slope-slider');
-                const points = [{x: 20, y: 50}, {x: 50, y: 80}, {x: 100, y: 120}, {x: 150, y: 160}, {x: 200, y: 190}, {x: 250, y: 240}];
-                function draw() {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = "#3b82f6";
-                    points.forEach(p => { ctx.beginPath(); ctx.arc(p.x, canvas.height - p.y/1.5, 4, 0, Math.PI*2); ctx.fill(); });
-                    const slope = slider.value / 100; 
-                    ctx.strokeStyle = "#10b981"; ctx.lineWidth = 3;
-                    ctx.beginPath(); ctx.moveTo(0, canvas.height - 20); 
-                    const endY = (canvas.height - 20) - (slope * 250);
-                    ctx.lineTo(300, endY); ctx.stroke();
+                container.innerHTML = `
+                    <div class="w-full max-w-sm text-center">
+                        <div class="flex border-b border-slate-200 mb-2">
+                            <button id="tab-fit" class="flex-1 py-1 text-xs font-bold text-blue-600 border-b-2 border-blue-600" onclick="switchRegTab('fit')">1. Fit the Line</button>
+                            <button id="tab-r2" class="flex-1 py-1 text-xs font-bold text-slate-400" onclick="switchRegTab('r2')">2. R² Simulator</button>
+                        </div>
+                        
+                        <!-- View 1: Fit Line -->
+                        <div id="view-fit" class="block">
+                            <h4 class="font-bold mb-2 text-xs">Adjust Slope to match Data</h4>
+                            <canvas id="fitCanvas" width="300" height="180" class="bg-white border border-slate-200 rounded mx-auto"></canvas>
+                            <input type="range" min="0" max="100" value="50" class="w-full mt-2" id="slope-slider-fit">
+                            <p class="text-[10px] text-slate-400 mt-1">Try to minimize the gray lines (Errors)</p>
+                        </div>
+
+                        <!-- View 2: R2 -->
+                        <div id="view-r2" class="hidden">
+                            <h4 class="font-bold mb-2 text-xs">Add Noise to Lower R²</h4>
+                            <canvas id="rsqCanvas" width="300" height="180" class="bg-white border border-slate-200 rounded mx-auto"></canvas>
+                            <input type="range" min="0" max="100" value="10" class="w-full mt-2" id="noise-slider-r2">
+                            <div id="rsq-display" class="font-mono font-bold text-emerald-600 text-sm mt-1">R² = 0.98</div>
+                        </div>
+                    </div>`;
+
+                // Logic for Tab Switch
+                window.switchRegTab = (tab) => {
+                    document.getElementById('view-fit').className = tab === 'fit' ? 'block' : 'hidden';
+                    document.getElementById('view-r2').className = tab === 'r2' ? 'block' : 'hidden';
+                    document.getElementById('tab-fit').className = tab === 'fit' ? 'flex-1 py-1 text-xs font-bold text-blue-600 border-b-2 border-blue-600' : 'flex-1 py-1 text-xs font-bold text-slate-400';
+                    document.getElementById('tab-r2').className = tab === 'r2' ? 'flex-1 py-1 text-xs font-bold text-blue-600 border-b-2 border-blue-600' : 'flex-1 py-1 text-xs font-bold text-slate-400';
+                };
+
+                // Logic for Fit Line
+                const fitCvs = document.getElementById('fitCanvas');
+                const fitCtx = fitCvs.getContext('2d');
+                const fitSlider = document.getElementById('slope-slider-fit');
+                const fitPoints = [{x: 20, y: 50}, {x: 60, y: 80}, {x: 100, y: 110}, {x: 160, y: 150}, {x: 220, y: 190}, {x: 260, y: 220}]; // Trend roughly y = 0.7x + 35
+                
+                function drawFit() {
+                    fitCtx.clearRect(0,0,300,180);
+                    
+                    // Draw Points
+                    fitCtx.fillStyle = "#3b82f6";
+                    fitPoints.forEach(p => { 
+                        fitCtx.beginPath(); fitCtx.arc(p.x, 180 - (p.y * 0.6), 4, 0, Math.PI*2); fitCtx.fill(); 
+                    });
+
+                    // Draw User Line
+                    const slope = fitSlider.value / 50; // 0 to 2
+                    fitCtx.strokeStyle = "#10b981"; fitCtx.lineWidth = 3;
+                    fitCtx.beginPath(); fitCtx.moveTo(0, 180 - 20); // Intercept approx 20
+                    fitCtx.lineTo(300, 180 - (20 + (slope * 300 * 0.5))); // visual scaling
+                    fitCtx.stroke();
+                    
+                    // Draw Residuals (visual only)
+                    fitCtx.strokeStyle = "#cbd5e1"; fitCtx.lineWidth = 1;
+                    fitPoints.forEach(p => {
+                        const lineY = 180 - (20 + (slope * p.x * 0.5));
+                        const pointY = 180 - (p.y * 0.6);
+                        fitCtx.beginPath(); fitCtx.moveTo(p.x, pointY); fitCtx.lineTo(p.x, lineY); fitCtx.stroke();
+                    });
                 }
-                slider.oninput = draw; draw();
+                fitSlider.oninput = drawFit;
+                drawFit();
+
+                // Logic for R2
+                const r2Cvs = document.getElementById('rsqCanvas');
+                const r2Ctx = r2Cvs.getContext('2d');
+                const r2Slider = document.getElementById('noise-slider-r2');
+                const r2Display = document.getElementById('rsq-display');
+
+                function drawR2() {
+                    const noise = parseInt(r2Slider.value);
+                    r2Ctx.clearRect(0,0,300,180);
+                    
+                    // Draw Best Fit Line (Fixed)
+                    r2Ctx.strokeStyle = "#94a3b8"; r2Ctx.lineWidth = 2; r2Ctx.setLineDash([5,5]);
+                    r2Ctx.beginPath(); r2Ctx.moveTo(20, 160); r2Ctx.lineTo(280, 20); r2Ctx.stroke(); r2Ctx.setLineDash([]);
+
+                    // Draw Points with Noise
+                    r2Ctx.fillStyle = "#ef4444";
+                    const pointsX = [40, 80, 120, 160, 200, 240];
+                    
+                    pointsX.forEach((x, i) => {
+                        const idealY = 160 - ((x-20) * (140/260));
+                        // Deterministic pseudo-random noise based on slider
+                        const offset = (Math.sin(i * 132) * noise) + ((Math.cos(i * 45) * noise)); 
+                        
+                        r2Ctx.beginPath(); r2Ctx.arc(x, idealY + offset, 4, 0, Math.PI*2); r2Ctx.fill();
+                    });
+
+                    // Fake R2
+                    let r2 = 1 - (noise / 80);
+                    if(r2 < 0) r2 = 0;
+                    r2Display.textContent = `R² = ${r2.toFixed(2)}`;
+                    r2Display.className = r2 > 0.8 ? "font-mono font-bold text-emerald-600 text-sm mt-1" : "font-mono font-bold text-orange-500 text-sm mt-1";
+                }
+                r2Slider.oninput = drawR2;
+                drawR2();
             }
         };
 
@@ -728,11 +811,11 @@
                     title: "Categorical Analysis & Contingency",
                     slides: [
                         `<h3 class="font-bold mb-2">When Math Fails</h3><p class="mb-2">You can't calculate the "Average" of text labels like "Sales Dept" or "Pass/Fail".</p><p>So, we count them instead using <strong>Frequency Tables</strong>.</p>`,
-                        `<h3 class="font-bold mb-2">How to Use a Contingency Table</h3><p class="text-sm mb-2">To find if a department is "Risky", we need the <strong>conditional probability</strong>.</p><ol class="list-decimal pl-4 text-sm space-y-2"><li><strong>Find the Row Total:</strong> Count everyone in that department (e.g., 100 people in Sales).</li><li><strong>Find the Target:</strong> Count the Errors in that department (e.g., 20 Errors).</li><li><strong>Divide:</strong> Target / Total = Rate (20 / 100 = 20%).</li></ol>`,
+                        `<h3 class="font-bold mb-2">How to Use a Contingency Table</h3><p class="text-sm mb-2">To find if a department is "Risky", we need the <strong>conditional probability</strong>.</p><ol class="list-decimal pl-4 text-sm space-y-2"><li><strong>Find the Row Total:</strong> Count all transactions tested in that department (e.g., 100 invoices).</li><li><strong>Find the Target:</strong> Count the Errors in that department (e.g., 20 Errors).</li><li><strong>Divide:</strong> Target / Total = Rate (20 / 100 = 20%).</li></ol>`,
                         `<div class="bg-blue-50 p-3 rounded"><p class="font-bold text-blue-800 text-sm">Compare!</p><p class="text-sm">If Sales has a 20% error rate and IT has a 5% error rate, you know where to audit next.</p></div>`
                     ],
                     renderInteractive: (container) => {
-                        container.innerHTML = `<div class="w-full max-w-sm"><h4 class="font-bold text-center mb-4">Interactive Cross-Tab</h4><table class="w-full text-sm border-collapse mb-4"><tr class="bg-slate-100"><th class="p-2 border">Dept</th><th class="p-2 border">Pass</th><th class="p-2 border">Fail</th><th class="p-2 border text-slate-400">Total</th></tr><tr class="hover:bg-blue-50 cursor-pointer transition-colors" id="row-sales" onclick="showRate('Sales', 20, 100)"><td class="p-2 border font-bold">Sales</td><td class="p-2 border text-center">80</td><td class="p-2 border text-center text-red-500 font-bold">20</td><td class="p-2 border text-center text-slate-500">100</td></tr><tr class="hover:bg-blue-50 cursor-pointer transition-colors" id="row-it" onclick="showRate('IT', 5, 100)"><td class="p-2 border font-bold">IT</td><td class="p-2 border text-center">95</td><td class="p-2 border text-center text-red-500 font-bold">5</td><td class="p-2 border text-center text-slate-500">100</td></tr></table><div id="rate-display" class="bg-slate-800 text-white p-3 rounded text-center text-xs hidden slide-up"><span class="font-bold text-emerald-400" id="rate-dept"></span> Error Rate: <span id="rate-val"></span>%<div class="text-[10px] text-slate-400 mt-1">Calculation: (Failures / Total) * 100</div></div><p class="text-xs text-center mt-3 text-slate-500">Click a row to calculate the conditional error rate.</p></div>`;
+                        container.innerHTML = `<div class="w-full max-w-sm"><h4 class="font-bold text-center mb-4">Interactive Cross-Tab</h4><table class="w-full text-sm border-collapse mb-4"><tr class="bg-slate-100"><th class="p-2 border">Dept</th><th class="p-2 border">Pass</th><th class="p-2 border">Fail</th><th class="p-2 border text-slate-400">Total Samples</th></tr><tr class="hover:bg-blue-50 cursor-pointer transition-colors" id="row-sales" onclick="showRate('Sales', 20, 100)"><td class="p-2 border font-bold">Sales</td><td class="p-2 border text-center">80</td><td class="p-2 border text-center text-red-500 font-bold">20</td><td class="p-2 border text-center text-slate-500">100</td></tr><tr class="hover:bg-blue-50 cursor-pointer transition-colors" id="row-it" onclick="showRate('IT', 5, 100)"><td class="p-2 border font-bold">IT</td><td class="p-2 border text-center">95</td><td class="p-2 border text-center text-red-500 font-bold">5</td><td class="p-2 border text-center text-slate-500">100</td></tr></table><div id="rate-display" class="bg-slate-800 text-white p-3 rounded text-center text-xs hidden slide-up"><span class="font-bold text-emerald-400" id="rate-dept"></span> Error Rate: <span id="rate-val"></span>%<div class="text-[10px] text-slate-400 mt-1">Calculation: (Failures / Total Samples) * 100</div></div><p class="text-xs text-center mt-3 text-slate-500">Click a row to calculate the conditional error rate.</p></div>`;
                         window.showRate = (dept, fail, total) => {
                             document.getElementById('rate-display').classList.remove('hidden');
                             document.getElementById('rate-dept').textContent = dept;
@@ -743,7 +826,7 @@
                 challenges: [
                     {
                         title: "Tax Compliance Analysis",
-                        desc: "Analyze relationship between 'Department' (Sales vs R&D) and 'Filing Accuracy' (Error vs Correct). <br><br><strong>Instruction:</strong> Calculate the error rate for each department. (Errors / (Errors + Correct)). Which department is riskier?",
+                        desc: "Analyze relationship between 'Department' (Sales vs R&D) and 'Filing Accuracy' (Error vs Correct). <br><br><strong>Instruction:</strong> Calculate the error rate per department. Which department has a higher risk density?",
                         chartType: "none",
                         customVisual: `<table class="w-full text-sm text-center border"><thead class="bg-gray-100"><tr><th>Dept</th><th>Error</th><th>Correct</th></tr></thead><tbody><tr><td>Sales</td><td class="text-red-500 font-bold">15</td><td class="text-green-500">35</td></tr><tr><td>R&D</td><td class="text-red-500">5</td><td class="text-green-500">45</td></tr></tbody></table>`,
                         options: [
@@ -972,20 +1055,20 @@
                 challenges: [
                     {
                         title: "Payroll Substantive Analytic",
-                        desc: "You ran a regression on Payroll. <br><strong>Equation:</strong> Expense = $60,000 * (Headcount) + Fixed Costs.<br><strong>R-Squared:</strong> 0.92.<br><br>What does the '$60,000' represent?",
+                        desc: "You ran a regression on Payroll for a large Corp. <br><strong>Equation:</strong> Expense = $60,000 * (Headcount) + $2.0M.<br><strong>R-Squared:</strong> 0.92.<br><br>What does the '$60,000' represent?",
                         chartType: "scatter",
                         xAxisLabel: "Headcount",
                         yAxisLabel: "Expense ($)",
                         data: [
-                            {x:10, y:650}, {x:20, y:1250}, {x:30, y:1850},
-                            {x:40, y:2450}, {x:50, y:3100}, {x:60, y:3650},
-                            {x:70, y:4250}, {x:80, y:4850}, {x:90, y:5450},
-                            {x:100, y:6200}, {x:110, y:6650}, {x:120, y:7250}
+                            {x:10, y:2600000}, {x:20, y:3200000}, {x:30, y:3800000},
+                            {x:40, y:4400000}, {x:50, y:5000000}, {x:60, y:5600000},
+                            {x:70, y:6200000}, {x:80, y:6800000}, {x:90, y:7400000},
+                            {x:100, y:8000000}
                         ],
                         labels: "Headcount vs Expense",
                         options: [
                             { text: "The Average Annual Wage per Employee", correct: true, feedback: "Correct! The slope represents the variable cost added per unit (employee)." },
-                            { text: "The Fixed Costs of HR", correct: false, feedback: "Incorrect. Fixed costs are the Intercept (b), not the slope (m)." },
+                            { text: "The Fixed Costs of HR", correct: false, feedback: "Incorrect. Fixed costs are the Intercept ($2.0M), not the slope." },
                             { text: "Total Payroll Expense", correct: false, feedback: "Incorrect. That's the output (Y), not the coefficient." }
                         ]
                     },
@@ -1067,33 +1150,97 @@
                 lesson: {
                     title: "Experimental Design & P-Values",
                     slides: [
-                        `<h3 class="font-bold text-lg mb-2 text-purple-600">Step 1: The Design</h3><p class="mb-4">You don't just "look at data". You design a trap for the truth.</p><ol class="list-decimal pl-4 space-y-2 text-sm"><li><strong>Question:</strong> "Will changing the Fraud Rule catch more bad guys?"</li><li><strong>Hypothesis:</strong> "Adding 'Bank Change' check will increase precision."</li></ol>`,
-                        `<h3 class="font-bold text-lg mb-2 text-purple-600">Step 2: The Setup</h3><div class="space-y-2 text-sm"><div class="bg-blue-50 p-2 rounded border border-blue-200"><strong>Independent Variable:</strong> The thing you change. <br>(e.g., The Fraud Rule Logic).</div><div class="bg-orange-50 p-2 rounded border border-orange-200"><strong>Dependent Variable:</strong> The thing you measure. <br>(e.g., % of true fraud caught).</div></div>`,
-                        `<h3 class="font-bold text-lg mb-2 text-purple-600">Step 3: The Verdict (P-Values)</h3><p class="mb-2">How do we know if we got lucky?</p><ul class="space-y-2 text-sm"><li><strong>P-Value:</strong> Probability it was just luck. <br><span class="font-bold text-emerald-600">Goal: < 0.05</span> (Less than 5% chance of luck).</li><li><strong>Confidence Interval:</strong> The range of truth. <br>If it crosses zero (e.g. -1% to +5%), we aren't sure.</li></ul>`
+                        `<h3 class="font-bold text-lg mb-2 text-purple-600">Step 1: The Design</h3><p class="mb-4">You design a test to improve audit response rates. You split clients into two groups.</p><ol class="list-decimal pl-4 space-y-2 text-sm"><li><strong>Group A (Control):</strong> Standard white envelope.</li><li><strong>Group B (Treatment):</strong> "Urgent" red stamp envelope.</li></ol>`,
+                        `<h3 class="font-bold text-lg mb-2 text-purple-600">Step 2: The Results</h3><div class="space-y-3 text-sm"><p>You mail 500 letters to each group.</p><div class="flex gap-4"><div class="bg-slate-100 p-2 rounded flex-1 text-center border"><strong>Group A</strong><br>15 replies (3%)</div><div class="bg-red-50 p-2 rounded flex-1 text-center border border-red-200"><strong>Group B</strong><br>45 replies (9%)</div></div><p class="mt-2">It <em>looks</em> like the Red Stamp worked (3x better!). But is it real?</p></div>`,
+                        `<h3 class="font-bold text-lg mb-2 text-purple-600">Step 3: The Verdict (P-Values)</h3><p class="mb-2">How do we know if the improvement was just luck?</p><ul class="space-y-2 text-sm"><li><strong>P-Value:</strong> Probability the effect is random. <br><span class="font-bold text-emerald-600">Goal: < 0.05</span>.</li><li>If P < 0.05, we reject the Null Hypothesis. The "Urgent" stamp works!</li></ul>`
                     ],
                     renderInteractive: (container) => {
-                        container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-2">Interactive: A/B Test Simulator</h4><div class="bg-slate-50 p-2 rounded border border-slate-200 mb-2 h-40 relative flex items-end justify-center overflow-hidden"><div id="curve-a" class="absolute bottom-0 border-2 border-slate-400 w-32 h-32 rounded-full border-b-0" style="left: 20%; opacity: 0.5;"></div><div id="curve-b" class="absolute bottom-0 border-2 border-emerald-500 w-32 h-32 rounded-full border-b-0 transition-all duration-300" style="left: 20%; opacity: 0.8;"></div><div class="absolute bottom-2 text-xs text-slate-400 w-full text-center">Difference in Means</div></div><input type="range" min="0" max="100" value="0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 mb-2" id="effect-slider"><div class="flex justify-between items-center bg-slate-100 p-2 rounded"><div class="text-xs"><div class="text-slate-500">P-Value</div><div id="p-val-display" class="font-bold text-lg text-slate-700">0.99</div></div><div class="text-xs text-right"><div class="text-slate-500">Conclusion</div><div id="conclusion-display" class="font-bold text-slate-400">Not Significant</div></div></div><p class="text-[10px] text-slate-400 mt-2">Slide right to increase the effect size (difference). Watch P-value drop.</p></div>`;
-                        const slider = document.getElementById('effect-slider');
-                        const curveB = document.getElementById('curve-b');
+                        container.innerHTML = `
+                            <div class="w-full max-w-sm text-center">
+                                <h4 class="font-bold mb-2">Interactive: Testing the "Urgent" Stamp</h4>
+                                <div class="bg-slate-50 p-2 rounded border border-slate-200 mb-2 h-40 relative flex items-center justify-center overflow-hidden">
+                                    <canvas id="pvalCanvas" width="280" height="150" class="absolute"></canvas>
+                                </div>
+                                <label class="text-xs text-slate-500 font-bold">Effect Size (Difference in Response)</label>
+                                <input type="range" min="0" max="50" value="0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600 mb-2" id="slope-slider">
+                                
+                                <div class="flex justify-between items-center bg-slate-100 p-2 rounded">
+                                    <div class="text-xs text-left">
+                                        <div class="text-slate-500">Hypothesis</div>
+                                        <div class="font-mono text-slate-700">Slope > 0</div>
+                                    </div>
+                                    <div class="text-xs text-right">
+                                        <div class="text-slate-500">P-Value</div>
+                                        <div id="p-val-display" class="font-bold text-lg text-slate-700">0.99</div>
+                                    </div>
+                                </div>
+                                <div id="conclusion-display" class="text-xs font-bold text-slate-400 mt-1">H0: No relationship (Slope = 0)</div>
+                            </div>`;
+                        
+                        const cvs = document.getElementById('pvalCanvas');
+                        const ctx = cvs.getContext('2d');
+                        const slider = document.getElementById('slope-slider');
                         const pDisplay = document.getElementById('p-val-display');
                         const cDisplay = document.getElementById('conclusion-display');
-                        slider.oninput = (e) => {
-                            const val = parseInt(e.target.value);
-                            curveB.style.left = (20 + (val/2)) + '%';
+
+                        function drawPVal() {
+                            const slope = parseInt(slider.value);
+                            ctx.clearRect(0,0,280,150);
+                            
+                            // Axis
+                            ctx.beginPath();
+                            ctx.moveTo(10, 140); ctx.lineTo(270, 140); 
+                            ctx.moveTo(10, 140); ctx.lineTo(10, 10);
+                            ctx.strokeStyle="#94a3b8"; ctx.stroke();
+                            
+                            // Axis Labels (Simple)
+                            ctx.fillStyle = "#64748b"; ctx.font = "10px sans-serif";
+                            ctx.fillText("Perceived Urgency", 180, 135);
+                            ctx.save(); ctx.translate(20, 80); ctx.rotate(-Math.PI/2);
+                            ctx.fillText("Response Likelihood", 0, 0); ctx.restore();
+
+                            // Scatter Points
+                            ctx.fillStyle = "#3b82f6";
+                            for(let i=0; i<40; i++) {
+                                let x = 20 + (Math.random() * 240);
+                                
+                                // INCREASED NOISE: +/- 40px range to ensure cloud shape
+                                let randomY = (Math.random() - 0.5) * 80; 
+                                
+                                // Effect of Slope (scaled to fit view)
+                                // Max slope 50 -> Max effect approx 80px height
+                                let slopeY = (x/240) * (slope * 1.6); 
+                                
+                                let y = 110 - (slopeY + randomY);
+                                // Clamp to view
+                                if(y < 10) y = 10;
+                                if(y > 135) y = 135;
+                                
+                                ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+                            }
+
+                            // Calculate Fake P-Value based on slope strength
+                            // High slope = Low P-Value
                             let p = 1.0;
-                            if(val > 0) p = Math.exp(-val/20);
-                            if(p > 1) p = 1;
+                            if(slope > 0) p = 1 / (slope * 1.5);
+                            if(p > 1) p = 0.99;
+                            if(p < 0.001) p = 0.001;
+                            
                             pDisplay.textContent = p.toFixed(3);
+                            
                             if(p < 0.05) {
                                 pDisplay.className = "font-bold text-lg text-emerald-600";
-                                cDisplay.textContent = "Significant! 🚀";
-                                cDisplay.className = "font-bold text-emerald-600";
+                                cDisplay.textContent = "Significant! Reject H0 (Urgency works)";
+                                cDisplay.className = "text-xs font-bold text-emerald-600 mt-1";
                             } else {
                                 pDisplay.className = "font-bold text-lg text-slate-700";
-                                cDisplay.textContent = "Not Significant 🤷";
-                                cDisplay.className = "font-bold text-slate-400";
+                                cDisplay.textContent = "Not Significant (Could be random noise)";
+                                cDisplay.className = "text-xs font-bold text-slate-400 mt-1";
                             }
                         }
+                        
+                        slider.oninput = drawPVal;
+                        drawPVal();
                     }
                 },
                 challenges: [
