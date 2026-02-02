@@ -526,9 +526,9 @@
                             <h3 class="font-bold text-purple-800 mb-2">2. Approximate Match (Mode -1 vs 1)</h3>
                             <div class="flex gap-4 mb-2">
                                 <table class="text-xs bg-white border h-fit">
-                                    <tr class="bg-gray-200 font-bold"><td>Tier</td><td>Min</td></tr>
-                                    <tr><td>0</td><td>$0</td></tr>
-                                    <tr><td>1</td><td>$500</td></tr>
+                                    <tr class="bg-gray-200 font-bold"><td>Min</td><td>Tier</td></tr>
+                                    <tr><td>$0</td><td>0</td></tr>
+                                    <tr><td>$500</td><td>1</td></tr>
                                 </table>
                                 <div class="text-sm text-gray-600 flex-1">
                                     <p class="mb-1"><strong>Scenario:</strong> Price is $450.</p>
@@ -604,7 +604,7 @@
                 secondaryTable: discountRules,
                 correctIndex: 1,
                 options: [
-                    { code: "=XLOOKUP(25, Rules[Min], Rules[Disc],, 0)", feedback: "Incorrect. 25 is not in the list. Exact match fails." },
+                    { code: "=XLOOKUP(25, Rules[Min], Rules[Disc],, 0)", feedback: "Incorrect. 25 is not in the list. Exact match (0) fails." },
                     { code: "=XLOOKUP(25, Rules[Min], Rules[Disc],, -1)", feedback: "Correct! Mode -1 finds the 'Next Smaller'. 10 is smaller than 25, so we get 5% discount." },
                     { code: "=XLOOKUP(25, Rules[Min], Rules[Disc],, 1)", feedback: "Incorrect. Mode 1 finds 'Next Larger' (50), which gives a 10% discount we didn't earn." },
                     { code: "=XLOOKUP(25, Rules[Min], Rules[Disc],, 2)", feedback: "Incorrect. Mode 2 is for wildcards." }
