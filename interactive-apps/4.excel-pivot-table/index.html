@@ -519,6 +519,13 @@
                 setActiveFilters({});
                 setTopNFilter(prev => ({ ...prev, enabled: false }));
                 setActiveSlicerFields([]);
+                // Fix: Reset Pivot Configuration completely
+                setPivotConfig({
+                    rows: [],
+                    columns: [],
+                    values: [],
+                    filters: []
+                });
             };
 
             // --- Renderers ---
