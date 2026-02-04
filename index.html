@@ -98,18 +98,15 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased flex flex-col min-h-screen relative">
 
-    <!-- Loading Screen -->
     <div id="loader">
         <div class="loader-spinner mb-4"></div>
         <h2 class="text-white text-xl font-bold tracking-wider animate-pulse">ACCT311</h2>
         <p class="text-slate-400 text-sm mt-2">Loading Environment...</p>
     </div>
 
-    <!-- Navigation -->
     <nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
-                <!-- Logo -->
                 <div class="flex items-center cursor-pointer" onclick="switchTab('apps')">
                     <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-sky-900/20">
                         <i class="fa-solid fa-chart-line text-accent text-lg"></i>
@@ -117,21 +114,19 @@
                     <span class="font-bold text-xl tracking-tight text-primary">ACCT311</span>
                 </div>
 
-                <!-- Desktop Menu -->
                 <div class="hidden md:flex space-x-1 items-center">
                     <button onclick="switchTab('apps')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Lecture Materials</button>
                     <button onclick="switchTab('demos')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Real-World Practice</button>
                     <button onclick="switchTab('labs')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Labs</button>
+                    <button onclick="switchTab('study')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Study Guides</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
     <header id="home" class="relative hero-pattern text-white py-20 lg:py-24 overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/95 to-slate-900/80"></div>
         
-        <!-- Decorative blobs -->
         <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-sky-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
         <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
 
@@ -155,10 +150,8 @@
     <main class="flex-grow -mt-10 relative z-20 pb-24">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            <!-- Category Selection (The 3 Groupings) -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                 
-                <!-- Card 1: Apps/Lecture -->
                 <button onclick="switchTab('apps')" id="btn-apps" class="category-btn active glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-sky-500 group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
@@ -167,10 +160,9 @@
                         <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-blue-500 transition-colors"></i>
                     </div>
                     <h3 class="text-lg font-bold text-slate-800">Lecture Materials</h3>
-                    <p class="text-sm text-slate-500 mt-1">Interactive Applications & Concepts</p>
+                    <p class="text-sm text-slate-500 mt-1">Interactive Concepts</p>
                 </button>
 
-                <!-- Card 2: Demos/Practice -->
                 <button onclick="switchTab('demos')" id="btn-demos" class="category-btn glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-orange-500 group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
@@ -179,10 +171,9 @@
                         <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-orange-500 transition-colors"></i>
                     </div>
                     <h3 class="text-lg font-bold text-slate-800">Class Demos</h3>
-                    <p class="text-sm text-slate-500 mt-1">Real-World Scenario Practice</p>
+                    <p class="text-sm text-slate-500 mt-1">Real-World Practice</p>
                 </button>
 
-                <!-- Card 3: Labs -->
                 <button onclick="switchTab('labs')" id="btn-labs" class="category-btn glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-emerald-500 group">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
@@ -191,15 +182,24 @@
                         <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-emerald-500 transition-colors"></i>
                     </div>
                     <h3 class="text-lg font-bold text-slate-800">Laboratory</h3>
-                    <p class="text-sm text-slate-500 mt-1">Assignments & Exercises</p>
+                    <p class="text-sm text-slate-500 mt-1">Assignments</p>
+                </button>
+
+                <button onclick="switchTab('study')" id="btn-study" class="category-btn glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-rose-500 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
+                            <i class="fa-solid fa-graduation-cap text-rose-500 text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-rose-500 transition-colors"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Study Guides</h3>
+                    <p class="text-sm text-slate-500 mt-1">Exam Preparation</p>
                 </button>
 
             </div>
 
-            <!-- Dynamic Content Container -->
             <div id="content-container" class="min-h-[500px]">
                 
-                <!-- CONTENT 1: INTERACTIVE APPS (Lecture Materials) -->
                 <div id="view-apps" class="animate-fade-in block">
                     <div class="flex items-center justify-between mb-8">
                         <div>
@@ -210,8 +210,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        
-                        <!-- 0. Introduction -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-blue-100 relative overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -225,7 +223,6 @@
                             </div>
                         </div>
 
-                        <!-- 1. Excel Basic -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-emerald-100 relative overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -239,7 +236,6 @@
                             </div>
                         </div>
 
-                        <!-- 2. Excel Conditional -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-amber-100 relative overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1555421689-d68471e189f2?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -253,7 +249,6 @@
                             </div>
                         </div>
 
-                        <!-- 3. Excel Lookup -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-blue-100 relative overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -267,7 +262,6 @@
                             </div>
                         </div>
 
-                        <!-- 4. Excel Pivot Table -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-purple-100 relative overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -281,7 +275,6 @@
                             </div>
                         </div>
 
-                        <!-- 5.1 Excel Stat -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-red-100 relative overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1543286386-2e659306cd6c?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -295,7 +288,6 @@
                             </div>
                         </div>
 
-                        <!-- 5.2 Excel Descriptive -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-orange-100 relative overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -309,7 +301,6 @@
                             </div>
                         </div>
 
-                        <!-- 6. Excel Solver -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-teal-100 relative overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -323,7 +314,6 @@
                             </div>
                         </div>
 
-                        <!-- 7. Power Query (Consolidated) -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative">
                             <div class="h-40 bg-yellow-100 relative overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -338,7 +328,6 @@
                             </div>
                         </div>
 
-                        <!-- 8. Power BI (Consolidated) -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative">
                             <div class="h-40 bg-yellow-400 relative overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -353,7 +342,6 @@
                             </div>
                         </div>
 
-                         <!-- 10. Alteryx (Consolidated) -->
                          <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative">
                             <div class="h-40 bg-cyan-600 relative overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -368,7 +356,6 @@
                             </div>
                         </div>
 
-                         <!-- 11. Exploratory AI -->
                          <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-indigo-600 relative overflow-hidden">
                                 <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -385,7 +372,6 @@
                     </div>
                 </div>
 
-                <!-- CONTENT 2: DEMOS (Real World Practice) -->
                 <div id="view-demos" class="hidden animate-fade-in">
                     <div class="flex items-center justify-between mb-8">
                         <div>
@@ -397,7 +383,6 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         
-                        <!-- Demo 3 -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
                             <div class="h-32 bg-orange-50 relative overflow-hidden">
                                 <div class="absolute inset-0 flex items-center justify-center">
@@ -413,7 +398,6 @@
                             </div>
                         </div>
 
-                        <!-- Demo 4.1 -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
                             <div class="h-32 bg-purple-50 relative overflow-hidden">
                                 <div class="absolute inset-0 flex items-center justify-center">
@@ -429,7 +413,6 @@
                             </div>
                         </div>
 
-                        <!-- Demo 4.2 -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
                             <div class="h-32 bg-purple-50 relative overflow-hidden">
                                 <div class="absolute inset-0 flex items-center justify-center">
@@ -445,7 +428,6 @@
                             </div>
                         </div>
 
-                        <!-- Demo 5.1 -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
                             <div class="h-32 bg-red-50 relative overflow-hidden">
                                 <div class="absolute inset-0 flex items-center justify-center">
@@ -461,7 +443,6 @@
                             </div>
                         </div>
 
-                        <!-- Demo 5.2 -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
                             <div class="h-32 bg-blue-50 relative overflow-hidden">
                                 <div class="absolute inset-0 flex items-center justify-center">
@@ -477,7 +458,6 @@
                             </div>
                         </div>
 
-                        <!-- Demo 7.1 -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
                             <div class="h-32 bg-yellow-50 relative overflow-hidden">
                                 <div class="absolute inset-0 flex items-center justify-center">
@@ -493,7 +473,6 @@
                             </div>
                         </div>
 
-                         <!-- Demo 7.2 -->
                          <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
                             <div class="h-32 bg-yellow-50 relative overflow-hidden">
                                 <div class="absolute inset-0 flex items-center justify-center">
@@ -509,7 +488,6 @@
                             </div>
                         </div>
 
-                        <!-- Coming Soon -->
                         <div class="border border-dashed border-slate-300 rounded-xl p-5 flex flex-col justify-center items-center text-center bg-slate-50/50 hover:bg-slate-50 transition-colors">
                             <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mb-3">
                                 <i class="fa-solid fa-plus text-slate-400"></i>
@@ -521,7 +499,6 @@
                     </div>
                 </div>
 
-                <!-- CONTENT 3: LABS (Assignments) -->
                 <div id="view-labs" class="hidden animate-fade-in">
                     <div class="flex items-center justify-between mb-8">
                         <div>
@@ -533,7 +510,6 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         
-                        <!-- Lab 1: Fundamentals (Active) -->
                         <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 relative overflow-hidden group hover:shadow-md transition-shadow">
                             <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                                 <i class="fa-solid fa-flask text-6xl text-emerald-600"></i>
@@ -547,7 +523,6 @@
                             </div>
                         </div>
 
-                         <!-- Lab 2: Pivot Table (Locked) -->
                          <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
                             <div class="absolute top-0 right-0 p-3 opacity-10">
                                 <i class="fa-solid fa-table text-6xl text-slate-400"></i>
@@ -561,7 +536,6 @@
                             </div>
                         </div>
 
-                        <!-- Lab 3: Stat & Regression (Locked) -->
                         <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
                             <div class="absolute top-0 right-0 p-3 opacity-10">
                                 <i class="fa-solid fa-chart-bar text-6xl text-slate-400"></i>
@@ -575,7 +549,6 @@
                             </div>
                         </div>
 
-                        <!-- Lab 4: Power Query (Locked) -->
                         <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
                             <div class="absolute top-0 right-0 p-3 opacity-10">
                                 <i class="fa-solid fa-bolt text-6xl text-slate-400"></i>
@@ -589,7 +562,6 @@
                             </div>
                         </div>
 
-                        <!-- Lab 5: Power BI (Locked) -->
                         <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
                             <div class="absolute top-0 right-0 p-3 opacity-10">
                                 <i class="fa-solid fa-chart-pie text-6xl text-slate-400"></i>
@@ -603,7 +575,6 @@
                             </div>
                         </div>
 
-                        <!-- Lab 6: Alteryx 1 (Locked) -->
                         <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
                             <div class="absolute top-0 right-0 p-3 opacity-10">
                                 <i class="fa-solid fa-gears text-6xl text-slate-400"></i>
@@ -617,7 +588,6 @@
                             </div>
                         </div>
 
-                        <!-- Lab 7: Alteryx 2 (Locked) -->
                         <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
                             <div class="absolute top-0 right-0 p-3 opacity-10">
                                 <i class="fa-solid fa-gears text-6xl text-slate-400"></i>
@@ -631,7 +601,6 @@
                             </div>
                         </div>
 
-                        <!-- Lab 8: Alteryx 3 (Locked) -->
                         <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
                             <div class="absolute top-0 right-0 p-3 opacity-10">
                                 <i class="fa-solid fa-gears text-6xl text-slate-400"></i>
@@ -648,11 +617,56 @@
                     </div>
                 </div>
 
+                <div id="view-study" class="hidden animate-fade-in">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900">Study Guides</h2>
+                            <p class="text-slate-600">Comprehensive resources for exam preparation.</p>
+                        </div>
+                        <span class="bg-rose-100 text-rose-800 text-xs font-semibold px-2.5 py-0.5 rounded">2 Guides Available</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group border-t-4 border-t-rose-400">
+                            <div class="p-8 flex flex-col flex-grow">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center">
+                                        <i class="fa-solid fa-book-reader text-rose-500 text-xl"></i>
+                                    </div>
+                                    <span class="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded">Exam 1 Prep</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-800 mb-2">Study Guide 1</h3>
+                                <p class="text-slate-600 text-sm mb-6 flex-grow">Covers Excel basics, conditionals, lookups, and pivot tables.</p>
+                                <a href="study-guide/study-guide1/index.html" class="inline-flex justify-center items-center w-full px-4 py-3 bg-rose-500 text-white rounded-lg font-semibold hover:bg-rose-600 transition-colors shadow-lg shadow-rose-200">
+                                    <i class="fa-solid fa-arrow-right mr-2 text-sm"></i> Open Guide
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group border-t-4 border-t-rose-400">
+                            <div class="p-8 flex flex-col flex-grow">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center">
+                                        <i class="fa-solid fa-file-pen text-rose-500 text-xl"></i>
+                                    </div>
+                                    <span class="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded">Exam 2 Prep</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-800 mb-2">Study Guide 2</h3>
+                                <p class="text-slate-600 text-sm mb-6 flex-grow">Covers Advanced Data Modeling, Power BI, and Alteryx workflows.</p>
+                                <a href="study-guide/study-guide2/index.html" class="inline-flex justify-center items-center w-full px-4 py-3 bg-rose-500 text-white rounded-lg font-semibold hover:bg-rose-600 transition-colors shadow-lg shadow-rose-200">
+                                    <i class="fa-solid fa-arrow-right mr-2 text-sm"></i> Open Guide
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
         </div>
     </main>
 
-    <!-- Modal for Power Query -->
     <div id="power-query-modal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" onclick="closeModal('power-query-modal')"></div>
         <div class="fixed inset-0 z-10 overflow-y-auto">
@@ -694,7 +708,6 @@
         </div>
     </div>
 
-    <!-- Modal for Power BI -->
     <div id="power-bi-modal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" onclick="closeModal('power-bi-modal')"></div>
         <div class="fixed inset-0 z-10 overflow-y-auto">
@@ -736,9 +749,7 @@
         </div>
     </div>
 
-    <!-- Modal for Alteryx Lessons -->
     <div id="alteryx-modal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <!-- Background backdrop -->
         <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" onclick="closeModal('alteryx-modal')"></div>
 
         <div class="fixed inset-0 z-10 overflow-y-auto">
@@ -813,6 +824,7 @@
                         <li><button onclick="switchTab('apps')" class="hover:text-sky-400 transition-colors text-left">Lecture Materials</button></li>
                         <li><button onclick="switchTab('demos')" class="hover:text-sky-400 transition-colors text-left">Class Demos</button></li>
                         <li><button onclick="switchTab('labs')" class="hover:text-sky-400 transition-colors text-left">Laboratory</button></li>
+                        <li><button onclick="switchTab('study')" class="hover:text-sky-400 transition-colors text-left">Study Guides</button></li>
                     </ul>
                 </div>
                 <div>
@@ -851,6 +863,7 @@
                 if(btn.id === 'btn-apps') btn.classList.remove('border-l-sky-500');
                 if(btn.id === 'btn-demos') btn.classList.remove('border-l-orange-500');
                 if(btn.id === 'btn-labs') btn.classList.remove('border-l-emerald-500');
+                if(btn.id === 'btn-study') btn.classList.remove('border-l-rose-500');
             });
             
             const activeBtn = document.getElementById(`btn-${tabId}`);
@@ -862,14 +875,17 @@
             document.getElementById('view-apps').classList.add('hidden');
             document.getElementById('view-demos').classList.add('hidden');
             document.getElementById('view-labs').classList.add('hidden');
+            document.getElementById('view-study').classList.add('hidden');
 
             const view = document.getElementById(`view-${tabId}`);
-            view.classList.remove('hidden');
-            
-            // Re-trigger animation
-            view.classList.remove('animate-fade-in');
-            void view.offsetWidth; // trigger reflow
-            view.classList.add('animate-fade-in');
+            if (view) {
+                view.classList.remove('hidden');
+                
+                // Re-trigger animation
+                view.classList.remove('animate-fade-in');
+                void view.offsetWidth; // trigger reflow
+                view.classList.add('animate-fade-in');
+            }
         }
 
         // Modal Logic
