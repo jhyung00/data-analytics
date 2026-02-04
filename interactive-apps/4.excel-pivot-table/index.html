@@ -400,20 +400,27 @@
 
                 const newConfig = { ...pivotConfig };
                 
-                (['rows', 'columns', 'filters'] ).forEach(k => {
-                    newConfig[k] = newConfig[k].filter(f => f !== field);
-                });
-                newConfig.values = newConfig.values.filter(v => v.field !== field);
+                // --- FIXED LOGIC ---
+                // We no longer blindly clear the field from other areas.
+                // This allows the user to have the same field in multiple areas (e.g., Rows AND Values).
 
                 if (area === 'values') {
+                    // Always allow adding to values.
+                    // Duplicates are allowed in Values (e.g. Sum of Amount, Avg of Amount).
                     newConfig.values.push({ field, agg: 'SUM', showAs: 'NORMAL' });
                 } else {
-                    if (field === 'Date' && area === 'rows') {
-                        ['Year', 'Quarter', 'Month'].forEach(subField => {
-                            if (!newConfig.rows.includes(subField)) newConfig.rows.push(subField);
-                        });
-                    } else {
-                        newConfig[area].push(field);
+                    // For Rows, Columns, and Filters:
+                    // We only check for duplicates within the SAME area.
+                    // We do NOT remove it from other areas, giving the user full flexibility.
+                    if (!newConfig[area].includes(field)) {
+                        if (field === 'Date' && area === 'rows') {
+                            // Auto-expand Date for Rows
+                            ['Year', 'Quarter', 'Month'].forEach(subField => {
+                                if (!newConfig.rows.includes(subField)) newConfig.rows.push(subField);
+                            });
+                        } else {
+                            newConfig[area].push(field);
+                        }
                     }
                 }
                 setPivotConfig(newConfig);
