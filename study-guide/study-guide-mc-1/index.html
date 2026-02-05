@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Master Class: Auditing & Data Management</title>
+    <style>
+        :root {
+            /* Modern Palette */
+            --primary: #107c41; /* Excel Green */
+            --primary-dark: #0b5c2f;
+            --secondary: #4b5563;
+            --bg-body: #f3f4f6;
+            --bg-card: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            
+            /* Feedback Colors */
+            --success-bg: #dcfce7;
+            --success-text: #14532d;
+            --success-border: #22c55e;
+            
+            --error-bg: #fee2e2;
+            --error-text: #7f1d1d;
+            --error-border: #ef4444;
+
+            --warning: #f59e0b;
+        }
+        
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding-bottom: 100px;
+        }
+
+        /* HEADER */
+        header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 2rem 1rem;
+            text-align: center;
+            background: linear-gradient(to bottom, #fff, #f9fafb);
+        }
+
+        h1 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+        }
+        
+        .subtitle {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* INSTRUCTOR TOOLBAR & SIDEBAR (Hidden by default) */
+        #instructorToolbar {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: #1f2937;
+            color: white;
+            padding: 0.75rem;
+            z-index: 2000;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+        }
+
+        .toolbar-group { display: flex; gap: 10px; align-items: center; }
+
+        .tool-btn {
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+        .tool-btn:hover { background: #4b5563; }
+        .tool-btn.action { background: var(--primary); border-color: var(--primary); }
+        .tool-btn.danger { background: #dc2626; border-color: #dc2626; }
+
+        #instructorSidebar {
+            display: none;
+            position: fixed;
+            top: 50px; right: 0; bottom: 0;
+            width: 250px;
+            background: white;
+            border-left: 1px solid var(--border);
+            box-shadow: -4px 0 15px rgba(0,0,0,0.05);
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 1900;
+        }
+        
+        .sidebar-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 0.9em;
+        }
+
+        /* DATA PANEL */
+        .data-panel {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            border-top: 4px solid var(--primary);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px 15px;
+            text-align: left;
+        }
+
+        th { background-color: #f9fafb; font-weight: 600; color: #374151; }
+        tr:nth-child(even) { background-color: #fcfcfc; }
+
+        /* SECTIONS */
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        .section-header::before {
+            content: '';
+            display: block;
+            width: 6px;
+            height: 24px;
+            background: var(--primary);
+            margin-right: 12px;
+            border-radius: 3px;
+        }
+
+        /* QUESTION CARDS */
+        .question-card {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid transparent;
+        }
+
+        /* State styles applied via JS after submission */
+        .question-card.graded-correct { border-color: var(--success-border); }
+        .question-card.graded-incorrect { border-color: var(--error-border); }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            width: 100%;
+        }
+
+        .code-snippet {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #c7254e;
+            font-size: 0.9em;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* OPTIONS */
+        .options { display: flex; flex-direction: column; gap: 8px; }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+            font-size: 0.95rem;
+        }
+
+        .option-label:hover {
+            border-color: #d1d5db;
+            background-color: #f9fafb;
+        }
+
+        input[type="radio"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+            accent-color: var(--primary);
+        }
+
+        /* Active/Checked State for better UX */
+        .option-label:has(input:checked) {
+            border-color: var(--primary);
+            background-color: #f0fdf4;
+            color: var(--primary-dark);
+            font-weight: 500;
+        }
+
+        /* FEEDBACK (Hidden initially) */
+        .feedback {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            border-radius: 8px;
+            display: none; /* Crucial: Hidden until submission */
+            font-size: 0.95rem;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .rationale-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: block;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+
+        .feedback.correct {
+            background-color: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
+        }
+
+        .feedback.incorrect {
+            background-color: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid var(--error-border);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* CONTROLS */
+        .controls {
+            text-align: center;
+            margin-top: 40px;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-main {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 48px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(16, 124, 65, 0.3);
+        }
+
+        .btn-main:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 124, 65, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: white;
+            color: var(--text-main);
+            border: 1px solid #d1d5db;
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-left: 10px;
+            display: none;
+        }
+        .btn-secondary:hover { background-color: #f9fafb; border-color: #9ca3af; }
+
+        /* SCORE DISPLAY */
+        .score-box {
+            margin-bottom: 20px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: none;
+        }
+
+        .hash-display {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 15px;
+            word-break: break-all;
+            background: #f3f4f6;
+            padding: 8px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        /* MODALS */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(2px);
+            z-index: 2100;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            z-index: 2200;
+            width: 90%;
+            max-width: 500px;
+        }
+        .close-modal-btn {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: none; border: none;
+            font-size: 1.5rem; cursor: pointer; color: #6b7280;
+        }
+        
+        /* Floating Data Button */
+        #floatingDataBtn {
+            position: fixed;
+            bottom: 120px; /* Above footer controls */
+            right: 30px;
+            background: var(--secondary);
+            color: white;
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer; z-index: 990; border: none; font-size: 24px;
+            transition: transform 0.2s;
+        }
+        #floatingDataBtn:hover { transform: scale(1.1); background-color: #374151; }
+        
+        footer {
+            text-align: center; margin-top: 60px; font-size: 0.85em; color: #9ca3af;
+        }
+        a.admin-link { color: inherit; text-decoration: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<!-- FLOATING DATA BUTTON -->
+<button id="floatingDataBtn" onclick="toggleDataModal()" title="View Data Source">📊</button>
+
+<!-- INSTRUCTOR TOOLBAR -->
+<div id="instructorToolbar">
+    <div class="toolbar-group">
+        <strong>👨‍🏫 Instructor Mode</strong>
+        <button class="tool-btn action" onclick="instructorAutoFill()">Auto-Fill Correct</button>
+        <button class="tool-btn" onclick="toggleSidebar()">Answer Key</button>
+    </div>
+    <div class="toolbar-group">
+        <button class="tool-btn" onclick="openVerifyModal()">Verify Hash</button>
+        <button class="tool-btn danger" onclick="openResetModal()">Reset Quiz</button>
+        <button class="tool-btn" onclick="logout()">Exit</button>
+    </div>
+</div>
+
+<div id="instructorSidebar">
+    <h4 style="margin-top:0">Answer Key</h4>
+    <div id="sidebarContent"></div>
+</div>
+
+<header>
+    <div class="container">
+        <h1>Mastering Excel: Audit & Management</h1>
+        <p class="subtitle">Level ID: EXCEL-PRO-25 • 25 Questions • Lookups, Logic, References & Pivots</p>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- Reference Data Table -->
+    <div class="data-panel" id="inlineDataPanel">
+        <h3 style="margin-top:0; color:var(--primary);">Scenario Data: GL_Reconciliation.xlsx</h3>
+        <p style="margin-bottom:15px; color:#666;">Use this table (Sheet1) to answer questions 1-15.</p>
+        <table>
+            <thead>
+                <tr><th></th><th>A (Inv ID)</th><th>B (Status)</th><th>C (Amount)</th><th>D (Date)</th><th>E (Region)</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>2</strong></td><td>1001</td><td>Paid</td><td>$500</td><td>1/1/2024</td><td>North</td></tr>
+                <tr><td><strong>3</strong></td><td>1002</td><td>Void</td><td>$0</td><td>1/2/2024</td><td>South</td></tr>
+                <tr><td><strong>4</strong></td><td>1003</td><td>Pending</td><td>$1,200</td><td>1/5/2024</td><td>North</td></tr>
+                <tr><td><strong>5</strong></td><td>1001</td><td>Cleared</td><td>$500</td><td>1/10/2024</td><td>North</td></tr>
+                <tr><td><strong>6</strong></td><td>1004</td><td>Paid</td><td>$300</td><td>1/12/2024</td><td>South</td></tr>
+                <tr><td><strong>7</strong></td><td>1005</td><td>Paid</td><td>$400</td><td>1/15/2024</td><td>East</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <form id="quizForm">
+        
+        <!-- PART 1 -->
+        <div class="section-header">Part 1: Lookup Functions (XLOOKUP & INDEX/MATCH)</div>
+
+        <div class="question-card" id="card-q1">
+            <div class="question-header"><div class="question-text">1. Auditing Invoice 1003: What amount is returned by <span class="code-snippet">=XLOOKUP(1003, A:A, C:C)</span>?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q1" value="A"> A) Paid</label>
+                <label class="option-label"><input type="radio" name="q1" value="B"> B) $500</label>
+                <label class="option-label"><input type="radio" name="q1" value="C"> C) $1,200</label>
+                <label class="option-label"><input type="radio" name="q1" value="D"> D) #N/A</label>
+            </div>
+            <div class="feedback" id="feedback-q1"></div>
+        </div>
+
+        <div class="question-card" id="card-q2">
+            <div class="question-header"><div class="question-text">2. Search Direction: Invoice 1001 appears twice. Using bottom-up search (-1), what does <span class="code-snippet">=XLOOKUP(1001, A:A, B:B, , , -1)</span> return?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q2" value="A"> A) Paid (Row 2)</label>
+                <label class="option-label"><input type="radio" name="q2" value="B"> B) Cleared (Row 5)</label>
+                <label class="option-label"><input type="radio" name="q2" value="C"> C) #SPILL!</label>
+                <label class="option-label"><input type="radio" name="q2" value="D"> D) #N/A</label>
+            </div>
+            <div class="feedback" id="feedback-q2"></div>
+        </div>
+
+        <div class="question-card" id="card-q3">
+            <div class="question-header"><div class="question-text">3. XMATCH Syntax: You need the relative position (row index) of the first 'Pending' status. What does <span class="code-snippet">=XMATCH("Pending", B:B)</span> return?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q3" value="A"> A) $1,200</label>
+                <label class="option-label"><input type="radio" name="q3" value="B"> B) 1003</label>
+                <label class="option-label"><input type="radio" name="q3" value="C"> C) 4</label>
+                <label class="option-label"><input type="radio" name="q3" value="D"> D) "Pending"</label>
+            </div>
+            <div class="feedback" id="feedback-q3"></div>
+        </div>
+
+        <div class="question-card" id="card-q4">
+            <div class="question-header"><div class="question-text">4. Legacy Lookups: Which syntax correctly replicates <span class="code-snippet">=XLOOKUP(1002, A:A, C:C)</span> using INDEX/MATCH?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q4" value="A"> A) =INDEX(A:A, MATCH(1002, C:C, 0))</label>
+                <label class="option-label"><input type="radio" name="q4" value="B"> B) =INDEX(C:C, MATCH(1002, A:A, 0))</label>
+                <label class="option-label"><input type="radio" name="q4" value="C"> C) =MATCH(1002, INDEX(C:C, A:A))</label>
+                <label class="option-label"><input type="radio" name="q4" value="D"> D) =INDEX(1002, MATCH(A:A, C:C))</label>
+            </div>
+            <div class="feedback" id="feedback-q4"></div>
+        </div>
+
+        <div class="question-card" id="card-q5">
+            <div class="question-header"><div class="question-text">5. Default Match Modes: Why is XMATCH often considered safer than the legacy MATCH function?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q5" value="A"> A) XMATCH is faster.</label>
+                <label class="option-label"><input type="radio" name="q5" value="B"> B) XMATCH defaults to Exact Match; MATCH defaults to Approximate.</label>
+                <label class="option-label"><input type="radio" name="q5" value="C"> C) MATCH cannot work with text.</label>
+            </div>
+            <div class="feedback" id="feedback-q5"></div>
+        </div>
+        
+        <div class="question-card" id="card-q6">
+            <div class="question-header"><div class="question-text">6. Error Handling: Invoice 1005 exists in the data. What will <span class="code-snippet">=XLOOKUP(1005, A:A, B:B, "Verify")</span> return?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q6" value="A"> A) Paid</label>
+                <label class="option-label"><input type="radio" name="q6" value="B"> B) #VALUE!</label>
+                <label class="option-label"><input type="radio" name="q6" value="C"> C) Verify</label>
+            </div>
+            <div class="feedback" id="feedback-q6"></div>
+        </div>
+
+        <div class="question-card" id="card-q7">
+            <div class="question-header"><div class="question-text">7. Nested Logic: What does <span class="code-snippet">=INDEX(C2:C7, XMATCH("Paid", B2:B7))</span> return?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q7" value="A"> A) The Amount for the *first* "Paid" invoice found.</label>
+                <label class="option-label"><input type="radio" name="q7" value="B"> B) The Sum of all Paid amounts.</label>
+                <label class="option-label"><input type="radio" name="q7" value="C"> C) An error.</label>
+            </div>
+            <div class="feedback" id="feedback-q7"></div>
+        </div>
+
+        <!-- PART 2 -->
+        <div class="section-header">Part 2: Conditional Aggregation (SUMIFS, COUNTIFS)</div>
+
+        <div class="question-card" id="card-q8">
+            <div class="question-header"><div class="question-text">8. Basic COUNTIFS: How many invoices have the status "Paid"?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q8" value="A"> A) 1</label>
+                <label class="option-label"><input type="radio" name="q8" value="B"> B) 2</label>
+                <label class="option-label"><input type="radio" name="q8" value="C"> C) 3</label>
+            </div>
+            <div class="feedback" id="feedback-q8"></div>
+        </div>
+
+        <div class="question-card" id="card-q9">
+            <div class="question-header"><div class="question-text">9. Basic SUMIFS: What is the total Amount for the "North" region? <span class="code-snippet">=SUMIFS(C:C, E:E, "North")</span></div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q9" value="A"> A) $1,700</label>
+                <label class="option-label"><input type="radio" name="q9" value="B"> B) $2,200</label>
+                <label class="option-label"><input type="radio" name="q9" value="C"> C) $500</label>
+            </div>
+            <div class="feedback" id="feedback-q9"></div>
+        </div>
+
+        <div class="question-card" id="card-q10">
+            <div class="question-header"><div class="question-text">10. Multi-Criteria: Total amount for invoices that are BOTH "Paid" AND in "South"?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q10" value="A"> A) $300</label>
+                <label class="option-label"><input type="radio" name="q10" value="B"> B) $500</label>
+                <label class="option-label"><input type="radio" name="q10" value="C"> C) $800</label>
+            </div>
+            <div class="feedback" id="feedback-q10"></div>
+        </div>
+
+        <div class="question-card" id="card-q11">
+            <div class="question-header"><div class="question-text">11. AVERAGEIFS: What is the average amount of all "Paid" invoices?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q11" value="A"> A) $300</label>
+                <label class="option-label"><input type="radio" name="q11" value="B"> B) $400</label>
+                <label class="option-label"><input type="radio" name="q11" value="C"> C) $500</label>
+            </div>
+            <div class="feedback" id="feedback-q11"></div>
+        </div>
+
+        <div class="question-card" id="card-q12">
+            <div class="question-header"><div class="question-text">12. Syntax: In <span class="code-snippet">=SUMIFS()</span>, which argument comes first?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q12" value="A"> A) Sum_range (What to sum)</label>
+                <label class="option-label"><input type="radio" name="q12" value="B"> B) Criteria_range (Where to look)</label>
+                <label class="option-label"><input type="radio" name="q12" value="C"> C) Criteria (What to look for)</label>
+            </div>
+            <div class="feedback" id="feedback-q12"></div>
+        </div>
+
+        <div class="question-card" id="card-q13">
+            <div class="question-header"><div class="question-text">13. Operators: What does <span class="code-snippet">=COUNTIFS(C:C, ">500")</span> return?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q13" value="A"> A) 1</label>
+                <label class="option-label"><input type="radio" name="q13" value="B"> B) 2</label>
+                <label class="option-label"><input type="radio" name="q13" value="C"> C) 3</label>
+            </div>
+            <div class="feedback" id="feedback-q13"></div>
+        </div>
+
+        <div class="question-card" id="card-q14">
+            <div class="question-header"><div class="question-text">14. Exclusion: Which formula sums amounts where Region is NOT "North"?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q14" value="A"> A) =SUMIFS(C:C, E:E, NOT "North")</label>
+                <label class="option-label"><input type="radio" name="q14" value="B"> B) =SUMIFS(C:C, E:E, "!North")</label>
+                <label class="option-label"><input type="radio" name="q14" value="C"> C) =SUMIFS(C:C, E:E, "<>North")</label>
+            </div>
+            <div class="feedback" id="feedback-q14"></div>
+        </div>
+
+        <div class="question-card" id="card-q15">
+            <div class="question-header"><div class="question-text">15. Date Logic: How many transactions occurred strictly *after* 1/10/2024?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q15" value="A"> A) 1</label>
+                <label class="option-label"><input type="radio" name="q15" value="B"> B) 2</label>
+                <label class="option-label"><input type="radio" name="q15" value="C"> C) 3</label>
+            </div>
+            <div class="feedback" id="feedback-q15"></div>
+        </div>
+
+        <!-- PART 3: References, Named Ranges, Dates (NEW) -->
+        <div class="section-header">Part 3: References, Dates & Validation (New)</div>
+
+        <div class="question-card" id="card-q16">
+            <div class="question-header"><div class="question-text">16. Named Ranges: You define the cell C2 (Tax Rate) as a Named Range called "TaxRate". Which statement is true?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q16" value="A"> A) You must use <span class="code-snippet">=C2</span> inside other formulas.</label>
+                <label class="option-label"><input type="radio" name="q16" value="B"> B) <span class="code-snippet">=Amount * TaxRate</span> acts like an absolute reference ($C$2) by default.</label>
+                <label class="option-label"><input type="radio" name="q16" value="C"> C) Named ranges cannot be used in formulas.</label>
+                <label class="option-label"><input type="radio" name="q16" value="D"> D) Named ranges are always relative references.</label>
+            </div>
+            <div class="feedback" id="feedback-q16"></div>
+        </div>
+
+        <div class="question-card" id="card-q17">
+            <div class="question-header"><div class="question-text">17. Absolute References: You write <span class="code-snippet">=$A$1 * 10</span> in cell B1 and drag it down to B5. What happens?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q17" value="A"> A) The formula changes to <span class="code-snippet">=$A$2 * 10</span>, <span class="code-snippet">=$A$3 * 10</span>, etc.</label>
+                <label class="option-label"><input type="radio" name="q17" value="B"> B) The formula stays exactly <span class="code-snippet">=$A$1 * 10</span> in all cells.</label>
+                <label class="option-label"><input type="radio" name="q17" value="C"> C) Excel gives an error.</label>
+            </div>
+            <div class="feedback" id="feedback-q17"></div>
+        </div>
+
+        <div class="question-card" id="card-q18">
+            <div class="question-header"><div class="question-text">18. Mixed References: You are building a multiplication table. You use the reference <span class="code-snippet">=$A2</span>. When you drag this RIGHT to the next column, what does it become?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q18" value="A"> A) It changes to <span class="code-snippet">=$B2</span>.</label>
+                <label class="option-label"><input type="radio" name="q18" value="B"> B) It stays <span class="code-snippet">=$A2</span> because the column is locked.</label>
+                <label class="option-label"><input type="radio" name="q18" value="C"> C) It changes to <span class="code-snippet">=$A3</span>.</label>
+            </div>
+            <div class="feedback" id="feedback-q18"></div>
+        </div>
+
+        <div class="question-card" id="card-q19">
+            <div class="question-header"><div class="question-text">19. Excel Dates: Excel stores dates as serial numbers. What does the number 1 represent in Excel's date system?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q19" value="A"> A) January 1, 1900</label>
+                <label class="option-label"><input type="radio" name="q19" value="B"> B) January 1, 1970</label>
+                <label class="option-label"><input type="radio" name="q19" value="C"> C) Day 1 of the current year</label>
+                <label class="option-label"><input type="radio" name="q19" value="D"> D) December 31, 1899</label>
+            </div>
+            <div class="feedback" id="feedback-q19"></div>
+        </div>
+
+        <div class="question-card" id="card-q20">
+            <div class="question-header"><div class="question-text">20. Sorting Dangers: You have a dataset A1:C10. You select ONLY cells A1:A10 and click "Sort A to Z". What usually happens?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q20" value="A"> A) Excel automatically sorts columns B and C to match.</label>
+                <label class="option-label"><input type="radio" name="q20" value="B"> B) Excel warns you to "Expand the selection" to avoid corrupting data.</label>
+                <label class="option-label"><input type="radio" name="q20" value="C"> C) Excel sorts column A but leaves B and C alone without warning.</label>
+            </div>
+            <div class="feedback" id="feedback-q20"></div>
+        </div>
+
+        <div class="question-card" id="card-q21">
+            <div class="question-header"><div class="question-text">21. Data Validation: You want to restrict user input in Cell A1 to a specific list of items (Red, Blue, Green). Which Feature setting do you use?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q21" value="A"> A) Custom Formula</label>
+                <label class="option-label"><input type="radio" name="q21" value="B"> B) Text Length</label>
+                <label class="option-label"><input type="radio" name="q21" value="C"> C) List</label>
+                <label class="option-label"><input type="radio" name="q21" value="D"> D) Whole Number</label>
+            </div>
+            <div class="feedback" id="feedback-q21"></div>
+        </div>
+
+        <!-- PART 4: Pivot Tables & Advanced (NEW) -->
+        <div class="section-header">Part 4: Pivot Tables (New)</div>
+
+        <div class="question-card" id="card-q22">
+            <div class="question-header"><div class="question-text">22. Data Validation Errors: If you use the "Stop" style in an Error Alert, what happens when a user types invalid data?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q22" value="A"> A) It shows a warning but lets them keep the value.</label>
+                <label class="option-label"><input type="radio" name="q22" value="B"> B) It prevents the user from entering the value entirely.</label>
+                <label class="option-label"><input type="radio" name="q22" value="C"> C) It automatically corrects the spelling.</label>
+            </div>
+            <div class="feedback" id="feedback-q22"></div>
+        </div>
+
+        <div class="question-card" id="card-q23">
+            <div class="question-header"><div class="question-text">23. Pivot Tables: You add a new row of data to your source table. Your Pivot Table does not show it immediately. What must you do?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q23" value="A"> A) Save the workbook.</label>
+                <label class="option-label"><input type="radio" name="q23" value="B"> B) Right-click the Pivot Table and select "Refresh".</label>
+                <label class="option-label"><input type="radio" name="q23" value="C"> C) Create a new Pivot Table.</label>
+            </div>
+            <div class="feedback" id="feedback-q23"></div>
+        </div>
+
+        <div class="question-card" id="card-q24">
+            <div class="question-header"><div class="question-text">24. Pivot Drill Down: What happens if you double-click a number (value) inside a Pivot Table?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q24" value="A"> A) It opens the formatting menu.</label>
+                <label class="option-label"><input type="radio" name="q24" value="B"> B) It creates a new sheet listing all the raw data records that make up that specific number.</label>
+                <label class="option-label"><input type="radio" name="q24" value="C"> C) It deletes the value.</label>
+            </div>
+            <div class="feedback" id="feedback-q24"></div>
+        </div>
+
+        <div class="question-card" id="card-q25">
+            <div class="question-header"><div class="question-text">25. Pivot Defaults: If you drag a text-based field (like "Customer Name") into the "Values" area, how does Excel summarize it by default?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q25" value="A"> A) Sum</label>
+                <label class="option-label"><input type="radio" name="q25" value="B"> B) Average</label>
+                <label class="option-label"><input type="radio" name="q25" value="C"> C) Count</label>
+            </div>
+            <div class="feedback" id="feedback-q25"></div>
+        </div>
+
+        <div class="controls">
+            <div id="scoreDisplay" class="score-box"></div>
+            
+            <button type="button" class="btn-main" onclick="submitQuiz()" id="submitBtn">Submit & Grade</button>
+            <button type="button" id="exportBtn" class="btn-secondary" onclick="exportResults()">Download Results (.txt)</button>
+            
+            <div id="hashDisplay" class="hash-display"></div>
+        </div>
+    </form>
+</div>
+
+<footer>
+    <a class="admin-link" onclick="openLoginModal()">Instructor Login</a>
+</footer>
+
+<!-- Modals -->
+<div class="modal-overlay" id="modalOverlay"></div>
+
+<!-- Data Modal -->
+<div class="modal" id="floatingDataPanel">
+    <button class="close-modal-btn" onclick="toggleDataModal()">×</button>
+    <h3 style="color:var(--primary); margin-top:0;">Scenario Data</h3>
+    <div style="overflow-x:auto;">
+        <table>
+            <thead><tr><th>A (ID)</th><th>B (Status)</th><th>C (Amt)</th><th>D (Date)</th><th>E (Rgn)</th></tr></thead>
+            <tbody>
+                <tr><td>1001</td><td>Paid</td><td>$500</td><td>1/1</td><td>North</td></tr>
+                <tr><td>1002</td><td>Void</td><td>$0</td><td>1/2</td><td>South</td></tr>
+                <tr><td>1003</td><td>Pend</td><td>$1,200</td><td>1/5</td><td>North</td></tr>
+                <tr><td>1001</td><td>Clear</td><td>$500</td><td>1/10</td><td>North</td></tr>
+                <tr><td>1004</td><td>Paid</td><td>$300</td><td>1/12</td><td>South</td></tr>
+                <tr><td>1005</td><td>Paid</td><td>$400</td><td>1/15</td><td>East</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal" id="loginModal">
+    <button class="close-modal-btn" onclick="closeLoginModal()">×</button>
+    <h3>Instructor Login</h3>
+    <input type="password" id="adminPassword" style="width:100%; padding:10px; margin-bottom:15px;" placeholder="Enter Password">
+    <button class="btn-main" onclick="checkLogin()" style="width:100%">Login</button>
+</div>
+
+<!-- Verify Modal -->
+<div class="modal" id="verifyModal">
+    <button class="close-modal-btn" onclick="closeVerifyModal()">×</button>
+    <h3>Verify Hash</h3>
+    <textarea id="hashInput" rows="3" style="width:100%; padding:8px;" placeholder="Paste hash..."></textarea>
+    <button class="btn-main" onclick="decodeHash()" style="margin-top:10px; width:100%">Verify</button>
+    <div id="verifyResult" style="margin-top:10px;"></div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal" id="studentNameModal">
+    <button class="close-modal-btn" onclick="closeStudentNameModal()">×</button>
+    <h3>Student Details</h3>
+    <input type="text" id="studentNameInput" style="width:100%; padding:10px; margin-bottom:15px;" placeholder="Full Name">
+    <button class="btn-main" onclick="finalizeExport()" style="width:100%">Download</button>
+</div>
+
+<!-- Reset Modal -->
+<div class="modal" id="resetConfirmModal">
+    <button class="close-modal-btn" onclick="closeResetConfirmModal()">×</button>
+    <h3>Reset Quiz?</h3>
+    <p>This will clear all answers and scores.</p>
+    <div style="text-align:right; margin-top:20px;">
+        <button class="tool-btn" onclick="closeResetConfirmModal()">Cancel</button>
+        <button class="tool-btn danger" onclick="confirmReset()" style="padding:8px 20px;">Confirm Reset</button>
+    </div>
+</div>
+
+<script>
+    const LEVEL_ID = "EXCEL-PRO-25";
+    
+    // COMPLETE ANSWER KEY (25 Questions)
+    const answers = {
+        q1: { correct: 'C', rationale: "XLOOKUP finds '1003' in Column A and returns the value in Column C ($1,200)." },
+        q2: { correct: 'B', rationale: "Search_mode -1 searches bottom-to-top. The last instance of 1001 is Row 5 ('Cleared')." },
+        q3: { correct: 'C', rationale: "XMATCH returns the relative position. 'Pending' is the 3rd item in the array (Row 4)." },
+        q4: { correct: 'B', rationale: "INDEX returns the value (Col C). MATCH finds the row (Col A). Syntax: INDEX(ReturnCol, MATCH(LookupValue, LookupCol, 0))." },
+        q5: { correct: 'B', rationale: "XMATCH defaults to Exact Match (0). Legacy MATCH defaults to Approximate (1), causing errors with unsorted data." },
+        q6: { correct: 'A', rationale: "The ID 1005 IS in the data (Row 7). It returns 'Paid'. The 'if_not_found' text is ignored." },
+        q7: { correct: 'A', rationale: "INDEX/MATCH returns a single value (the first match). It does not sum or spill multiple values." },
+        
+        q8: { correct: 'C', rationale: "3 'Paid' items: Row 2, Row 6, and Row 7." },
+        q9: { correct: 'B', rationale: "North Region rows: 2 (500) + 4 (1200) + 5 (500) = 2200." },
+        q10: { correct: 'A', rationale: "Paid AND South: Only Row 6 ($300). Row 3 is South but 'Void'." },
+        q11: { correct: 'B', rationale: "Paid amounts: 500, 300, 400. Sum=1200. Count=3. Average = 400." },
+        q12: { correct: 'A', rationale: "SUMIFS requires Sum_Range first. (SUMIF takes it last, which is confusing)." },
+        q13: { correct: 'A', rationale: "Amounts > 500: Only Row 4 ($1,200). 500 is not > 500." },
+        q14: { correct: 'C', rationale: "The operator <> means 'not equal to' in Excel syntax. Correct usage: \"<>North\"." },
+        q15: { correct: 'B', rationale: "Dates after 1/10/2024: Row 6 (1/12) and Row 7 (1/15). Row 5 (1/10/2024) is excluded." },
+
+        // NEW QUESTIONS (16-25)
+        q16: { correct: 'B', rationale: "Named Ranges function as Absolute References by default. They do not change when you drag formulas." },
+        q17: { correct: 'B', rationale: "Both the column ($A) and row ($1) are locked with dollar signs. The reference will not change." },
+        q18: { correct: 'B', rationale: "The column is locked ($A), but the row is relative (2). Dragging right changes nothing. Dragging down changes the row." },
+        q19: { correct: 'A', rationale: "Excel's date system starts at 1, which represents January 1, 1900." },
+        q20: { correct: 'B', rationale: "If you select only one column of a dataset, Excel usually warns you to 'Expand the selection'. If you ignore it (Option C), data becomes corrupt." },
+        q21: { correct: 'C', rationale: "Data Validation > Allow: List is used to create dropdown menus." },
+        q22: { correct: 'B', rationale: "The 'Stop' style is strict; it prevents entry. 'Warning' allows entry after a prompt." },
+        q23: { correct: 'B', rationale: "Pivot Tables are not live. You must click Refresh to see new source data." },
+        q24: { correct: 'B', rationale: "Double-clicking a value in a Pivot Table triggers the 'Show Details' feature, creating a new sheet with the underlying records." },
+        q25: { correct: 'C', rationale: "Since you cannot mathematically Sum text, Excel defaults to 'Count' for text fields." }
+    };
+
+    let currentScore = 0;
+    let quizSubmitted = false;
+    let submissionTime = "";
+    let submissionHash = "";
+
+    // --- SUBMISSION LOGIC ---
+    function submitQuiz() {
+        if(quizSubmitted) return;
+        
+        let score = 0;
+        let total = Object.keys(answers).length;
+        
+        // Loop through all questions
+        for (let qId in answers) {
+            const card = document.getElementById(`card-${qId}`);
+            const selected = document.querySelector(`input[name="${qId}"]:checked`);
+            const feedbackDiv = document.getElementById(`feedback-${qId}`);
+            
+            // Show Feedback Block
+            feedbackDiv.style.display = 'block';
+            feedbackDiv.classList.remove('correct', 'incorrect');
+            card.classList.remove('graded-correct', 'graded-incorrect');
+
+            if (selected) {
+                if (selected.value === answers[qId].correct) {
+                    score++;
+                    feedbackDiv.classList.add('correct');
+                    card.classList.add('graded-correct');
+                    feedbackDiv.innerHTML = `<span class="rationale-title">Correct</span>${answers[qId].rationale}`;
+                } else {
+                    feedbackDiv.classList.add('incorrect');
+                    card.classList.add('graded-incorrect');
+                    feedbackDiv.innerHTML = `<span class="rationale-title">Incorrect (Answer: ${answers[qId].correct})</span>${answers[qId].rationale}`;
+                }
+            } else {
+                feedbackDiv.classList.add('incorrect');
+                card.classList.add('graded-incorrect');
+                feedbackDiv.innerHTML = `<span class="rationale-title">Skipped (Answer: ${answers[qId].correct})</span>${answers[qId].rationale}`;
+            }
+        }
+
+        currentScore = score;
+        submissionTime = new Date().toISOString();
+        quizSubmitted = true;
+
+        // Hash Generation
+        const rawString = `${LEVEL_ID}|${score}/${total}|${submissionTime}`;
+        submissionHash = btoa(rawString);
+
+        // Update UI
+        const scoreDiv = document.getElementById('scoreDisplay');
+        scoreDiv.style.display = 'block';
+        
+        if (score === total) {
+            scoreDiv.innerHTML = `🏆 Perfect Score! ${score} / ${total}`;
+            scoreDiv.style.color = 'var(--primary)';
+        } else {
+            scoreDiv.innerHTML = `Result: ${score} / ${total}`;
+            scoreDiv.style.color = score > 15 ? 'var(--warning)' : 'var(--error-text)';
+        }
+
+        document.getElementById('hashDisplay').style.display = 'block';
+        document.getElementById('hashDisplay').textContent = `Security Hash: ${submissionHash}`;
+        document.getElementById('exportBtn').style.display = 'inline-block';
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').innerText = "Submitted";
+        
+        // Disable inputs
+        document.querySelectorAll('input[type="radio"]').forEach(el => el.disabled = true);
+        
+        // Scroll to score
+        scoreDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // --- DATA MODAL ---
+    function toggleDataModal() {
+        const modal = document.getElementById('floatingDataPanel');
+        const overlay = document.getElementById('modalOverlay');
+        const isHidden = modal.style.display === 'none' || modal.style.display === '';
+        modal.style.display = isHidden ? 'block' : 'none';
+        overlay.style.display = isHidden ? 'block' : 'none';
+    }
+
+    // --- EXPORT LOGIC ---
+    function exportResults() {
+        if (!quizSubmitted) return;
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('studentNameModal').style.display = 'block';
+        document.getElementById('studentNameInput').focus();
+    }
+
+    function closeStudentNameModal() {
+        document.getElementById('modalOverlay').style.display = 'none';
+        document.getElementById('studentNameModal').style.display = 'none';
+    }
+
+    function finalizeExport() {
+        const studentName = document.getElementById('studentNameInput').value.trim() || "Unknown Student";
+        let content = `EXCEL ASSESSMENT REPORT\n`;
+        content += `-----------------------\n`;
+        content += `Student: ${studentName}\n`;
+        content += `Level: ${LEVEL_ID}\n`;
+        content += `Date: ${submissionTime}\n`;
+        content += `Score: ${currentScore}/${Object.keys(answers).length}\n`;
+        content += `Hash: ${submissionHash}\n\n`;
+        content += `DETAILED RESPONSES:\n`;
+        
+        for (let qId in answers) {
+            const selected = document.querySelector(`input[name="${qId}"]:checked`);
+            const val = selected ? selected.value : "SKIPPED";
+            const result = (val === answers[qId].correct) ? "CORRECT" : "WRONG";
+            content += `Q${qId.substring(1)}: ${val} [${result}]\n`;
+        }
+        
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${studentName.replace(/\s+/g, '_')}_ExcelResults.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        closeStudentNameModal();
+    }
+
+    // --- INSTRUCTOR & UTILS ---
+    function openLoginModal() {
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('loginModal').style.display = 'block';
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('adminPassword').focus();
+    }
+    
+    function closeLoginModal() {
+        document.getElementById('modalOverlay').style.display = 'none';
+        document.getElementById('loginModal').style.display = 'none';
+    }
+    
+    function checkLogin() {
+        if (document.getElementById('adminPassword').value === "teacher") {
+            closeLoginModal();
+            document.getElementById('instructorToolbar').style.display = 'flex';
+            populateSidebar();
+        } else {
+            alert("Incorrect Password");
+        }
+    }
+
+    function logout() {
+        document.getElementById('instructorToolbar').style.display = 'none';
+        document.getElementById('instructorSidebar').style.display = 'none';
+    }
+
+    function instructorAutoFill() {
+        for (let qId in answers) {
+            const correctVal = answers[qId].correct;
+            const radio = document.querySelector(`input[name="${qId}"][value="${correctVal}"]`);
+            if (radio) radio.checked = true;
+        }
+    }
+
+    function toggleSidebar() {
+        const sb = document.getElementById('instructorSidebar');
+        sb.style.display = (sb.style.display === 'none' || sb.style.display === '') ? 'block' : 'none';
+    }
+
+    function populateSidebar() {
+        const content = document.getElementById('sidebarContent');
+        content.innerHTML = '';
+        for (let qId in answers) {
+            content.innerHTML += `
+                <div class="sidebar-item">
+                    <span>Q${qId.substring(1)}</span>
+                    <strong style="color:var(--primary)">${answers[qId].correct}</strong>
+                </div>`;
+        }
+    }
+
+    function openResetModal() {
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('resetConfirmModal').style.display = 'block';
+    }
+    
+    function closeResetConfirmModal() {
+        document.getElementById('modalOverlay').style.display = 'none';
+        document.getElementById('resetConfirmModal').style.display = 'none';
+    }
+
+    function confirmReset() {
+        document.getElementById('quizForm').reset();
+        document.querySelectorAll('input[type="radio"]').forEach(el => {
+            el.disabled = false;
+            el.checked = false;
+        });
+        document.querySelectorAll('.feedback').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.question-card').forEach(el => el.classList.remove('graded-correct', 'graded-incorrect'));
+        document.getElementById('scoreDisplay').style.display = 'none';
+        document.getElementById('hashDisplay').style.display = 'none';
+        document.getElementById('exportBtn').style.display = 'none';
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').innerText = "Submit & Grade";
+        quizSubmitted = false;
+        currentScore = 0;
+        closeResetConfirmModal();
+    }
+
+    // Hash Verify
+    function openVerifyModal() {
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('verifyModal').style.display = 'block';
+        document.getElementById('hashInput').value = '';
+        document.getElementById('verifyResult').innerHTML = '';
+    }
+    function closeVerifyModal() {
+        document.getElementById('modalOverlay').style.display = 'none';
+        document.getElementById('verifyModal').style.display = 'none';
+    }
+    function decodeHash() {
+        const hash = document.getElementById('hashInput').value.trim();
+        try {
+            const decoded = atob(hash);
+            const parts = decoded.split('|');
+            if (parts.length === 3 && parts[0] === LEVEL_ID) {
+                document.getElementById('verifyResult').innerHTML = `<div style="color:green; font-weight:bold;">✔ Valid Score: ${parts[1]}</div>`;
+            } else { throw new Error(); }
+        } catch {
+            document.getElementById('verifyResult').innerHTML = `<div style="color:red; font-weight:bold;">✘ Invalid Hash</div>`;
+        }
+    }
+
+</script>
+</body>
+</html>
