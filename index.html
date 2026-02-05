@@ -94,6 +94,15 @@
         .category-btn.active i {
             color: #0ea5e9;
         }
+
+        /* Hover effect for study guide buttons */
+        .group-btn:hover .fa-arrow-right {
+            opacity: 1;
+            transform: translateX(2px);
+        }
+        .group-btn .fa-arrow-right {
+            transition: all 0.3s ease;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased flex flex-col min-h-screen relative">
@@ -628,6 +637,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         
+                        <!-- Study Guide 1 -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group border-t-4 border-t-rose-400">
                             <div class="p-8 flex flex-col flex-grow">
                                 <div class="flex items-center justify-between mb-4">
@@ -638,12 +648,24 @@
                                 </div>
                                 <h3 class="text-xl font-bold text-slate-800 mb-2">Study Guide 1</h3>
                                 <p class="text-slate-600 text-sm mb-6 flex-grow">Covers Excel basics, conditionals, lookups, and pivot tables.</p>
-                                <a href="study-guide/study-guide1/index.html" class="inline-flex justify-center items-center w-full px-4 py-3 bg-rose-500 text-white rounded-lg font-semibold hover:bg-rose-600 transition-colors shadow-lg shadow-rose-200">
-                                    <i class="fa-solid fa-arrow-right mr-2 text-sm"></i> Open Guide
-                                </a>
+                                
+                                <div class="space-y-3">
+                                    <!-- Updated: Lab Style Link -->
+                                    <a href="study-guide/study-guide-lab-style-1/index.html" class="flex items-center justify-between w-full px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all group-btn">
+                                        <span class="flex items-center"><i class="fa-solid fa-laptop-code mr-2 text-rose-400"></i> Lab Simulation</span>
+                                        <i class="fa-solid fa-arrow-right text-xs opacity-0 group-btn-hover:opacity-100 transition-opacity"></i>
+                                    </a>
+                                    
+                                    <!-- Added: Multiple Choice Link -->
+                                    <a href="study-guide/study-guide-mc-1/index.html" class="flex items-center justify-between w-full px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all group-btn">
+                                        <span class="flex items-center"><i class="fa-solid fa-list-check mr-2 text-rose-400"></i> Multiple Choice</span>
+                                        <i class="fa-solid fa-arrow-right text-xs opacity-0 group-btn-hover:opacity-100 transition-opacity"></i>
+                                    </a>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- Study Guide 2 -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group border-t-4 border-t-rose-400">
                             <div class="p-8 flex flex-col flex-grow">
                                 <div class="flex items-center justify-between mb-4">
@@ -654,13 +676,25 @@
                                 </div>
                                 <h3 class="text-xl font-bold text-slate-800 mb-2">Study Guide 2</h3>
                                 <p class="text-slate-600 text-sm mb-6 flex-grow">Covers Advanced Data Modeling, Power BI, and Alteryx workflows.</p>
-                                <div class="inline-flex justify-center items-center w-full px-4 py-3 bg-slate-200 text-slate-500 rounded-lg font-semibold cursor-not-allowed">
+                                
+                                <!-- Placeholder for Coming Soon -->
+                                <div class="inline-flex justify-center items-center w-full px-4 py-3 bg-slate-100 text-slate-400 rounded-lg font-semibold cursor-not-allowed border border-slate-200">
                                     <i class="fa-solid fa-clock mr-2 text-sm"></i> Coming Soon
                                 </div>
                                 
-                                <!-- <a href="study-guide/study-guide2/index.html" class="inline-flex justify-center items-center w-full px-4 py-3 bg-rose-500 text-white rounded-lg font-semibold hover:bg-rose-600 transition-colors shadow-lg shadow-rose-200">
-                                    <i class="fa-solid fa-arrow-right mr-2 text-sm"></i> Open Guide
-                                </a> -->
+                                <!-- Hidden/Commented out Structure for SG2 -->
+                                <!-- 
+                                <div class="space-y-3 hidden">
+                                    <a href="study-guide/study-guide-lab-style-2/index.html" class="flex items-center justify-between w-full px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all">
+                                        <span class="flex items-center"><i class="fa-solid fa-laptop-code mr-2 text-rose-400"></i> Lab Simulation</span>
+                                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                                    </a>
+                                    <a href="study-guide/study-guide-mc-2/index.html" class="flex items-center justify-between w-full px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all">
+                                        <span class="flex items-center"><i class="fa-solid fa-list-check mr-2 text-rose-400"></i> Multiple Choice</span>
+                                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                                    </a>
+                                </div> 
+                                -->
                             </div>
                         </div>
 
