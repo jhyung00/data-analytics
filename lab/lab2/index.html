@@ -16,12 +16,17 @@
         .modal { transition: opacity 0.25s ease; }
         body.modal-active { overflow: hidden; }
         
-        /* Custom File Upload */
-        .file-upload-wrapper { position: relative; overflow: hidden; display: inline-block; }
-        .file-upload-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
-        
         /* Task Card Hover */
         .task-row:hover { background-color: #f8fafc; }
+        
+        /* Details/Summary Animation */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details[open] summary ~ * { animation: sweep .3s ease-in-out; }
+        @keyframes sweep {
+            0%    {opacity: 0; transform: translateY(-10px)}
+            100%  {opacity: 1; transform: translateY(0)}
+        }
     </style>
 </head>
 <body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
@@ -82,8 +87,8 @@
                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h5v5h5v11H6zm2-9h8v2H8v-2zm0 4h8v2H8v-2z" style="display:none;"/><path d="M21.17 3.25Q21.5 3.25 21.76 3.5 22 3.74 22 4.08V19.92Q22 20.26 21.76 20.5 21.5 20.75 21.17 20.75H7.83Q7.5 20.75 7.24 20.5 7 20.26 7 19.92V17H2.83Q2.5 17 2.24 16.76 2 16.5 2 16.17V7.83Q2 7.5 2.24 7.24 2.5 7 2.83 7H7V4.08Q7 3.74 7.24 3.5 7.5 3.25 7.83 3.25M7 13.06L8.18 15.28H9.97L8.09 11.96L9.98 8.72H8.19L6.96 10.85L5.75 8.72H3.94L5.86 11.97L3.92 15.28H5.73ZM20.5 14.5V9.5H19V14.5ZM17.5 14.5V9.5H16V14.5ZM14.5 14.5V9.5H13V14.5ZM20.5 19.25V16H13V19.25ZM20.5 8H13V4.75H20.5Z"/></svg>
                         </div>
                         <div class="text-left">
-                            <p class="text-sm font-medium text-gray-700 group-hover:text-green-700">Sales_Ledger_FY25.xlsx</p>
-                            <p class="text-xs text-gray-500">18 KB &bull; Click to Download</p>
+                            <p class="text-sm font-medium text-gray-700 group-hover:text-green-700">Sales_Ledger_Global_FY25.xlsx</p>
+                            <p class="text-xs text-gray-500">45 KB &bull; Click to Download</p>
                         </div>
                     </button>
                 </div>
@@ -95,26 +100,240 @@
                     
                     <div class="prose text-gray-700 max-w-none">
                         <p class="text-lg">Team,</p>
-                        <p>We are closing the books on the first half of fiscal '25. I have attached the raw sales ledger above. Please perform a detailed Pivot Table analysis to break down the performance of our iPhone and Mac lines.</p>
+                        <p>We are closing the books on the first half of fiscal '25. I have attached the raw sales ledger above. It contains detailed transaction data across our global markets. Please perform a detailed Pivot Table analysis to break down the performance of our iPhone and Mac lines.</p>
                         
                         <div class="bg-blue-50 border-l-4 border-blue-500 p-4 my-6">
                             <h3 class="font-bold text-blue-800 text-lg mb-1">Analyst Task List (Requirements)</h3>
-                            <p class="text-sm text-blue-700 mb-3"><strong>Note:</strong> To ensure your workbook is clean and easy to audit, please create a <span class="font-bold underline">separate Pivot Table</span> for each task below (Tasks 3-10).</p>
-                            <ol class="list-decimal list-inside space-y-2 text-sm text-blue-900">
-                                <li><strong>Data Setup:</strong> Download the Excel file. Convert the range to an Excel Table and name it <strong>"AppleSales"</strong>.</li>
-                                <li><strong>Revenue Calculation:</strong> The source data is missing total values. Create a new column in the source data (not pivot) called <strong>"Revenue"</strong> using the formula: <code class="bg-blue-100 px-1 rounded">=Units * Unit_Price</code>.</li>
-                                <li><strong>Regional Analysis:</strong> Create a Pivot Table showing <strong>Total Revenue</strong> by <strong>Region</strong>.</li>
-                                <li><strong>Channel Volume:</strong> Show the <strong>Count of Transactions</strong> by <strong>Channel</strong>.</li>
-                                <li><strong>Pricing Strategy:</strong> Show the <strong>Average Unit_Price</strong> for each <strong>Product</strong>.</li>
-                                <li><strong>Profitability (Calculated Field):</strong> Calculate "Gross Profit" inside the Pivot Table using a Calculated Field. Formula: <code class="bg-blue-100 px-1 rounded">=Revenue - (Units * Unit_Cost)</code>.</li>
-                                <li><strong>Product Mix:</strong> Show <strong>Product</strong> vs <strong>Revenue</strong> as a <strong>% of Column Total</strong> to see market share.</li>
-                                <li><strong>Monthly Trends:</strong> Show <strong>Total Revenue</strong> grouped by <strong>Month</strong>.</li>
-                                <li><strong>Visual Audit:</strong> Apply a <strong>Red-White-Green</strong> Color Scale (Conditional Formatting) to the Profitability table (Task 6).</li>
-                                <li><strong>Audit Drill Down:</strong> Drill down into the <strong>"Americas"</strong> revenue figure in your Regional Analysis table (Task 3) to find the transaction count.</li>
-                            </ol>
+                            <p class="text-sm text-blue-700 mb-3"><strong>Instructions:</strong> Each task below includes a brief "Challenge Mode" instruction. If you are stuck, click "Need Step-by-Step Help?" to reveal detailed steps.</p>
+                            <p class="text-xs text-blue-600 mb-4 italic">Note: To ensure your workbook is clean, please create a separate Pivot Table for each task below.</p>
+                            
+                            <ul class="space-y-3 text-sm text-blue-900">
+                                
+                                <!-- Task 1 -->
+                                <li class="bg-white border border-blue-100 rounded-lg p-1">
+                                    <div class="p-3">
+                                        <div class="font-bold text-gray-900 mb-1">1. Data Setup</div>
+                                        <div class="text-blue-800">Convert the raw data range into an Excel Table and name it <strong>"AppleSales"</strong>.</div>
+                                    </div>
+                                    <details class="group border-t border-blue-50">
+                                        <summary class="flex items-center gap-2 cursor-pointer list-none p-2 bg-blue-50 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition">
+                                            <svg class="w-4 h-4 transition group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            Need Step-by-Step Help?
+                                        </summary>
+                                        <div class="p-4 bg-gray-50 text-gray-700 text-xs leading-relaxed">
+                                            1. Download the Excel file.<br>
+                                            2. Click anywhere inside the data.<br>
+                                            3. Press <code>Ctrl+T</code> (or Cmd+T on Mac) and click OK.<br>
+                                            4. In the <strong>Table Design</strong> tab (top ribbon), find the "Table Name" box on the far left and type <strong>"AppleSales"</strong>.
+                                        </div>
+                                    </details>
+                                </li>
+
+                                <!-- Task 2 -->
+                                <li class="bg-white border border-blue-100 rounded-lg p-1">
+                                    <div class="p-3">
+                                        <div class="font-bold text-gray-900 mb-1">2. Revenue & Cost Calculation</div>
+                                        <div class="text-blue-800">Create two new calculated columns in your table: <strong>Revenue</strong> (Units * Price) and <strong>COGS</strong> (Units * Cost).</div>
+                                    </div>
+                                    <details class="group border-t border-blue-50">
+                                        <summary class="flex items-center gap-2 cursor-pointer list-none p-2 bg-blue-50 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition">
+                                            <svg class="w-4 h-4 transition group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            Need Step-by-Step Help?
+                                        </summary>
+                                        <div class="p-4 bg-gray-50 text-gray-700 text-xs leading-relaxed">
+                                            1. In cell I1 (or next to the last column), type <strong>"Revenue"</strong> and press Enter.<br>
+                                            2. In the first empty cell under Revenue, type <code>=[@Units]*[@Unit_Price]</code> and press Enter.<br>
+                                            3. Repeat for <strong>"COGS"</strong> using the formula <code>=[@Units]*[@Unit_Cost]</code>.
+                                        </div>
+                                    </details>
+                                </li>
+                                
+                                <!-- Task 3 -->
+                                <li class="bg-white border border-blue-100 rounded-lg p-1">
+                                    <div class="p-3">
+                                        <div class="font-bold text-gray-900 mb-1">3. Regional Grouping</div>
+                                        <div class="text-blue-800">Create a Pivot Table showing Revenue by Country. Manually group countries into <strong>Americas</strong>, <strong>Europe</strong>, and <strong>Asia Pacific</strong>.</div>
+                                    </div>
+                                    <details class="group border-t border-blue-50">
+                                        <summary class="flex items-center gap-2 cursor-pointer list-none p-2 bg-blue-50 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition">
+                                            <svg class="w-4 h-4 transition group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            Need Step-by-Step Help?
+                                        </summary>
+                                        <div class="p-4 bg-gray-50 text-gray-700 text-xs leading-relaxed">
+                                            1. Insert a Pivot Table. Drag <strong>Country</strong> to Rows and <strong>Revenue</strong> to Values.<br>
+                                            2. <strong>Group Americas:</strong> Hold Ctrl/Cmd and select USA, Canada, Brazil, Mexico. Right-click > Group. Rename "Group1" to "Americas".<br>
+                                            3. <strong>Group Europe:</strong> Select UK, France, Germany, Italy, Spain. Right-click > Group. Rename to "Europe".<br>
+                                            4. <strong>Group Asia:</strong> Select China, Japan, Australia, South Korea, India. Right-click > Group. Rename to "Asia Pacific".
+                                        </div>
+                                    </details>
+                                </li>
+
+                                <!-- Task 4 -->
+                                <li class="bg-white border border-blue-100 rounded-lg p-1">
+                                    <div class="p-3">
+                                        <div class="font-bold text-gray-900 mb-1">4. Channel Volume</div>
+                                        <div class="text-blue-800">Show the <strong>Count of Transactions</strong> broken down by <strong>Channel</strong>.</div>
+                                    </div>
+                                    <details class="group border-t border-blue-50">
+                                        <summary class="flex items-center gap-2 cursor-pointer list-none p-2 bg-blue-50 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition">
+                                            <svg class="w-4 h-4 transition group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            Need Step-by-Step Help?
+                                        </summary>
+                                        <div class="p-4 bg-gray-50 text-gray-700 text-xs leading-relaxed">
+                                            1. Drag <strong>Channel</strong> to Rows.<br>
+                                            2. Drag <strong>Channel</strong> (again) or Transaction ID to Values.<br>
+                                            3. Ensure the aggregation is set to <strong>Count</strong> (not Sum).
+                                        </div>
+                                    </details>
+                                </li>
+
+                                <!-- Task 5 -->
+                                <li class="bg-white border border-blue-100 rounded-lg p-1">
+                                    <div class="p-3">
+                                        <div class="font-bold text-gray-900 mb-1">5. Pricing Strategy (Bar Chart)</div>
+                                        <div class="text-blue-800">Calculate the <strong>Average Unit_Price</strong> for each Product. Insert a <strong>Clustered Bar Pivot Chart</strong> to visualize this.</div>
+                                    </div>
+                                    <details class="group border-t border-blue-50">
+                                        <summary class="flex items-center gap-2 cursor-pointer list-none p-2 bg-blue-50 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition">
+                                            <svg class="w-4 h-4 transition group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            Need Step-by-Step Help?
+                                        </summary>
+                                        <div class="p-4 bg-gray-50 text-gray-700 text-xs leading-relaxed">
+                                            1. Drag <strong>Product</strong> to Rows and <strong>Unit_Price</strong> to Values.<br>
+                                            2. Right-click the values column > Summarize Values By > <strong>Average</strong>.<br>
+                                            3. Click inside the Pivot Table > Insert > PivotChart > <strong>Bar > Clustered Bar</strong>.
+                                        </div>
+                                    </details>
+                                </li>
+                                
+                                <!-- Task 6 -->
+                                <li class="bg-white border border-blue-100 rounded-lg p-1">
+                                    <div class="p-3">
+                                        <div class="font-bold text-gray-900 mb-1">6. Profitability (Calculated Field)</div>
+                                        <div class="text-blue-800">Create a <strong>Calculated Field</strong> named <strong>"Gross Profit"</strong> that subtracts COGS from Revenue. Show this by Product.</div>
+                                    </div>
+                                    <details class="group border-t border-blue-50">
+                                        <summary class="flex items-center gap-2 cursor-pointer list-none p-2 bg-blue-50 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition">
+                                            <svg class="w-4 h-4 transition group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            Need Step-by-Step Help?
+                                        </summary>
+                                        <div class="p-4 bg-gray-50 text-gray-700 text-xs leading-relaxed">
+                                            1. Create a NEW Pivot Table with <strong>Product</strong> in Rows.<br>
+                                            2. Go to <strong>PivotTable Analyze</strong> tab > Fields, Items & Sets > <strong>Calculated Field</strong>.<br>
+                                            3. Name: <strong>"Gross Profit"</strong>.<br>
+                                            4. Formula: <code>= Revenue - COGS</code> (Double click fields to insert them).
+                                        </div>
+                                    </details>
+                                </li>
+
+                                <!-- Task 7 -->
+                                <li class="bg-white border border-blue-100 rounded-lg p-1">
+                                    <div class="p-3">
+                                        <div class="font-bold text-gray-900 mb-1">7. Product Mix & Slicers</div>
+                                        <div class="text-blue-800">
+                                            Show Revenue Share % by Product (Pie Chart). 
+                                            <br><span class="text-purple-700 font-semibold">New:</span> Add a <strong>Slicer</strong> for "Product" to filter the chart.
+                                        </div>
+                                    </div>
+                                    <details class="group border-t border-blue-50">
+                                        <summary class="flex items-center gap-2 cursor-pointer list-none p-2 bg-blue-50 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition">
+                                            <svg class="w-4 h-4 transition group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            Need Step-by-Step Help?
+                                        </summary>
+                                        <div class="p-4 bg-gray-50 text-gray-700 text-xs leading-relaxed">
+                                            1. Drag <strong>Product</strong> to Rows and <strong>Revenue</strong> to Values.<br>
+                                            2. Right-click a number in Values > Show Values As > <strong>% of Column Total</strong>.<br>
+                                            3. Insert > PivotChart > <strong>Pie</strong>.<br>
+                                            4. <strong>Insert Slicer:</strong> Click inside Pivot Table > PivotTable Analyze > Insert Slicer > Check <strong>"Product"</strong> > OK.
+                                        </div>
+                                    </details>
+                                </li>
+
+                                <!-- Task 8 -->
+                                <li class="bg-white border border-blue-100 rounded-lg p-1">
+                                    <div class="p-3">
+                                        <div class="font-bold text-gray-900 mb-1">8. Monthly Trends (Line Chart)</div>
+                                        <div class="text-blue-800">Show Monthly Revenue trends (group by Month only). Create a <strong>Line Pivot Chart</strong> to visualize.</div>
+                                    </div>
+                                    <details class="group border-t border-blue-50">
+                                        <summary class="flex items-center gap-2 cursor-pointer list-none p-2 bg-blue-50 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition">
+                                            <svg class="w-4 h-4 transition group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            Need Step-by-Step Help?
+                                        </summary>
+                                        <div class="p-4 bg-gray-50 text-gray-700 text-xs leading-relaxed">
+                                            1. Drag <strong>Date</strong> to Rows and <strong>Revenue</strong> to Values.<br>
+                                            2. Ensure Excel groups by Months. Remove "Year", "Quarter", and "Date" fields from the Rows area so only <strong>Months</strong> remain.<br>
+                                            3. Insert > PivotChart > <strong>Line</strong>.
+                                        </div>
+                                    </details>
+                                </li>
+                                
+                                <!-- Task 9 -->
+                                <li class="bg-white border border-blue-100 rounded-lg p-1">
+                                    <div class="p-3">
+                                        <div class="font-bold text-gray-900 mb-1">9. Visual Audit (Heat Map)</div>
+                                        <div class="text-blue-800">Apply <strong>Green-White-Red Color Scale</strong> conditional formatting to your Profit values (Task 6) to identify high performers.</div>
+                                    </div>
+                                    <details class="group border-t border-blue-50">
+                                        <summary class="flex items-center gap-2 cursor-pointer list-none p-2 bg-blue-50 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition">
+                                            <svg class="w-4 h-4 transition group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            Need Step-by-Step Help?
+                                        </summary>
+                                        <div class="p-4 bg-gray-50 text-gray-700 text-xs leading-relaxed">
+                                            1. Highlight the Profit numbers (do not select the Grand Total).<br>
+                                            2. Home tab > Conditional Formatting > <strong>Color Scales</strong>.<br>
+                                            3. Select the first option (Green for high, Red for low).
+                                        </div>
+                                    </details>
+                                </li>
+
+                                <!-- Task 10 -->
+                                <li class="bg-white border border-blue-100 rounded-lg p-1">
+                                    <div class="p-3">
+                                        <div class="font-bold text-gray-900 mb-1">10. Audit Drill Down</div>
+                                        <div class="text-blue-800">Perform a drill-down audit on the <strong>"Americas"</strong> revenue total. Count the resulting rows in the new sheet.</div>
+                                    </div>
+                                    <details class="group border-t border-blue-50">
+                                        <summary class="flex items-center gap-2 cursor-pointer list-none p-2 bg-blue-50 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition">
+                                            <svg class="w-4 h-4 transition group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            Need Step-by-Step Help?
+                                        </summary>
+                                        <div class="p-4 bg-gray-50 text-gray-700 text-xs leading-relaxed">
+                                            1. Go to your Regional Grouping table (Task 3).<br>
+                                            2. <strong>Double-click</strong> directly on the numeric total for "Americas".<br>
+                                            3. Excel will create a new sheet. Count the rows in this table.
+                                        </div>
+                                    </details>
+                                </li>
+
+                                <!-- Task 11 (New) -->
+                                <li class="bg-white border border-blue-100 rounded-lg p-1">
+                                    <div class="p-3">
+                                        <div class="font-bold text-gray-900 mb-1">11. Monthly Growth Analysis (%)</div>
+                                        <div class="text-blue-800">Create a new Pivot Table showing <strong>Total Revenue</strong> by <strong>Month</strong>. Set the values to show the <strong>% Difference From</strong> the previous month.</div>
+                                        <div class="text-xs text-gray-500 mt-1">Goal: Identify the growth percentage for <strong>April</strong>. <span class="font-semibold text-blue-700">Round to 1 decimal place (e.g., 0.5%).</span></div>
+                                    </div>
+                                    <details class="group border-t border-blue-50">
+                                        <summary class="flex items-center gap-2 cursor-pointer list-none p-2 bg-blue-50 text-xs font-semibold text-blue-600 hover:bg-blue-100 transition">
+                                            <svg class="w-4 h-4 transition group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            Need Step-by-Step Help?
+                                        </summary>
+                                        <div class="p-4 bg-gray-50 text-gray-700 text-xs leading-relaxed">
+                                            1. Drag <strong>Date</strong> (Month) to Rows and <strong>Revenue</strong> to Values.<br>
+                                            2. Right-click any number in the Revenue column.<br>
+                                            3. Select <strong>Show Values As</strong> > <strong>% Difference From...</strong><br>
+                                            4. In the dialog box:<br>
+                                               - Base Field: <strong>Date (or Months)</strong><br>
+                                               - Base Item: <strong>(previous)</strong><br>
+                                            5. Click OK. Read the percentage for <strong>April</strong>.
+                                        </div>
+                                    </details>
+                                </li>
+
+                            </ul>
                         </div>
 
-                        <p>Once completed, please validate your key figures in the form below and attach your workbook.</p>
+                        <p>Once completed, please validate your key figures in the form below.</p>
                     </div>
 
                     <!-- Input Form for Validation -->
@@ -125,7 +344,7 @@
                         </div>
                         
                         <div class="p-6">
-                            <!-- Tasks 1-5 -->
+                            <!-- Tasks 1-6 -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-8">
                                 <!-- Task 1 -->
                                 <div class="task-row p-2 rounded transition">
@@ -138,9 +357,9 @@
 
                                 <!-- Task 2 -->
                                 <div class="task-row p-2 rounded transition">
-                                    <label class="text-sm font-semibold text-gray-800 block mb-1">2. Global Revenue Calculation</label>
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">2. Global Revenue</label>
                                     <div class="flex items-center justify-between gap-4">
-                                        <span class="text-xs text-gray-500">Sum of new "Revenue" column</span>
+                                        <span class="text-xs text-gray-500">Sum of "Revenue" column</span>
                                         <div class="relative flex-1">
                                             <span class="absolute left-2 top-1.5 text-gray-400">$</span>
                                             <input type="text" id="ans_task2" class="apple-input pl-6 text-right" placeholder="0">
@@ -150,9 +369,9 @@
 
                                 <!-- Task 3 -->
                                 <div class="task-row p-2 rounded transition">
-                                    <label class="text-sm font-semibold text-gray-800 block mb-1">3. Regional Analysis</label>
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">3. Regional Grouping</label>
                                     <div class="flex items-center justify-between gap-4">
-                                        <span class="text-xs text-gray-500">Total Revenue for "Americas"</span>
+                                        <span class="text-xs text-gray-500">Total Revenue for "Americas" Group</span>
                                         <div class="relative flex-1">
                                             <span class="absolute left-2 top-1.5 text-gray-400">$</span>
                                             <input type="text" id="ans_task3" class="apple-input pl-6 text-right" placeholder="0">
@@ -180,15 +399,10 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="border-t border-gray-100 my-4"></div>
-
-                            <!-- Tasks 6-10 -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                 <!-- Task 6 -->
                                 <div class="task-row p-2 rounded transition">
-                                    <label class="text-sm font-semibold text-gray-800 block mb-1">6. Profitability (Calc Field)</label>
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">6. Profitability</label>
                                     <div class="flex items-center justify-between gap-4">
                                         <span class="text-xs text-gray-500">Total Gross Profit (Global)</span>
                                         <div class="relative flex-1">
@@ -197,15 +411,26 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
+                            <div class="border-t border-gray-100 my-4"></div>
+
+                            <!-- Tasks 7-11 -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                 <!-- Task 7 -->
                                 <div class="task-row p-2 rounded transition">
-                                    <label class="text-sm font-semibold text-gray-800 block mb-1">7. Product Mix</label>
-                                    <div class="flex items-center justify-between gap-4">
-                                        <span class="text-xs text-gray-500">Revenue Share % for "iPhone 17"</span>
-                                        <div class="relative w-28">
-                                            <input type="text" id="ans_task7" class="apple-input pr-6 text-right" placeholder="0.0">
-                                            <span class="absolute right-2 top-1.5 text-gray-400">%</span>
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">7. Product Mix & Slicer</label>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between gap-4">
+                                            <span class="text-xs text-gray-500">Rev Share % for "iPhone 17"</span>
+                                            <div class="relative w-28">
+                                                <input type="text" id="ans_task7" class="apple-input pr-6 text-right" placeholder="0.0">
+                                                <span class="absolute right-2 top-1.5 text-gray-400">%</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between gap-4">
+                                            <span class="text-xs text-purple-600">Added Product Slicer?</span>
+                                            <input type="checkbox" id="ans_task7_slicer" class="apple-checkbox">
                                         </div>
                                     </div>
                                 </div>
@@ -239,29 +464,27 @@
                                         <input type="number" id="ans_task10" class="apple-input w-24 text-right" placeholder="0">
                                     </div>
                                 </div>
-                            </div>
 
-                             <!-- File Upload -->
-                             <div class="mt-8 bg-gray-50 border border-dashed border-gray-300 rounded-lg p-6 text-center">
-                                <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                <label class="block text-sm font-medium text-gray-700 mb-2 mt-2">Attach Completed Excel Workbook</label>
-                                <div class="flex items-center justify-center gap-3">
-                                    <label class="file-upload-wrapper bg-white border border-gray-300 text-gray-600 hover:bg-gray-50 font-medium py-1.5 px-4 rounded-lg cursor-pointer shadow-sm transition text-sm">
-                                        <span id="file-label">Select File...</span>
-                                        <input type="file" id="excelUpload" onchange="updateFileName(this)">
-                                    </label>
-                                    <span id="file-name" class="text-xs text-gray-500 italic">No file chosen</span>
+                                <!-- Task 11 (New) -->
+                                <div class="task-row p-2 rounded transition">
+                                    <label class="text-sm font-semibold text-gray-800 block mb-1">11. Monthly Growth %</label>
+                                    <div class="flex items-center justify-between gap-4">
+                                        <span class="text-xs text-gray-500">Growth % for <strong>April</strong> (vs March)</span>
+                                        <div class="relative w-28">
+                                            <input type="text" id="ans_task11" class="apple-input pr-6 text-right" placeholder="0.0">
+                                            <span class="absolute right-2 top-1.5 text-gray-400">%</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
 
                     <!-- Qualitative Analysis -->
                     <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                          <h2 class="text-lg font-bold text-gray-900 mb-2">Executive Summary</h2>
-                         <p class="text-sm text-gray-500 mb-3">Based on your analysis, why is the Americas region outperforming? Is it volume, pricing, or product mix? (2-3 sentences) <span class="font-medium text-gray-700">Provide key data points to back your argument.</span></p>
-                         <textarea id="analysis_text" class="w-full border border-gray-300 rounded-lg p-3 h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none" placeholder="The Americas region is driving profitability primarily due to..."></textarea>
+                         <p class="text-sm text-gray-500 mb-3">Based on your charts and pivot tables, identify one key trend or anomaly. Which <strong>Region</strong> or <strong>Product</strong> is our biggest profit driver, and which area requires strategic adjustment? (2-3 sentences) <span class="font-medium text-gray-700">Reference specific figures to support your conclusion.</span></p>
+                         <textarea id="analysis_text" class="w-full border border-gray-300 rounded-lg p-3 h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none" placeholder="Our analysis indicates that the top performing segment is..."></textarea>
                     </div>
 
                 </div>
@@ -290,7 +513,7 @@
                 <!-- Score Display -->
                 <div id="scoreArea" class="hidden text-center mb-6">
                     <div class="inline-block p-4 rounded-full bg-blue-50 mb-2">
-                        <span id="scoreValue" class="text-4xl font-bold text-blue-600">0</span><span class="text-xl text-blue-400">/10</span>
+                        <span id="scoreValue" class="text-4xl font-bold text-blue-600">0</span><span class="text-xl text-blue-400">/12</span>
                     </div>
                     <p class="text-sm text-gray-500">Validation Score</p>
                 </div>
@@ -302,17 +525,26 @@
                     </div>
                     
                     <div class="bg-yellow-50 p-3 rounded-md border border-yellow-100 text-sm text-yellow-800">
-                        <p><strong>Important:</strong> Clicking "Send" generates your scorecard. You must upload <strong>BOTH</strong> the downloaded report and your Excel Workbook to Canvas for credit.</p>
+                        <p><strong>Important:</strong> First, <strong>Download the Report</strong> to save a local copy of your work. Then, click <strong>Submit Score</strong> to send your grade to the instructor.</p>
+                        <p class="mt-2 font-bold text-yellow-900">Upload your downloaded text report and Excel file to Canvas.</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-gray-50 px-6 py-4 flex justify-end gap-3">
-                <button onclick="closeReplyModal()" class="text-gray-600 font-medium hover:bg-gray-200 px-4 py-2 rounded-lg transition">Cancel</button>
-                <button onclick="submitAndDownload()" class="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-lg shadow-sm transition flex items-center gap-2">
-                    Send & Download Report
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                </button>
+            <div class="bg-gray-50 px-6 py-4 flex flex-col gap-3">
+                <div class="flex justify-between items-center w-full">
+                      <button onclick="closeReplyModal()" class="text-gray-600 font-medium hover:bg-gray-200 px-4 py-2 rounded-lg transition">Close</button>
+                      <div class="flex gap-2">
+                          <button onclick="downloadReport()" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium px-4 py-2 rounded-lg shadow-sm transition flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            1. Download
+                          </button>
+                          <button id="btnSubmit" onclick="submitScore()" class="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg shadow-sm transition flex items-center gap-2">
+                            2. Submit Score
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                          </button>
+                      </div>
+                </div>
             </div>
         </div>
     </div>
@@ -342,21 +574,23 @@
                  </h2>
                  <button onclick="closeInstructor()" class="text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
             </div>
-           
+            
             <!-- Numeric Key -->
             <div class="space-y-2 text-sm font-mono bg-gray-100 p-4 rounded mb-6 border border-gray-200">
                 <h3 class="font-bold text-gray-700 border-b border-gray-300 pb-1 mb-2">Numeric Key</h3>
                 <div class="grid grid-cols-2 gap-x-8 gap-y-1">
                     <p>1. Table Setup: <span class="font-bold text-green-700">Check</span></p>
-                    <p>2. Global Rev: <span class="font-bold text-blue-700">5,491,000</span></p>
-                    <p>3. Americas Rev: <span class="font-bold text-blue-700">3,226,000</span></p>
-                    <p>4. Online Tx: <span class="font-bold text-blue-700">7</span></p>
-                    <p>5. Avg Price: <span class="font-bold text-blue-700">1,100</span></p>
-                    <p>6. Gross Profit: <span class="font-bold text-blue-700">2,612,500</span></p>
-                    <p>7. iPhone Share: <span class="font-bold text-blue-700">66.1%</span></p>
-                    <p>8. March Rev: <span class="font-bold text-blue-700">486,000</span></p>
+                    <p>2. Global Rev: <span class="font-bold text-blue-700" id="key-rev-total">--</span></p>
+                    <p>3. Americas (Grp): <span class="font-bold text-blue-700" id="key-rev-amer">--</span></p>
+                    <p>4. Online Tx: <span class="font-bold text-blue-700" id="key-count">--</span></p>
+                    <p>5. Avg Price: <span class="font-bold text-blue-700" id="key-price">--</span></p>
+                    <p>6. Gross Profit: <span class="font-bold text-blue-700" id="key-profit">--</span></p>
+                    <p>7a. iPhone Share: <span class="font-bold text-blue-700" id="key-share">--%</span></p>
+                    <p>7b. Slicer Added: <span class="font-bold text-green-700">Check</span></p>
+                    <p>8. March Rev: <span class="font-bold text-blue-700" id="key-rev-march">--</span></p>
                     <p>9. Heat Map: <span class="font-bold text-green-700">Check</span></p>
-                    <p>10. Audit Rows: <span class="font-bold text-blue-700">6</span></p>
+                    <p>10. Audit Rows: <span class="font-bold text-blue-700" id="key-audit-rows">--</span></p>
+                    <p>11. April Growth: <span class="font-bold text-purple-700" id="key-april-growth">--%</span></p>
                 </div>
             </div>
 
@@ -366,51 +600,20 @@
                 
                 <div class="space-y-3 text-sm text-gray-600">
                     <div class="p-3 bg-gray-50 rounded border border-gray-100">
-                        <strong class="block text-gray-900 mb-1">Task 3: Regional Analysis</strong>
-                        <p>Insert > PivotTable. Drag <strong>Region</strong> to Rows and <strong>Revenue</strong> to Values.</p>
-                    </div>
-                    
-                    <div class="p-3 bg-gray-50 rounded border border-gray-100">
-                        <strong class="block text-gray-900 mb-1">Task 4: Channel Volume</strong>
-                        <p>Drag <strong>Channel</strong> to Rows and <strong>Channel</strong> (again) to Values. Ensure it says "Count of Channel". If it says Sum, click Value Field Settings > Count.</p>
+                        <strong class="block text-gray-900 mb-1">Task 7: Slicer</strong>
+                        <p>After creating the Pie Chart, go to <strong>PivotTable Analyze > Insert Slicer</strong>. Select "Product". This allows users to filter the visual instantly.</p>
                     </div>
 
                     <div class="p-3 bg-gray-50 rounded border border-gray-100">
-                        <strong class="block text-gray-900 mb-1">Task 5: Pricing Strategy</strong>
-                        <p>Drag <strong>Product</strong> to Rows and <strong>Unit_Price</strong> to Values. Right-click the values column > Summarize Values By > <strong>Average</strong>.</p>
-                    </div>
-
-                    <div class="p-3 bg-gray-50 rounded border border-gray-100">
-                        <strong class="block text-gray-900 mb-1">Task 6: Profitability (Calculated Field)</strong>
-                        <p>Click inside Pivot. Go to <em>PivotTable Analyze tab > Fields, Items & Sets > Calculated Field</em>. Name it "Gross Profit". Formula: <code>=Revenue - (Units * Unit_Cost)</code>.</p>
-                    </div>
-
-                    <div class="p-3 bg-gray-50 rounded border border-gray-100">
-                        <strong class="block text-gray-900 mb-1">Task 7: Product Mix (%)</strong>
-                        <p>Drag <strong>Product</strong> to Rows and <strong>Revenue</strong> to Values. Right-click a number in the column > <em>Show Values As > % of Column Total</em>.</p>
-                    </div>
-
-                    <div class="p-3 bg-gray-50 rounded border border-gray-100">
-                        <strong class="block text-gray-900 mb-1">Task 8: Monthly Trends</strong>
-                        <p>Drag <strong>Date</strong> to Rows. If Excel shows individual dates, Right-click any date cell > <strong>Group...</strong> > Select "Months".</p>
-                    </div>
-
-                     <div class="p-3 bg-gray-50 rounded border border-gray-100">
-                        <strong class="block text-gray-900 mb-1">Task 9: Visual Audit</strong>
-                        <p>Select the numbers in the Profit table (exclude Grand Total). Home > Conditional Formatting > Color Scales > Select Red-White-Green.</p>
+                        <strong class="block text-gray-900 mb-1">Task 11: Monthly Growth %</strong>
+                        <p>Pivot Table: Rows = Date (Months). Values = Revenue. <br>
+                        Right Click Value > <strong>Show Values As > % Difference From</strong>.<br>
+                        Base Field: Date (Month). Base Item: (previous).<br>
+                        Formula behind the scenes: <code>(April Rev - March Rev) / March Rev</code>.</p>
                     </div>
                 </div>
             </div>
-
-            <!-- Executive Summary Key -->
-            <div class="space-y-2 mt-4 pt-4 border-t border-gray-200">
-                <h3 class="font-bold text-gray-800">Executive Summary Analysis (Key)</h3>
-                <div class="bg-blue-50 p-4 rounded text-sm text-gray-700 space-y-2">
-                    <p><strong>Core Drivers:</strong> Volume & Product Mix (Not Pricing).</p>
-                    <p><strong>Sample Answer:</strong> "The Americas region is outperforming primarily due to significantly higher <strong>Sales Volume</strong> (approx 2x other regions) and a superior <strong>Product Mix</strong>. They sold 2,300 units of the high-value <strong>iPhone 17</strong> ($1,100), whereas Greater China only sold 1,000. Additionally, Americas captured the entire high-margin <strong>Services</strong> segment."</p>
-                </div>
-            </div>
-
+            
             <div class="mt-6 pt-4 border-t sticky bottom-0 bg-white">
                 <button onclick="autoFillDemo()" class="w-full bg-blue-100 text-blue-700 py-3 rounded font-medium hover:bg-blue-200 transition">Auto-Fill Correct Answers (Demo Mode)</button>
             </div>
@@ -418,122 +621,252 @@
     </div>
 
     <script>
-        // Data in Array Format (Better for SheetJS)
-        // [Date, Region, Product, Channel, Units, Unit_Price, Unit_Cost]
-        const dataSet = [
-            ["Date", "Region", "Product", "Channel", "Units", "Unit_Price", "Unit_Cost"],
-            ["1/15/2025", "Americas", "iPhone 17", "Online", 500, 1100, 600],
-            ["1/18/2025", "Europe", "MacBook Air M4", "Retail Store", 200, 1300, 800],
-            ["1/22/2025", "Greater China", "iPhone 17", "Carrier", 1000, 1100, 600],
-            ["2/5/2025", "Americas", "Services", "Online", 5000, 30, 5],
-            ["2/10/2025", "Japan", "iPad Pro", "Retail Store", 150, 1000, 550],
-            ["2/14/2025", "Europe", "Wearables", "Online", 300, 400, 200],
-            ["2/20/2025", "Americas", "iPhone 17", "Retail Store", 400, 1100, 600],
-            ["3/1/2025", "Rest of Asia", "MacBook Air M4", "Carrier", 100, 1300, 800],
-            ["3/15/2025", "Americas", "Services", "Online", 5200, 30, 5],
-            ["3/20/2025", "Greater China", "iPad Pro", "Online", 200, 1000, 550],
-            ["4/2/2025", "Americas", "iPhone 17", "Carrier", 800, 1100, 600],
-            ["4/5/2025", "Europe", "Services", "Online", 3000, 35, 5],
-            ["4/10/2025", "Japan", "Wearables", "Retail Store", 500, 400, 200],
-            ["4/12/2025", "Americas", "MacBook Air M4", "Online", 300, 1300, 800],
-            ["4/15/2025", "Americas", "iPhone 17", "Retail Store", 600, 1100, 600]
+        // --- INSTRUCTOR CONFIGURATION ---
+        // Paste your Google Web App URL here to enable remote submission logging
+        const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw0D8jLhk_5Z9St5JLXL4W4o6yJEOpSe9Xwy9LDJNQnGxOj5ea5oIsRFZ4u5TmLjpbU/exec"; 
+
+        // --- 1. EXPANDED DATASET (~60 Rows) ---
+        // Schema: [TransactionID, Date, Country, Product, Channel, Units, Unit_Price, Unit_Cost]
+        // Updated logic: Add Transaction ID to start. Convert dates to Objects for SheetJS.
+        const header = ["Transaction ID", "Date", "Country", "Product", "Channel", "Units", "Unit_Price", "Unit_Cost"];
+        const rawDataStrings = [
+            // AMERICAS (USA, Canada, Brazil, Mexico)
+            ["1/05/2025", "USA", "iPhone 17", "Online", 1200, 1100, 600],
+            ["1/12/2025", "USA", "iPhone 17", "Retail Store", 800, 1100, 600],
+            ["1/15/2025", "USA", "Services", "Online", 6000, 30, 5],
+            ["2/01/2025", "Canada", "MacBook Air M4", "Online", 400, 1300, 800],
+            ["2/10/2025", "USA", "Wearables", "Retail Store", 600, 400, 200],
+            ["2/20/2025", "Brazil", "iPhone 17", "Online", 450, 1100, 600],
+            ["3/05/2025", "Mexico", "iPad Pro", "Retail Store", 300, 1000, 550],
+            ["3/15/2025", "USA", "Services", "Online", 6500, 30, 5],
+            ["3/20/2025", "Canada", "iPhone 17", "Carrier", 550, 1100, 600],
+            ["4/01/2025", "USA", "MacBook Air M4", "Retail Store", 700, 1300, 800],
+            ["4/05/2025", "Brazil", "Wearables", "Online", 200, 400, 200],
+            ["4/10/2025", "Mexico", "iPhone 17", "Retail Store", 200, 1100, 600],
+            ["4/15/2025", "USA", "iPad Pro", "Online", 500, 1000, 550],
+            ["5/01/2025", "Canada", "Services", "Online", 1000, 30, 5],
+            ["5/10/2025", "USA", "iPhone 17", "Carrier", 900, 1100, 600],
+            ["5/20/2025", "Brazil", "MacBook Air M4", "Retail Store", 150, 1300, 800],
+            ["1/08/2025", "USA", "iPhone 17", "Online", 300, 1100, 600], 
+            ["2/14/2025", "Canada", "Wearables", "Retail Store", 100, 400, 200], 
+
+            // EUROPE (UK, France, Germany, Italy, Spain)
+            ["1/08/2025", "UK", "MacBook Air M4", "Online", 800, 1300, 800],
+            ["1/20/2025", "Germany", "iPhone 17", "Carrier", 600, 1100, 600],
+            ["2/05/2025", "France", "iPad Pro", "Retail Store", 400, 1000, 550],
+            ["2/15/2025", "UK", "Services", "Online", 3000, 30, 5],
+            ["3/01/2025", "Italy", "Wearables", "Online", 300, 400, 200],
+            ["3/10/2025", "Spain", "iPhone 17", "Retail Store", 250, 1100, 600],
+            ["3/25/2025", "Germany", "MacBook Air M4", "Retail Store", 450, 1300, 800],
+            ["4/02/2025", "France", "Services", "Online", 1500, 30, 5],
+            ["4/12/2025", "UK", "iPhone 17", "Online", 500, 1100, 600],
+            ["4/20/2025", "Italy", "iPad Pro", "Carrier", 200, 1000, 550],
+            ["5/05/2025", "Spain", "MacBook Air M4", "Online", 150, 1300, 800],
+            ["5/15/2025", "Germany", "Wearables", "Retail Store", 350, 400, 200],
+            ["2/28/2025", "UK", "iPad Pro", "Online", 200, 1000, 550], 
+            ["3/12/2025", "France", "iPhone 17", "Carrier", 300, 1100, 600], 
+
+            // ASIA PACIFIC (China, Japan, Australia, South Korea, India)
+            ["1/10/2025", "China", "iPhone 17", "Online", 2000, 1100, 600],
+            ["1/25/2025", "Japan", "iPad Pro", "Retail Store", 600, 1000, 550],
+            ["2/02/2025", "Australia", "MacBook Air M4", "Carrier", 300, 1300, 800],
+            ["2/12/2025", "South Korea", "iPhone 17", "Online", 500, 1100, 600],
+            ["2/25/2025", "China", "Services", "Online", 8000, 30, 5],
+            ["3/08/2025", "India", "Wearables", "Online", 1000, 400, 200],
+            ["3/18/2025", "Japan", "MacBook Air M4", "Retail Store", 400, 1300, 800],
+            ["3/28/2025", "Australia", "iPhone 17", "Retail Store", 350, 1100, 600],
+            ["4/08/2025", "China", "iPad Pro", "Online", 900, 1000, 550],
+            ["4/18/2025", "South Korea", "Services", "Online", 1200, 30, 5],
+            ["5/02/2025", "India", "iPhone 17", "Carrier", 600, 1100, 600],
+            ["5/12/2025", "Japan", "Wearables", "Retail Store", 450, 400, 200],
+            ["5/22/2025", "China", "MacBook Air M4", "Online", 800, 1300, 800],
+            ["1/30/2025", "Australia", "Services", "Online", 500, 30, 5], 
+            ["3/22/2025", "India", "iPad Pro", "Retail Store", 200, 1000, 550], 
+            ["4/25/2025", "South Korea", "iPhone 17", "Online", 400, 1100, 600], 
         ];
 
-        function downloadXLSX() {
-            // Create a workbook and worksheet using SheetJS
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(dataSet);
+        // Process data to add Transaction ID and format Dates
+        const rawData = rawDataStrings.map((row, index) => {
+            const tranId = `Tran-00${index + 1}`.slice(-8); // e.g. Tran-001
+            const dateObj = new Date(row[0]);
+            return [tranId, dateObj, ...row.slice(1)];
+        });
+        
+        const dataSet = [header, ...rawData];
 
-            // Add worksheet to workbook
-            XLSX.utils.book_append_sheet(wb, ws, "Sales_Ledger");
+        // --- 2. DYNAMIC KEY CALCULATION ---
+        
+        const AMERICAS_COUNTRIES = ["USA", "Canada", "Brazil", "Mexico"];
+        const TARGET_PRICE_PRODUCT = "iPhone 17";
 
-            // Write and download
-            XLSX.writeFile(wb, "Sales_Ledger_FY25.xlsx");
-        }
-
-        // Correct Answers Logic
-        const KEY = {
-            rev_total: 5491000,
-            rev_amer: 3226000,
-            count: 7,
-            price: 1100,
-            profit: 2612500,
-            share: 66.1,
-            rev_march: 486000,
-            audit_rows: 6
+        let calculatedKey = {
+            rev_total: 0,
+            rev_amer: 0,
+            count_online: 0,
+            price_target: 0,
+            profit_total: 0,
+            share_target: 0,
+            rev_march: 0,
+            audit_rows: 0,
+            april_growth: 0
         };
 
-        let calculatedScore = 0;
+        function calculateCorrectAnswers() {
+            let totalRev = 0;
+            let amerRev = 0;
+            let onlineCount = 0;
+            let grossProfit = 0;
+            
+            let iphoneRev = 0;
+            let iphonePriceSum = 0;
+            let iphoneCount = 0;
+            let americasRowCount = 0;
+            
+            // Monthly Revenue bucket (Index 0 = Jan, 1 = Feb, etc.)
+            let monthlyRev = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-        function updateFileName(input) {
-            const fileName = input.files[0] ? input.files[0].name : "No file chosen";
-            document.getElementById('file-name').innerText = fileName;
+            rawData.forEach(row => {
+                const date = row[1]; // Date Object
+                const country = row[2];
+                const product = row[3];
+                const channel = row[4];
+                const units = row[5];
+                const price = row[6];
+                const cost = row[7];
+
+                const revenue = units * price;
+                const profit = revenue - (units * cost);
+                const monthIndex = date.getMonth(); // 0-11
+                
+                // Global Totals
+                totalRev += revenue;
+                grossProfit += profit;
+                monthlyRev[monthIndex] += revenue;
+
+                // Americas Logic
+                if (AMERICAS_COUNTRIES.includes(country)) {
+                    amerRev += revenue;
+                    americasRowCount++;
+                }
+
+                // Channel Logic
+                if (channel === "Online") {
+                    onlineCount++;
+                }
+
+                // Product Logic (iPhone 17)
+                if (product === TARGET_PRICE_PRODUCT) {
+                    iphoneRev += revenue;
+                    iphonePriceSum += price; 
+                    iphoneCount++;
+                }
+            });
+
+            // Calculate April Growth vs March
+            // March is Index 2, April is Index 3
+            const marchRev = monthlyRev[2];
+            const aprilRev = monthlyRev[3];
+            // Formula: (New - Old) / Old
+            const growthRate = ((aprilRev - marchRev) / marchRev) * 100;
+
+            // Set Values
+            calculatedKey.rev_total = totalRev;
+            calculatedKey.rev_amer = amerRev;
+            calculatedKey.count_online = onlineCount;
+            calculatedKey.price_target = iphoneCount > 0 ? (iphonePriceSum / iphoneCount) : 0;
+            calculatedKey.profit_total = grossProfit;
+            calculatedKey.share_target = (totalRev > 0) ? ((iphoneRev / totalRev) * 100) : 0;
+            calculatedKey.rev_march = marchRev;
+            calculatedKey.audit_rows = americasRowCount;
+            // Round growth rate to 1 decimal place for validation consistency
+            calculatedKey.april_growth = parseFloat(growthRate.toFixed(1));
+
+            // Update Instructor Modal with calculated values
+            document.getElementById('key-rev-total').innerText = totalRev.toLocaleString();
+            document.getElementById('key-rev-amer').innerText = amerRev.toLocaleString();
+            document.getElementById('key-count').innerText = onlineCount;
+            document.getElementById('key-price').innerText = calculatedKey.price_target.toLocaleString();
+            document.getElementById('key-profit').innerText = grossProfit.toLocaleString();
+            document.getElementById('key-share').innerText = calculatedKey.share_target.toFixed(1) + "%";
+            document.getElementById('key-rev-march').innerText = marchRev.toLocaleString();
+            document.getElementById('key-audit-rows').innerText = americasRowCount;
+            document.getElementById('key-april-growth').innerText = calculatedKey.april_growth.toFixed(1) + "%";
         }
 
-        // Helper: Clean non-numeric chars except decimal
+        // Initialize Calculation on Load
+        calculateCorrectAnswers();
+
+
+        // --- 3. UI & DOWNLOAD FUNCTIONS ---
+
+        function downloadXLSX() {
+            const wb = XLSX.utils.book_new();
+            // Convert dataSet to sheet with date parsing enabled
+            const ws = XLSX.utils.aoa_to_sheet(dataSet, { cellDates: true });
+            
+            // Adjust column widths slightly for better look
+            ws['!cols'] = [
+                { wch: 10 }, // ID
+                { wch: 12 }, // Date
+                { wch: 12 }, // Country
+                { wch: 15 }, // Product
+                { wch: 12 }, // Channel
+                { wch: 8 },  // Units
+                { wch: 10 }, // Price
+                { wch: 10 }  // Cost
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, "Sales_Ledger");
+            XLSX.writeFile(wb, "Sales_Ledger_Global_FY25.xlsx");
+        }
+
+        let currentScore = 0;
+
+        // Clean numeric input
         function cleanNumber(str) {
             if (!str) return 0;
-            // Remove commmas, $ signs, spaces
-            let val = str.replace(/[^0-9.]/g, '');
+            let val = str.replace(/[^0-9.-]/g, ''); // Added minus sign just in case
             return parseFloat(val) || 0;
         }
 
-        // Helper: Check with 2% Leeway and handle % format
+        // Validate Answer with 2% margin
         function checkAnswer(userStr, target, isPercent = false) {
             let userVal = cleanNumber(userStr);
+            if (isPercent && userVal < 1 && Math.abs(target) > 1) userVal = userVal * 100;
             
-            // Handle percent inputs like 0.661 vs 66.1
+            // Default 2% relative margin
+            let margin = Math.abs(target * 0.02);
+            
+            // For percentages, ensure a minimum absolute margin (0.1) to handle rounding differences
             if (isPercent) {
-                if (userVal < 1 && target > 1) userVal = userVal * 100;
+                margin = Math.max(margin, 0.1);
             }
-
-            // 2% Leeway calculation
-            const margin = target * 0.02;
-            const min = target - margin;
-            const max = target + margin;
-
-            return (userVal >= min && userVal <= max);
+            
+            return (userVal >= target - margin && userVal <= target + margin);
         }
 
         function calculateGrade() {
             let score = 0;
             
-            // Task 1: Checkbox
             if (document.getElementById('ans_task1').checked) score++;
-
-            // Task 2: Global Rev
-            if (checkAnswer(document.getElementById('ans_task2').value, KEY.rev_total)) score++;
-
-            // Task 3: Americas Rev
-            if (checkAnswer(document.getElementById('ans_task3').value, KEY.rev_amer)) score++;
-
-            // Task 4: Online Count (Exact)
-            if (cleanNumber(document.getElementById('ans_task4').value) === KEY.count) score++;
-
-            // Task 5: Avg Price (Exact or slight margin)
-            if (checkAnswer(document.getElementById('ans_task5').value, KEY.price)) score++;
-
-            // Task 6: Profit
-            if (checkAnswer(document.getElementById('ans_task6').value, KEY.profit)) score++;
-
-            // Task 7: Share %
-            if (checkAnswer(document.getElementById('ans_task7').value, KEY.share, true)) score++;
-
-            // Task 8: March Rev
-            if (checkAnswer(document.getElementById('ans_task8').value, KEY.rev_march)) score++;
-
-            // Task 9: Checkbox
+            if (checkAnswer(document.getElementById('ans_task2').value, calculatedKey.rev_total)) score++;
+            if (checkAnswer(document.getElementById('ans_task3').value, calculatedKey.rev_amer)) score++;
+            if (cleanNumber(document.getElementById('ans_task4').value) === calculatedKey.count_online) score++;
+            if (checkAnswer(document.getElementById('ans_task5').value, calculatedKey.price_target)) score++;
+            if (checkAnswer(document.getElementById('ans_task6').value, calculatedKey.profit_total)) score++;
+            if (checkAnswer(document.getElementById('ans_task7').value, calculatedKey.share_target, true)) score++;
+            if (document.getElementById('ans_task7_slicer').checked) score++; // New score point
+            if (checkAnswer(document.getElementById('ans_task8').value, calculatedKey.rev_march)) score++;
             if (document.getElementById('ans_task9').checked) score++;
-
-            // Task 10: Audit Rows (Exact)
-            if (cleanNumber(document.getElementById('ans_task10').value) === KEY.audit_rows) score++;
+            if (cleanNumber(document.getElementById('ans_task10').value) === calculatedKey.audit_rows) score++;
+            if (checkAnswer(document.getElementById('ans_task11').value, calculatedKey.april_growth, true)) score++; // New score point
 
             return score;
         }
 
         function openReplyModal() {
-            calculatedScore = calculateGrade();
-            document.getElementById('scoreValue').innerText = calculatedScore;
+            currentScore = calculateGrade();
+            document.getElementById('scoreValue').innerText = currentScore;
             document.getElementById('scoreArea').classList.remove('hidden');
 
             const modal = document.getElementById('replyModal');
@@ -555,12 +888,11 @@
             container.classList.remove('scale-100');
         }
 
-        // New Logic for Custom Password Modal
+        // Instructor Logic
         function instructorAccess() {
             document.getElementById('passwordModal').classList.remove('hidden');
             document.getElementById('instructorPassInput').value = '';
             document.getElementById('passError').classList.add('hidden');
-            // Timeout to ensure focus works after display block
             setTimeout(() => document.getElementById('instructorPassInput').focus(), 100);
         }
 
@@ -569,8 +901,7 @@
         }
 
         function checkPassword() {
-            const pass = document.getElementById('instructorPassInput').value;
-            if (pass === "teacher") {
+            if (document.getElementById('instructorPassInput').value === "teacher") {
                 closePasswordModal();
                 document.getElementById('instructorModal').classList.remove('hidden');
             } else {
@@ -578,58 +909,87 @@
             }
         }
         
-        function handlePassKeyPress(e) {
-            if (e.key === 'Enter') checkPassword();
-        }
-
-        function closeInstructor() {
-            document.getElementById('instructorModal').classList.add('hidden');
-        }
+        function handlePassKeyPress(e) { if (e.key === 'Enter') checkPassword(); }
+        function closeInstructor() { document.getElementById('instructorModal').classList.add('hidden'); }
 
         function autoFillDemo() {
             document.getElementById('ans_task1').checked = true;
-            document.getElementById('ans_task2').value = "5,491,000";
-            document.getElementById('ans_task3').value = "3,226,000";
-            document.getElementById('ans_task4').value = "7";
-            document.getElementById('ans_task5').value = "1,100";
-            document.getElementById('ans_task6').value = "2,612,500";
-            document.getElementById('ans_task7').value = "66.1";
-            document.getElementById('ans_task8').value = "486,000";
+            document.getElementById('ans_task2').value = calculatedKey.rev_total.toLocaleString();
+            document.getElementById('ans_task3').value = calculatedKey.rev_amer.toLocaleString();
+            document.getElementById('ans_task4').value = calculatedKey.count_online;
+            document.getElementById('ans_task5').value = calculatedKey.price_target.toLocaleString();
+            document.getElementById('ans_task6').value = calculatedKey.profit_total.toLocaleString();
+            document.getElementById('ans_task7').value = calculatedKey.share_target.toFixed(1);
+            document.getElementById('ans_task7_slicer').checked = true;
+            document.getElementById('ans_task8').value = calculatedKey.rev_march.toLocaleString();
             document.getElementById('ans_task9').checked = true;
-            document.getElementById('ans_task10').value = "6";
+            document.getElementById('ans_task10').value = calculatedKey.audit_rows;
+            document.getElementById('ans_task11').value = calculatedKey.april_growth.toFixed(1);
             closeInstructor();
         }
-
-        function submitAndDownload() {
-            // Check if file is selected
-            if (!document.getElementById('excelUpload').files[0]) {
-                if(!confirm("Warning: You have not attached your Excel Workbook. Your instructor requires this file. Do you want to generate the report anyway?")) {
-                    return;
-                }
+        
+        // --- GOOGLE SHEET SUBMISSION LOGIC ---
+        function submitToGoogleSheet(data) {
+            const btn = document.getElementById('btnSubmit');
+            const originalText = btn.innerHTML;
+            
+            if (!GOOGLE_WEB_APP_URL) {
+                alert("WARNING: Google Sheet URL is missing.\n\nPlease contact your instructor.\n(Instructor: Add your script URL to line 660 in the code).");
+                return;
+            } else if (!GOOGLE_WEB_APP_URL.endsWith('/exec')) {
+                 alert("ERROR: Invalid Google Script URL.\n\nThe URL must end in '/exec'.\nYou might have pasted the editor URL instead of the Deployment URL.");
+                 return;
             }
+            
+            // Visual Feedback
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...`;
+            
+            fetch(GOOGLE_WEB_APP_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                // Success State
+                btn.innerHTML = `<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Sent!`;
+                btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                console.log("Data submitted to Google Sheet successfully");
+                alert("Score submitted successfully!");
+            }).catch(err => {
+                console.error("Error submitting to Google Sheet", err);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                alert("Error sending data. Please check your internet connection.");
+            });
+        }
 
+        function downloadReport() {
             const name = document.getElementById('studentName').value || "Unknown Student";
             const analysis = document.getElementById('analysis_text').value || "No analysis provided.";
-            const attachedFile = document.getElementById('excelUpload').files[0] ? document.getElementById('excelUpload').files[0].name : "No file attached";
             
             const content = `APPLE INC. PERFORMANCE REPORT
 -----------------------------
 Student Name: ${name}
 Date: ${new Date().toLocaleDateString()}
-Validation Score: ${calculatedScore}/10
-Attached File: ${attachedFile}
+Validation Score: ${currentScore}/12
 
-SUBMITTED ANSWERS:
+SUBMITTED ANSWERS vs KEY:
 1. Table Setup:    ${document.getElementById('ans_task1').checked ? "Yes" : "No"}
-2. Global Rev:     ${document.getElementById('ans_task2').value} (Correct: 5,491,000)
-3. Americas Rev:   ${document.getElementById('ans_task3').value} (Correct: 3,226,000)
-4. Online Tx:      ${document.getElementById('ans_task4').value} (Correct: 7)
-5. Avg Price:      ${document.getElementById('ans_task5').value} (Correct: 1,100)
-6. Gross Profit:   ${document.getElementById('ans_task6').value} (Correct: 2,612,500)
-7. iPhone Share:   ${document.getElementById('ans_task7').value}% (Correct: 66.1%)
-8. March Rev:      ${document.getElementById('ans_task8').value} (Correct: 486,000)
+2. Global Rev:     ${document.getElementById('ans_task2').value} (Key: ${calculatedKey.rev_total.toLocaleString()})
+3. Americas Rev:   ${document.getElementById('ans_task3').value} (Key: ${calculatedKey.rev_amer.toLocaleString()})
+4. Online Tx:      ${document.getElementById('ans_task4').value} (Key: ${calculatedKey.count_online})
+5. Avg Price:      ${document.getElementById('ans_task5').value} (Key: ${calculatedKey.price_target})
+6. Gross Profit:   ${document.getElementById('ans_task6').value} (Key: ${calculatedKey.profit_total.toLocaleString()})
+7a. iPhone Share:  ${document.getElementById('ans_task7').value}% (Key: ${calculatedKey.share_target.toFixed(1)}%)
+7b. Slicer Added:  ${document.getElementById('ans_task7_slicer').checked ? "Yes" : "No"}
+8. March Rev:      ${document.getElementById('ans_task8').value} (Key: ${calculatedKey.rev_march.toLocaleString()})
 9. Heat Map:       ${document.getElementById('ans_task9').checked ? "Yes" : "No"}
-10. Audit Rows:    ${document.getElementById('ans_task10').value} (Correct: 6)
+10. Audit Rows:    ${document.getElementById('ans_task10').value} (Key: ${calculatedKey.audit_rows})
+11. April Growth:  ${document.getElementById('ans_task11').value}% (Key: ${calculatedKey.april_growth.toFixed(1)}%)
 
 EXECUTIVE SUMMARY:
 ${analysis}
@@ -645,8 +1005,35 @@ End of Report`;
             link.click();
             document.body.removeChild(link);
             
-            closeReplyModal();
-            alert("Report generated! \n\nIMPORTANT: Please upload BOTH this text report AND your Excel Workbook to Canvas.");
+            alert("Report Downloaded!\n\nPlease remember to click 'Submit Score' to send your results to the instructor.");
+        }
+
+        function submitScore() {
+            const name = document.getElementById('studentName').value || "Unknown Student";
+            const analysis = document.getElementById('analysis_text').value || "No analysis provided.";
+            
+            // Generate Data Object
+            const submissionData = {
+                name: name,
+                score: currentScore,
+                analysis: analysis,
+                answers: {
+                    task1: document.getElementById('ans_task1').checked ? "Yes" : "No",
+                    task2: document.getElementById('ans_task2').value,
+                    task3: document.getElementById('ans_task3').value,
+                    task4: document.getElementById('ans_task4').value,
+                    task5: document.getElementById('ans_task5').value,
+                    task6: document.getElementById('ans_task6').value,
+                    task7: document.getElementById('ans_task7').value,
+                    task7_slicer: document.getElementById('ans_task7_slicer').checked ? "Yes" : "No",
+                    task8: document.getElementById('ans_task8').value,
+                    task9: document.getElementById('ans_task9').checked ? "Yes" : "No",
+                    task10: document.getElementById('ans_task10').value,
+                    task11: document.getElementById('ans_task11').value
+                }
+            };
+
+            submitToGoogleSheet(submissionData);
         }
     </script>
 </body>
