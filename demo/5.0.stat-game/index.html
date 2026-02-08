@@ -511,14 +511,14 @@
         sector: 2,
         theme: "theme-analytics",
         door: "door-h",
-        prompt: "Regression of Revenue (Y) vs COGS (X) has an R-Squared of 0.15. Interpret the coefficient of determination.",
-        data: [{M:"J",R:100,C:20},{M:"F",R:200,C:90},{M:"M",R:300,C:10}],
-        chartType: "scatter",
-        chartKey: "R",
+        prompt: "Regression of Sales vs 'CEO Mood' has a P-Value of 0.65. Regression of Sales vs 'Ad Spend' has a P-Value of 0.03. Which driver is statistically significant?",
+        data: [{M:"Mood",P:0.65},{M:"Ads",P:0.03}],
+        chartType: "bar",
+        chartKey: "P",
         answers: [
-          { text: "The model explains 85% of variance.", correct: false },
-          { text: "The model explains only 15% of variance (No correlation).", correct: true, explain: "Correct. R² of 0.15 means X (Costs) fails to predict Y (Revenue). In accounting, these should be highly correlated." },
-          { text: "Negative correlation.", correct: false }
+          { text: "CEO Mood (Higher P is better).", correct: false },
+          { text: "Ad Spend (P < 0.05 rejects the Null).", correct: true, explain: "Correct. A P-Value below 0.05 indicates the relationship is statistically significant and not due to random chance." },
+          { text: "Neither.", correct: false }
         ]
       },
       {
@@ -607,14 +607,14 @@
         sector: 5,
         theme: "theme-standard",
         door: "door-h",
-        prompt: "Inventory Turnover (Sales / Avg Inv) dropped 6.0 -> 3.0. Sales are flat. What does the ratio change imply?",
-        data: [{Y:22,T:6},{Y:23,T:3}],
+        prompt: "Audit Sample Mean = $500. Standard Error (SE) = $20. Construct the 95% Confidence Interval (Mean ± 2 SE). Is an invoice of $600 reasonable?",
+        data: [{Y:1, Val:500}, {Y:2, Val:600}],
         chartType: "bar",
-        chartKey: "T",
+        chartKey: "Val",
         answers: [
-          { text: "Inventory is selling faster.", correct: false },
-          { text: "Inventory accumulation (Valuation Risk).", correct: true, explain: "Correct. If Sales are flat but Turnover halves, Inventory levels must have doubled. Risk of obsolescence." },
-          { text: "COGS decreased.", correct: false }
+          { text: "Yes, it's within range.", correct: false },
+          { text: "No. CI is $460-$540. $600 is an outlier.", correct: true, explain: "Correct. 95% Confidence Interval = $500 ± (2 * $20) = $460 to $540. The $600 value falls outside this range, making it a statistical anomaly." },
+          { text: "SE is too high to tell.", correct: false }
         ]
       }
     ];
