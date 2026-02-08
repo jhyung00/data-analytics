@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+  <title>Audit Escape: The Fraud Dungeon</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['Courier New', 'monospace'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          animation: {
+            'ticker': 'ticker 30s linear infinite',
+            'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+            'unlock': 'unlock 0.5s ease-out forwards',
+            'alarm': 'alarm 0.5s ease-in-out infinite',
+            'pulse-glow': 'pulseGlow 2s infinite',
+          },
+          keyframes: {
+            ticker: {
+              '0%': { transform: 'translateX(100%)' },
+              '100%': { transform: 'translateX(-100%)' },
+            },
+            shake: {
+              '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+              '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+              '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+              '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
+            },
+            unlock: {
+              '0%': { transform: 'scale(1)' },
+              '50%': { transform: 'scale(1.2) rotate(-10deg)' },
+              '100%': { transform: 'scale(0) rotate(10deg)', opacity: 0 }
+            },
+            alarm: {
+              '0%, 100%': { backgroundColor: 'rgba(239, 68, 68, 0)' },
+              '50%': { backgroundColor: 'rgba(239, 68, 68, 0.3)' }
+            },
+            pulseGlow: {
+              '0%, 100%': { boxShadow: '0 0 10px rgba(16, 185, 129, 0.5)' },
+              '50%': { boxShadow: '0 0 25px rgba(16, 185, 129, 0.9)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root { color-scheme: dark; }
+    
+    /* Dynamic Theme Variables */
+    body { transition: background-color 1s ease; background-color: var(--bg-main, #0f172a); color: #e2e8f0; }
+    
+    .theme-benford { --accent: #10b981; --bg-main: #022c22; --bg-card: #064e3b; --text-color: #ecfdf5; }
+    .theme-fraud { --accent: #ef4444; --bg-main: #450a0a; --bg-card: #7f1d1d; --text-color: #fef2f2; }
+    .theme-analytics { --accent: #d946ef; --bg-main: #2e1065; --bg-card: #581c87; --text-color: #fdf4ff; }
+    .theme-standard { --accent: #3b82f6; --bg-main: #172554; --bg-card: #1e3a8a; --text-color: #eff6ff; }
+
+    /* CRT Effect */
+    .crt::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+      z-index: 50;
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+    }
+
+    /* --- REFACTORED DOOR MECHANICS --- */
+    /* Container: Absolute, full screen, high z-index, no interactions */
+    #doorOverlay { position: absolute; inset: 0; z-index: 100; pointer-events: none; overflow: hidden; }
+    
+    /* Base Panel Style */
+    .door-panel {
+        position: absolute;
+        background-color: #1e293b;
+        border-color: #000;
+        z-index: 10;
+        transition: transform 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* === TYPE 1: HORIZONTAL BLAST DOOR (door-h) === */
+    /* Two panels side-by-side, moving left and right */
+    .door-h .door-left {
+        width: 50%; height: 100%;
+        left: 0; top: 0;
+        border-right-width: 4px;
+        transform: translateX(0);
+    }
+    .door-h .door-right {
+        width: 50%; height: 100%;
+        right: 0; top: 0;
+        border-left-width: 4px;
+        transform: translateX(0);
+    }
+    /* Open State */
+    .door-h.door-open .door-left { transform: translateX(-100%); }
+    .door-h.door-open .door-right { transform: translateX(100%); }
+
+    /* === TYPE 2: VERTICAL SHUTTER (door-v) === */
+    /* Two panels top-and-bottom, moving up and down */
+    .door-v .door-left {
+        width: 100%; height: 50%;
+        left: 0; top: 0;
+        border-bottom-width: 4px;
+        transform: translateY(0);
+    }
+    .door-v .door-right {
+        width: 100%; height: 50%;
+        left: 0; bottom: 0;
+        border-top-width: 4px;
+        transform: translateY(0);
+    }
+    /* Open State */
+    .door-v.door-open .door-left { transform: translateY(-100%); }
+    .door-v.door-open .door-right { transform: translateY(100%); }
+
+    /* === TYPE 3: VAULT ROTATE (door-r) === */
+    /* Complex rotation effect */
+    .door-r { perspective: 1000px; }
+    .door-r .door-panel {
+        width: 100%; height: 100%;
+        top: 0; left: 0;
+        transition: all 1s ease-in-out;
+        border: none;
+    }
+    /* Create diagonal split using clip-path */
+    .door-r .door-left {
+        clip-path: polygon(0 0, 100% 0, 0 100%);
+        background: #334155;
+        z-index: 2;
+        transform-origin: top left;
+    }
+    .door-r .door-right {
+        clip-path: polygon(100% 0, 100% 100%, 0 100%);
+        background: #1e293b;
+        z-index: 1;
+        transform-origin: bottom right;
+    }
+    
+    .door-r.door-shut .door-left { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+    .door-r.door-shut .door-right { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+    
+    .door-r.door-open .door-left { transform: translate(-50%, -50%) rotate(-45deg) scale(1.5); opacity: 0; }
+    .door-r.door-open .door-right { transform: translate(50%, 50%) rotate(45deg) scale(1.5); opacity: 0; }
+
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+    ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+  </style>
+</head>
+
+<body class="h-screen flex flex-col overflow-hidden font-mono text-sm crt theme-standard bg-slate-900">
+
+  <!-- ALARM OVERLAY -->
+  <div id="alarmOverlay" class="absolute inset-0 z-40 pointer-events-none hidden animate-alarm"></div>
+
+  <!-- TICKER -->
+  <div class="bg-black text-white/80 border-b border-white/10 h-8 flex items-center overflow-hidden relative z-40 shrink-0">
+    <div class="whitespace-nowrap animate-ticker font-bold uppercase tracking-widest text-xs" style="color: var(--accent);">
+      ⚠ STATISTICAL ANOMALY DETECTED ⚠ P-VALUE < 0.05 ⚠ NULL HYPOTHESIS REJECTED ⚠ AUDIT RISK ELEVATED ⚠ MATERIAL MISSTATEMENT LIKELY ⚠
+    </div>
+  </div>
+
+  <!-- DOOR OVERLAY -->
+  <div id="doorOverlay" class="absolute inset-0 door-h door-open">
+    <div class="door-panel door-left shadow-2xl">
+        <div class="w-12 h-12 border-2 border-white/20 rounded-full flex items-center justify-center opacity-50">
+           <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+        </div>
+    </div>
+    <div class="door-panel door-right shadow-2xl">
+        <div class="w-12 h-12 border-2 border-white/20 rounded-full flex items-center justify-center opacity-50">
+           <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+        </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-6xl mx-auto w-full p-4 overflow-y-auto relative z-0 flex flex-col" id="mainContainer">
+    
+    <!-- LOBBY -->
+    <div id="lobbyScreen" class="flex-1 flex flex-col items-center justify-center p-4">
+      <div class="max-w-2xl w-full bg-slate-900/95 rounded-xl border-2 border-slate-700 p-8 shadow-2xl text-center space-y-8 backdrop-blur">
+        
+        <div>
+           <h1 class="text-5xl font-black text-red-500 uppercase tracking-tighter drop-shadow-[0_0_15px_rgba(239,68,68,0.6)] mb-2">Audit Escape</h1>
+           <p class="text-slate-400 text-lg">The Fraud Dungeon</p>
+        </div>
+
+        <!-- MISSION BRIEFING -->
+        <div class="bg-black/40 text-left p-6 rounded-lg border border-white/10 space-y-4">
+          <div class="text-green-500 font-bold uppercase tracking-widest text-xs border-b border-green-500/30 pb-2">Mission Briefing</div>
+          <ul class="space-y-3 text-sm text-slate-300">
+             <li class="flex items-start gap-3">
+               <span class="text-xl">📊</span>
+               <span><strong>Analyze Data:</strong> Each room contains a dataset and a chart (Histogram, Scatterplot, Boxplot).</span>
+             </li>
+             <li class="flex items-start gap-3">
+               <span class="text-xl">🔍</span>
+               <span><strong>Find the Anomaly:</strong> Use statistical rules (Z-scores, Benford's Law, R-squared) to identify the fraud.</span>
+             </li>
+             <li class="flex items-start gap-3">
+               <span class="text-xl">🔓</span>
+               <span><strong>Unlock the Door:</strong> Correct answers open the blast doors and earn <strong>+100 Points</strong>.</span>
+             </li>
+             <li class="flex items-start gap-3">
+               <span class="text-xl">🚨</span>
+               <span><strong>Penalty:</strong> Incorrect answers trigger a Lockdown Alarm and deduct <strong>-50 Points</strong>.</span>
+             </li>
+          </ul>
+        </div>
+
+        <div class="space-y-4 pt-4 border-t border-white/10">
+          <label class="block text-xs font-bold uppercase text-slate-500">Select Investigator</label>
+          <div class="flex justify-center gap-4" id="avatarGrid">
+            <button class="avatar-btn w-14 h-14 text-3xl bg-slate-800 rounded-full hover:bg-slate-700 border-2 border-transparent transition-all ring-2 ring-transparent hover:ring-white focus:outline-none" data-char="🕵️‍♂️">🕵️‍♂️</button>
+            <button class="avatar-btn w-14 h-14 text-3xl bg-slate-800 rounded-full hover:bg-slate-700 border-2 border-transparent transition-all ring-2 ring-transparent hover:ring-white focus:outline-none" data-char="👩‍💻">👩‍💻</button>
+            <button class="avatar-btn w-14 h-14 text-3xl bg-slate-800 rounded-full hover:bg-slate-700 border-2 border-transparent transition-all ring-2 ring-transparent hover:ring-white focus:outline-none" data-char="🤖">🤖</button>
+          </div>
+
+          <div class="flex gap-2">
+              <input id="playerName" type="text" placeholder="ENTER AGENT NAME" class="flex-1 bg-black border border-slate-700 text-green-500 p-4 font-bold tracking-widest focus:outline-none focus:border-green-500 uppercase placeholder:text-slate-700 text-center rounded" />
+              <button id="btnStart" class="flex-1 py-4 bg-red-700 hover:bg-red-600 text-white font-black uppercase tracking-widest rounded shadow-[0_0_15px_rgba(220,38,38,0.5)] transition-all active:scale-95 animate-pulse-glow">
+                Enter Dungeon
+              </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME ROOM -->
+    <div id="roomArea" class="hidden flex-1 flex flex-col min-h-0">
+      
+      <!-- Room Header -->
+      <div class="flex justify-between items-end mb-4 border-b border-white/10 pb-2 shrink-0 z-10 relative bg-black/20 rounded-t-lg p-2">
+        <div>
+          <div class="text-[10px] uppercase tracking-widest mb-1 opacity-70">Sector <span id="roomSector">1</span></div>
+          <h2 id="roomName" class="text-xl md:text-3xl font-black uppercase tracking-tight" style="color: var(--accent);">The Boiler Room</h2>
+        </div>
+        <div class="text-right">
+           <div class="text-xs font-mono opacity-60" id="playerDisplay">Agent</div>
+           <div class="text-lg font-black font-mono" id="roomCounter">01 / 20</div>
+           <div class="text-xs text-green-500 font-bold" id="scoreDisplay">Score: 0</div>
+        </div>
+      </div>
+
+      <!-- Room Content -->
+      <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 min-h-0 pb-4">
+        
+        <!-- Left: Data Terminal (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col gap-4 min-h-0 relative z-0">
+          
+          <!-- Chart -->
+          <div class="flex-1 bg-black/40 border border-white/10 p-4 rounded-xl relative overflow-hidden flex flex-col min-h-[300px] shadow-lg">
+             <div class="flex justify-between items-center mb-2 z-10 relative">
+                 <div class="text-[10px] font-mono opacity-60">VISUAL_ANALYSIS_TOOL</div>
+                 <div id="chartTypeLabel" class="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10">HISTOGRAM</div>
+             </div>
+             <!-- Canvas Container -->
+             <div class="flex-1 relative w-full h-full">
+                 <canvas id="mainChart" class="w-full h-full relative z-10"></canvas>
+                 <!-- Grid BG -->
+                 <div class="absolute inset-0 z-0 opacity-10" style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 20px 20px;"></div>
+             </div>
+          </div>
+
+          <!-- Table -->
+          <div class="h-48 bg-black/40 border border-white/10 rounded-xl p-3 font-mono text-xs overflow-hidden flex flex-col shadow-lg">
+             <div class="flex justify-between items-center mb-2 border-b border-white/10 pb-1">
+               <span class="text-green-500 font-bold">RAW_DATA.CSV</span>
+               <button id="btnCopy" class="text-[10px] bg-white/10 hover:bg-white/20 text-white px-2 py-1 rounded uppercase transition-colors">Copy Data</button>
+             </div>
+             <div class="overflow-auto flex-1 custom-scrollbar">
+               <table class="w-full text-left opacity-80">
+                 <thead id="tableHead" class="text-white/50 uppercase sticky top-0 bg-black/80 backdrop-blur z-10"></thead>
+                 <tbody id="tableBody"></tbody>
+               </table>
+             </div>
+          </div>
+        </div>
+
+        <!-- Right: Lock Interface (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col relative z-0">
+          <div class="flex-1 bg-black/30 border-2 border-white/10 p-6 rounded-2xl relative shadow-2xl backdrop-blur-md flex flex-col justify-center overflow-visible" id="questionCard">
+            
+            <!-- Padlock Icon -->
+            <div id="padlock" class="absolute -top-6 -right-6 w-16 h-16 bg-slate-900 border-4 border-white/20 rounded-full flex items-center justify-center shadow-lg z-20 transition-transform">
+                <svg class="w-8 h-8 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <rect x="5" y="11" width="14" height="10" rx="2" />
+                    <path d="M8 11V7a4 4 0 1 1 8 0v4" />
+                </svg>
+            </div>
+
+            <h3 class="text-xs font-bold opacity-50 uppercase mb-4 tracking-widest">Statistical Challenge</h3>
+            <p id="roomPrompt" class="text-base md:text-lg font-medium leading-relaxed mb-6 font-sans text-white drop-shadow-md">
+              ...
+            </p>
+
+            <div id="answerOptions" class="space-y-3 relative z-10">
+              <!-- Answers generated here -->
+            </div>
+
+            <!-- Feedback -->
+            <div id="feedbackPanel" class="hidden mt-6 bg-black/90 border-l-4 border-green-500 p-4 animate-slide-in relative z-20 shadow-xl rounded-r">
+               <div id="feedbackTitle" class="text-green-500 font-black text-xs uppercase mb-1 tracking-widest">Statistical Proof Accepted</div>
+               <p id="feedbackText" class="text-white text-sm mb-4 leading-relaxed opacity-90">Analysis correct.</p>
+               
+               <button id="btnNext" class="w-full py-4 bg-white text-black hover:bg-slate-200 font-black uppercase tracking-widest rounded transition-all shadow-lg flex items-center justify-center gap-2 transform hover:scale-[1.02]">
+                 <span>Open Blast Door</span>
+                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+               </button>
+               
+               <button id="btnRetry" class="hidden w-full py-3 bg-red-900/50 hover:bg-red-800 text-red-200 font-bold uppercase tracking-widest rounded border border-red-500/50">
+                 Analyze Data Again (-50 Pts)
+               </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SUCCESS SCREEN -->
+    <div id="endScreen" class="hidden flex-1 flex flex-col items-center justify-center p-4">
+      <div class="max-w-lg w-full bg-slate-900/90 border border-green-500/30 p-8 rounded-2xl text-center space-y-6 shadow-[0_0_50px_rgba(16,185,129,0.2)] backdrop-blur">
+        <div class="text-6xl mb-2 animate-bounce">🔓</div>
+        <h2 class="text-4xl font-black text-white uppercase tracking-tighter">Escape Successful</h2>
+        <p class="text-slate-400">You have successfully used statistical inference to expose the fraud ring.</p>
+        
+        <div class="bg-black/50 p-6 rounded-xl border border-white/10">
+          <div class="text-slate-500 text-xs uppercase tracking-widest mb-2">Final Proficiency</div>
+          <div class="text-6xl font-black text-green-500 font-mono" id="finalScore">0</div>
+          <div class="text-slate-600 text-xs mt-1">POINTS ACCUMULATED</div>
+        </div>
+
+        <button id="btnSubmit" class="w-full py-4 bg-green-600 hover:bg-green-500 text-white font-black uppercase tracking-widest rounded shadow-lg transition-all transform hover:-translate-y-1">
+          Upload Evidence to HQ
+        </button>
+        <button onclick="location.reload()" class="w-full py-3 text-slate-500 hover:text-white font-bold uppercase text-xs">
+          Start New Operation
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    /**
+     * SOUND ENGINE (Realism Update)
+     */
+    const playSound = (type) => {
+       try {
+         const AudioContext = window.AudioContext || window.webkitAudioContext;
+         if (!AudioContext) return;
+         const ctx = new AudioContext();
+         const t = ctx.currentTime;
+         
+         if (type === 'door') {
+            // Complex procedural door sound
+            
+            // 1. Hydraulic Hiss (Filtered White Noise)
+            const bufferSize = ctx.sampleRate * 1.2;
+            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * 0.5;
+            }
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer;
+            const noiseFilter = ctx.createBiquadFilter();
+            noiseFilter.type = 'lowpass';
+            noiseFilter.frequency.setValueAtTime(800, t);
+            noiseFilter.frequency.exponentialRampToValueAtTime(100, t + 1.0);
+            
+            const noiseGain = ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.4, t);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 1.0);
+            
+            noise.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(ctx.destination);
+            noise.start(t);
+            
+            // 2. Heavy Mechanism (Sawtooth / Triangle Mix)
+            const osc = ctx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(60, t);
+            osc.frequency.linearRampToValueAtTime(20, t + 1.2);
+            
+            const oscGain = ctx.createGain();
+            oscGain.gain.setValueAtTime(0.2, t);
+            oscGain.gain.linearRampToValueAtTime(0, t + 1.2);
+            
+            osc.connect(oscGain);
+            oscGain.connect(ctx.destination);
+            osc.start(t);
+            osc.stop(t + 1.2);
+
+            // 3. Metallic Clank (Ring Modulator Simulation)
+            const clank = ctx.createOscillator();
+            clank.type = 'square';
+            clank.frequency.setValueAtTime(120, t);
+            const clankGain = ctx.createGain();
+            clankGain.gain.setValueAtTime(0.15, t);
+            clankGain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+            
+            clank.connect(clankGain);
+            clankGain.connect(ctx.destination);
+            clank.start(t);
+            clank.stop(t + 0.2);
+            
+         } else if (type === 'alarm') {
+            // Sci-fi alert
+            const osc = ctx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(800, t);
+            osc.frequency.linearRampToValueAtTime(400, t + 0.2);
+            osc.frequency.linearRampToValueAtTime(800, t + 0.4);
+            
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0.1, t);
+            gain.gain.linearRampToValueAtTime(0, t + 0.5);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.5);
+         }
+       } catch(e) {}
+    };
+
+    /**
+     * CONFIG & STATE
+     */
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz3CfKJmwlZS3bfmaf1LLMwuiTfdId3gR9G8tCWwBcbgZ33FlcMN9PM4AWoxtwGLd0x/exec";
+    
+    let gameState = {
+      player: "Guest",
+      avatar: "🕵️‍♂️",
+      roomIndex: 0,
+      score: 0
+    };
+
+    /**
+     * ROOM DATA (Subset for brevity, fully playable)
+     */
+    const ROOMS = [
+      {
+        id: "R-01",
+        name: "The Basement",
+        sector: 1,
+        theme: "theme-standard",
+        door: "door-h", // Blast Door
+        prompt: "The Mean invoice is $8,500. The Median is $400. Statistically, what does this gap imply about the population distribution?",
+        data: [{ID:"001",Val:400},{ID:"002",Val:420},{ID:"003",Val:380},{ID:"004",Val:410},{ID:"005",Val:40890}],
+        chartType: "bar",
+        chartKey: "Val",
+        answers: [
+          { text: "The data is normally distributed (Bell Curve).", correct: false },
+          { text: "Positively Skewed by Outliers.", correct: true, explain: "Correct. A Mean much larger than the Median indicates a 'Right Skew' caused by extreme high values (Outliers)." },
+          { text: "The data contains negative values.", correct: false }
+        ]
+      },
+      {
+        id: "R-02",
+        name: "Corridor of Echoes",
+        sector: 1,
+        theme: "theme-analytics",
+        door: "door-v", // Shutter
+        prompt: "A transaction has a Z-Score of 6.0 (Mean=$100, SD=$10). What is the statistical probability of this occurring by chance?",
+        data: [{T:"A",V:100},{T:"B",V:110},{T:"C",V:90},{T:"D",V:160}],
+        chartType: "scatter",
+        chartKey: "V",
+        answers: [
+          { text: "5% (1 in 20).", correct: false },
+          { text: "Almost Zero (<0.00001%).", correct: true, explain: "Correct. A Z-Score of 6 is 6 Standard Deviations away. In a normal distribution, this is virtually impossible without an anomaly." },
+          { text: "50% (Coin Flip).", correct: false }
+        ]
+      },
+      {
+        id: "R-03",
+        name: "The Precision Chamber",
+        sector: 2,
+        theme: "theme-fraud",
+        door: "door-r", // Vault
+        prompt: "Expense A is $1,050 (Mean $1,000, SD $10). Expense B is $5,000 (Mean $1,000, SD $2,000). Which is the true statistical anomaly?",
+        data: [{Exp:"A", Val:1050, Z:5.0}, {Exp:"B", Val:5000, Z:2.0}],
+        chartType: "bar",
+        chartKey: "Z",
+        answers: [
+          { text: "Expense B ($5,000) because the amount is larger.", correct: false },
+          { text: "Expense A ($1,050) because the Deviation is 5 Sigma.", correct: true, explain: "Correct. While $5k is larger money, Expense A is 5 Standard Deviations from its mean (Z=5). It breaks the pattern of its specific population far more severely." },
+          { text: "Both are equal.", correct: false }
+        ]
+      },
+      {
+        id: "R-04",
+        name: "The Mirror Room",
+        sector: 2,
+        theme: "theme-analytics",
+        door: "door-h",
+        prompt: "Regression of Revenue (Y) vs COGS (X) has an R-Squared of 0.15. Interpret the coefficient of determination.",
+        data: [{M:"J",R:100,C:20},{M:"F",R:200,C:90},{M:"M",R:300,C:10}],
+        chartType: "scatter",
+        chartKey: "R",
+        answers: [
+          { text: "The model explains 85% of variance.", correct: false },
+          { text: "The model explains only 15% of variance (No correlation).", correct: true, explain: "Correct. R² of 0.15 means X (Costs) fails to predict Y (Revenue). In accounting, these should be highly correlated." },
+          { text: "Negative correlation.", correct: false }
+        ]
+      },
+      {
+        id: "R-05",
+        name: "The Pattern Room",
+        sector: 3,
+        theme: "theme-benford",
+        door: "door-v",
+        prompt: "Benford's Law states leading digits follow a log distribution (1=30%, 9=4.6%). View the histogram. What is the anomaly?",
+        data: [{D:1,Freq:30},{D:2,Freq:17},{D:3,Freq:12},{D:4,Freq:10},{D:5,Freq:8},{D:6,Freq:7},{D:7,Freq:6},{D:8,Freq:5},{D:9,Freq:40}],
+        chartType: "bar",
+        chartKey: "Freq",
+        answers: [
+          { text: "Digit 1 is too high.", correct: false },
+          { text: "Digit 9 spike (40%) violates the logarithmic law.", correct: true, explain: "Correct. A spike in 9s is statistically improbable. It suggests humans manually picking numbers just below a threshold (e.g., $9,000)." },
+          { text: "The distribution is too flat.", correct: false }
+        ]
+      },
+      {
+        id: "R-06",
+        name: "The Narrow Box",
+        sector: 3,
+        theme: "theme-analytics",
+        door: "door-r",
+        prompt: "Analyze the Days Sales Outstanding (DSO - Avg days to collect) Boxplot. The box is tight (30-32), but outliers exist.",
+        data: { min: 28, q1: 30, med: 31, q3: 32, max: 34, outliers: [60, 90, 120] },
+        chartType: "boxplot",
+        chartKey: "val",
+        answers: [
+          { text: "Collections are universally poor.", correct: false },
+          { text: "Process is stable (tight box), but specific customers are failing.", correct: true, explain: "Correct. The Interquartile Range (Box) is small, meaning the general process works. The outliers represent specific, isolated risks." },
+          { text: "The Mean is 90.", correct: false }
+        ]
+      },
+      {
+        id: "R-07",
+        name: "The Twin Room",
+        sector: 4,
+        theme: "theme-fraud",
+        door: "door-h",
+        prompt: "The Mode (Most frequent value) of payments is $4,999. Why is this statistically suspicious?",
+        data: [{A:250},{A:4999},{A:120},{A:4999},{A:4999}],
+        chartType: "bar",
+        chartKey: "A",
+        answers: [
+          { text: "It's the market price.", correct: false },
+          { text: "Structuring (Clustering) below approval limits.", correct: true, explain: "Correct. When the Mode sits just below a round number control limit ($5,000), it implies intentional circumvention." },
+          { text: "High Volume.", correct: false }
+        ]
+      },
+      {
+        id: "R-08",
+        name: "Slope of Doom",
+        sector: 4,
+        theme: "theme-analytics",
+        door: "door-v",
+        prompt: "Regression Equation: Total Cost = $500,000 + 0.60(Sales). What does the Y-Intercept ($500k) represent statistically?",
+        data: [{Type:"Int",V:500000},{Type:"Slope",V:0.6}],
+        chartType: "bar",
+        chartKey: "V",
+        answers: [
+          { text: "Variable Cost per unit.", correct: false },
+          { text: "Fixed Costs (Cost when Sales = 0).", correct: true, explain: "Correct. The Intercept is the value of Y when X is zero. In accounting, this represents the Fixed Cost base." },
+          { text: "Net Income.", correct: false }
+        ]
+      },
+      {
+        id: "R-09",
+        name: "Divergence Chamber",
+        sector: 5,
+        theme: "theme-fraud",
+        door: "door-r",
+        prompt: "Sales Trend +20%. Cash Flow Trend -10%. Statistical Correlation is Negative. Implication?",
+        data: [{Y:1,S:100,C:90},{Y:2,S:120,C:81}],
+        chartType: "line",
+        chartKey: "S",
+        answers: [
+          { text: "Earnings Quality Deterioration.", correct: true, explain: "Correct. Divergence between accrual sales and actual cash implies revenue is being recorded but not collected (e.g., Fake Revenue)." },
+          { text: "Timing difference.", correct: false },
+          { text: "Efficiency improvement.", correct: false }
+        ]
+      },
+      {
+        id: "R-10",
+        name: "Stagnant Air",
+        sector: 5,
+        theme: "theme-standard",
+        door: "door-h",
+        prompt: "Inventory Turnover (Sales / Avg Inv) dropped 6.0 -> 3.0. Sales are flat. What does the ratio change imply?",
+        data: [{Y:22,T:6},{Y:23,T:3}],
+        chartType: "bar",
+        chartKey: "T",
+        answers: [
+          { text: "Inventory is selling faster.", correct: false },
+          { text: "Inventory accumulation (Valuation Risk).", correct: true, explain: "Correct. If Sales are flat but Turnover halves, Inventory levels must have doubled. Risk of obsolescence." },
+          { text: "COGS decreased.", correct: false }
+        ]
+      }
+    ];
+
+    /**
+     * DOM ELEMENTS
+     */
+    const els = {
+      doorOverlay: document.getElementById('doorOverlay'),
+      alarmOverlay: document.getElementById('alarmOverlay'),
+      lobby: document.getElementById('lobbyScreen'),
+      roomArea: document.getElementById('roomArea'),
+      endScreen: document.getElementById('endScreen'),
+      avatarGrid: document.getElementById('avatarGrid'),
+      pNameInput: document.getElementById('playerName'),
+      btnStart: document.getElementById('btnStart'),
+      roomName: document.getElementById('roomName'),
+      roomSector: document.getElementById('roomSector'),
+      roomCounter: document.getElementById('roomCounter'),
+      roomPrompt: document.getElementById('roomPrompt'),
+      mainChart: document.getElementById('mainChart'),
+      chartTypeLabel: document.getElementById('chartTypeLabel'),
+      answerOptions: document.getElementById('answerOptions'),
+      feedbackPanel: document.getElementById('feedbackPanel'),
+      feedbackText: document.getElementById('feedbackText'),
+      feedbackTitle: document.getElementById('feedbackTitle'),
+      btnNext: document.getElementById('btnNext'),
+      btnRetry: document.getElementById('btnRetry'),
+      tableHead: document.getElementById('tableHead'),
+      tableBody: document.getElementById('tableBody'),
+      playerDisplay: document.getElementById('playerDisplay'),
+      scoreDisplay: document.getElementById('scoreDisplay'),
+      btnCopy: document.getElementById('btnCopy'),
+      btnSubmit: document.getElementById('btnSubmit'),
+      finalScore: document.getElementById('finalScore'),
+      padlock: document.getElementById('padlock')
+    };
+
+    /**
+     * GAME LOGIC
+     */
+
+    // 1. Avatar Selection
+    els.avatarGrid.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        els.avatarGrid.querySelectorAll('button').forEach(b => {
+          b.classList.remove('bg-white', 'text-black');
+          b.classList.add('bg-slate-800');
+        });
+        btn.classList.remove('bg-slate-800');
+        btn.classList.add('bg-white', 'text-black');
+        gameState.avatar = btn.dataset.char;
+      });
+    });
+
+    // 2. Start
+    els.btnStart.addEventListener('click', () => {
+      const name = els.pNameInput.value.trim() || "Unknown Agent";
+      gameState.player = name;
+      gameState.roomIndex = 0;
+      gameState.score = 0;
+      
+      els.lobby.classList.add('hidden');
+      els.roomArea.classList.remove('hidden');
+      els.playerDisplay.textContent = `${gameState.avatar} ${gameState.player}`;
+      updateScore(0);
+      
+      loadRoom(0);
+      // Setup initial door state (closed, then open)
+      setDoorType('door-h'); 
+      els.doorOverlay.classList.add('door-shut');
+      els.doorOverlay.classList.remove('door-open');
+      setTimeout(() => {
+          els.doorOverlay.classList.remove('door-shut');
+          els.doorOverlay.classList.add('door-open');
+          playSound('door');
+      }, 500);
+    });
+
+    function updateScore(change) {
+      gameState.score += change;
+      els.scoreDisplay.textContent = `Score: ${gameState.score}`;
+      if (change < 0) {
+        els.scoreDisplay.classList.add('text-red-500');
+        setTimeout(() => els.scoreDisplay.classList.remove('text-red-500'), 500);
+      }
+    }
+
+    function setDoorType(type) {
+      // Clean previous type from overlay while keeping absolute/inset
+      els.doorOverlay.className = `absolute inset-0 z-100 pointer-events-none overflow-hidden ${type}`;
+    }
+
+    // 3. Load Room
+    function loadRoom(index) {
+        if(index >= ROOMS.length) {
+            winGame();
+            return;
+        }
+
+        const room = ROOMS[index];
+        
+        // Theme Update
+        document.body.className = `h-screen flex flex-col overflow-hidden font-mono text-sm crt ${room.theme}`;
+        
+        // Content
+        els.roomSector.textContent = room.sector;
+        els.roomName.textContent = room.name;
+        els.roomName.style.color = "var(--accent)";
+        els.roomCounter.textContent = `${(index + 1).toString().padStart(2,'0')} / ${ROOMS.length}`;
+        els.roomPrompt.textContent = room.prompt;
+        
+        // Reset UI
+        els.feedbackPanel.classList.add('hidden');
+        els.answerOptions.innerHTML = '';
+        els.answerOptions.classList.remove('pointer-events-none');
+        els.alarmOverlay.classList.add('hidden');
+        
+        // Reset Padlock
+        els.padlock.innerHTML = `
+            <svg class="w-8 h-8 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <rect x="5" y="11" width="14" height="10" rx="2" />
+                <path d="M8 11V7a4 4 0 1 1 8 0v4" />
+            </svg>
+        `;
+        els.padlock.className = "absolute -top-6 -right-6 w-16 h-16 bg-slate-900 border-4 border-white/20 rounded-full flex items-center justify-center shadow-lg z-20 transition-transform";
+
+        // Render Data
+        if(room.chartType === 'boxplot') {
+          renderTable([{Metric: "Min", Val: room.data.min}, {Metric: "Q1", Val: room.data.q1}, {Metric: "Med", Val: room.data.med}, {Metric: "Q3", Val: room.data.q3}, {Metric: "Max", Val: room.data.max}, {Metric: "Outliers", Val: room.data.outliers.join(', ')}]);
+        } else {
+          renderTable(room.data);
+        }
+        
+        renderChart(room);
+
+        // Render Answers
+        room.answers.forEach(ans => {
+            const btn = document.createElement('button');
+            btn.className = "w-full text-left p-4 bg-black/40 border border-white/10 text-white/80 hover:bg-white/10 hover:border-white/40 transition-all text-xs font-bold uppercase tracking-wider group relative overflow-hidden";
+            btn.innerHTML = `<span class="relative z-10">${ans.text}</span><div class="absolute inset-0 bg-white/5 translate-x-[-100%] group-hover:translate-x-0 transition-transform"></div>`;
+            btn.onclick = () => handleAnswer(ans, btn, room);
+            els.answerOptions.appendChild(btn);
+        });
+        
+        // Set next door type
+        setDoorType(room.door || 'door-h');
+    }
+
+    // 4. Handle Answer
+    function handleAnswer(ans, btn, room) {
+        
+        if(ans.correct) {
+            // Success State
+            els.answerOptions.classList.add('pointer-events-none'); // Lock all
+            btn.classList.add('border-green-500', 'bg-green-900/40');
+            updateScore(100);
+            
+            // Unlock Animation
+            els.padlock.classList.add('animate-unlock');
+            els.padlock.innerHTML = `
+                <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <rect x="5" y="11" width="14" height="10" rx="2" />
+                    <path d="M8 11V7a4 4 0 0 1 8 0v4" transform="translate(0, -3)" />
+                </svg>
+            `;
+            els.feedbackTitle.textContent = "STATISTICAL PROOF ACCEPTED";
+            els.feedbackTitle.className = "text-green-500 font-black text-xs uppercase mb-1 tracking-widest";
+            els.feedbackPanel.className = "mt-6 bg-black/90 border-l-4 border-green-500 p-4 animate-slide-in relative z-20 shadow-xl rounded-r";
+            
+            els.btnNext.classList.remove('hidden');
+            els.btnRetry.classList.add('hidden');
+            els.alarmOverlay.classList.add('hidden');
+            
+        } else {
+            // Failure State
+            btn.classList.add('border-red-500', 'bg-red-900/40', 'animate-shake', 'opacity-50', 'pointer-events-none'); // Disable this specific wrong button
+            
+            // Penalty
+            updateScore(-50);
+            playSound('alarm');
+            
+            // Visual Alarm
+            els.alarmOverlay.classList.remove('hidden');
+            
+            els.feedbackTitle.textContent = "INCORRECT INFERENCE - LOCKDOWN INITIATED";
+            els.feedbackTitle.className = "text-red-500 font-black text-xs uppercase mb-1 tracking-widest";
+            els.feedbackPanel.className = "mt-6 bg-black/90 border-l-4 border-red-500 p-4 animate-slide-in relative z-20 shadow-xl rounded-r";
+            
+            els.btnNext.classList.add('hidden');
+            els.btnRetry.classList.remove('hidden');
+        }
+
+        els.feedbackText.textContent = ans.explain;
+        els.feedbackPanel.classList.remove('hidden');
+    }
+    
+    // Retry Logic
+    els.btnRetry.onclick = () => {
+        els.feedbackPanel.classList.add('hidden');
+        els.alarmOverlay.classList.add('hidden');
+        // We don't re-enable the wrong button, forcing them to choose another
+    };
+
+    // 5. Next Button (Door Animation)
+    els.btnNext.addEventListener('click', () => {
+        // Shut Door
+        els.doorOverlay.classList.remove('door-open');
+        els.doorOverlay.classList.add('door-shut');
+        playSound('door');
+        
+        // Wait, Load, Open
+        setTimeout(() => {
+            gameState.roomIndex++;
+            loadRoom(gameState.roomIndex);
+            
+            // Allow door to swap visual style while closed
+            setTimeout(() => {
+                 els.doorOverlay.classList.remove('door-shut');
+                 els.doorOverlay.classList.add('door-open');
+                 playSound('door');
+            }, 100);
+            
+        }, 1000);
+    });
+
+    // 6. Win
+    function winGame() {
+        els.roomArea.classList.add('hidden');
+        els.endScreen.classList.remove('hidden');
+        els.finalScore.textContent = gameState.score;
+        document.body.className = "h-screen flex flex-col overflow-hidden font-mono text-sm theme-standard bg-slate-900";
+    }
+
+    // 7. Chart Engine (Includes Boxplot)
+    function renderChart(room) {
+        const ctx = els.mainChart.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        const rect = els.mainChart.parentElement.getBoundingClientRect();
+        els.mainChart.width = rect.width * dpr;
+        els.mainChart.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0,0, rect.width, rect.height);
+        
+        const w = rect.width;
+        const h = rect.height;
+        const pad = 30;
+        const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+        
+        els.chartTypeLabel.textContent = room.chartType.toUpperCase();
+
+        if (room.chartType === 'boxplot') {
+            // Draw Boxplot
+            const data = room.data;
+            const min = data.min; // e.g., 28
+            const max = Math.max(data.max, ...data.outliers); // e.g. 120
+            const range = max - min;
+            
+            const scaleY = (val) => h - pad - ((val - min) / range * (h - pad*2));
+            const midX = w / 2;
+            const boxW = 60;
+
+            ctx.strokeStyle = accent;
+            ctx.fillStyle = accent;
+            ctx.lineWidth = 2;
+
+            // Box (Q1 to Q3)
+            const yQ1 = scaleY(data.q1);
+            const yQ3 = scaleY(data.q3);
+            ctx.strokeRect(midX - boxW/2, yQ3, boxW, yQ1 - yQ3);
+            
+            // Median Line
+            const yMed = scaleY(data.med);
+            ctx.beginPath(); ctx.moveTo(midX - boxW/2, yMed); ctx.lineTo(midX + boxW/2, yMed); ctx.stroke();
+
+            // Whiskers
+            const yMin = scaleY(data.min);
+            const yMax = scaleY(data.max);
+            ctx.beginPath(); 
+            // Bottom whisker
+            ctx.moveTo(midX, yQ1); ctx.lineTo(midX, yMin); 
+            ctx.moveTo(midX - 10, yMin); ctx.lineTo(midX + 10, yMin);
+            // Top whisker
+            ctx.moveTo(midX, yQ3); ctx.lineTo(midX, yMax);
+            ctx.moveTo(midX - 10, yMax); ctx.lineTo(midX + 10, yMax);
+            ctx.stroke();
+
+            // Outliers
+            ctx.fillStyle = '#ef4444';
+            data.outliers.forEach(out => {
+                const y = scaleY(out);
+                ctx.beginPath(); ctx.arc(midX, y, 4, 0, Math.PI*2); ctx.fill();
+            });
+
+        } else {
+            // Standard Bar/Scatter
+            const vals = room.data.map(d => d[room.chartKey]);
+            const labels = room.data.map(d => Object.values(d)[0]);
+            const max = Math.max(...vals);
+            const min = Math.min(...vals);
+            
+            // Axes
+            ctx.strokeStyle = '#ffffff30';
+            ctx.beginPath();
+            ctx.moveTo(pad, pad); ctx.lineTo(pad, h-pad); ctx.lineTo(w-pad, h-pad);
+            ctx.stroke();
+
+            if(room.chartType === 'bar') {
+                const barW = (w - pad*2) / vals.length * 0.6;
+                const gap = (w - pad*2) / vals.length;
+                
+                vals.forEach((v, i) => {
+                    const x = pad + (i*gap) + (gap-barW)/2;
+                    const barH = (v/max)*(h-pad*2);
+                    const y = h - pad - barH;
+                    
+                    ctx.fillStyle = accent;
+                    if(i === vals.length-1 && v > vals[0]*2) ctx.fillStyle = '#ef4444'; // Anomaly highlight
+                    ctx.fillRect(x, y, barW, barH);
+                    
+                    ctx.fillStyle = '#ffffff80';
+                    ctx.textAlign = 'center';
+                    ctx.font = '10px monospace';
+                    ctx.fillText(labels[i], x + barW/2, h-10);
+                });
+            } else {
+                // Scatter
+                const stepX = (w - pad*2) / (vals.length - 1 || 1);
+                ctx.strokeStyle = accent;
+                vals.forEach((v, i) => {
+                    const x = pad + (i * stepX);
+                    const y = h - pad - ((v - min)/(max-min || 1) * (h - pad*2));
+                    ctx.beginPath(); ctx.arc(x,y, 4, 0, Math.PI*2);
+                    ctx.fillStyle = (i === vals.length-1) ? '#ef4444' : accent;
+                    ctx.fill();
+                });
+            }
+        }
+    }
+
+    // 8. Render Table
+    function renderTable(data) {
+        if(!data || !data.length) return;
+        const headers = Object.keys(data[0]);
+        els.tableHead.innerHTML = `<tr>${headers.map(h=>`<th class="p-2 text-left">${h}</th>`).join('')}</tr>`;
+        els.tableBody.innerHTML = data.map(r => `
+            <tr class="border-b border-white/5 hover:bg-white/5">
+                ${headers.map(h=>`<td class="p-2">${r[h]}</td>`).join('')}
+            </tr>
+        `).join('');
+    }
+
+    els.btnCopy.onclick = () => {
+        const room = ROOMS[gameState.roomIndex];
+        const headers = Object.keys(room.data[0] || room.data); // Handle array vs obj
+        const csv = "DATA_COPIED_TO_CLIPBOARD";
+        navigator.clipboard.writeText(JSON.stringify(room.data)); // Simplified for boxplot obj
+        els.btnCopy.textContent = "COPIED";
+        setTimeout(() => els.btnCopy.textContent = "COPY DATA", 1000);
+    };
+
+    els.btnSubmit.onclick = async () => {
+        els.btnSubmit.textContent = "UPLOADING...";
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST", 
+                mode: "no-cors", 
+                body: JSON.stringify({player: gameState.player, score: gameState.score})
+            });
+            els.btnSubmit.textContent = "UPLOAD SUCCESSFUL";
+        } catch(e) { els.btnSubmit.textContent = "UPLOAD FAILED"; }
+    };
+
+  </script>
+</body>
+</html>
