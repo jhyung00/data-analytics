@@ -8,14 +8,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SheetJS for Excel Export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Three.js for 3D Viz -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <!-- Katex for Math -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
 
     <style>
         body {
@@ -83,6 +81,10 @@
             color: white;
             box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
         }
+        
+        .sidebar-expanded { width: 16rem; }
+        .sidebar-collapsed { width: 5rem; }
+        
         .instructor-reveal {
             border: 2px solid #8b5cf6 !important; /* Violet */
             background-color: #f5f3ff !important;
@@ -101,6 +103,18 @@
             border-radius: 4px;
             font-weight: bold;
         }
+
+        /* Simulation Specific Styles */
+        .sim-dot { transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .drop-line { animation: dropDown 0.5s ease-in forwards; }
+        @keyframes dropDown { 
+            0% { height: 0; top: 0; opacity: 1; } 
+            80% { height: 100%; top: 0; opacity: 1; }
+            100% { height: 100%; top: 0; opacity: 0; }
+        }
+        /* More dynamic pile-in from top */
+        .pile-dot { animation: pileIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes pileIn { from { transform: translate(-50%, -100px) scale(0.5); opacity: 0; } to { transform: translate(-50%, 0) scale(1); opacity: 1; } }
     </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col">
@@ -118,13 +132,18 @@
                 </div>
             </div>
             <div class="flex items-center space-x-6">
+                <!-- Data Download Button -->
+                <a href="#" class="hidden sm:flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-bold transition-all">
+                    <i class="fa-solid fa-download text-emerald-400"></i> Lab Data
+                </a>
+
                 <div class="text-right hidden sm:block">
                     <div class="text-xs text-slate-400 uppercase tracking-wider font-bold">Phase</div>
                     <div id="phase-display" class="text-sm font-bold text-emerald-400 drop-shadow-md">Introduction</div>
                 </div>
                 <div class="text-right bg-slate-800 px-3 py-1 rounded-lg border border-slate-700">
                     <div class="text-sm font-semibold">Score: <span id="score-display" class="text-emerald-400">0</span></div>
-                    <div class="text-xs text-slate-400">Level: <span id="progress-display">1/11</span></div>
+                    <div class="text-xs text-slate-400">Level: <span id="progress-display">1/10</span></div>
                 </div>
             </div>
         </div>
@@ -134,16 +153,19 @@
     <div class="flex-grow flex max-w-7xl mx-auto w-full pt-4 pb-4 h-[calc(100vh-64px)] gap-4 px-4 overflow-hidden">
         
         <!-- Sidebar Navigation -->
-        <aside class="w-64 bg-white rounded-2xl shadow-xl hidden md:flex flex-col flex-none h-full overflow-hidden border border-slate-100">
-            <div class="p-4 border-b border-slate-100 font-extrabold text-slate-700 bg-slate-50 flex-none tracking-wide text-xs uppercase">
-                Mission Map
+        <aside id="sidebar" class="sidebar-expanded bg-white rounded-2xl shadow-xl hidden md:flex flex-col flex-none h-full overflow-hidden border border-slate-100 transition-all duration-300">
+            <div class="p-4 border-b border-slate-100 font-extrabold text-slate-700 bg-slate-50 flex-none tracking-wide text-xs uppercase flex justify-between items-center">
+                <span id="sidebar-title">Mission Map</span>
+                <button onclick="toggleSidebar()" class="text-slate-400 hover:text-indigo-600 transition-colors">
+                    <i id="sidebar-icon" class="fa-solid fa-chevron-left"></i>
+                </button>
             </div>
             <div class="flex-grow overflow-y-auto custom-scroll p-2 space-y-1" id="nav-list">
                 <!-- Nav items generated via JS -->
             </div>
             <div class="p-4 border-t border-slate-100 bg-slate-50 flex-none">
-                <button id="instructor-btn" onclick="toggleInstructor()" class="text-xs text-slate-500 hover:text-purple-600 font-bold flex items-center transition-all w-full p-3 rounded hover:bg-purple-50 border border-transparent">
-                    <i class="fa-solid fa-graduation-cap mr-2"></i> <span id="instructor-text">Teacher Access</span>
+                <button id="instructor-btn" onclick="toggleInstructor()" class="text-xs text-slate-500 hover:text-purple-600 font-bold flex items-center justify-center transition-all w-full p-3 rounded hover:bg-purple-50 border border-transparent overflow-hidden">
+                    <i class="fa-solid fa-graduation-cap mr-2"></i> <span id="instructor-text" class="whitespace-nowrap">Teacher Access</span>
                 </button>
             </div>
         </aside>
@@ -188,7 +210,7 @@
             <!-- Lesson Container -->
             <div id="lesson-container" class="hidden w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row absolute inset-0 z-10">
                 <!-- Left: Theory -->
-                <div class="md:w-1/2 flex flex-col border-r border-slate-100 relative h-full">
+                <div id="lesson-left-panel" class="w-full md:w-1/2 flex flex-col relative h-full" style="min-width: 300px;">
                     <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white flex-none">
                         <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide flex items-center gap-2">
                             <i class="fa-solid fa-book-open"></i> Learning
@@ -216,15 +238,17 @@
                     </div>
                 </div>
 
+                <!-- Resizer Handle -->
+                <div id="lesson-resizer" class="hidden md:flex w-4 bg-slate-50 hover:bg-indigo-100 cursor-col-resize flex-col justify-center items-center z-20 border-x border-slate-200 transition-colors flex-none">
+                    <div class="w-1 h-8 bg-slate-300 rounded-full"></div>
+                </div>
+
                 <!-- Right: Interactive Playground -->
-                <div class="md:w-1/2 p-8 bg-slate-50 flex flex-col items-center justify-center relative h-full overflow-y-auto custom-scroll">
-                    <div class="absolute top-4 right-4 text-slate-200 rotate-12">
-                        <i class="fa-solid fa-flask text-5xl"></i>
-                    </div>
-                    <div id="lesson-playground" class="w-full flex flex-col items-center justify-center flex-grow">
+                <div id="lesson-right-panel" class="w-full md:w-1/2 p-2 bg-slate-50 flex flex-col items-center justify-center relative h-full overflow-y-auto custom-scroll flex-1" style="min-width: 300px;">
+                    <div id="lesson-playground" class="w-full h-full flex flex-col items-center justify-center flex-grow relative z-10">
                         <!-- Dynamic Interactive Elements -->
                     </div>
-                    <button onclick="goToChallenge()" class="mt-8 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 flex-none group border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">
+                    <button onclick="goToChallenge()" class="mb-4 w-11/12 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 flex-none group border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">
                         Start Audit Challenge <i class="fa-solid fa-paper-plane group-hover:rotate-12 transition-transform"></i>
                     </button>
                 </div>
@@ -293,15 +317,12 @@
                     <div class="p-8 bg-white border border-t-0 border-slate-200 rounded-b-3xl shadow-2xl">
                         <div class="flex justify-center items-baseline gap-2 mb-6">
                             <div class="text-6xl font-black text-slate-800"><span id="final-score">0</span></div>
-                            <div class="text-xl text-slate-400 font-bold" id="total-questions">/ 13</div>
+                            <div class="text-xl text-slate-400 font-bold" id="total-questions">/ 10</div>
                         </div>
                         <div id="final-feedback" class="text-sm text-left bg-slate-50 p-6 rounded-xl mb-8 text-slate-600 border border-slate-100 shadow-inner"></div>
                         <div class="space-y-2">
                             <button onclick="restartGame()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-colors border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1">
                                 Restart Training 🔄
-                            </button>
-                            <button onclick="downloadPracticeData()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors border-b-4 border-indigo-700 active:border-b-0 active:translate-y-1">
-                                <i class="fa-solid fa-file-excel mr-2"></i>Download Practice Data
                             </button>
                         </div>
                     </div>
@@ -345,8 +366,32 @@
             lessonSlide: 0, 
             maxLessonSlides: 0,
             instructorMode: false,
-            totalPossibleScore: 0
+            totalPossibleScore: 0,
+            sidebarOpen: true
         };
+
+        // --- Sidebar Logic ---
+        function toggleSidebar() {
+            state.sidebarOpen = !state.sidebarOpen;
+            const sb = document.getElementById('sidebar');
+            const icon = document.getElementById('sidebar-icon');
+            const title = document.getElementById('sidebar-title');
+            const list = document.getElementById('nav-list');
+            const teacherTxt = document.getElementById('instructor-text');
+            
+            if (state.sidebarOpen) {
+                sb.classList.replace('sidebar-collapsed', 'sidebar-expanded');
+                icon.className = "fa-solid fa-chevron-left";
+                title.classList.remove('hidden');
+                teacherTxt.classList.remove('hidden');
+            } else {
+                sb.classList.replace('sidebar-expanded', 'sidebar-collapsed');
+                icon.className = "fa-solid fa-chevron-right";
+                title.classList.add('hidden');
+                teacherTxt.classList.add('hidden');
+            }
+            initSidebar(); // Re-render to update text visibility
+        }
 
         // --- Global Utils ---
         function attachRevealHandlers() {
@@ -355,52 +400,6 @@
                     this.classList.add('revealed');
                 }
             });
-        }
-
-        function downloadPracticeData() {
-            // Generate data suitable for descriptive stats, histogram, regression
-            const rows = [];
-            const header = ["Transaction_ID", "Date", "Region", "Expense_Category", "Headcount", "Ad_Spend", "Revenue"];
-            rows.push(header);
-
-            const regions = ["North", "South", "East", "West"];
-            const cats = ["Travel", "Meals", "Supplies", "IT"];
-            
-            // Base values
-            let baseRevenue = 50000;
-            
-            for(let i=1; i<=50; i++) {
-                const id = 1000 + i;
-                // Random Date in 2025
-                const month = Math.floor(Math.random() * 12);
-                const day = Math.floor(Math.random() * 28) + 1;
-                const dateObj = new Date(2025, month, day);
-                const dateStr = dateObj.toISOString().split('T')[0];
-                
-                const region = regions[Math.floor(Math.random() * regions.length)];
-                const cat = cats[Math.floor(Math.random() * cats.length)];
-                
-                // Headcount (10-50)
-                const headcount = Math.floor(10 + Math.random() * 40);
-                
-                // Ad Spend (1000 - 5000)
-                const adSpend = Math.floor(1000 + Math.random() * 4000);
-                
-                // Revenue: Correlated with Headcount and Ad_Spend
-                // Rev = Base + (HC * 1000) + (Ad * 5) + Noise
-                const noise = (Math.random() - 0.5) * 5000; // +/- 2500 noise
-                const revenue = Math.floor(baseRevenue + (headcount * 1000) + (adSpend * 5) + noise);
-
-                rows.push([id, dateStr, region, cat, headcount, adSpend, revenue]);
-            }
-
-            // Create worksheet
-            const ws = XLSX.utils.aoa_to_sheet(rows);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Practice_Data");
-
-            // Download
-            XLSX.writeFile(wb, "Apex_Audit_Practice_Data.xlsx");
         }
 
         // --- Content Blocks ---
@@ -441,18 +440,29 @@
                         <div class="mt-2 text-xs bg-purple-50 text-purple-700 p-2 rounded inline-block">Ex: Risk (Low < High), Star Ratings (1-5)</div>
                     </div>
                 </div>`,
-                `<h3 class="font-bold mb-4 text-xl">Cheat Sheet</h3>
-                <table class="w-full text-sm text-left border-separate border-spacing-y-2">
-                    <thead class="text-xs uppercase text-slate-400"><tr><th class="pl-2">Type</th><th>Example</th><th>Can Average?</th></tr></thead>
-                    <tbody>
-                        <tr class="bg-slate-50"><td class="p-3 font-bold border-l-4 border-slate-300 rounded-r-lg">Nominal</td><td>Department</td><td><span class="blur-reveal text-red-500 font-bold">NO</span></td></tr>
-                        <tr class="bg-purple-50"><td class="p-3 font-bold border-l-4 border-purple-300 rounded-r-lg text-purple-900">Ordinal</td><td>Risk Level</td><td><span class="blur-reveal text-orange-500 font-bold">NO</span></td></tr>
-                        <tr class="bg-emerald-50"><td class="p-3 font-bold border-l-4 border-emerald-300 rounded-r-lg text-emerald-900">Quant</td><td>$$ Value</td><td><span class="blur-reveal text-emerald-600 font-bold">YES</span></td></tr>
-                    </tbody>
-                </table>`
+                `<h3 class="font-bold mb-4 text-xl">3. Types of Quantitative Data</h3>
+                <div class="space-y-4 text-sm">
+                    <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                        <strong class="text-indigo-900">1️⃣ Discrete (Countable)</strong>
+                        <p>Whole numbers only. No fractions.</p>
+                        <ul class="list-disc pl-4 mt-1 text-xs text-indigo-800">
+                            <li>Errors (4, not 4.6)</li>
+                            <li>Employees (18, not 18.3)</li>
+                        </ul>
+                    </div>
+                    <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                        <strong class="text-emerald-900">2️⃣ Continuous (Measured)</strong>
+                        <p>Can have decimals. Infinite possibilities.</p>
+                        <ul class="list-disc pl-4 mt-1 text-xs text-emerald-800">
+                            <li>Dollars ($2,456.37)</li>
+                            <li>Time (3.27 hours)</li>
+                            <li>Error Rate (6.4%)</li>
+                        </ul>
+                    </div>
+                </div>`
             ],
             renderInteractive: (container) => {
-                container.innerHTML = `<div class="w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-4">Data Classifier 🤖</h3><div id="classifier-box" class="bg-white border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-6 min-h-[80px] flex items-center justify-center font-mono text-lg text-slate-400 transition-all">Tap a button below</div><div class="grid grid-cols-2 gap-3 text-sm font-bold"><button class="bg-white border border-slate-200 p-3 rounded-xl hover:bg-indigo-50 hover:border-indigo-300 text-slate-600 transition-all shadow-sm" onclick="classify('Invoice ID', 'Nominal')">Invoice #</button><button class="bg-white border border-slate-200 p-3 rounded-xl hover:bg-emerald-50 hover:border-emerald-300 text-slate-600 transition-all shadow-sm" onclick="classify('Amount ($)', 'Quantitative')">Amount ($)</button><button class="bg-white border border-slate-200 p-3 rounded-xl hover:bg-purple-50 hover:border-purple-300 text-slate-600 transition-all shadow-sm" onclick="classify('Risk (L/M/H)', 'Ordinal')">Risk Level</button><button class="bg-white border border-slate-200 p-3 rounded-xl hover:bg-orange-50 hover:border-orange-300 text-slate-600 transition-all shadow-sm" onclick="classify('Vendor Name', 'Nominal')">Vendor Name</button></div></div>`;
+                container.innerHTML = `<div class="w-full max-w-sm text-center"><h3 class="font-bold text-xl mb-4">Data Classifier 🤖</h3><div id="classifier-box" class="bg-white border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-6 min-h-[80px] flex items-center justify-center font-mono text-lg text-slate-400 transition-all">Tap a button below</div><div class="grid grid-cols-2 gap-3 text-sm font-bold"><button class="bg-white border border-slate-200 p-3 rounded-xl hover:bg-indigo-50 hover:border-indigo-300 text-slate-600 transition-all shadow-sm" onclick="classify('Invoice ID', 'Nominal')">Invoice #</button><button class="bg-white border border-slate-200 p-3 rounded-xl hover:bg-emerald-50 hover:border-emerald-300 text-slate-600 transition-all shadow-sm" onclick="classify('Amount ($)', 'Quantitative')">Amount ($)</button><button class="bg-white border border-slate-200 p-3 rounded-xl hover:bg-purple-50 hover:border-purple-300 text-slate-600 transition-all shadow-sm" onclick="classify('Risk (L/M/H)', 'Ordinal')">Risk Level</button><button class="bg-white border border-slate-200 p-3 rounded-xl hover:bg-orange-50 hover:border-orange-300 text-slate-600 transition-all shadow-sm" onclick="classify('Vendor Name', 'Nominal')">Vendor Name</button><button class="bg-white border border-slate-200 p-3 rounded-xl hover:bg-blue-50 hover:border-blue-300 text-slate-600 transition-all shadow-sm" onclick="classify('Staff Count', 'Discrete')">Staff Count</button><button class="bg-white border border-slate-200 p-3 rounded-xl hover:bg-teal-50 hover:border-teal-300 text-slate-600 transition-all shadow-sm" onclick="classify('Fuel (Liters)', 'Continuous')">Fuel Vol</button></div></div>`;
                 window.classify = (item, type) => {
                     const box = document.getElementById('classifier-box');
                     box.innerHTML = `<div class="animate-bounce"><strong>${item}</strong><br><span class="text-sm text-slate-500 font-normal">is ${type}</span></div>`;
@@ -467,7 +477,8 @@
                 `<div class="flex items-center gap-4 mb-4 bg-slate-100 p-4 rounded-xl"><span class="text-4xl">☕</span><p>Imagine you are chilling in a coffee shop with 9 friends. The <strong>Mean (Average)</strong> income is <strong>$46k/year</strong>.</p></div>`,
                 `<div class="flex items-center gap-4 mb-4 bg-yellow-50 p-4 rounded-xl border border-yellow-200 animate-pulse"><span class="text-4xl">🚁</span><div><p class="font-bold text-yellow-800 uppercase text-xs">Alert</p><p class="font-bold">ENTER BILL GATES!</p></div></div><p>Suddenly, a billionaire walks in. He earns <strong>$50,000,000/year</strong>.</p>`,
                 `<div class="bg-red-50 p-4 rounded-xl border-l-4 border-red-500 mb-4 shadow-sm"><p class="font-bold text-red-700 text-lg">Mean jumps to $5M!</p><p class="text-sm text-red-600 mt-1">Does everyone feel richer? <span class="blur-reveal">No. The Mean is lying.</span></p></div>`,
-                `<div class="bg-emerald-50 p-4 rounded-xl border-l-4 border-emerald-500 mb-4 shadow-sm"><p class="font-bold text-emerald-700 text-lg">Solution: The Median</p><p class="text-sm text-emerald-600 mt-1">The middle value. Even with Bill Gates, the median stays around <span class="blur-reveal">$50k</span>. It resists outliers.</p></div>`
+                `<div class="bg-emerald-50 p-4 rounded-xl border-l-4 border-emerald-500 mb-4 shadow-sm"><p class="font-bold text-emerald-700 text-lg">Solution: The Median</p><p class="text-sm text-emerald-600 mt-1">The middle value. Even with Bill Gates, the median stays around <span class="blur-reveal">$50k</span>. It resists outliers.</p></div>`,
+                `<div class="bg-indigo-50 p-4 rounded-xl border-l-4 border-indigo-500 mb-4 shadow-sm"><p class="font-bold text-indigo-700 text-lg">Definition: The Mode</p><p class="text-sm text-indigo-600 mt-1">The most frequently occurring value in a dataset.</p></div>`
             ],
             renderInteractive: (container) => {
                 container.innerHTML = `<div class="w-full max-w-sm"><h4 class="font-bold text-center mb-4 text-slate-400 text-xs uppercase tracking-widest">Simulation</h4><div id="room" class="grid grid-cols-5 gap-2 mb-6 bg-slate-200 p-6 rounded-2xl min-h-[220px] content-center justify-items-center relative overflow-hidden shadow-inner"><div class="text-2xl text-center grayscale opacity-70">🧑‍💼<div class="text-[8px] font-bold">$46k</div></div><div class="text-2xl text-center grayscale opacity-70">👩‍💼<div class="text-[8px] font-bold">$42k</div></div><div class="text-2xl text-center grayscale opacity-70">👨‍💻<div class="text-[8px] font-bold">$48k</div></div><div class="text-2xl text-center grayscale opacity-70">🧑‍🔧<div class="text-[8px] font-bold">$45k</div></div><div class="text-2xl text-center grayscale opacity-70">👩‍🔬<div class="text-[8px] font-bold">$50k</div></div><div class="text-2xl text-center grayscale opacity-70">👨‍🎨<div class="text-[8px] font-bold">$41k</div></div><div class="text-2xl text-center grayscale opacity-70">👩‍✈️<div class="text-[8px] font-bold">$52k</div></div><div class="text-2xl text-center grayscale opacity-70">👨‍🚒<div class="text-[8px] font-bold">$43k</div></div><div class="text-2xl text-center grayscale opacity-70">👩‍⚖️<div class="text-[8px] font-bold">$47k</div></div><div id="uncle-spot" class="opacity-0 transition-all duration-500 text-4xl text-center scale-0">🚁<div class="text-[8px] bg-yellow-300 text-yellow-900 font-black rounded px-1 shadow-lg border border-yellow-500">$50M</div></div></div><button id="add-uncle-btn" onclick="toggleUncle()" class="w-full bg-slate-800 text-white py-3 rounded-xl hover:bg-slate-900 mb-6 font-bold shadow-lg active:scale-95 transition-all">Add Billionaire 🚁</button><div class="space-y-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm"><div><div class="flex justify-between text-xs font-bold mb-1 uppercase tracking-wider"><span class="text-blue-500">Mean (Average)</span><span id="mean-val" class="text-slate-700">$46k</span></div><div class="w-full bg-slate-100 rounded-full h-3"><div id="mean-bar" class="bg-blue-500 h-3 rounded-full transition-all duration-700 shadow-md" style="width: 5%"></div></div></div><div><div class="flex justify-between text-xs font-bold mb-1 uppercase tracking-wider"><span class="text-emerald-500">Median (Middle)</span><span id="median-val" class="text-slate-700">$46k</span></div><div class="w-full bg-slate-100 rounded-full h-3"><div id="median-bar" class="bg-emerald-500 h-3 rounded-full transition-all duration-500 shadow-md" style="width: 5%"></div></div></div></div></div>`;
@@ -506,7 +517,8 @@
                 `<p class="mb-4"><strong>Standard Deviation</strong> measures this "spread".</p><p class="font-bold bg-slate-900 text-white p-3 rounded-lg text-center shadow-lg">High Spread = High Risk ⚠️</p>`
             ],
             renderInteractive: (container) => {
-                container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-4 text-slate-400 uppercase text-xs tracking-widest">Volatility Simulator</h4><div class="flex justify-center gap-4 mb-4"><button id="btn-safe" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-bold hover:bg-blue-200 transition-colors">Index Fund</button><button id="btn-risky" class="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg text-sm font-bold hover:bg-orange-200 transition-colors">Crypto</button></div><div class="h-32 bg-white border border-slate-200 rounded-2xl relative flex flex-col items-center justify-center overflow-hidden shadow-sm" id="dispersion-box"><div class="absolute h-full w-0.5 bg-slate-300 left-1/2"></div><div id="dots-container" class="w-full h-full relative"></div></div><p class="text-xs mt-3 text-slate-400 font-bold" id="dispersion-text">Select an investment.</p></div>`;
+                // Increased height from h-32 to h-48
+                container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-4 text-slate-400 uppercase text-xs tracking-widest">Volatility Simulator</h4><div class="flex justify-center gap-4 mb-4"><button id="btn-safe" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-bold hover:bg-blue-200 transition-colors">Index Fund</button><button id="btn-risky" class="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg text-sm font-bold hover:bg-orange-200 transition-colors">Crypto</button></div><div class="h-48 bg-white border border-slate-200 rounded-2xl relative flex flex-col items-center justify-center overflow-hidden shadow-sm" id="dispersion-box"><div class="absolute h-full w-0.5 bg-slate-300 left-1/2"></div><div id="dots-container" class="w-full h-full relative"></div></div><p class="text-xs mt-3 text-slate-400 font-bold" id="dispersion-text">Select an investment.</p></div>`;
                 const box = document.getElementById('dots-container');
                 const txt = document.getElementById('dispersion-text');
                 const drawReturns = (returns, color) => {
@@ -530,7 +542,7 @@
             slides: [
                 `<h3 class="font-bold mb-4 text-xl">1. The Bell Curve 🔔</h3><p class="mb-4">The <strong>Normal Distribution</strong> is the superstar of statistics.</p><ul class="list-disc pl-4 text-sm space-y-2"><li><strong>Symmetrical:</strong> Left side mirrors right side.</li><li><strong>Predictable:</strong> We know exactly how much data falls where.</li></ul>`,
                 `<h3 class="font-bold mb-4 text-xl">2. The 68-95-99.7 Rule</h3><p class="text-sm mb-4">Memorize this for audit sampling!</p><div class="space-y-3 text-xs font-bold"><div class="bg-indigo-100 text-indigo-800 p-3 rounded-lg flex justify-between"><span>1 Standard Dev (σ)</span> <span>68% of data</span></div><div class="bg-indigo-200 text-indigo-900 p-3 rounded-lg flex justify-between"><span>2 Standard Dev (2σ)</span> <span>95% of data</span></div><div class="bg-indigo-300 text-indigo-950 p-3 rounded-lg flex justify-between"><span>3 Standard Dev (3σ)</span> <span>99.7% of data</span></div></div>`,
-                `<h3 class="font-bold mb-4 text-xl">3. Z-Score: The "Weirdness" Metric</h3><p class="mb-4 text-sm">A <strong>Z-Score</strong> tells you exactly how far a data point is from the Mean.</p><div class="bg-slate-100 p-4 rounded-xl font-mono text-center text-sm mb-4 border border-slate-200">Z = (Value - Mean) / StdDev</div><div class="grid grid-cols-3 gap-2 text-center text-xs"><div class="bg-white p-2 rounded shadow-sm">Z=0<br>Average</div><div class="bg-white p-2 rounded shadow-sm">Z=2<br>High</div><div class="bg-red-50 text-red-600 font-bold p-2 rounded shadow-sm border border-red-100">Z=3+<br><span class="blur-reveal">Suspicious!</span></div></div>`
+                `<h3 class="font-bold mb-4 text-xl">3. Z-Score: The "Weirdness" Metric</h3><p class="mb-4 text-sm">A <strong>Z-Score</strong> tells you exactly how far a data point is from the Mean.</p><div class="bg-slate-100 p-4 rounded-xl font-mono text-center text-sm mb-4 border border-slate-200">Z = (Value - Mean) / StdDev<br><span class="text-xs text-slate-500 block mt-2 pt-2 border-t border-slate-200">Ex: ($300k - $60k) / $10k = 24</span></div><div class="grid grid-cols-3 gap-2 text-center text-xs"><div class="bg-white p-2 rounded shadow-sm">Z=0<br>Average</div><div class="bg-white p-2 rounded shadow-sm">Z=2<br>High</div><div class="bg-red-50 text-red-600 font-bold p-2 rounded shadow-sm border border-red-100">Z=3+<br><span class="blur-reveal">Suspicious!</span></div></div>`
             ],
             renderInteractive: (container) => {
                 container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-2 text-slate-400 uppercase text-xs tracking-widest">Distribution Scanner</h4><div class="relative bg-white border border-slate-200 rounded-2xl flex items-end justify-center overflow-hidden h-48 shadow-sm"><canvas id="bellCanvas" width="300" height="150" class="absolute bottom-0"></canvas></div><div class="flex justify-center gap-2 mt-4"><button class="text-xs font-bold bg-white text-indigo-600 px-3 py-2 rounded-lg hover:bg-indigo-50 border border-slate-200 shadow-sm transition-all" onclick="highlightArea(1)">68% (1σ)</button><button class="text-xs font-bold bg-white text-indigo-600 px-3 py-2 rounded-lg hover:bg-indigo-50 border border-slate-200 shadow-sm transition-all" onclick="highlightArea(2)">95% (2σ)</button><button class="text-xs font-bold bg-white text-indigo-600 px-3 py-2 rounded-lg hover:bg-indigo-50 border border-slate-200 shadow-sm transition-all" onclick="highlightArea(3)">99% (3σ)</button></div><p id="dist-info" class="text-xs font-bold text-slate-400 mt-3 min-h-[20px]">Tap a range to visualize.</p></div>`;
@@ -553,6 +565,16 @@
                     ctx.beginPath(); ctx.moveTo(0, height);
                     for(let x = 0; x <= width; x++) ctx.lineTo(x, getY(x));
                     ctx.lineWidth = 2; ctx.strokeStyle = "#475569"; ctx.stroke();
+
+                    // Mark Sigma on X Axis
+                    ctx.fillStyle = "#64748b"; ctx.font = "9px sans-serif"; ctx.textAlign = "center";
+                    ctx.fillText("μ", mean, height - 5);
+                    ctx.fillText("+1σ", mean + stdDev, height - 5);
+                    ctx.fillText("-1σ", mean - stdDev, height - 5);
+                    ctx.fillText("+2σ", mean + (2*stdDev), height - 5);
+                    ctx.fillText("-2σ", mean - (2*stdDev), height - 5);
+                    ctx.fillText("+3σ", mean + (3*stdDev), height - 5);
+                    ctx.fillText("-3σ", mean - (3*stdDev), height - 5);
                 };
                 setTimeout(() => drawBell(0), 100);
                 window.highlightArea = (sigma) => {
@@ -565,82 +587,123 @@
             }
         };
 
-        const lessonStandardError = {
-            title: "Standard Error: The Cookie Factory",
+        const lessonBenfordsLaw = {
+            title: "Benford's Law 📊",
             slides: [
-                `<h3 class="font-bold mb-4 text-xl">1. Imagine a Big Cookie Factory 🍪</h3>
-                <p class="mb-4">There are 2,000 cookies in a huge box. You check 60 cookies (n=60) and find 4 are broken (~7%).</p>
-                <div class="bg-orange-50 p-4 rounded-xl border border-orange-200 text-orange-900 mb-4">
-                    <strong>Important Question:</strong><br>
-                    If you grabbed a <em>different</em> 60 cookies, would you get exactly 4 broken again?
-                </div>
-                <p class="text-sm">Maybe 3. Maybe 6. The number might <span class="blur-reveal">wiggle around a little</span>. Standard Error measures this "natural wiggle".</p>`,
+                `<h3 class="font-bold mb-4 text-xl">1. The First Digit Law</h3>
+                 <p class="mb-4 text-sm"><strong>Benford’s Law</strong> predicts that in natural datasets (like invoices), the first digit is <strong>not</strong> random.</p>
+                 <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 mb-4">
+                    <div class="flex justify-between text-xs font-bold text-indigo-800 mb-1">
+                        <span>Digit 1</span><span>Digit 9</span>
+                    </div>
+                    <div class="w-full bg-white rounded-full h-4 mb-2 flex overflow-hidden">
+                        <div class="bg-indigo-600 h-full" style="width: 30.1%"></div>
+                        <div class="bg-indigo-400 h-full" style="width: 17.6%"></div>
+                        <div class="bg-indigo-300 h-full" style="width: 52.3%"></div>
+                    </div>
+                    <p class="text-xs text-indigo-900">
+                        <strong>1</strong> appears ~30.1% of the time.<br>
+                        <strong>9</strong> appears only ~4.6% of the time.
+                    </p>
+                 </div>
+                 <p class="text-xs text-slate-500">Why? Because numbers grow exponentially (1 to 2 is a 100% jump, 8 to 9 is small).</p>`,
+
+                `<h3 class="font-bold mb-4 text-xl">2. Detecting Fraud 🕵️‍♀️</h3>
+                 <p class="mb-4 text-sm">When people <strong>invent</strong> numbers, they try to be "random" and use digits equally (11.1% each).</p>
+                 <div class="space-y-3 text-sm">
+                    <div class="p-3 bg-white border-l-4 border-emerald-500 shadow-sm">
+                        <strong>Natural Data</strong><br>Follows the curve (Lots of 1s and 2s).
+                    </div>
+                    <div class="p-3 bg-white border-l-4 border-red-500 shadow-sm">
+                        <strong>Manipulated Data</strong><br>Too flat, or strange spikes (e.g., many 9s to stay under a limit).
+                    </div>
+                 </div>
+                 <p class="mt-4 text-xs font-bold text-red-500">⚠️ Deviation ≠ Fraud, but it signals a need for investigation.</p>`,
+
+                `<h3 class="font-bold mb-4 text-xl">3. When to Use It</h3>
+                 <ul class="space-y-2 text-sm list-disc pl-4 text-slate-700">
+                    <li><strong>Large Datasets:</strong> 50+ observations needed.</li>
+                    <li><strong>Wide Range:</strong> Numbers must span multiple magnitudes (e.g., $10 to $10,000).</li>
+                    <li><strong>Natural Origin:</strong> Sales, expenses, payments.</li>
+                 </ul>
+                 <div class="mt-4 bg-slate-100 p-3 rounded-lg text-xs border border-slate-200">
+                    <strong>Don't use on:</strong> ATM withdrawals ($20, $40), fixed prices, or restricted data.
+                 </div>`
+            ],
+            renderInteractive: (container) => {
+                container.innerHTML = `
+                <div class="w-full max-w-sm text-center">
+                    <h4 class="font-bold mb-2 text-slate-400 uppercase text-xs tracking-widest">Benford Analyzer</h4>
+                    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm relative">
+                        <canvas id="benfordCanvas" height="200"></canvas>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <button class="flex-1 bg-emerald-100 text-emerald-700 font-bold py-2 rounded-lg text-xs hover:bg-emerald-200 transition-colors" onclick="loadBenfordData('real')">Authentic Data</button>
+                        <button class="flex-1 bg-red-100 text-red-700 font-bold py-2 rounded-lg text-xs hover:bg-red-200 transition-colors" onclick="loadBenfordData('fake')">Fake Data</button>
+                    </div>
+                    <p id="benford-feedback" class="text-xs font-bold text-slate-400 mt-2 min-h-[20px]">Load data to analyze.</p>
+                </div>`;
                 
-                `<h3 class="font-bold mb-4 text-xl">2. Here is the Formula</h3>
-                <div class="font-mono text-center mb-4 bg-slate-100 p-4 rounded-lg text-sm shadow-sm overflow-x-auto whitespace-nowrap">
-                    SE = &radic;( p(1-p) / n )
-                </div>
-                <ul class="space-y-3 text-sm">
-                    <li class="flex gap-2 items-start"><span class="bg-slate-200 px-2 rounded font-bold font-mono whitespace-nowrap">p(1-p)</span> <span>Measures how mixed things are. If all broken or none broken, no wiggle.</span></li>
-                    <li class="flex gap-2 items-start"><span class="bg-slate-200 px-2 rounded font-bold font-mono">n</span> <span>Sample size. Check more cookies? <span class="blur-reveal">Wiggle gets smaller.</span></span></li>
-                    <li class="flex gap-2 items-start"><span class="bg-slate-200 px-2 rounded font-bold font-mono">&radic;</span> <span>Square Root. Just think: "Shrink the wiggle to size."</span></li>
-                </ul>`,
+                const ctx = document.getElementById('benfordCanvas').getContext('2d');
+                let chart;
 
-                `<h3 class="font-bold mb-4 text-xl">3. 95% Confidence 🎯</h3>
-                <p class="mb-4">Based on calculation, We found SE = 3%. So if the real rate is 7%, most samples land at 7% &plusmn; 3%.</p>
-                <div class="bg-emerald-50 p-4 rounded-xl border-l-4 border-emerald-500 mb-4">
-                    <strong class="text-emerald-900">Estimate &plusmn; 1.96 &times; SE</strong>
-                    <div class="mt-2 text-sm text-emerald-800">
-                        <strong>Where does 1.96 come from?</strong><br>
-                        Recall the Bell Curve: <span class="blur-reveal">95% of data falls within 1.96 standard deviations</span> of the center.
-                    </div>
-                </div>
-                <p class="text-xs text-slate-500 italic">This means 95 out of 100 times, the real answer is in our range.</p>`
-            ],
-            renderInteractive: (container) => {
-                container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-2 text-slate-400 uppercase text-xs tracking-widest">Confidence Interval Builder</h4><div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100"><div class="mb-6"><div class="flex justify-between text-xs font-bold text-slate-500 mb-2"><span>Cookies Checked (n)</span><span id="n-val" class="text-orange-600 text-lg">60</span></div><input type="range" min="30" max="500" step="10" value="60" id="n-slider" class="w-full accent-orange-500 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"></div><div class="relative h-24 bg-slate-50 rounded-xl border border-slate-200 mb-4 flex items-center justify-center overflow-hidden"><div class="absolute h-full w-0.5 bg-orange-500 z-10"></div><div class="absolute bg-white px-1 text-[10px] font-bold text-orange-500 z-20 -top-2">7%</div><div id="ci-bar" class="h-8 bg-orange-200/50 border-x-2 border-orange-400 rounded-sm transition-all duration-300 flex items-center justify-center relative"><div class="text-[9px] text-orange-800 font-bold whitespace-nowrap px-2">Confidence Interval</div></div></div><div class="grid grid-cols-2 gap-2 text-center"><div class="bg-slate-50 p-2 rounded"><div class="text-[10px] text-slate-400 uppercase font-bold">Standard Error</div><div id="se-display" class="font-bold text-slate-700">3.2%</div></div><div class="bg-emerald-50 p-2 rounded border border-emerald-100"><div class="text-[10px] text-emerald-600 uppercase font-bold">Range</div><div id="range-display" class="font-bold text-emerald-700">0.7% - 13.3%</div></div></div><p class="text-xs text-slate-400 mt-2 italic">More cookies = Less wiggle.</p></div></div>`;
-                const slider = document.getElementById('n-slider');
-                function update() {
-                    const n = parseInt(slider.value); const p = 0.07;
-                    const se = Math.sqrt((p * (1-p)) / n); const sePercent = (se * 100).toFixed(1);
-                    const margin = 1.96 * se * 100; const lower = Math.max(0, 7 - margin).toFixed(1); const upper = (7 + margin).toFixed(1);
-                    document.getElementById('n-val').textContent = n; document.getElementById('se-display').textContent = sePercent + "%";
-                    document.getElementById('range-display').textContent = `${lower}% - ${upper}%`;
-                    const widthPx = margin * 15; document.getElementById('ci-bar').style.width = Math.min(100, widthPx) + "%";
-                }
-                slider.oninput = update;
-            }
-        };
+                window.loadBenfordData = (type) => {
+                    const labels = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
+                    const expected = [30.1, 17.6, 12.5, 9.7, 7.9, 6.7, 5.8, 5.1, 4.6];
+                    let actual = [];
+                    let color = '';
+                    let feedback = '';
 
-        const lessonTypeErrors = {
-            title: "Audit Risk: Crying Wolf vs. Missing Fraud",
-            slides: [
-                `<h3 class="font-bold mb-4 text-xl">1. Medical Analogy 🏥</h3>
-                <p class="mb-4">Imagine a doctor testing for a disease.</p>
-                <div class="space-y-3">
-                    <div class="bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
-                        <strong class="text-yellow-900">Type I (False Alarm):</strong><br>
-                        Doctor says you are sick, but you are healthy.<br>
-                        <em>Result: <span class="blur-reveal">Unnecessary stress.</span></em>
-                    </div>
-                    <div class="bg-red-50 p-3 rounded-lg border-l-4 border-red-400">
-                        <strong class="text-red-900">Type II (Missed Diagnosis):</strong><br>
-                        Doctor says you are healthy, but you have a disease.<br>
-                        <em>Result: <span class="blur-reveal">Dangerous/Fatal.</span></em>
-                    </div>
-                </div>`,
-                `<h3 class="font-bold mb-4 text-xl">2. The Audit Version</h3><p class="mb-4">In audit hypothesis testing, you can make the same fatal mistakes.</p>`,
-                `<div class="bg-yellow-50 p-5 rounded-xl border border-yellow-200 mb-4 shadow-sm relative"><div class="absolute -top-3 -right-3 text-2xl">🐺</div><strong class="text-yellow-900 text-lg block mb-1">Type I Error (Efficiency Risk)</strong>You think there is a problem, but there isn't. <br><span class="blur-reveal text-yellow-800 font-medium">"Crying Wolf"</span>. You waste time digging into nothing.</div>`,
-                `<div class="bg-red-50 p-5 rounded-xl border border-red-200 mb-4 shadow-sm relative"><div class="absolute -top-3 -right-3 text-2xl">💣</div><strong class="text-red-900 text-lg block mb-1">Type II Error (Effectiveness Risk)</strong>You think it's clean, but it's NOT. <br><span class="blur-reveal text-red-800 font-medium">"Missing the Fraud"</span>. This gets auditors sued.</div>`,
-                `<div class="mt-6 text-center bg-slate-900 text-white p-4 rounded-xl"><p class="text-xs text-slate-400 uppercase font-bold mb-1">Pop Quiz</p><p class="font-bold mb-2">Which error keeps auditors up at night?</p><span class="blur-reveal bg-white/20 text-white px-2 py-1 rounded">Type II (Missing the Fraud)</span></div>`
-            ],
-            renderInteractive: (container) => {
-                container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-4 text-slate-400 uppercase text-xs tracking-widest">Risk Matrix Simulator</h4><div class="bg-white p-4 rounded-2xl shadow-lg border border-slate-100"><div class="flex mb-2 text-xs font-bold text-slate-400 uppercase"><div class="w-1/3"></div><div class="w-1/3 text-center">Reality:<br><span class="text-emerald-500">Clean</span></div><div class="w-1/3 text-center">Reality:<br><span class="text-red-500">Fraud</span></div></div><div class="flex mb-2 h-16"><div class="w-1/3 flex items-center justify-end pr-2 text-xs font-bold text-slate-600 leading-tight">You Say:<br>Clean</div><div class="w-1/3 bg-emerald-100 rounded-l-lg border-y border-l border-emerald-200 flex items-center justify-center"><i class="fa-solid fa-check text-emerald-500 text-xl"></i></div><div class="w-1/3 bg-slate-50 rounded-r-lg border border-slate-200 hover:bg-red-100 hover:border-red-300 cursor-pointer transition-all flex flex-col items-center justify-center group relative" onclick="showError('type2')"><span class="font-bold text-slate-300 text-2xl group-hover:hidden">?</span><span class="hidden group-hover:block text-red-600 font-bold text-xs animate-pulse">Type II<br>Beta</span></div></div><div class="flex h-16"><div class="w-1/3 flex items-center justify-end pr-2 text-xs font-bold text-slate-600 leading-tight">You Say:<br>Fraud</div><div class="w-1/3 bg-slate-50 rounded-l-lg border border-slate-200 hover:bg-yellow-50 hover:border-yellow-300 cursor-pointer transition-all flex flex-col items-center justify-center group relative" onclick="showError('type1')"><span class="font-bold text-slate-300 text-2xl group-hover:hidden">?</span><span class="hidden group-hover:block text-yellow-600 font-bold text-xs animate-pulse">Type I<br>Alpha</span></div><div class="w-1/3 bg-emerald-100 rounded-r-lg border-y border-r border-emerald-200 flex items-center justify-center"><i class="fa-solid fa-check text-emerald-500 text-xl"></i></div></div></div><div id="matrix-feedback" class="mt-4 p-3 rounded-xl bg-slate-800 text-white text-sm font-medium min-h-[60px] flex items-center justify-center">Tap a '?' box to reveal the error type.</div></div>`;
-                window.showError = (type) => {
-                    const fb = document.getElementById('matrix-feedback');
-                    if(type === 'type1') fb.innerHTML = `<span class="text-yellow-400 font-bold mr-2">Type I Error:</span> You rejected a clean client. Waste of effort. (Alpha Risk)`;
-                    if(type === 'type2') fb.innerHTML = `<span class="text-red-400 font-bold mr-2">Type II Error:</span> You accepted a fraud. Audit Failure! (Beta Risk)`;
-                }
+                    if(type === 'real') {
+                        // Slightly noisy Benford
+                        actual = expected.map(v => v + (Math.random() * 4 - 2)); 
+                        color = '#10b981';
+                        feedback = "Matches Expected Pattern ✅";
+                    } else {
+                        // Uniform / Random
+                        actual = labels.map(() => 11.1 + (Math.random() * 10 - 5));
+                        // Add a spike
+                        actual[3] += 15; // Spike at 4
+                        actual[0] -= 10; // Drop at 1
+                        color = '#ef4444';
+                        feedback = "Suspicious Deviation (Too few 1s, too many 4s) 🚩";
+                    }
+
+                    if(chart) chart.destroy();
+
+                    chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Expected %',
+                                    data: expected,
+                                    type: 'line',
+                                    borderColor: '#6366f1',
+                                    borderWidth: 2,
+                                    pointRadius: 0,
+                                    tension: 0.4
+                                },
+                                {
+                                    label: 'Actual %',
+                                    data: actual,
+                                    backgroundColor: color,
+                                    borderRadius: 4
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } },
+                            scales: { y: { beginAtZero: true, display: false }, x: { grid: { display: false } } }
+                        }
+                    });
+                    document.getElementById('benford-feedback').textContent = feedback;
+                    document.getElementById('benford-feedback').className = type === 'real' ? "text-xs font-bold text-emerald-600 mt-2 min-h-[20px]" : "text-xs font-bold text-red-600 mt-2 min-h-[20px]";
+                };
+                
+                setTimeout(() => window.loadBenfordData('real'), 100);
             }
         };
 
@@ -671,30 +734,85 @@
             }
         };
 
-        const lessonLinearRegression = {
-            title: "Predicting Payroll (Linear)",
+        const lessonRegression = {
+            title: "Regression Analysis",
             slides: [
-                `<h3 class="font-bold text-xl mb-4 text-indigo-600">Predicting with a Line</h3><p class="mb-4">You are auditing <strong>Payroll Expense</strong>. You expect it to go up as headcount goes up.</p><p class="bg-indigo-50 p-2 rounded">This is <strong>Linear Regression</strong>: <br>Expense = (Headcount * Avg Wage) + Fixed Costs.</p>`,
-                `<h3 class="font-bold mb-4 text-xl">R-Squared (Goodness of Fit)</h3><p class="mb-2">How trustworthy is the line?</p><p class="mb-2"><strong>R²</strong> tells you how well the line fits the data (0 to 1).</p><ul class="list-disc pl-4 text-sm space-y-1"><li><span class="blur-reveal">R² = 1.0: Perfect fit.</span></li><li><span class="blur-reveal">R² > 0.8: Strong audit evidence.</span></li><li><span class="blur-reveal">R² < 0.5: Weak relationship. Don't rely on it.</span></li></ul>`
+                `<h3 class="font-bold text-xl mb-4 text-indigo-600">Part 1: Linear Regression</h3><p class="mb-4">You are auditing <strong>Payroll Expense</strong>. You expect it to go up as headcount goes up.</p><p class="bg-indigo-50 p-2 rounded">This is <strong>Linear Regression</strong>: <br>Expense = (Headcount * Avg Wage) + Fixed Costs.</p>`,
+                `<h3 class="font-bold mb-4 text-xl">Variables: Who drives who?</h3>
+                <div class="space-y-4">
+                    <div class="p-3 bg-white border-l-4 border-indigo-500 shadow-sm rounded-r-lg">
+                        <strong class="text-indigo-900">Independent Variable (X)</strong>
+                        <p class="text-sm text-slate-600">The driver that influences the outcome.<br><span class="text-xs text-slate-400 italic">Example: Temperature, Ad Spend, Headcount.</span></p>
+                    </div>
+                    <div class="p-3 bg-white border-l-4 border-emerald-500 shadow-sm rounded-r-lg">
+                        <strong class="text-emerald-900">Dependent Variable (Y)</strong>
+                        <p class="text-sm text-slate-600">The output or "Result". This reacts to X.<br><span class="text-xs text-slate-400 italic">Example: Ice Cream Sales, Revenue, Total Payroll.</span></p>
+                    </div>
+                    <div class="mt-4 p-4 bg-slate-100 rounded-xl border border-slate-200">
+                        <p class="font-bold text-sm mb-2 text-slate-700">Quiz: We predict <em>Sales</em> based on <em>Ad Spend</em>.</p>
+                        <p class="text-xs mb-2">Which is the Dependent Variable?</p>
+                        <span class="blur-reveal bg-white px-2 py-1 rounded border border-slate-300">Sales (Y) depends on Ad Spending (X).</span>
+                    </div>
+                </div>`,
+                `<h3 class="font-bold mb-4 text-xl">R-Squared (Fit)</h3><p class="mb-2">How trustworthy is the line?</p><p class="mb-2"><strong>R²</strong> tells you how well the line fits the data (0 to 1).</p><ul class="list-disc pl-4 text-sm space-y-1"><li><span class="blur-reveal">R² = 1.0: Perfect fit.</span></li><li><span class="blur-reveal">R² > 0.8: Strong audit evidence.</span></li><li><span class="blur-reveal">R² < 0.5: Weak relationship.</span></li><li><span class="blur-reveal">R² = 0: No explanatory power.</span></li></ul>`,
+                `<h3 class="font-bold text-xl mb-4 text-purple-600">Part 2: Multiple Regression</h3><p class="mb-4">Reality is COMPLEX. <strong>Cost of Goods Sold (COGS)</strong> depends on multiple drivers.</p><p>COGS = (A * Units) + (B * Oil Price) + Fixed</p><p class="text-sm bg-slate-100 p-2 rounded">We can visualize this as a plane cutting through a 3D cloud of data points (Sales, Ads, Quality).</p>`
             ],
             renderInteractive: (container) => {
-                container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-4 text-slate-400 uppercase text-xs tracking-widest">R-Squared Simulator</h4><canvas id="rsqCanvas" width="300" height="150" class="bg-white border border-slate-200 rounded-2xl mx-auto mb-4"></canvas><input type="range" min="0" max="100" value="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" id="noise-slider-r2"><div id="rsq-display" class="font-mono font-bold text-emerald-600 text-xl mt-2">R² = 0.98</div><p class="text-xs text-slate-400 mt-1">Slide right to add noise.</p></div>`;
+                // Interactive Container Init - Merging Noise Slider (User Preferred) and 3D View
+                container.innerHTML = `
+                <div id="reg-interactive-1" class="w-full max-w-sm text-center">
+                    <h4 class="font-bold mb-4 text-slate-400 uppercase text-xs tracking-widest">R-Squared Simulator</h4>
+                    <canvas id="rsqCanvas" width="300" height="150" class="bg-white border border-slate-200 rounded-2xl mx-auto mb-4"></canvas>
+                    <input type="range" min="0" max="100" value="10" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" id="noise-slider-r2">
+                    <div id="rsq-display" class="font-mono font-bold text-emerald-600 text-xl mt-2">R² = 0.98</div>
+                    <p class="text-xs text-slate-400 mt-1">Slide right to add noise.</p>
+                    <p class="text-[10px] text-slate-500 mt-2 italic bg-slate-50 p-2 rounded">Regression line is where sum of squared errors are minimized.</p>
+                </div>
+                <div id="reg-interactive-2" class="w-full max-w-sm text-center relative h-64 hidden">
+                    <h4 class="font-bold mb-2 text-slate-400 uppercase text-xs tracking-widest">3D Regression Visualizer</h4>
+                    <div id="three-container" class="w-full h-full rounded-2xl overflow-hidden shadow-lg border border-slate-200 relative">
+                        <div class="absolute top-2 left-2 bg-white/80 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-slate-600 z-10 border border-slate-200">Y: COGS (Up)</div>
+                        <div class="absolute bottom-2 right-2 bg-white/80 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-slate-600 z-10 border border-slate-200">X: Sales</div>
+                        <div class="absolute bottom-2 left-2 bg-white/80 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-slate-600 z-10 border border-slate-200">Z: Ads</div>
+                    </div>
+                </div>`;
+
+                // Logic for Linear R-Squared Simulator (Noise Slider)
                 const r2Cvs = document.getElementById('rsqCanvas');
                 const r2Ctx = r2Cvs.getContext('2d');
                 const r2Slider = document.getElementById('noise-slider-r2');
                 const r2Display = document.getElementById('rsq-display');
+                
                 function drawR2() {
                     const noise = parseInt(r2Slider.value);
                     r2Ctx.clearRect(0,0,300,150);
+                    
+                    // Draw Line
                     r2Ctx.strokeStyle = "#94a3b8"; r2Ctx.lineWidth = 2; r2Ctx.setLineDash([5,5]);
                     r2Ctx.beginPath(); r2Ctx.moveTo(20, 130); r2Ctx.lineTo(280, 20); r2Ctx.stroke(); r2Ctx.setLineDash([]);
+                    
+                    // Draw Points and Error Bars
                     r2Ctx.fillStyle = "#ef4444";
-                    const pointsX = [40, 80, 120, 160, 200, 240];
+                    const pointsX = [40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260];
                     pointsX.forEach((x, i) => {
                         const idealY = 130 - ((x-20) * (110/260));
+                        // Deterministic psuedo-random offset based on index
                         const offset = (Math.sin(i * 132) * noise) + ((Math.cos(i * 45) * noise)); 
-                        r2Ctx.beginPath(); r2Ctx.arc(x, idealY + offset, 4, 0, Math.PI*2); r2Ctx.fill();
+                        const actualY = idealY + offset;
+
+                        // Draw Error Bar (Residual)
+                        if (Math.abs(offset) > 2) {
+                            r2Ctx.beginPath();
+                            r2Ctx.moveTo(x, idealY);
+                            r2Ctx.lineTo(x, actualY);
+                            r2Ctx.strokeStyle = "rgba(239, 68, 68, 0.4)"; // Faint red
+                            r2Ctx.lineWidth = 1;
+                            r2Ctx.stroke();
+                        }
+
+                        r2Ctx.beginPath(); r2Ctx.arc(x, actualY, 4, 0, Math.PI*2); r2Ctx.fill();
                     });
+
                     let r2 = 1 - (noise / 80);
                     if(r2 < 0) r2 = 0;
                     r2Display.textContent = `R² = ${r2.toFixed(2)}`;
@@ -702,27 +820,87 @@
                 }
                 r2Slider.oninput = drawR2;
                 drawR2();
-            }
-        };
 
-        const lessonMultipleRegression = {
-            title: "Predicting COGS (Multiple)",
-            slides: [
-                `<h3 class="font-bold text-xl mb-4 text-purple-600">Reality is Complex</h3><p class="mb-4">Payroll was simple. But <strong>Cost of Goods Sold (COGS)</strong> depends on many things.</p><ul class="list-disc pl-4 text-sm"><li>Units Sold</li><li>Material Prices (Inflation)</li><li>Shipping Rates</li></ul>`,
-                `<h3 class="font-bold mb-4 text-xl">Multiple Regression</h3><p class="mb-2">COGS = (A * Units) + (B * Price) + Fixed</p><p class="text-sm bg-slate-100 p-2 rounded">This isolates the impact of <em>each</em> driver. If Units go up, but COGS stays flat, did we use cheaper materials?</p>`
-            ],
-            renderInteractive: (container) => {
-                container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-4 text-slate-400 uppercase text-xs tracking-widest">COGS Calculator</h4><div class="bg-slate-900 text-white p-6 rounded-2xl mb-4 font-mono shadow-xl">Predicted: <span id="cogs-output" class="text-emerald-400 text-xl font-bold">$10,000</span></div><div class="space-y-4"><div class="bg-white p-3 rounded-xl border border-slate-100"><div class="flex justify-between text-xs mb-1 font-bold"><span>Units Sold</span><span id="unit-val">1000</span></div><input type="range" min="0" max="2000" value="1000" id="unit-slider" class="w-full accent-indigo-500 h-2 bg-slate-200 rounded-lg appearance-none"></div><div class="bg-white p-3 rounded-xl border border-slate-100"><div class="flex justify-between text-xs mb-1 font-bold"><span>Material Cost ($)</span><span id="cost-val">10</span></div><input type="range" min="5" max="20" value="10" id="cost-slider" class="w-full accent-orange-500 h-2 bg-slate-200 rounded-lg appearance-none"></div></div></div>`;
-                const unitSlider = document.getElementById('unit-slider');
-                const costSlider = document.getElementById('cost-slider');
-                const output = document.getElementById('cogs-output');
-                function calc() {
-                    const u = unitSlider.value; const c = costSlider.value;
-                    document.getElementById('unit-val').textContent = u;
-                    document.getElementById('cost-val').textContent = "$" + c;
-                    output.textContent = "$" + (u * c).toLocaleString();
+                // Logic for 3D Init (Lazy Loaded)
+                let threeInitialized = false;
+                
+                window.updateRegressionInteractive = (slideIndex) => {
+                    const container1 = document.getElementById('reg-interactive-1');
+                    const container2 = document.getElementById('reg-interactive-2');
+                    
+                    // Shift logic because we added a slide. 3D view is now at index 3 (4th slide)
+                    if (slideIndex === 3) { 
+                        container1.classList.add('hidden');
+                        container2.classList.remove('hidden');
+                        
+                        if (!threeInitialized) {
+                            threeInitialized = true;
+                            setTimeout(initThreeJS, 100);
+                        }
+                    } else {
+                        container1.classList.remove('hidden');
+                        container2.classList.add('hidden');
+                    }
+                };
+
+                function initThreeJS() {
+                    const el = document.getElementById('three-container');
+                    if(!el || el.clientHeight === 0) return; // Prevent 0 height error
+                    
+                    const scene = new THREE.Scene();
+                    scene.background = new THREE.Color(0xf8fafc); 
+                    
+                    const camera = new THREE.PerspectiveCamera(50, el.clientWidth/el.clientHeight, 0.1, 1000);
+                    const renderer = new THREE.WebGLRenderer({ antialias: true });
+                    renderer.setSize(el.clientWidth, el.clientHeight);
+                    el.appendChild(renderer.domElement);
+
+                    // Points Cloud
+                    const geometry = new THREE.BufferGeometry();
+                    const count = 60;
+                    const positions = new Float32Array(count * 3);
+                    for(let i=0; i<count*3; i+=3) {
+                        const x = (Math.random() - 0.5) * 4; // Sales
+                        const z = (Math.random() - 0.5) * 4; // Ads
+                        const y = (0.5 * x) + (0.3 * z) + (Math.random() * 0.5); // COGS
+                        positions[i] = x;
+                        positions[i+1] = y;
+                        positions[i+2] = z;
+                    }
+                    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                    const material = new THREE.PointsMaterial({ color: 0x4f46e5, size: 0.12 });
+                    const points = new THREE.Points(geometry, material);
+                    scene.add(points);
+
+                    // Regression Plane
+                    const planeGeom = new THREE.PlaneGeometry(4, 4);
+                    const planeMat = new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.2 });
+                    const plane = new THREE.Mesh(planeGeom, planeMat);
+                    // Rotate to match the formula trends
+                    plane.rotation.x = Math.PI / 2; 
+                    plane.rotation.z = Math.PI / 6; 
+                    plane.rotation.y = -Math.PI / 8;
+                    scene.add(plane);
+
+                    // Axis Lines (Custom)
+                    const axisMat = new THREE.LineBasicMaterial({ color: 0x94a3b8 });
+                    const xGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-2,0,0), new THREE.Vector3(2,0,0)]);
+                    const yGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-1,0), new THREE.Vector3(0,2,0)]);
+                    const zGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-2), new THREE.Vector3(0,0,2)]);
+                    scene.add(new THREE.Line(xGeo, axisMat));
+                    scene.add(new THREE.Line(yGeo, axisMat));
+                    scene.add(new THREE.Line(zGeo, axisMat));
+
+                    camera.position.set(3, 2, 5);
+                    camera.lookAt(0, 0, 0);
+
+                    const animate = function () {
+                        requestAnimationFrame(animate);
+                        scene.rotation.y += 0.003;
+                        renderer.render(scene, camera);
+                    };
+                    animate();
                 }
-                unitSlider.oninput = calc; costSlider.oninput = calc;
             }
         };
 
@@ -762,16 +940,329 @@
                     </div>
                     <div class="bg-red-50 p-3 rounded-lg border border-red-200">
                         <strong>Step 2: You Sample</strong><br>
-                        Test 30 reports. Find 6 errors (20%). <br><em>That feels high.</em>
+                        Test 30 reports. Find 6 errors (20%). <br>
+                        <strong>Alternative Hypothesis (H1):</strong> The error rate is > 5%.
                     </div>
                     <div class="font-bold text-slate-600 mt-2">
-                        The P-Value Question:<br>
-                        <span class="blur-reveal font-normal">"If the control were actually working normally, how likely is it that I would randomly see 6 errors out of 30?"</span>
+                        The Test:<br>
+                        <span class="blur-reveal font-normal">Can we reject the Null and adopt the Alternative? Here we use p-value to make decision.</span>
                     </div>
                 </div>`
             ],
             renderInteractive: (container) => {
                 container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-2 text-slate-400 uppercase text-xs tracking-widest">P-Value Significance</h4><div class="relative bg-white border border-slate-200 rounded-2xl h-48 flex items-end justify-center px-4 pb-4 gap-1 shadow-sm overflow-hidden"><div class="absolute inset-0 border-b border-slate-100" style="bottom: 25%"></div><div class="absolute inset-0 border-b border-slate-100" style="bottom: 50%"></div><div class="w-full bg-indigo-200 rounded-t-sm" style="height: 5%"></div><div class="w-full bg-indigo-200 rounded-t-sm" style="height: 5%"></div><div class="w-full bg-indigo-200 rounded-t-sm" style="height: 5%"></div><div class="w-full bg-indigo-200 rounded-t-sm" style="height: 10%"></div><div class="w-full bg-indigo-200 rounded-t-sm" style="height: 20%"></div><div class="w-full bg-indigo-200 rounded-t-sm" style="height: 40%"></div><div class="w-full bg-indigo-200 rounded-t-sm" style="height: 70%"></div><div class="w-full bg-indigo-200 rounded-t-sm" style="height: 40%"></div><div class="w-full bg-indigo-200 rounded-t-sm" style="height: 20%"></div><div class="w-full bg-red-500 hover:bg-red-600 transition-all rounded-t relative group animate-pulse shadow-lg shadow-red-500/50" style="height: 5%"><div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded">P=0.02</div></div></div><div class="flex justify-between px-4 text-[10px] font-bold text-slate-400 mt-2 uppercase"><span>Normal</span><span>Rare</span><span class="text-red-500 text-lg -mt-2">Extreme</span></div><div class="mt-4 bg-slate-900 text-white p-4 rounded-xl border border-slate-700 shadow-xl"><div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">Result</div><div class="text-2xl font-mono font-bold text-red-400">Significant</div><div class="text-xs text-slate-300 mt-1">"Evidence against the Null is strong."</div></div></div>`;
+            }
+        };
+
+        const lessonStandardError = {
+            title: "Standard Error: Precision",
+            slides: [
+                `<h3 class="font-bold mb-4 text-xl">1. Imagine a Big Cookie Factory 🥠</h3>
+                <p class="mb-4">There are 2,000 fortune cookies in a huge box. You check 60 cookies (n=60) and find 4 are broken (~7%).</p>
+                <div class="bg-orange-50 p-4 rounded-xl border border-orange-200 text-orange-900 mb-4">
+                    <strong>Important Question:</strong><br>
+                    If you grabbed a <em>different</em> 60 cookies, would you get exactly 4 broken again?
+                </div>
+                <p class="text-sm">Maybe 3. Maybe 6. The number might <span class="blur-reveal">fluctuate</span>. Standard Error measures this "natural sampling variability".</p>`,
+                
+                `<h3 class="font-bold mb-4 text-xl">2. The 95% Confidence Interval</h3>
+                <p class="mb-2 text-sm">Imagine True Rate = 7% and Standard Error (SE) = 3%.</p>
+                
+                <div class="space-y-4 text-sm">
+                    <div class="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                        <strong class="text-indigo-900">95% Confidence (±2 SE)</strong>
+                        <p class="font-mono text-xs mt-1">Estimate ± (2 × SE)</p>
+                        <p class="font-mono text-xs text-indigo-700">7% ± (2 × 3%)</p>
+                        <p class="font-mono text-xs text-indigo-700">7% ± 6%</p>
+                        <p class="font-bold text-indigo-800 mt-1">Range: 1% to 13%</p>
+                    </div>
+                </div>`
+            ],
+            renderInteractive: (container) => {
+                // Restored Confidence Interval Builder
+                container.innerHTML = `<div class="w-full max-w-sm text-center"><h4 class="font-bold mb-2 text-slate-400 uppercase text-xs tracking-widest">Confidence Interval Builder</h4><div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100"><div class="mb-6"><div class="flex justify-between text-xs font-bold text-slate-500 mb-2"><span>Cookies Checked (n)</span><span id="n-val" class="text-orange-600 text-lg">60</span></div><input type="range" min="30" max="500" step="10" value="60" id="n-slider" class="w-full accent-orange-500 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"></div><div class="relative h-24 bg-slate-50 rounded-xl border border-slate-200 mb-4 flex items-center justify-center overflow-hidden"><div class="absolute h-full w-0.5 bg-orange-500 z-10"></div><div class="absolute bg-white px-1 text-[10px] font-bold text-orange-500 z-20 -top-2">7%</div><div id="ci-bar" class="h-8 bg-orange-200/50 border-x-2 border-orange-400 rounded-sm transition-all duration-300 flex items-center justify-center relative"><div class="text-[9px] text-orange-800 font-bold whitespace-nowrap px-2">Confidence Interval</div></div></div><div class="grid grid-cols-2 gap-2 text-center"><div class="bg-slate-50 p-2 rounded"><div class="text-[10px] text-slate-400 uppercase font-bold">Standard Error</div><div id="se-display" class="font-bold text-slate-700">3.2%</div></div><div class="bg-emerald-50 p-2 rounded border border-emerald-100"><div class="text-[10px] text-emerald-600 uppercase font-bold">Range</div><div id="range-display" class="font-bold text-emerald-700">0.7% - 13.3%</div></div></div><p class="text-xs text-slate-400 mt-2 italic">More cookies = Less wiggle.</p></div></div>`;
+                const slider = document.getElementById('n-slider');
+                function update() {
+                    const n = parseInt(slider.value); const p = 0.07;
+                    const se = Math.sqrt((p * (1-p)) / n); const sePercent = (se * 100).toFixed(1);
+                    const margin = 2.0 * se * 100; const lower = Math.max(0, 7 - margin).toFixed(1); const upper = (7 + margin).toFixed(1);
+                    document.getElementById('n-val').textContent = n; document.getElementById('se-display').textContent = sePercent + "%";
+                    document.getElementById('range-display').textContent = `${lower}% - ${upper}%`;
+                    const widthPx = margin * 15; document.getElementById('ci-bar').style.width = Math.min(100, widthPx) + "%";
+                }
+                slider.oninput = update;
+            }
+        };
+
+        const lessonSimulation = {
+            title: "Lab: Sampling Simulation",
+            slides: [
+                `<h3 class="font-bold mb-4 text-xl">What is Audit Sampling?</h3>
+                <div class="space-y-4 text-sm leading-relaxed text-slate-600 mb-6">
+                    <p>Audit sampling is when an auditor tests <strong>less than 100%</strong> of a population to draw conclusions about the entire population.</p>
+                    <ul class="list-disc pl-4 space-y-1">
+                        <li><strong>Why?</strong> <span class="blur-reveal">Testing every single transaction is too costly and time-consuming.</span></li>
+                        <li><strong>How?</strong> <span class="blur-reveal">A properly selected sample provides reliable evidence.</span></li>
+                        <li><strong>Goal:</strong> <span class="blur-reveal">To estimate whether the population contains material misstatement.</span></li>
+                    </ul>
+                </div>
+                <div class="bg-slate-100 p-4 rounded-xl border border-slate-200">
+                    <strong class="text-slate-800">The Simulation Next</strong>
+                    <p class="text-xs mt-1 mb-2">Top Graph = Entire Population.<br>Bottom Graph = Sampling Distribution (Averages of sample averages).</p>
+                    <div class="text-xs bg-white p-2 rounded border border-slate-200 shadow-sm">
+                        <div class="mb-1"><strong>🐱 Cats :</strong> Represents Cat Weight.</div>
+                        <div><strong>📋 Audit :</strong> Represents Inventory Counts (samples tested).</div>
+                    </div>
+                </div>`
+            ],
+            renderInteractive: (container, isChallenge = false) => {
+                // Vanilla JS Implementation of the VisualSamplingSim
+                // We use a prefix to avoid ID collisions between Lesson view and Challenge view
+                const pf = isChallenge ? 'c-' : 'l-'; 
+
+                container.innerHTML = `
+                <div class="w-full h-full flex flex-col bg-white overflow-hidden p-2">
+                    <!-- Controls -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-2 mb-2 flex-none">
+                        <div class="flex flex-wrap justify-between items-center gap-2">
+                            <div class="flex bg-slate-100 p-1 rounded-lg ${isChallenge ? 'hidden' : ''}">
+                                <button id="${pf}mode-cats" class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors bg-white shadow text-blue-600">🐱 Cats</button>
+                                <button id="${pf}mode-audit" class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors text-slate-400">📋 Audit</button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase">n = <span id="${pf}n-val-display" class="text-slate-800 text-sm">5</span></span>
+                                <input type="range" min="2" max="25" value="5" id="${pf}sim-n-slider" class="w-20 accent-slate-600 h-2 bg-slate-200 rounded-lg appearance-none">
+                            </div>
+                            <div class="flex gap-1">
+                                <button id="${pf}sim-draw-btn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-md font-bold text-xs transition-all active:scale-95">Draw 1</button>
+                                <button id="${pf}sim-fast-btn" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md font-bold text-xs transition-all active:scale-95">Fast</button>
+                                <button id="${pf}sim-reset-btn" class="p-1.5 text-slate-400 hover:text-red-500 transition-colors"><i class="fa-solid fa-rotate-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pop Graph -->
+                    <div class="relative mb-0 flex-none h-32 bg-white rounded-t-xl border-x border-t border-slate-200 overflow-hidden shadow-inner">
+                        <div class="absolute inset-0 flex justify-between px-4 pt-2 select-none z-0 text-[10px] font-bold text-slate-400">
+                            <span id="${pf}label-min">0</span><span id="${pf}label-mid">50</span><span id="${pf}label-max">100</span>
+                        </div>
+                        <div id="${pf}pop-container" class="absolute inset-0"></div>
+                        <!-- Ghost Mean Line -->
+                        <div id="${pf}ghost-mean" class="absolute w-0.5 h-full top-0 border-l-2 border-dashed border-indigo-400 z-10 transition-all duration-300 opacity-0" style="left: 50%">
+                             <div class="absolute top-0 -translate-x-1/2 -mt-1 bg-indigo-500 text-white text-[9px] px-1 rounded font-bold">Mean</div>
+                        </div>
+                    </div>
+
+                    <!-- Drop Zone -->
+                    <div class="h-8 bg-slate-100 border-x border-slate-200 flex items-center justify-center relative overflow-hidden flex-none">
+                         <div id="${pf}drop-msg" class="text-[10px] text-slate-400 flex items-center gap-2">Dots drop down to form SE</div>
+                         <div id="${pf}drop-line" class="absolute top-0 h-full w-0.5 bg-indigo-500 opacity-0" style="left: 50%"></div>
+                    </div>
+
+                    <!-- Sample Dist Graph -->
+                    <div class="relative h-40 bg-slate-50 rounded-b-xl border border-slate-200 overflow-hidden shadow-sm flex-grow">
+                        <div class="absolute bottom-0 w-full flex justify-between px-4 pb-1 select-none border-t border-slate-200 z-0 text-[10px] font-bold text-slate-400">
+                             <span>min</span><span>μ</span><span>max</span>
+                        </div>
+                        <div id="${pf}pile-container" class="absolute inset-0"></div>
+                        <!-- Stats Overlay -->
+                        <div id="${pf}stats-overlay" class="absolute top-2 right-2 bg-white/90 p-2 rounded-lg border border-slate-200 shadow-sm backdrop-blur-sm z-20 hidden">
+                             <div class="text-[10px] font-bold text-slate-500">Samples: <span id="${pf}sample-count">0</span></div>
+                             <div class="text-lg font-bold text-slate-800">SE: <span id="${pf}se-val">0.00</span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sim Concepts (Hidden in Challenge) -->
+                    <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-slate-600 flex-none ${isChallenge ? 'hidden' : ''}">
+                         <div class="bg-white p-2 rounded border border-slate-200">
+                           <strong class="block text-slate-800 mb-1">Key Concepts</strong>
+                           Top graph = <span class="font-bold text-blue-600">Population</span>. <br>
+                           When we take a sample, extremes cancel out, so the average lands near the middle.
+                         </div>
+                         <div class="bg-white p-2 rounded border border-slate-200">
+                           <strong class="block text-slate-800 mb-1">"Tiny Spike" Effect</strong>
+                           n=2: Bottom pile is wide. <br>
+                           n=25: Bottom pile is a sharp spike (Low SE, High Precision).
+                         </div>
+                    </div>
+                </div>
+                `;
+
+                // Logic
+                const CONFIG = {
+                    cats: { min: 2, max: 18, mean: 10, sd: 2.5, color: 'bg-blue-500', sColor: 'bg-orange-500' },
+                    audit: { min: 0, max: 300, mean: 150, sd: 45, color: 'bg-emerald-500', sColor: 'bg-indigo-500' }
+                };
+                
+                let mode = isChallenge ? 'audit' : 'cats';
+                let population = [];
+                let sampleMeans = [];
+                let isAnimating = false;
+                let sampleSize = 5;
+
+                // Gaussian Random
+                const randn = (mu, sigma) => {
+                    let u = 0, v = 0;
+                    while(u===0) u = Math.random(); while(v===0) v = Math.random();
+                    return (Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)) * sigma + mu;
+                };
+
+                const initPop = () => {
+                    population = [];
+                    const cfg = CONFIG[mode];
+                    for(let i=0; i<150; i++) {
+                        population.push({
+                            id: i,
+                            val: randn(cfg.mean, cfg.sd),
+                            y: Math.random() * 80 + 10
+                        });
+                    }
+                    renderPop();
+                    sampleMeans = [];
+                    document.getElementById(`${pf}pile-container`).innerHTML = ''; // Reset pile
+                    document.getElementById(`${pf}stats-overlay`).classList.add('hidden');
+                };
+
+                const getPos = (val) => {
+                    const cfg = CONFIG[mode];
+                    return Math.max(0, Math.min(100, ((val - cfg.min) / (cfg.max - cfg.min)) * 100));
+                };
+
+                const renderPop = () => {
+                    const container = document.getElementById(`${pf}pop-container`);
+                    const cfg = CONFIG[mode];
+                    container.innerHTML = population.map(p => 
+                        `<div id="${pf}dot-${p.id}" class="absolute w-1.5 h-1.5 rounded-full ${cfg.color} opacity-40 sim-dot" style="left:${getPos(p.val)}%; top:${p.y}%; transform:translate(-50%, -50%)"></div>`
+                    ).join('');
+                    
+                    document.getElementById(`${pf}label-min`).textContent = cfg.min;
+                    document.getElementById(`${pf}label-mid`).textContent = (cfg.min+cfg.max)/2;
+                    document.getElementById(`${pf}label-max`).textContent = cfg.max;
+                };
+
+                // Add a single dot to pile
+                const addDotToPile = (mean) => {
+                    const container = document.getElementById(`${pf}pile-container`);
+                    const cfg = CONFIG[mode];
+                    const binWidth = (cfg.max - cfg.min) / 50;
+                    
+                    const bins = {};
+                    sampleMeans.forEach(m => {
+                        const b = Math.floor((m - cfg.min) / binWidth);
+                        bins[b] = (bins[b] || 0) + 1;
+                    });
+                    
+                    const myBin = Math.floor((mean - cfg.min) / binWidth);
+                    const heightIdx = bins[myBin];
+
+                    const dot = document.createElement('div');
+                    dot.className = `absolute w-2.5 h-2.5 rounded-full border border-white shadow-sm ${cfg.sColor} pile-dot`;
+                    dot.style.left = getPos(mean) + '%';
+                    dot.style.bottom = ((heightIdx * 8) + 15) + 'px';
+                    dot.style.transform = 'translate(-50%,0)';
+                    container.appendChild(dot);
+
+                    // Update stats
+                    const meanOfMeans = sampleMeans.reduce((a,b)=>a+b,0)/sampleMeans.length;
+                    const se = Math.sqrt(sampleMeans.reduce((a,b)=>a+Math.pow(b-meanOfMeans,2),0)/sampleMeans.length);
+                    document.getElementById(`${pf}stats-overlay`).classList.remove('hidden');
+                    document.getElementById(`${pf}sample-count`).textContent = sampleMeans.length;
+                    document.getElementById(`${pf}se-val`).textContent = se.toFixed(2);
+                };
+
+                const runSim = (fast = false) => {
+                    if(isAnimating) return;
+                    isAnimating = true;
+                    const count = fast ? 50 : 1;
+                    const delay = fast ? 5 : 600; // Fast mode delay reduced for dynamic dropping
+                    const cfg = CONFIG[mode];
+                    
+                    let i = 0;
+                    const step = () => {
+                        const indices = [];
+                        const vals = [];
+                        for(let k=0; k<sampleSize; k++) {
+                            const idx = Math.floor(Math.random() * population.length);
+                            indices.push(idx);
+                            vals.push(population[idx].val);
+                        }
+                        const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
+
+                        // Visuals (Only for slow mode or last step of fast)
+                        if(!fast) {
+                             // Highlight pop dots
+                             indices.forEach(idx => {
+                                 const el = document.getElementById(`${pf}dot-${idx}`);
+                                 if(el) {
+                                     el.classList.add('scale-[2.5]', 'z-20', 'ring-2', 'ring-white', 'opacity-100', cfg.sColor.replace('bg-', '!bg-'));
+                                     el.classList.remove(cfg.color);
+                                 }
+                             });
+                             const gm = document.getElementById(`${pf}ghost-mean`);
+                             gm.style.left = getPos(mean) + '%';
+                             gm.classList.remove('opacity-0');
+                             
+                             const dl = document.getElementById(`${pf}drop-line`);
+                             dl.style.left = getPos(mean) + '%';
+                             dl.style.animation = 'none';
+                             void dl.offsetWidth; 
+                             dl.style.animation = 'dropDown 0.5s ease-in forwards';
+                             dl.classList.remove('opacity-0');
+                             dl.className = `absolute top-0 h-full w-0.5 ${cfg.sColor} drop-line`;
+                        }
+
+                        setTimeout(() => {
+                            if(!fast) {
+                                indices.forEach(idx => {
+                                    const el = document.getElementById(`${pf}dot-${idx}`);
+                                    if(el) {
+                                        el.classList.remove('scale-[2.5]', 'z-20', 'ring-2', 'ring-white', 'opacity-100', cfg.sColor.replace('bg-', '!bg-'));
+                                        el.classList.add(cfg.color);
+                                    }
+                                });
+                                document.getElementById(`${pf}ghost-mean`).classList.add('opacity-0');
+                            }
+                            
+                            sampleMeans.push(mean);
+                            addDotToPile(mean); // Animate dots individually even in fast mode
+                            
+                            i++;
+                            if(i < count) {
+                                setTimeout(step, delay); // Use timeout for recursion to allow UI updates
+                            } else {
+                                isAnimating = false;
+                            }
+                        }, delay);
+                    };
+                    step();
+                };
+
+                const btnCats = document.getElementById(`${pf}mode-cats`);
+                if(btnCats) btnCats.onclick = () => {
+                    mode = 'cats';
+                    document.getElementById(`${pf}mode-cats`).className = "px-3 py-1.5 rounded-md text-xs font-bold transition-colors bg-white shadow text-blue-600";
+                    document.getElementById(`${pf}mode-audit`).className = "px-3 py-1.5 rounded-md text-xs font-bold transition-colors text-slate-400";
+                    initPop();
+                };
+                
+                const btnAudit = document.getElementById(`${pf}mode-audit`);
+                if(btnAudit) btnAudit.onclick = () => {
+                    mode = 'audit';
+                    document.getElementById(`${pf}mode-audit`).className = "px-3 py-1.5 rounded-md text-xs font-bold transition-colors bg-white shadow text-emerald-600";
+                    document.getElementById(`${pf}mode-cats`).className = "px-3 py-1.5 rounded-md text-xs font-bold transition-colors text-slate-400";
+                    initPop();
+                };
+
+                document.getElementById(`${pf}sim-n-slider`).oninput = (e) => {
+                    sampleSize = parseInt(e.target.value);
+                    document.getElementById(`${pf}n-val-display`).textContent = sampleSize;
+                    initPop(); // Clear on change n
+                };
+                document.getElementById(`${pf}sim-reset-btn`).onclick = () => initPop();
+                document.getElementById(`${pf}sim-draw-btn`).onclick = () => runSim(false);
+                document.getElementById(`${pf}sim-fast-btn`).onclick = () => runSim(true);
+
+                initPop();
             }
         };
 
@@ -800,7 +1291,8 @@
             }
         };
 
-        // --- Main Data Array (Reordered) ---
+        // --- Main Data Array ---
+        // Reordered P-Values and Regression as requested
         const scenarios = [
              {
                 topic: "Variable Types",
@@ -826,6 +1318,17 @@
                             { text: "Qualitative Nominal", correct: true, feedback: "Correct! Names are categories (Qualitative) with no inherent mathematical order (Nominal)." },
                             { text: "Qualitative Ordinal", correct: false, feedback: "Incorrect. Is 'Amazon' greater than 'Delta'? No." },
                             { text: "Quantitative", correct: false, feedback: "Incorrect. You cannot do math on names." }
+                        ]
+                    },
+                    {
+                        title: "Discrete vs Continuous 📏",
+                        desc: "<strong>Variable A:</strong> Number of stored laptops (e.g., 40). <br><strong>Variable B:</strong> Weight of scrap metal (e.g., 40.5 kg). <br><br>Classify these.",
+                        chartType: "none",
+                        customVisual: `<div class="flex justify-around items-center h-40 bg-white border border-slate-200 rounded-xl p-4"><div class="text-center"><div class="text-4xl mb-2">💻</div><div class="text-xs font-bold text-slate-500">Countable</div></div><div class="w-px h-20 bg-slate-200"></div><div class="text-center"><div class="text-4xl mb-2">⚖️</div><div class="text-xs font-bold text-slate-500">Measurable</div></div></div>`,
+                        options: [
+                            { text: "A: Continuous, B: Discrete", correct: false, feedback: "Incorrect. You can't have half a laptop (usually)." },
+                            { text: "A: Discrete, B: Continuous", correct: true, feedback: "Correct! Counts are integers (Discrete). Measurements like weight can have decimals (Continuous)." },
+                            { text: "Both are Continuous", correct: false, feedback: "Incorrect." }
                         ]
                     }
                 ]
@@ -903,28 +1406,26 @@
                     }
                 ]
             },
+            // Insert Benford's Law after Distributions
             {
-                topic: "Std Error & Confidence",
-                lesson: lessonStandardError,
+                topic: "Benford's Law",
+                lesson: lessonBenfordsLaw,
                 challenges: [
-                     {
-                        title: "Interpreting Precision 🎯",
-                        desc: "You estimate Payables error rate is 4%. <br><strong>Scenario A:</strong> SE = 0.5% (Confidence Interval: 3.5% - 4.5%) <br><strong>Scenario B:</strong> SE = 3.0% (Confidence Interval: 1.0% - 7.0%) <br><br>Which scenario gives you more comfort?",
-                        chartType: "none",
-                        customVisual: `<div class="p-6 bg-white border border-slate-200 rounded-xl text-center shadow-sm"><div class="text-sm font-bold text-slate-400 mb-4 uppercase tracking-widest">Confidence Interval Width</div><div class="relative h-16 w-full bg-slate-100 rounded-lg overflow-hidden"><div class="absolute top-3 left-[45%] w-[10%] h-4 bg-emerald-400 rounded shadow-md text-[8px] text-white flex items-center justify-center font-bold">A</div><div class="absolute top-9 left-[15%] w-[70%] h-4 bg-red-400 rounded shadow-md text-[8px] text-white flex items-center justify-center font-bold">B</div></div></div>`,
-                        options: [
-                            { text: "Scenario A (Low SE)", correct: true, feedback: "Correct! Low Standard Error means your estimate is precise. The variability is small." },
-                            { text: "Scenario B (High SE)", correct: false, feedback: "Incorrect. High SE means your estimate is unreliable." }
-                        ]
-                    },
                     {
-                        title: "Narrowing the Range 📏",
-                        desc: "You calculated a Confidence Interval of 4% ± 10% (0% to 14%). The partner says this range is too wide to be useful. How do you narrow it?",
+                        title: "Vendor Fraud Check 🚩",
+                        desc: "You analyze 5,000 vendor invoices. <br><strong>Expected (Benford):</strong> 30% start with '1'. <br><strong>Actual:</strong> 12% start with '1', and 40% start with '4'. <br><br>What does this suggest?",
                         chartType: "none",
-                        customVisual: `<div class="p-6 bg-white border border-slate-200 rounded-xl text-center"><div class="text-xl font-mono text-slate-600 mb-2">Width = 14%</div><div class="w-full h-2 bg-slate-200 rounded overflow-hidden"><div class="h-full bg-orange-400 w-full animate-pulse"></div></div><p class="text-xs text-slate-400 mt-2">Too wide!</p></div>`,
+                        customVisual: `<div class="w-full h-40 bg-white border border-slate-200 rounded-xl flex items-end justify-center p-4 gap-2">
+                            <div class="w-8 bg-indigo-200 h-[30%] rounded-t relative group"><span class="absolute -top-4 left-1 text-[8px]">Exp</span></div>
+                            <div class="w-8 bg-red-400 h-[12%] rounded-t relative group"><span class="absolute -top-4 left-1 text-[8px] font-bold">1</span></div>
+                            <div class="w-8"></div>
+                            <div class="w-8 bg-indigo-200 h-[10%] rounded-t relative group"><span class="absolute -top-4 left-1 text-[8px]">Exp</span></div>
+                            <div class="w-8 bg-red-400 h-[40%] rounded-t relative group"><span class="absolute -top-4 left-1 text-[8px] font-bold">4</span></div>
+                        </div>`,
                         options: [
-                            { text: "Increase Sample Size", correct: true, feedback: "Correct! Larger samples reduce the Standard Error (the wobble), making the interval tighter." },
-                            { text: "Decrease Sample Size", correct: false, feedback: "Incorrect. Fewer samples would make the interval even wider." }
+                            { text: "Normal Variance", correct: false, feedback: "Incorrect. These deviations are huge." },
+                            { text: "Data Manipulation / Fraud Risk", correct: true, feedback: "Correct! A spike at '4' and dip at '1' is highly suspicious and unnatural." },
+                            { text: "The data set is too small", correct: false, feedback: "Incorrect. 5,000 is plenty for Benford Analysis." }
                         ]
                     }
                 ]
@@ -947,13 +1448,14 @@
                     }
                 ]
             },
+            // Combined Regression Module (Moved Before P-Values)
             {
-                topic: "Linear Regression",
-                lesson: lessonLinearRegression,
+                topic: "Regression Analysis",
+                lesson: lessonRegression,
                 challenges: [
                     {
-                        title: "Payroll Prediction 👷",
-                        desc: "Regression: Expense = $60k * (Headcount) + $2.0M. <br>What does '$60k' represent?",
+                        title: "Payroll Prediction (Linear) 👷",
+                        desc: "Regression: Expense = $2.0M + $60k * (Headcount). <br>What does '$60k' represent?",
                         chartType: "scatter",
                         xAxisLabel: "Headcount",
                         yAxisLabel: "Expense ($)",
@@ -964,15 +1466,9 @@
                             { text: "Fixed Costs", correct: false, feedback: "Incorrect. Fixed costs are the Intercept ($2.0M)." },
                             { text: "Total Expense", correct: false, feedback: "Incorrect. That's the output (Y)." }
                         ]
-                    }
-                ]
-            },
-            {
-                topic: "Multiple Regression",
-                lesson: lessonMultipleRegression,
-                challenges: [
+                    },
                     {
-                        title: "COGS Analysis 🏭",
+                        title: "COGS Analysis (Multiple) 🏭",
                         desc: "Regression Coefficients: <br>Units Sold: +$50 <br>Oil Price: +$200 <br>Efficiency Upgrade: -$5,000. <br><br>What was the financial impact of the Upgrade?",
                         chartType: "none",
                         customVisual: `<div class="font-mono bg-slate-900 text-white p-6 rounded-2xl shadow-xl text-sm"><span class="text-slate-400">COGS = </span><br><span class="text-blue-400">(50 * Units)</span> + <br><span class="text-orange-400">(200 * Oil)</span> + <br><span class="text-red-400">(-5000 * Upgrade)</span></div>`,
@@ -984,6 +1480,7 @@
                     }
                 ]
             },
+            // P-Values (Moved After Regression)
             {
                 topic: "P-Values",
                 lesson: lessonPValues,
@@ -1011,17 +1508,48 @@
                 ]
             },
             {
-                topic: "Type I & II Errors",
-                lesson: lessonTypeErrors,
+                topic: "Std Error & Confidence",
+                lesson: lessonStandardError,
                 challenges: [
-                     {
-                        title: "The Lawsuit Scenario ⚖️",
-                        desc: "You signed off on a clean audit. <br>Six months later, $5M fraud was found. <br><br>Which error did you commit?",
+                      {
+                        title: "Interpreting Precision 🎯",
+                        desc: "You estimate Payables error rate is 4%. <br><strong>Scenario A:</strong> SE = 0.5% (Confidence Interval: 3.5% - 4.5%) <br><strong>Scenario B:</strong> SE = 3.0% (Confidence Interval: 1.0% - 7.0%) <br><br>Which scenario gives you more comfort?",
                         chartType: "none",
-                        customVisual: `<div class="p-8 bg-white border-2 border-red-100 rounded-2xl text-center shadow-lg"><i class="fa-solid fa-gavel text-6xl text-slate-200 mb-4 block"></i><div class="text-2xl font-black text-slate-800">AUDIT FAILURE</div></div>`,
+                        customVisual: `<div class="p-6 bg-white border border-slate-200 rounded-xl text-center shadow-sm"><div class="text-sm font-bold text-slate-400 mb-4 uppercase tracking-widest">Confidence Interval Width</div><div class="relative h-16 w-full bg-slate-100 rounded-lg overflow-hidden"><div class="absolute top-3 left-[45%] w-[10%] h-4 bg-emerald-400 rounded shadow-md text-[8px] text-white flex items-center justify-center font-bold">A</div><div class="absolute top-9 left-[15%] w-[70%] h-4 bg-red-400 rounded shadow-md text-[8px] text-white flex items-center justify-center font-bold">B</div></div></div>`,
                         options: [
-                            { text: "Type I Error (Efficiency)", correct: false, feedback: "Incorrect. Type I means you did too much work for nothing." },
-                            { text: "Type II Error (Effectiveness)", correct: true, feedback: "Correct! You accepted a bad population. This leads to lawsuits." }
+                            { text: "Scenario A (Low SE)", correct: true, feedback: "Correct! Low Standard Error means your estimate is precise. The variability is small." },
+                            { text: "Scenario B (High SE)", correct: false, feedback: "Incorrect. High SE means your estimate is unreliable." }
+                        ]
+                    },
+                    {
+                        title: "Narrowing the Range 📏",
+                        desc: "You calculated a Confidence Interval of 4% ± 10% (0% to 14%). The partner says this range is too wide to be useful. How do you narrow it?",
+                        chartType: "none",
+                        customVisual: `<div class="p-6 bg-white border border-slate-200 rounded-xl text-center"><div class="text-xl font-mono text-slate-600 mb-2">Width = 14%</div><div class="w-full h-2 bg-slate-200 rounded overflow-hidden"><div class="h-full bg-orange-400 w-full animate-pulse"></div></div><p class="text-xs text-slate-400 mt-2">Too wide!</p></div>`,
+                        options: [
+                            { text: "Increase Sample Size", correct: true, feedback: "Correct! Larger samples reduce the Standard Error (the wobble), making the interval tighter." },
+                            { text: "Decrease Sample Size", correct: false, feedback: "Incorrect. Fewer samples would make the interval even wider." }
+                        ]
+                    }
+                ]
+            },
+            // Separate Simulation Module
+            {
+                topic: "Sampling Lab",
+                lesson: lessonSimulation,
+                challenges: [
+                    {
+                        title: "Lab Question: Effect of N 🔬",
+                        desc: "<strong>Run the simulation</strong> with n=2, then with n=25. <br><br>What happens to the pile of sample means (the sampling distribution) as 'n' increases?",
+                        chartType: "none",
+                        customVisual: `<div id="sim-challenge-container" class="w-full h-full relative"></div>`,
+                        renderCustom: () => {
+                            // Cloning the interactive into the challenge view
+                            lessonSimulation.renderInteractive(document.getElementById('sim-challenge-container'), true);
+                        },
+                        options: [
+                            { text: "It gets wider (More Error)", correct: false, feedback: "Incorrect. Larger samples cancel out extremes." },
+                            { text: "It gets narrower (Less Error)", correct: true, feedback: "Correct! The 'Law of Large Numbers' creates a tight spike. This is why auditors want larger samples." }
                         ]
                     }
                 ]
@@ -1035,7 +1563,7 @@
                         desc: "You are analyzing 'User Login Locations' for Netflix to find password sharers. <br><br><strong>Cluster A:</strong> Home (0km, High Freq). <br><strong>Cluster B:</strong> Commute (10km, Med Freq). <br><strong>Cluster C:</strong> 5000km away, High Freq (simultaneous with Home). <br><br>Which is the suspicious activity?",
                         chartType: "none",
                         customVisual: `<div class="relative w-full h-64 bg-white border border-slate-200 rounded-2xl flex items-center justify-center shadow-sm"><canvas id="jeClusterChart" width="400" height="250"></canvas><div class="absolute bottom-2 right-2 text-xs text-slate-400 font-bold">X: Distance | Y: Frequency</div></div>`,
-                        renderCustom: () => {
+                        renderCustom: () => { 
                             const cvs = document.getElementById('jeClusterChart');
                             if(!cvs) return;
                             const ctx = cvs.getContext('2d');
@@ -1055,8 +1583,8 @@
                         },
                         options: [
                             { text: "Cluster A", correct: false, feedback: "No, that looks like standard home usage." },
-                            { text: "Cluster C", correct: true, feedback: "Correct! High usage from a massive distance suggests account sharing or a hacked account." },
-                            { text: "Cluster B", correct: false, feedback: "No, that looks like a standard commute/work location." }
+                            { text: "Cluster B", correct: false, feedback: "No, that looks like a standard commute/work location." },
+                            { text: "Cluster C", correct: true, feedback: "Correct! High usage from a massive distance suggests account sharing or a hacked account." }
                         ]
                     }
                 ]
@@ -1068,8 +1596,13 @@
             list.innerHTML = '';
             scenarios.forEach((s, i) => {
                 const item = document.createElement('div');
-                item.className = "cursor-pointer p-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center mb-1 group";
-                item.innerHTML = `<span class="w-6 h-6 rounded-lg bg-slate-100 text-[10px] flex items-center justify-center mr-3 text-slate-400 group-hover:bg-indigo-200 group-hover:text-indigo-700 transition-colors">${i+1}</span> ${s.topic}`;
+                item.className = "cursor-pointer p-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all flex items-center mb-1 group overflow-hidden whitespace-nowrap";
+                
+                // Foldable logic inside the item
+                const badge = `<span class="w-6 h-6 rounded-lg bg-slate-100 text-[10px] flex-none flex items-center justify-center mr-3 text-slate-400 group-hover:bg-indigo-200 group-hover:text-indigo-700 transition-colors">${i+1}</span>`;
+                const text = `<span class="transition-opacity duration-200 ${state.sidebarOpen ? 'opacity-100' : 'opacity-0 hidden'}">${s.topic}</span>`;
+                
+                item.innerHTML = badge + text;
                 item.id = `nav-item-${i}`;
                 item.onclick = () => jumpToLevel(i);
                 list.appendChild(item);
@@ -1078,6 +1611,51 @@
             scenarios.forEach(s => total += s.challenges.length);
             state.totalPossibleScore = total;
             document.getElementById('progress-display').textContent = `1/${scenarios.length}`;
+        }
+
+        // --- Resizable Panel Logic ---
+        function initResizer() {
+            const resizer = document.getElementById('lesson-resizer');
+            const leftSide = document.getElementById('lesson-left-panel');
+            const rightSide = document.getElementById('lesson-right-panel');
+            const container = document.getElementById('lesson-container');
+
+            let x = 0;
+            let leftWidth = 0;
+
+            const mouseMoveHandler = function(e) {
+                const dx = e.clientX - x;
+                const containerWidth = container.getBoundingClientRect().width;
+                const newLeftWidth = ((leftWidth + dx) * 100) / containerWidth;
+                
+                // Constraints
+                if(newLeftWidth < 20 || newLeftWidth > 80) return;
+
+                leftSide.style.width = `${newLeftWidth}%`;
+                leftSide.style.flex = `0 0 ${newLeftWidth}%`;
+            };
+
+            const mouseUpHandler = function() {
+                document.removeEventListener('mousemove', mouseMoveHandler);
+                document.removeEventListener('mouseup', mouseUpHandler);
+                resizer.classList.remove('bg-indigo-200');
+                // Re-enable pointer events on iframes if you had any
+                document.body.style.cursor = 'default';
+                document.body.style.userSelect = '';
+            };
+
+            const mouseDownHandler = function(e) {
+                x = e.clientX;
+                leftWidth = leftSide.getBoundingClientRect().width;
+
+                document.addEventListener('mousemove', mouseMoveHandler);
+                document.addEventListener('mouseup', mouseUpHandler);
+                resizer.classList.add('bg-indigo-200');
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none'; // Prevent text selection
+            };
+
+            resizer.addEventListener('mousedown', mouseDownHandler);
         }
 
         // ... (Remaining Logic Functions mostly unchanged, just referencing new structure) ...
@@ -1141,6 +1719,9 @@
             document.getElementById('phase-display').textContent = "Learning Phase";
             document.getElementById('progress-display').textContent = `${index + 1}/${scenarios.length}`;
             
+            // Clean up potentially persistent hooks from previous modules (e.g., Regression)
+            window.updateRegressionInteractive = null;
+
             const data = scenarios[index].lesson;
             state.maxLessonSlides = data.slides.length;
             document.getElementById('lesson-title').textContent = data.title;
@@ -1171,6 +1752,9 @@
             prevBtn.disabled = state.lessonSlide === 0;
             prevBtn.classList.toggle('opacity-30', state.lessonSlide === 0);
             
+            // Hook for complex interactives that need slide awareness (Regression)
+            if(window.updateRegressionInteractive) window.updateRegressionInteractive(state.lessonSlide);
+
             attachRevealHandlers(); // New util for click reveals
         }
 
@@ -1194,6 +1778,8 @@
                 }
                 document.getElementById('lesson-step-counter').textContent = `${state.lessonSlide + 1}/${state.maxLessonSlides}`;
                 document.getElementById('lesson-next-btn').classList.remove('hidden');
+                
+                if(window.updateRegressionInteractive) window.updateRegressionInteractive(state.lessonSlide);
                 attachRevealHandlers();
             }
         }
@@ -1357,7 +1943,10 @@
             initSidebar();
         }
 
-        window.onload = () => initSidebar();
+        window.onload = () => {
+            initSidebar();
+            initResizer(); // Initialize the resizable splitter
+        };
     </script>
 </body>
 </html>
