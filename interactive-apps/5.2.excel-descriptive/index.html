@@ -736,13 +736,16 @@
                 content: `
                     <div class="bg-indigo-50 border-l-4 border-indigo-600 p-6 shadow-sm">
                         <h3 class="text-2xl font-bold text-indigo-900 mb-2">Data Analyst Certification</h3>
-                        <p class="text-indigo-800 mb-4">You have been provided with raw sales data from a retail chain. Your task is to analyze performance and distribution.</p>
+                        <p class="text-indigo-800 mb-4">You have been provided with raw data from a retail chain and a manufacturing plant. Your task is to analyze performance and distribution.</p>
                         
                         <div class="bg-white p-4 rounded border border-indigo-200 text-sm space-y-3 mb-6">
+                            <p class="font-bold text-slate-800 border-b pb-1">PART A: Retail Sales (Sheet 1)</p>
                             <p><strong>Task 1:</strong> Use Descriptive Statistics on the 'Daily Sales' column. Identify the Mean and Skewness.</p>
                             <p><strong>Task 2:</strong> Create a Histogram for 'Customer Age' using bins of 10 years (20, 30, 40...).</p>
                             <p><strong>Task 3:</strong> Create a Box & Whisker plot for 'Profit Margin' to identify underperforming stores (outliers).</p>
-                            <p><strong>Task 4:</strong> Run a Regression to predict 'Daily Sales' (Y) based on 'Ad Spend' (X). What is the R Square?</p>
+                            
+                            <p class="font-bold text-slate-800 border-b pb-1 mt-4">PART B: Factory Efficiency (Sheet 2)</p>
+                            <p><strong>Task 4:</strong> Run a Regression to predict 'Energy Cost' (Y) based on 'Machine Uptime Hours' (X) using the 60 data points provided.</p>
                         </div>
 
                         <button onclick="downloadCapstone()" class="w-full md:w-auto px-6 py-3 bg-indigo-700 hover:bg-indigo-800 text-white rounded-lg shadow font-bold flex justify-center items-center gap-2 transition-transform hover:-translate-y-1">
@@ -763,6 +766,15 @@
             loadItem(0);
             animateConfetti();
         }
+        
+        // --- ADDED MISSING NAVIGATION FUNCTION ---
+        window.nextItem = function() {
+            if (currentIndex < sequence.length - 1) {
+                loadItem(currentIndex + 1);
+            } else {
+                alert("This is the last module!");
+            }
+        };
 
         function renderModuleList() {
             const list = document.getElementById('module-list');
@@ -1055,7 +1067,7 @@
                 ["C010", 41, ""]
             ];
 
-            // Sheet 3: Regression Data (NEW)
+            // Sheet 3: Regression Data
             const regData = [
                 ["Month", "Ad Spend (X)", "Sales (Y)"],
                 ["Jan", 1000, 15000],
@@ -1083,28 +1095,60 @@
         }
 
         function downloadCapstone() {
-            // Sheet 1: Raw Sales Data
+            // Sheet 1: Raw Sales Data (Small dataset for Desc Stats/Boxplot)
             const rawData = [
-                ["Date", "Store", "Daily Sales", "Profit Margin", "Customer Age", "Ad Spend"],
-                ["2024-01-01", "North", 1200, 0.15, 34, 100],
-                ["2024-01-01", "South", 950, 0.12, 22, 80],
-                ["2024-01-01", "East", 2100, 0.18, 45, 150],
-                ["2024-01-02", "North", 1150, 0.14, 31, 95],
-                ["2024-01-02", "South", 800, 0.10, 19, 75],
-                ["2024-01-02", "East", 2200, 0.19, 52, 160],
-                ["2024-01-03", "North", 1300, 0.16, 28, 110],
-                ["2024-01-03", "South", 200, -0.05, 21, 50], // Outlier
-                ["2024-01-03", "East", 2050, 0.17, 48, 145],
-                ["", "", "", "", "", ""],
-                ["Instructions:", "1. Run Descriptive Stats on 'Daily Sales'.", "", "", "", ""],
-                ["", "2. Create a Histogram for 'Customer Age'.", "", "", "", ""],
-                ["", "3. Create Boxplot for 'Profit Margin' to find the outlier.", "", "", "", ""],
-                ["", "4. Run Regression to predict 'Daily Sales' using 'Ad Spend'.", "", "", "", ""]
+                ["Date", "Store", "Daily Sales", "Profit Margin", "Customer Age"],
+                ["2024-01-01", "North", 1200, 0.15, 34],
+                ["2024-01-01", "South", 950, 0.12, 22],
+                ["2024-01-01", "East", 2100, 0.18, 45],
+                ["2024-01-02", "North", 1150, 0.14, 31],
+                ["2024-01-02", "South", 800, 0.10, 19],
+                ["2024-01-02", "East", 2200, 0.19, 52],
+                ["2024-01-03", "North", 1300, 0.16, 28],
+                ["2024-01-03", "South", 200, -0.05, 21], // Outlier
+                ["2024-01-03", "East", 2050, 0.17, 48],
+                ["", "", "", "", ""],
+                ["Instructions:", "Part A: Retail Analysis", "", "", ""],
+                ["", "1. Run Descriptive Stats on 'Daily Sales'.", "", "", ""],
+                ["", "2. Create a Histogram for 'Customer Age'.", "", "", ""],
+                ["", "3. Create Boxplot for 'Profit Margin' to find the outlier.", "", "", ""]
             ];
+
+            // Sheet 2: Factory Efficiency (Regression Challenge - 60 Data Points)
+            const factoryData = [
+                ["Month_Index", "Machine_Uptime_Hours (X)", "Energy_Cost_USD (Y)"]
+            ];
+
+            // Generate 60 months of data (5 years)
+            // Logic: Base Cost ($500) + (Uptime * $15/hr) + Random Noise
+            for (let i = 1; i <= 60; i++) {
+                // Random Uptime between 200 and 400 hours
+                const uptime = Math.floor(Math.random() * (400 - 200 + 1)) + 200;
+                
+                // Linear relationship with some noise
+                // Cost = 500 (Fixed) + (Uptime * 15) + Noise(-200 to +200)
+                const noise = Math.floor(Math.random() * 401) - 200;
+                const cost = 500 + (uptime * 15) + noise;
+
+                factoryData.push([i, uptime, cost]);
+            }
+            // Add outlier for educational purposes
+            factoryData.push([61, 300, 12000]); // Huge cost spike, same hours (Machine malfunction?)
+
+            // Instruction Row for Sheet 2
+            factoryData.push([]);
+            factoryData.push(["Instructions:", "Part B: Regression Analysis"]);
+            factoryData.push(["", "1. Run Regression with Energy Cost as Y and Uptime as X."]);
+            factoryData.push(["", "2. Determine the R-Square value to see how well Uptime predicts Cost."]);
+
 
             const wb = XLSX.utils.book_new();
             const ws1 = XLSX.utils.aoa_to_sheet(rawData);
-            XLSX.utils.book_append_sheet(wb, ws1, "Capstone_Raw_Data");
+            const ws2 = XLSX.utils.aoa_to_sheet(factoryData);
+            
+            XLSX.utils.book_append_sheet(wb, ws1, "Retail_Data");
+            XLSX.utils.book_append_sheet(wb, ws2, "Regression_Challenge_Data");
+            
             XLSX.writeFile(wb, "Data_Analysis_Capstone.xlsx");
         }
 
