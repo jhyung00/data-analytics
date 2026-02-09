@@ -533,7 +533,7 @@
                 `<div class="flex items-center gap-4 mb-4 bg-yellow-50 p-4 rounded-xl border border-yellow-200 animate-pulse"><span class="text-4xl">🚁</span><div><p class="font-bold text-yellow-800 uppercase text-xs">Alert</p><p class="font-bold">ENTER BILL GATES!</p></div></div><p>Suddenly, a billionaire walks in. He earns <strong>$50,000,000/year</strong>.</p>`,
                 `<div class="bg-red-50 p-4 rounded-xl border-l-4 border-red-500 mb-4 shadow-sm"><p class="font-bold text-red-700 text-lg">Mean jumps to $5M!</p><p class="text-sm text-red-600 mt-1">Does everyone feel richer? <span class="blur-reveal">No. The Mean is lying.</span></p></div>`,
                 `<div class="bg-emerald-50 p-4 rounded-xl border-l-4 border-emerald-500 mb-4 shadow-sm"><p class="font-bold text-emerald-700 text-lg">Solution: The Median</p><p class="text-sm text-emerald-600 mt-1">The middle value. Even with Bill Gates, the median stays around <span class="blur-reveal">$50k</span>. It resists outliers.</p></div>`,
-                `<div class="bg-indigo-50 p-4 rounded-xl border-l-4 border-indigo-500 mb-4 shadow-sm"><p class="font-bold text-indigo-700 text-lg">Definition: The Mode</p><p class="text-sm text-indigo-600 mt-1">The most frequently occurring value in a dataset.</p></div>`
+                `<div class="bg-indigo-50 p-4 rounded-xl border-l-4 border-indigo-500 mb-4 shadow-sm"><p class="font-bold text-indigo-700 text-lg">Definition: The Mode</p><p class="text-sm text-indigo-600 mt-1">The most frequently occurring value in a dataset. In this example, it is $46k.</p></div>`
             ],
             renderInteractive: (container) => {
                 // Unified interactive view
@@ -677,7 +677,9 @@
                     const lbl = document.getElementById('curve-label');
                     
                     let peakX = w * 0.5;
-                    let cp1x, cp1y, cp2x, cp2y;
+                    
+                    // Positions for Mean, Median, Mode Lines
+                    let meanX, medianX, modeX;
 
                     ctx.beginPath();
                     ctx.moveTo(10, h-10);
@@ -690,16 +692,25 @@
                             const y = (h-10) - (Math.exp(-0.5 * normalized * normalized) * (h * 0.8));
                             ctx.lineTo(x, y);
                         }
+                        meanX = medianX = modeX = peakX;
                     } else if (type === 'pos') {
                         lbl.textContent = "Positive Skew (Tail Right)";
                         peakX = w * 0.3;
                         ctx.bezierCurveTo(peakX - 30, h-10, peakX - 20, 20, peakX, 20); // Up to peak left
                         ctx.bezierCurveTo(peakX + 50, 20, w * 0.8, h-30, w-10, h-10); // Long tail right
+                        
+                        modeX = peakX;
+                        medianX = w * 0.45;
+                        meanX = w * 0.6;
                     } else {
                         lbl.textContent = "Negative Skew (Tail Left)";
                         peakX = w * 0.7;
                         ctx.bezierCurveTo(w*0.2, h-30, peakX - 50, 20, peakX, 20); // Long tail left
                         ctx.bezierCurveTo(peakX + 20, 20, peakX + 30, h-10, w-10, h-10); // Down fast right
+                        
+                        modeX = peakX;
+                        medianX = w * 0.55;
+                        meanX = w * 0.4;
                     }
 
                     ctx.lineWidth = 3;
@@ -711,6 +722,34 @@
                     ctx.lineTo(10, h-10);
                     ctx.fillStyle = type === 'normal' ? "rgba(59, 130, 246, 0.1)" : type === 'pos' ? "rgba(239, 68, 68, 0.1)" : "rgba(168, 85, 247, 0.1)";
                     ctx.fill();
+
+                    // Function to draw distinct lines
+                    const drawLine = (x, label, color, heightPct) => {
+                        ctx.beginPath();
+                        ctx.moveTo(x, h - 10);
+                        ctx.lineTo(x, h - (h * heightPct));
+                        ctx.strokeStyle = color;
+                        ctx.setLineDash([4, 4]);
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+
+                        // Label
+                        ctx.fillStyle = color;
+                        ctx.font = "bold 10px sans-serif";
+                        ctx.textAlign = "center";
+                        ctx.fillText(label, x, h - (h * heightPct) - 5);
+                    };
+
+                    // Draw Lines
+                    if (type === 'normal') {
+                        // Draw single central line
+                        drawLine(peakX, "Mean = Med = Mode", "#2563eb", 0.9);
+                    } else {
+                        drawLine(modeX, "Mode", "#db2777", 0.85); // Pink
+                        drawLine(medianX, "Median", "#10b981", 0.65); // Emerald
+                        drawLine(meanX, "Mean", "#2563eb", 0.45); // Blue
+                    }
                 };
 
                 // Init
