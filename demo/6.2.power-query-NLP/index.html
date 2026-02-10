@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accounting Textual Analysis Lab | NLP & Sentiment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        /* 3D Book Engine */
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        
+        .perspective-container {
+            perspective: 2500px;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Responsive Book Dimensions */
+        .book {
+            position: relative;
+            width: 95vw;          /* Mobile width */
+            height: 85vh;         /* Mobile height */
+            max-width: 950px;     /* Desktop max width */
+            max-height: 700px;    /* Desktop max height */
+            transform-style: preserve-3d;
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.5s;
+        }
+
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 4px 16px 16px 4px;
+            transform-origin: left center;
+            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+            background-color: #fcfcfc;
+        }
+
+        .page.flipped {
+            transform: rotateY(-180deg);
+            pointer-events: none;
+        }
+        
+        /* Realistic Shadow Depth */
+        .page::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.02) 5%, transparent 10%);
+            pointer-events: none;
+        }
+
+        .paper-content {
+            font-family: 'Merriweather', serif;
+            color: #374151;
+            line-height: 1.7;
+            padding: 1.5rem; /* Mobile padding */
+            /* Flex layout to push buttons to bottom naturally */
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        /* Desktop Padding override */
+        @media (min-width: 768px) {
+            .paper-content {
+                padding: 3.5rem;
+                padding-bottom: 6rem;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .paper-content::-webkit-scrollbar { width: 6px; }
+        .paper-content::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
+
+        /* Data Blocks */
+        .mda-block {
+            background-color: #fff;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            font-family: 'Merriweather', serif;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        @media (min-width: 768px) {
+            .mda-block {
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Concept Cards for NLP */
+        .concept-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        @media (min-width: 768px) {
+            .concept-card {
+                padding: 1.25rem;
+                margin-bottom: 1.25rem;
+            }
+        }
+
+        /* Blurred Solution */
+        .blur-content {
+            filter: blur(8px);
+            user-select: none;
+            transition: filter 0.5s ease;
+        }
+        .blur-content.revealed {
+            filter: blur(0);
+            user-select: auto;
+        }
+        
+        /* Table Styling */
+        .dict-table th { background-color: #f8fafc; position: sticky; top: 0; }
+        .dict-table tr:nth-child(even) { background-color: #f8fafc; }
+
+        /* Navigation Buttons */
+        .nav-btn {
+            transition: all 0.2s;
+        }
+        .nav-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        /* Link styling */
+        .academic-link {
+            color: #4f46e5;
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 2px;
+        }
+        .academic-link:hover {
+            color: #4338ca;
+            text-decoration-thickness: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="perspective-container">
+    <div class="book" id="book">
+        
+        <!-- PAGE 1: COVER -->
+        <div class="page z-[70]" id="page-1">
+            <div class="paper-content relative">
+                <!-- Decorative background pattern -->
+                <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23000000\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+
+                <div class="flex-1 flex flex-col justify-center items-center text-center px-2">
+                    <div class="w-16 h-16 md:w-20 md:h-20 bg-indigo-900 rounded-lg flex items-center justify-center mb-6 md:mb-8 shadow-xl rotate-3 relative z-10">
+                        <i class="fa-solid fa-magnifying-glass-chart text-2xl md:text-3xl text-white"></i>
+                    </div>
+                    
+                    <h1 class="text-2xl md:text-4xl font-bold text-slate-900 mb-2 font-serif tracking-tight relative z-10">Textual Analysis & NLP</h1>
+                    <h2 class="text-sm md:text-lg text-indigo-600 font-semibold mb-6 md:mb-8 uppercase tracking-widest relative z-10">Accounting Lab Module 4.2</h2>
+                    
+                    <div class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-200 max-w-lg mx-auto text-left relative z-10 w-full">
+                        <p class="text-xs text-slate-400 uppercase font-bold mb-3">Case Study</p>
+                        <h3 class="text-lg md:text-xl font-bold text-slate-800 mb-2">Apex Global Logistics (AGL)</h3>
+                        <p class="text-slate-600 mb-4 text-sm leading-relaxed">
+                            In this lab, you will act as a forensic analyst. You must process unstructured MD&A data from 2024 and 2025 to detect shifts in corporate tone regarding AI implementation and supply chain risks using the <strong>Bag of Words</strong> technique.
+                        </p>
+                        <div class="flex gap-2 mt-4 flex-wrap">
+                            <span class="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded border border-slate-200">Fiscal 2024 vs 2025</span>
+                            <a href="https://sraf.nd.edu/loughranmcdonald-master-dictionary/" target="_blank" class="px-2 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs rounded border border-indigo-200 transition-colors">
+                                <i class="fa-solid fa-link mr-1"></i> Loughran-McDonald
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-8 flex justify-center relative z-10">
+                    <button onclick="nextPage()" class="bg-indigo-900 hover:bg-indigo-800 text-white px-8 py-3 rounded shadow-lg transition flex items-center gap-3 font-medium cursor-pointer">
+                        Open Lab Book
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 2: NLP THEORY -->
+        <div class="page z-[60]" id="page-2">
+            <div class="paper-content relative">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h3 class="text-xl md:text-2xl font-bold text-slate-800">Part 1: The Theory</h3>
+                    <span class="text-xs font-mono text-slate-400">01 / 07</span>
+                </div>
+
+                <div class="flex-1">
+                    <p class="text-sm text-slate-600 mb-6 leading-relaxed">
+                        Financial reports are composed of 80% unstructured text. <strong>Natural Language Processing (NLP)</strong> allows auditors to quantify qualitative risk disclosures that traditional financial ratios might miss.
+                    </p>
+
+                    <div class="concept-card border-l-4 border-l-blue-500 mb-4">
+                        <h4 class="font-sans font-bold text-slate-800 text-sm mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-scissors text-blue-500"></i> 1. Tokenization
+                        </h4>
+                        <p class="text-xs text-slate-600 mb-2 leading-relaxed">
+                            Computers cannot "read" paragraphs like humans do. <strong>Tokenization</strong> is the process of breaking a text stream into meaningful elements called tokens. In accounting, this transforms unstructured MD&A text into structured rows of data that can be analyzed.
+                        </p>
+                        <div class="bg-slate-100 p-2 rounded text-xs font-mono border border-slate-200 overflow-x-auto">
+                            <span class="text-slate-400">Raw:</span> "Sales fell." &nbsp;&rarr;&nbsp; <span class="text-blue-600">Tokens:</span> ["Sales", "fell", "."]
+                        </div>
+                    </div>
+
+                    <div class="concept-card border-l-4 border-l-red-500 mb-4">
+                        <h4 class="font-sans font-bold text-slate-800 text-sm mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-filter text-red-500"></i> 2. Stop Word Removal
+                        </h4>
+                        <p class="text-xs text-slate-600 mb-2 leading-relaxed">
+                            Common words (e.g., "the", "and", "is", "at") appear frequently but carry no financial sentiment. These are called <strong>Stop Words</strong>. We filter them out to increase the "signal-to-noise" ratio, allowing us to focus on words that impact value (e.g., "loss", "gain", "risk").
+                        </p>
+                    </div>
+
+                    <div class="concept-card border-l-4 border-l-indigo-500">
+                        <h4 class="font-sans font-bold text-slate-800 text-sm mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-sack-dollar text-indigo-500"></i> 3. Bag of Words (BoW)
+                        </h4>
+                        <p class="text-xs text-slate-600 mb-2 leading-relaxed">
+                            The <strong>Bag of Words</strong> model simplifies text by disregarding grammar and word order, treating the document as a "bag" of tokens. We simply count the frequency of positive vs. negative words against a domain-specific dictionary (like Loughran-McDonald).
+                        </p>
+                        <div class="bg-indigo-50 p-2 rounded text-xs border border-indigo-100 mt-2 text-indigo-800">
+                            <strong>Why it matters:</strong> Even without context, a high frequency of words like "litigation" or "impairment" in a 10-K strongly correlates with future financial distress.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-6 flex justify-end gap-2">
+                    <button onclick="prevPage()" class="nav-btn px-4 py-2 bg-white border border-slate-300 rounded text-sm hover:bg-slate-50 text-slate-600">Back</button>
+                    <button onclick="nextPage()" class="nav-btn px-4 py-2 bg-indigo-900 text-white rounded text-sm hover:bg-indigo-800 shadow">Next: Applied Logic</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 3 (NEW): APPLIED LOGIC & RESEARCH -->
+        <div class="page z-[50]" id="page-3">
+            <div class="paper-content relative">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h3 class="text-xl md:text-2xl font-bold text-slate-800">Part 1.5: Applied Logic</h3>
+                    <span class="text-xs font-mono text-slate-400">02 / 07</span>
+                </div>
+
+                <div class="flex-1">
+                    <!-- Calculation Example Section -->
+                    <div class="mb-8">
+                        <h4 class="font-bold text-slate-800 text-sm mb-3 border-l-4 border-indigo-500 pl-2">How Sentiment is Calculated</h4>
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs">
+                            <p class="mb-2 text-slate-500 uppercase font-bold text-[10px]">1. The Text</p>
+                            <p class="font-serif italic text-slate-700 mb-4 text-sm">"The <strong class="text-green-600">innovative</strong> strategy <strong class="text-green-600">improved</strong> profits, though <strong class="text-red-600">litigation</strong> risks remain."</p>
+                            
+                            <!-- Flex col on mobile, row on desktop -->
+                            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                                <div class="w-full md:w-1/2">
+                                    <p class="mb-1 text-slate-500 uppercase font-bold text-[10px]">2. Dictionary Match</p>
+                                    <table class="text-left w-full border-collapse text-[10px] font-mono">
+                                        <tr class="border-b"><td class="pr-3 py-1">innovative</td><td class="text-green-600">Positive Word</td></tr>
+                                        <tr class="border-b"><td class="pr-3 py-1">improved</td><td class="text-green-600">Positive Word</td></tr>
+                                        <tr class="border-b"><td class="pr-3 py-1">litigation</td><td class="text-red-600">Negative Word</td></tr>
+                                        <tr><td class="pr-3 py-1">strategy/risks</td><td class="text-gray-400">Neutral (Ignore)</td></tr>
+                                    </table>
+                                </div>
+                                <div class="w-full md:w-1/2">
+                                    <p class="mb-1 text-slate-500 uppercase font-bold text-[10px]">3. The Formula</p>
+                                    <div class="bg-white p-2 border rounded font-mono text-center overflow-x-auto">
+                                        (Pos_Count - Neg_Count) / Total_Hits<br>
+                                        <span class="text-gray-500 mt-1 block">(2 - 1) / (2 + 1) = <strong class="text-indigo-600">0.33</strong></span>
+                                    </div>
+                                    <p class="text-center mt-1 text-[10px] text-slate-400">Result: Moderately Optimistic</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Exercise -->
+                    <div class="mb-8 bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                        <h4 class="font-bold text-indigo-900 text-sm mb-2"><i class="fa-solid fa-bolt text-indigo-500 mr-2"></i>Try It Yourself</h4>
+                        
+                        <!-- NEW MINI DICTIONARY -->
+                        <div class="flex flex-col md:flex-row gap-2 md:gap-3 mb-3 text-[10px] font-mono bg-white p-2 rounded border border-indigo-100">
+                            <span class="font-bold text-slate-500">Dictionary:</span>
+                            <span class="text-green-600">efficient (Positive)</span>
+                            <span class="text-red-600">loss (Negative)</span>
+                            <span class="text-slate-400">others (Ignore)</span>
+                        </div>
+
+                        <p class="text-xs text-indigo-800 mb-3">Click analyze to process this sample sentence using the dictionary above.</p>
+                        
+                        <div class="bg-white p-3 rounded border border-indigo-200 mb-3 font-serif text-sm text-slate-700" id="interactive-text">
+                            The <strong>efficient</strong> team avoided <strong>loss</strong>.
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row justify-between items-center gap-2">
+                            <button onclick="runInteractiveDemo()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs font-semibold transition w-full sm:w-auto">
+                                Calculate Sentiment
+                            </button>
+                            <div id="interactive-result" class="text-xs font-mono font-bold text-slate-700 opacity-0 transition-opacity duration-500">
+                                Result: (1 - 1) / (1 + 1) = 0.00 (Neutral)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Literature Review Section -->
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-sm mb-3 border-l-4 border-amber-500 pl-2">Academic Context</h4>
+                        <div class="text-xs text-slate-600 space-y-3 leading-relaxed">
+                            <p>
+                                <strong>Financial Sentiment:</strong> Authors Tim Loughran and Bill McDonald (Notre Dame) revolutionized the field by creating a domain-specific dictionary for accounting. They noted that words like 'liability' are negative in standard English but neutral in financial statements.
+                            </p>
+                            <p>
+                                <strong>Social Media:</strong> Early research used Yahoo forums, while recent studies focus on Twitter and StockTwits. Twitter provides instantaneous information, such as predicting stock market reactions to FOMC meetings based on tweet sentiment. Researchers have found that while social media represents a small percentage of traders, its sentiment (especially negative) significantly impacts market liquidity.
+                            </p>
+                            <p>
+                                <strong>Political Bias:</strong> Textual analysis is used to measure partisan differences in the speech of U.S. Congress members and financial regulators. For example, SEC Commissioners have shown an increasing trend in partisan language since the mid-1970s.
+                            </p>
+                            <p>
+                                <strong>Fraud Detection:</strong> Specific vocabulary choices and topics in MD&A sections of 10-K filings can help predict accounting fraud. Managers committing fraud often disassociate their names from deceptive plans and may unintentionally transfer linguistic cues from fraudulent memos into their reports.
+                            </p>
+                            <div class="mt-4 pt-3 border-t border-slate-100">
+                                <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3470272" target="_blank" class="academic-link">
+                                    <i class="fa-regular fa-file-pdf mr-1"></i> Read Full Paper (SSRN)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-6 flex justify-end gap-2">
+                    <button onclick="prevPage()" class="nav-btn px-4 py-2 bg-white border border-slate-300 rounded text-sm hover:bg-slate-50 text-slate-600">Back</button>
+                    <button onclick="nextPage()" class="nav-btn px-4 py-2 bg-indigo-900 text-white rounded text-sm hover:bg-indigo-800 shadow">Next: The Data</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 4: DATA (REALISTIC) -->
+        <div class="page z-[40]" id="page-4">
+            <div class="paper-content relative">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h3 class="text-xl md:text-2xl font-bold text-slate-800">Part 2: The Corpus</h3>
+                    <span class="text-xs font-mono text-slate-400">03 / 07</span>
+                </div>
+                
+                <div class="flex-1">
+                    <!-- Simplifed Instructions -->
+                    <div class="mb-6 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-triangle-exclamation text-yellow-600"></i>
+                            <h4 class="font-bold text-slate-800 text-sm">Instructions</h4>
+                        </div>
+                        <p class="text-xs text-slate-700">
+                            Copy the text blocks below into Excel or Power BI as your raw corpus. <strong>Detailed data processing steps are located in Part 4.</strong>
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-6">
+                        <!-- 2025 Section -->
+                        <div class="relative group">
+                            <div class="flex justify-between items-end mb-2">
+                                <h4 class="font-sans font-bold text-indigo-700 text-sm">FY 2025 (Current Year)</h4>
+                                <button onclick="copyToClipboard('mda-2025')" class="text-xs bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded text-slate-700 transition">Copy</button>
+                            </div>
+                            <div id="mda-2025" class="mda-block">Management Discussion and Analysis 2025.
+    Fiscal 2025 marked a pivotal turnaround for Apex Global. We successfully executed our strategic integration of autonomous AI systems, leading to substantial efficiency gains across our logistics network. While inflation remains a concern, our ability to streamline operations helped stabilize margins. We see a tremendous opportunity in the electric vehicle transport sector, which has become a lucrative revenue stream. Innovation in our software stack has enabled us to better manage inventory, reducing waste. Despite geopolitical tension, we remain optimistic about our trajectory. The enhancement of our digital infrastructure is a major achievement that will empower our workforce and benefit shareholders.</div>
+                        </div>
+
+                        <!-- 2024 Section -->
+                        <div class="relative group">
+                            <div class="flex justify-between items-end mb-2">
+                                <h4 class="font-sans font-bold text-slate-600 text-sm">FY 2024 (Prior Year)</h4>
+                                <button onclick="copyToClipboard('mda-2024')" class="text-xs bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded text-slate-700 transition">Copy</button>
+                            </div>
+                            <div id="mda-2024" class="mda-block text-slate-500">Management Discussion and Analysis 2024.
+    The operating environment in 2024 was characterized by persistent volatility and severe headwinds. We suffered a decline in volume due to the global economic slowdown. Rising fuel costs continued to burden our bottom line, resulting in a net loss for the third quarter. Supply chain disruption caused unwanted delays, forcing us to abandon several low-margin routes. We face ongoing litigation regarding labor disputes which creates uncertainty for future cash flows. The deterioration of demand in European markets acted as a significant constraint on growth. We fear that without correction, these adverse conditions may aggravate our liquidity position.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-6 flex justify-end gap-2">
+                    <button onclick="prevPage()" class="nav-btn px-4 py-2 bg-white border border-slate-300 rounded text-sm hover:bg-slate-50 text-slate-600">Back</button>
+                    <button onclick="nextPage()" class="nav-btn px-4 py-2 bg-indigo-900 text-white rounded text-sm hover:bg-indigo-800 shadow">Next: Dictionary</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 5: DICTIONARY -->
+        <div class="page z-[30]" id="page-5">
+            <div class="paper-content relative">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <div>
+                        <h3 class="text-xl md:text-2xl font-bold text-slate-800">Part 3: The Dictionary</h3>
+                        <p class="text-xs text-slate-500 mt-1">Loughran-McDonald Financial Sentiment (Subset)</p>
+                    </div>
+                    <span class="text-xs font-mono text-slate-400">04 / 07</span>
+                </div>
+
+                <div class="flex-1">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="text-xs text-slate-600">
+                            <p class="italic mb-1">The full dictionary is accessible through the <a href="https://sraf.nd.edu/loughranmcdonald-master-dictionary/" target="_blank" class="text-indigo-600 underline">Loughran-McDonald Master Dictionary</a> website.</p>
+                        </div>
+                        <button onclick="copyTable()" class="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1 rounded font-semibold transition border border-indigo-200">
+                            <i class="fa-regular fa-copy mr-1"></i> Copy Table
+                        </button>
+                    </div>
+
+                    <div class="border rounded-lg overflow-hidden h-[400px] overflow-y-auto shadow-inner bg-white">
+                        <table class="dict-table w-full text-sm text-left">
+                            <thead class="text-sm text-slate-700 uppercase bg-slate-100">
+                                <tr>
+                                    <th class="px-6 py-3">Word</th>
+                                    <th class="px-6 py-3">Sentiment</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dictionary-body" class="font-mono text-sm text-slate-600">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-6 flex justify-end gap-2">
+                    <button onclick="prevPage()" class="nav-btn px-4 py-2 bg-white border border-slate-300 rounded text-sm hover:bg-slate-50 text-slate-600">Back</button>
+                    <button onclick="nextPage()" class="nav-btn px-4 py-2 bg-indigo-900 text-white rounded text-sm hover:bg-indigo-800 shadow">Next: Guide</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 6: PROCESS GUIDE -->
+        <div class="page z-[20]" id="page-6">
+            <div class="paper-content relative">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h3 class="text-xl md:text-2xl font-bold text-slate-800">Part 4: The Process</h3>
+                    <span class="text-xs font-mono text-slate-400">05 / 07</span>
+                </div>
+
+                <div class="flex-1">
+                    <div class="space-y-4 font-sans text-sm text-slate-700 overflow-y-auto pr-2">
+                        
+                        <div class="flex gap-4 items-start">
+                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 shrink-0">1</div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Setup & Clean (Power Query)</h4>
+                                <div class="text-xs text-slate-600 mt-1 space-y-1">
+                                    <p>Create an Excel table. <strong>Column A (ID):</strong> Manually type "Apex 2025" (or 2024). <strong>Column B (Text):</strong> Paste the copied MD&A data.</p>
+                                    <p class="font-semibold text-indigo-700">Before splitting:</p>
+                                    <ul class="list-disc pl-4">
+                                        <li>Right-click [MD&A Text] &rarr; <strong>Replace Values</strong>.</li>
+                                        <li>Find punctuation (<code>.</code> <code>,</code> <code>"</code> <code>'</code>) and replace with <em>(empty)</em> to clean the text.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 items-start">
+                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 shrink-0">2</div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Tokenize (Split to Rows)</h4>
+                                <p class="text-slate-600 text-xs mt-1">
+                                    Right-click [MD&A Text] &rarr; Split Column &rarr; By Delimiter (Space). <br>
+                                    <span class="bg-yellow-100 px-1 font-semibold">Important:</span> Expand 'Advanced Options' and select <strong>Split into Rows</strong>. Finally, transform the column to <strong>Lowercase</strong> and <strong>Trim</strong>.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 items-start">
+                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 shrink-0">3</div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Merge Queries</h4>
+                                <p class="text-slate-600 text-xs mt-1">Perform a <strong>Merge</strong> between Token Table (Left) and Dictionary (Right). Use <strong>Left Outer Join</strong>. Expand [Sentiment]. <strong>Filter out <em>null</em> rows.</strong></p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 items-start">
+                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 shrink-0">4</div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Calculate Tone (Group & Pivot)</h4>
+                                <ol class="text-slate-600 text-xs mt-1 list-decimal pl-4 space-y-1">
+                                    <li><strong>Group By:</strong> Advanced &rarr; Group by [Year] and [Sentiment]. Aggregation: <strong>Count Rows</strong>.</li>
+                                    <li><strong>Pivot Column:</strong> Select [Sentiment] &rarr; Pivot Column. Values: [Count].</li>
+                                    <li><strong>Clean Nulls:</strong> Select [Positive] and [Negative] columns &rarr; Replace Values (<em>null</em> &rarr; 0).</li>
+                                    <li><strong>Add Custom Column:</strong> Formula: <br><code class="bg-slate-100 px-1">([Positive] - [Negative]) / ([Positive] + [Negative])</code></li>
+                                </ol>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-6 flex justify-end gap-2">
+                    <button onclick="prevPage()" class="nav-btn px-4 py-2 bg-white border border-slate-300 rounded text-sm hover:bg-slate-50 text-slate-600">Back</button>
+                    <button onclick="nextPage()" class="nav-btn px-4 py-2 bg-indigo-900 text-white rounded text-sm hover:bg-indigo-800 shadow">Next: Solution</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 7: SOLUTION -->
+        <div class="page z-[10]" id="page-7">
+            <div class="paper-content relative bg-slate-50">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h3 class="text-xl md:text-2xl font-bold text-slate-800">Part 5: Solution</h3>
+                    <div class="flex items-center gap-2">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="instructor-toggle" class="sr-only peer" onchange="toggleSolution()">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                            <span class="ml-2 text-xs font-medium text-slate-500">Reveal</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- BLURRED CONTAINER -->
+                <div id="solution-content" class="blur-content h-full">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <!-- 2025 Card -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border-t-4 border-indigo-500">
+                            <h4 class="font-bold text-slate-500 text-xs uppercase mb-2">FY 2025 (Current)</h4>
+                            <div class="flex items-end gap-2 mb-3">
+                                <span class="text-3xl font-bold text-slate-800">+0.88</span>
+                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded font-bold mb-1">Strongly Positive</span>
+                            </div>
+                            <div class="text-xs text-slate-500 leading-snug space-y-2">
+                                <p><strong>Score Logic:</strong> (15 Positive - 1 Negative) / 16 Total = 0.875</p>
+                                <p>
+                                    <strong>Dominant Tokens:</strong> Efficiency, Opportunity, Innovation, Enhancement, Lucrative.<br>
+                                    <strong>Interpretation:</strong> Management is signaling successful restructuring and AI integration.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- 2024 Card -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border-t-4 border-red-500">
+                            <h4 class="font-bold text-slate-500 text-xs uppercase mb-2">FY 2024 (Prior)</h4>
+                            <div class="flex items-end gap-2 mb-3">
+                                <span class="text-3xl font-bold text-slate-800">-1.00</span>
+                                <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded font-bold mb-1">Strongly Negative</span>
+                            </div>
+                            <div class="text-xs text-slate-500 leading-snug space-y-2">
+                                <p><strong>Score Logic:</strong> (0 Positive - 15 Negative) / 15 Total = -1.00</p>
+                                <p>
+                                    <strong>Dominant Tokens:</strong> Volatility, Decline, Burden, Loss, Litigation, Uncertainty.<br>
+                                    <strong>Interpretation:</strong> Clear indicators of financial distress and macro-economic pressure.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-sm">
+                        <h5 class="font-bold text-indigo-900 mb-1">Note on Dictionary Limitations</h5>
+                        <p class="text-xs text-indigo-800 leading-relaxed">
+                            While the sentiment score accurately captures the shift in tone, standard dictionaries like Loughran-McDonald do not yet include terms like "AI" or "Autonomous". An advanced analysis would require a custom dictionary to capture the positive sentiment associated with these specific technological investments.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Overlay Message for Hidden State -->
+                <div id="hidden-msg" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                    <div class="bg-white/90 p-6 rounded-xl shadow-xl border border-slate-200 backdrop-blur-sm">
+                        <i class="fa-solid fa-lock text-slate-400 text-3xl mb-2"></i>
+                        <p class="font-bold text-slate-700">Solution Locked</p>
+                        <p class="text-xs text-slate-500">Toggle switch to reveal</p>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-6 flex justify-end gap-2">
+                    <button onclick="prevPage()" class="nav-btn px-4 py-2 bg-white border border-slate-300 rounded text-sm hover:bg-slate-50 text-slate-600">Back</button>
+                    <button onclick="location.reload()" class="nav-btn px-4 py-2 bg-slate-800 text-white rounded text-sm hover:bg-slate-700 shadow">Reset Lab</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl text-sm font-semibold opacity-0 pointer-events-none transition-opacity duration-300 z-[100] flex items-center gap-2">
+    <i class="fa-solid fa-check-circle text-green-400"></i> Copied to Clipboard
+</div>
+
+<script>
+    // --- DICTIONARY DATA ---
+    const posWords = [
+        "accomplish", "achievement", "adequate", "advancement", "advantage", "attain", "attractive", 
+        "beneficial", "benefit", "better", "brilliant", "calm", "capable", "collaborate", "confidence", 
+        "constructive", "creative", "efficiency", "efficient", "empower", "enable", "encourage", "enhance", 
+        "enhancement", "enjoy", "excellent", "excite", "favorable", "gain", "glad", "good", "great", 
+        "happy", "honor", "hope", "improve", "innovation", "innovate", "inspire", "leader", 
+        "lucrative", "manage", "opportunity", "optimistic", "perfect", "productive", "profitable", 
+        "prosperity", "recovery", "reward", "stable", "stabilize", "strong", "streamline", "success", 
+        "successful", "synergy", "tremendous", "turnaround", "upward", "valuable", "win", "winner", "worth"
+    ];
+    
+    const negWords = [
+        "abandon", "abuse", "adverse", "against", "aggravate", "annoy", "anxiety", "burden", 
+        "bankrupt", "barrier", "blame", "block", "break", "bribe", "catastrophe", "challenge", 
+        "chaos", "charge", "cheat", "claim", "close", "collapse", "collision", "complain", 
+        "concern", "conflict", "confuse", "constraint", "crash", "crime", "crisis", "critic", 
+        "damage", "danger", "decline", "defect", "deficit", "delay", "deterioration", "disaster", 
+        "discipline", "disclaim", "dispute", "disruption", "distress", "downsize", "fail", "failure", 
+        "fear", "fire", "fraud", "guilty", "hardship", "harm", "headwind", "impairment", 
+        "imperfect", "incident", "inferior", "injure", "insolvency", "insufficient", "interfere", "interrupt", 
+        "jeopardy", "lawsuit", "liability", "liquidation", "litigation", "loss", "lose", "malfunction", 
+        "misleading", "mistake", "negligence", "offense", "omission", "opposition", "panic", "penalty", 
+        "peril", "poor", "problem", "recession", "restructure", "risk", "shortage", "slowdown", 
+        "stagnation", "threat", "trouble", "uncertainty", "unwanted", "violation", "volatility", "weak"
+    ];
+
+    // Populate Dictionary Table
+    const tbody = document.getElementById('dictionary-body');
+    const allWords = [
+        ...posWords.map(w => ({w, s: 'Positive'})),
+        ...negWords.map(w => ({w, s: 'Negative'}))
+    ].sort((a,b) => a.w.localeCompare(b.w));
+
+    allWords.forEach(item => {
+        const row = document.createElement('tr');
+        row.className = "border-b border-slate-100 hover:bg-slate-50";
+        row.innerHTML = `
+            <td class="px-6 py-2 font-medium text-slate-800">${item.w}</td>
+            <td class="px-6 py-2">
+                <span class="${item.s === 'Positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs font-bold px-2 py-0.5 rounded">
+                    ${item.s}
+                </span>
+            </td>`;
+        tbody.appendChild(row);
+    });
+
+    // --- PAGE TURN LOGIC ---
+    let currentPage = 1;
+    const totalPages = 7;
+
+    function nextPage() {
+        if (currentPage < totalPages) {
+            const page = document.getElementById(`page-${currentPage}`);
+            page.classList.add('flipped');
+            setTimeout(() => {
+                page.style.zIndex = 10 + currentPage; 
+            }, 600);
+            currentPage++;
+        }
+    }
+
+    function prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            const page = document.getElementById(`page-${currentPage}`);
+            page.classList.remove('flipped');
+            page.style.zIndex = 80 - currentPage; 
+        }
+    }
+
+    // --- INTERACTIVE DEMO (Page 3) ---
+    function runInteractiveDemo() {
+        const textField = document.getElementById('interactive-text');
+        const resultField = document.getElementById('interactive-result');
+        
+        // Simple string replacement to highlight
+        const originalText = "The efficient team avoided loss.";
+        // We know 'efficient' is positive, 'loss' is negative
+        const highlighted = `The <strong class="text-green-600 bg-green-50 px-1 rounded">efficient</strong> team avoided <strong class="text-red-600 bg-red-50 px-1 rounded">loss</strong>.`;
+        
+        textField.innerHTML = highlighted;
+        
+        // Reveal calculation
+        resultField.classList.remove('opacity-0');
+    }
+
+    // --- UTILITIES ---
+    function showToast() {
+        const toast = document.getElementById('toast');
+        toast.style.opacity = '1';
+        setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+    }
+
+    function copyToClipboard(elementId) {
+        const text = document.getElementById(elementId).innerText;
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast();
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+        }
+        document.body.removeChild(textArea);
+    }
+
+    function copyTable() {
+        let csv = "Word\tSentiment\n";
+        allWords.forEach(item => {
+            csv += `${item.w}\t${item.s}\n`;
+        });
+        const textArea = document.createElement("textarea");
+        textArea.value = csv;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast();
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+        }
+        document.body.removeChild(textArea);
+    }
+
+    function toggleSolution() {
+        const checkbox = document.getElementById('instructor-toggle');
+        const content = document.getElementById('solution-content');
+        const msg = document.getElementById('hidden-msg');
+        if (checkbox.checked) {
+            content.classList.add('revealed');
+            msg.style.display = 'none';
+        } else {
+            content.classList.remove('revealed');
+            msg.style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+</html>

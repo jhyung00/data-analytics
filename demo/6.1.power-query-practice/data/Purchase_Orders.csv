@@ -1,0 +1,11 @@
+PO_Number,PO_Date,VendorName_Clean,PO_Amount
+PO-7801,01/25/2025,Omega Air,125.5
+PO-7802,01/09/2025,Acme Logistics,36.17
+PO-7803,01/23/2025,City Water Utility,1245.0
+PO-7804,01/03/2025,Omega Air,99.0
+PO-7805,01/08/2025,Staples,1245.0
+PO-7806,01/19/2025,Amazon Marketplace,125.5
+PO-7807,01/09/2025,Amazon Marketplace,99.0
+PO-7808,01/27/2025,United Parcel Service,1980.0
+PO-7809,01/24/2025,Staples,450.0
+PO-7810,01/10/2025,Globex Software,3000.0

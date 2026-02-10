@@ -1,0 +1,9 @@
+VendorID,VendorName_Clean,Category,Default_GL,Default_Terms
+V001,Staples,Office Supplies,6100,Net 30
+V002,Omega Air,Travel,7200,Net 15
+V003,City Water Utility,Utilities,6300,Due on receipt
+V004,Amazon Marketplace,Office Supplies,6100,Net 30
+V005,Acme Logistics,Freight,6500,Net 30
+V006,Beta Consulting LLC,Professional Services,7000,Net 45
+V007,Globex Software,Software,6800,Net 30
+V008,United Parcel Service,Freight,6500,Net 30
