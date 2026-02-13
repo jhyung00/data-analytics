@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuditAI Forensic Suite</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- SheetJS for real .xlsx generation -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        
+        /* Custom Scrollbar for Excel Views */
+        .excel-scroll::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .excel-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .excel-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .excel-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 h-screen overflow-hidden">
+    <div id="root" class="h-full"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- Icons ---
+        const IconBase = ({ children, className, size = 20 }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
+        );
+        const BookOpen = (props) => <IconBase {...props}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></IconBase>;
+        const Calculator = (props) => <IconBase {...props}><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></IconBase>;
+        const ChevronLeft = (props) => <IconBase {...props}><polyline points="15 18 9 12 15 6"/></IconBase>;
+        const ChevronRight = (props) => <IconBase {...props}><polyline points="9 18 15 12 9 6"/></IconBase>;
+        const Info = (props) => <IconBase {...props}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></IconBase>;
+        const Activity = (props) => <IconBase {...props}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></IconBase>;
+        const Layout = (props) => <IconBase {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></IconBase>;
+        const Scissors = (props) => <IconBase {...props}><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></IconBase>;
+        const Sigma = (props) => <IconBase {...props}><path d="M18 7V4H6l6 8-6 8h12v-3"/></IconBase>;
+        const AlertTriangle = (props) => <IconBase {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></IconBase>;
+        const Download = (props) => <IconBase {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></IconBase>;
+        const Database = (props) => <IconBase {...props}><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></IconBase>;
+        const Briefcase = (props) => <IconBase {...props}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></IconBase>;
+        const CheckCircle = (props) => <IconBase {...props}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconBase>;
+
+        // --- Shared Components ---
+
+        const SidebarItem = ({ icon: Icon, label, active, onClick, collapsed, isSubItem }) => (
+            <button
+                onClick={onClick}
+                className={`flex items-center w-full p-2 mb-1 transition-colors duration-200 rounded-lg group
+                    ${active 
+                        ? 'bg-emerald-600 text-white shadow-md' 
+                        : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'
+                    }
+                    ${isSubItem ? 'pl-10 text-sm' : 'p-3'}
+                `}
+                title={collapsed ? label : ''}
+            >
+                <Icon size={isSubItem ? 16 : 20} className={`${active ? 'text-white' : 'text-slate-500 group-hover:text-emerald-700'}`} />
+                {!collapsed && <span className="ml-3 font-medium whitespace-nowrap">{label}</span>}
+            </button>
+        );
+
+        const SectionHeader = ({ title, collapsed }) => (
+            !collapsed && (
+                <div className="px-3 mt-6 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    {title}
+                </div>
+            )
+        );
+
+        const ExcelCell = ({ value, isHeader, isSelected, onClick, formula, className = "", children, rowHeader, colHeader, result }) => (
+            <div 
+                onClick={onClick}
+                className={`
+                    border-r border-b border-gray-300 px-2 py-1 text-sm cursor-pointer relative flex items-center
+                    ${isHeader ? 'bg-gray-100 font-bold text-center justify-center text-slate-600' : 'bg-white font-mono text-slate-800'}
+                    ${rowHeader ? 'bg-gray-100 font-bold text-center justify-center text-slate-500 w-8 flex-none' : ''}
+                    ${colHeader ? 'bg-gray-100 font-bold text-center justify-center text-slate-600 h-8' : ''}
+                    ${isSelected ? 'ring-2 ring-emerald-500 z-10' : ''}
+                    ${className}
+                `}
+                style={{ minHeight: '36px' }}
+            >
+                {formula ? (
+                    <div className="flex flex-col w-full py-1">
+                        <span className="text-emerald-700 font-medium text-xs break-words leading-tight">{formula}</span>
+                        {result && <span className="text-slate-500 text-[10px] text-right w-full font-bold mt-1">= {result}</span>}
+                    </div>
+                ) : (
+                    <div className="w-full text-right truncate">
+                        {children || value}
+                    </div>
+                )}
+            </div>
+        );
+
+        const ModuleCard = ({ title, children, className = "" }) => (
+            <div className={`bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 ${className}`}>
+                <h3 className="text-xl font-bold text-slate-800 mb-4 border-b pb-2 border-slate-100">{title}</h3>
+                <div className="text-slate-600 leading-relaxed">
+                    {children}
+                </div>
+            </div>
+        );
+
+        // --- Concepts Modules ---
+
+        const ConceptNB = () => (
+            <div className="animate-fade-in pb-10">
+                <ModuleCard title="Concept: Naive Bayes (The Probability Engine)">
+                    <div className="flex flex-col gap-6">
+                        <div>
+                            <h4 className="font-bold text-emerald-800 mb-2 text-sm uppercase">How it works</h4>
+                            <p className="text-sm mb-4">
+                                Naive Bayes looks at historical data to calculate the probability of an event happening given certain conditions. It assumes all features are independent (which is "Naive", but computationally efficient).
+                            </p>
+                            <h4 className="font-bold text-emerald-800 mb-2 text-sm uppercase">Audit Implication</h4>
+                            <p className="text-sm">
+                                <strong>Fraud Detection:</strong> We calculate the probability of a transaction being "Suspicious" given multiple flags (e.g., "Round Number", "Weekend", "Manual Entry"). If the posterior probability exceeds a threshold, the transaction is flagged for human review.
+                            </p>
+                        </div>
+                        <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100 text-xs">
+                            <strong className="block mb-2 text-emerald-900">Example Scenario:</strong>
+                            <ul className="list-disc pl-4 space-y-2 text-emerald-800">
+                                <li><strong>History:</strong> 90% of past frauds happened on weekends.</li>
+                                <li><strong>New Item:</strong> A large journal entry posted on a Sunday.</li>
+                                <li><strong>Result:</strong> Model flags this as 85% risk score based on the "Weekend" condition.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </ModuleCard>
+            </div>
+        );
+
+        const ConceptReg = () => (
+            <div className="animate-fade-in pb-10">
+                <ModuleCard title="Concept: Regression (The Trend Forecaster)">
+                    <div className="flex flex-col gap-6">
+                        <div>
+                            <h4 className="font-bold text-indigo-800 mb-2 text-sm uppercase">How it works</h4>
+                            <p className="text-sm mb-4">
+                                Regression fits a line (or curve) through data points to model the relationship between variables. It creates an equation (y = mx + b) to predict future outcomes.
+                            </p>
+                            <h4 className="font-bold text-indigo-800 mb-2 text-sm uppercase">Audit Implication</h4>
+                            <p className="text-sm">
+                                <strong>Analytical Procedures:</strong> Auditors use this to form an "expectation". For example, predicting Revenue based on Cost of Goods Sold. If the <em>Actual</em> Revenue differs significantly from the <em>Predicted</em> Revenue (a large "Residual"), it indicates a material misstatement or revenue leakage.
+                            </p>
+                        </div>
+                        <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100 text-xs">
+                            <strong className="block mb-2 text-indigo-900">Example Scenario:</strong>
+                            <ul className="list-disc pl-4 space-y-2 text-indigo-800">
+                                <li><strong>Trend:</strong> Sales usually track 2x Marketing Spend.</li>
+                                <li><strong>Event:</strong> Q4 Marketing was flat, but Sales tripled.</li>
+                                <li><strong>Result:</strong> Regression model predicts lower sales. The huge positive residual flags potential "Channel Stuffing" or fake revenue.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </ModuleCard>
+            </div>
+        );
+
+        const ConceptKM = () => (
+            <div className="animate-fade-in pb-10">
+                <ModuleCard title="Concept: K-Means Clustering (The Grouper)">
+                    <div className="flex flex-col gap-6">
+                        <div>
+                            <h4 className="font-bold text-purple-800 mb-2 text-sm uppercase">How it works</h4>
+                            <p className="text-sm mb-4">
+                                An "Unsupervised" method that groups data points into K number of clusters based on similarity (distance). It doesn't need labels (like "Fraud" or "Normal"); it just finds natural groupings.
+                            </p>
+                            <h4 className="font-bold text-purple-800 mb-2 text-sm uppercase">Audit Implication</h4>
+                            <p className="text-sm">
+                                <strong>Outlier Detection:</strong> Most transactions fall into standard clusters (e.g., "Regular Payroll", "Standard Vendor Payments"). K-Means helps identify transactions that are far away from any cluster centroid. These outliers are often errors or unique fraud schemes that don't match known patterns.
+                            </p>
+                        </div>
+                        <div className="bg-purple-50 p-4 rounded-lg border border-purple-100 text-xs">
+                            <strong className="block mb-2 text-purple-900">Example Scenario:</strong>
+                            <ul className="list-disc pl-4 space-y-2 text-purple-800">
+                                <li><strong>Groups:</strong> Cluster A (Small, Frequent), Cluster B (Large, Monthly).</li>
+                                <li><strong>Event:</strong> A medium-sized payment happens weekly.</li>
+                                <li><strong>Result:</strong> It doesn't fit A or B. K-Means isolates it as an outlier, prompting the auditor to ask "What is this unique payment cycle?"</li>
+                            </ul>
+                        </div>
+                    </div>
+                </ModuleCard>
+            </div>
+        );
+
+        // --- 0. Foundations ---
+
+        const TrainingSetModule = () => (
+            <div className="space-y-6 animate-fade-in">
+                <ModuleCard title="Foundation: Training vs. Validation Sets">
+                    <p className="mb-4">
+                        Before applying Naive Bayes or Regression, you must split your audit data. You cannot test your model on the same data you used to build it.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-blue-50 p-4 rounded border border-blue-100">
+                            <h4 className="font-bold text-blue-800 mb-2">1. Training Set (80%)</h4>
+                            <p className="text-sm text-blue-700 mb-2">
+                                This is the "History Book". You feed this into Excel to calculate your probabilities (Naive Bayes) or your Slope/Intercept (Regression).
+                            </p>
+                        </div>
+                        <div className="bg-amber-50 p-4 rounded border border-amber-100">
+                            <h4 className="font-bold text-amber-800 mb-2">2. Validation/Test Set (20%)</h4>
+                            <p className="text-sm text-amber-700 mb-2">
+                                This is the "Exam". You hide the answers (labels), run your model, and then check if your model guessed correctly to validate accuracy.
+                            </p>
+                        </div>
+                    </div>
+                </ModuleCard>
+            </div>
+        );
+
+        // --- Case Study: Uber (Downloadable Lab) ---
+
+        const CaseStudyUber = () => {
+            const generateUberExcel = () => {
+                // 1. Create Instructions Sheet
+                const instructionsData = [
+                    ["INSTRUCTIONS: Naive Bayes for Cash Intermediaries"],
+                    [""],
+                    ["Scenario:", "Uber needs to identify 'Cash Intermediaries' (Agents) hidden in vendor data."],
+                    ["Task:", "Build a Naive Bayes Model to calculate the probability a vendor is an Agent."],
+                    [""],
+                    ["STEP 1: PREPARE"],
+                    ["1. Go to the 'Data' tab."],
+                    ["2. Filter/Sort to Randomize the list (optional)."],
+                    ["3. Select the first 160 rows (80%). This is your TRAINING SET."],
+                    ["4. The remaining 40 rows are your TEST SET. Hide the 'Is_Agent' column for these for now."],
+                    [""],
+                    ["STEP 2: TRAINING (Calculate Probabilities)"],
+                    ["1. Calculate Prior Probability: P(Agent) = (Total Agents in Training) / 160"],
+                    ["2. Calculate Likelihoods for each Feature (Pivot Tables are great for this):"],
+                    ["   - P(Round_Amount | Agent) = (Agents with Round Amounts) / (Total Agents)"],
+                    ["   - P(Weekend_Tx | Agent) = (Agents with Weekend Tx) / (Total Agents)"],
+                    ["   - P(Manual_Entry | Agent) = (Agents with Manual Entry) / (Total Agents)"],
+                    [""],
+                    ["STEP 3: TESTING (Apply Model)"],
+                    ["1. For a row in your Test Set, look at its features."],
+                    ["2. Calculate Risk Score = P(Agent) * P(Feature1|Agent) * P(Feature2|Agent)..."],
+                    ["3. If Score > 0.05 (Threshold), flag as Suspicious."],
+                    ["4. Compare your flags to the actual 'Is_Agent' column to see accuracy."]
+                ];
+
+                // 2. Create Data Sheet
+                const dataRows = [
+                    ["VendorID", "Tx_Amount", "Is_Round_Amount", "Is_Weekend_Tx", "Is_Manual_Entry", "Country", "Is_Agent"]
+                ];
+
+                // Generate 200 rows of synthetic data based on the Uber article
+                for (let i = 1; i <= 200; i++) {
+                    const isAgent = Math.random() < 0.15; // 15% are agents
+                    
+                    // Agents have higher probability of suspicious features
+                    const isRound = isAgent ? (Math.random() < 0.8) : (Math.random() < 0.2);
+                    const isWeekend = isAgent ? (Math.random() < 0.7) : (Math.random() < 0.1);
+                    const isManual = isAgent ? (Math.random() < 0.9) : (Math.random() < 0.3);
+                    
+                    const amount = Math.floor(Math.random() * 5000) + 100;
+                    const countries = ["Indonesia", "Brazil", "India", "Egypt"];
+                    const country = countries[Math.floor(Math.random() * countries.length)];
+
+                    dataRows.push([
+                        `VEN-${1000+i}`,
+                        amount,
+                        isRound ? "Yes" : "No",
+                        isWeekend ? "Yes" : "No",
+                        isManual ? "Yes" : "No",
+                        country,
+                        isAgent ? "Yes" : "No"
+                    ]);
+                }
+
+                // Create Workbook using SheetJS
+                const wb = XLSX.utils.book_new();
+                
+                const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
+                const wsData = XLSX.utils.aoa_to_sheet(dataRows);
+
+                // Set col widths
+                wsInstructions['!cols'] = [{wch: 60}];
+                wsData['!cols'] = [{wch: 15}, {wch: 12}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 12}, {wch: 10}];
+
+                XLSX.utils.book_append_sheet(wb, wsInstructions, "ReadMe_Instructions");
+                XLSX.utils.book_append_sheet(wb, wsData, "Vendor_Data");
+
+                // Write file
+                XLSX.writeFile(wb, "Uber_Cash_Intermediaries_Lab.xlsx");
+            };
+
+            return (
+                <div className="animate-fade-in space-y-6 pb-10">
+                    <ModuleCard title="Uber Lab: Cash Intermediaries Analysis">
+                        <div className="space-y-4">
+                            <div className="p-4 bg-slate-100 rounded-lg border border-slate-200">
+                                <h4 className="font-bold text-slate-800 mb-2 flex items-center">
+                                    <Briefcase size={16} className="text-slate-600 mr-2" />
+                                    The Challenge
+                                </h4>
+                                <p className="text-sm text-slate-700">
+                                    Uber's internal audit team needs to find "Cash Intermediaries" (vendors who pay bribes or bypass controls). 
+                                    They have sparsely labeled data. We will use a <strong>Naive Bayes</strong> approach to flag high-risk vendors based on their transaction patterns.
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 className="font-bold text-slate-800 text-sm uppercase mb-2">Lab Objectives</h4>
+                                    <ul className="list-disc pl-4 space-y-2 text-sm text-slate-600">
+                                        <li>Download the dataset (.xlsx).</li>
+                                        <li>Split data into <strong>Training (80%)</strong> and <strong>Testing (20%)</strong>.</li>
+                                        <li>Calculate prior probabilities using the Training set.</li>
+                                        <li>Build a risk scoring formula.</li>
+                                        <li>Test the accuracy on your hidden Test set.</li>
+                                    </ul>
+                                </div>
+                                <div className="flex flex-col justify-center">
+                                    <button 
+                                        onClick={generateUberExcel}
+                                        className="w-full flex items-center justify-center px-6 py-4 bg-emerald-600 text-white font-bold rounded-lg shadow-md hover:bg-emerald-700 transition transform hover:-translate-y-1"
+                                    >
+                                        <Download size={24} className="mr-3" /> 
+                                        <span>Download Practice Lab (.xlsx)<br/><span className="text-xs font-normal opacity-90">Includes Instructions & Data</span></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </ModuleCard>
+                </div>
+            );
+        };
+
+        // --- 1. Naive Bayes Lab ---
+
+        const NBSimulator = () => {
+            const [step, setStep] = useState(0);
+            const [feedback, setFeedback] = useState("");
+            const [userInputs, setUserInputs] = useState({});
+
+            const steps = [
+                {
+                    targetCell: "F4",
+                    result: "0.50",
+                    displayFormula: "=COUNTIFS(D:D,\"Yes\")/Rows",
+                    title: "1. Prior Probability",
+                    desc: "Count 'Yes' in Col D (Rows 2-9), divide by total rows (8)."
+                },
+                {
+                    targetCell: "F7",
+                    result: "1.00",
+                    displayFormula: "=COUNTIFS(B:B,\"Yes\", D:D,\"Yes\")/4",
+                    title: "2. Likelihood: High Amt",
+                    desc: "Count where Col B is 'Yes' AND Col D is 'Yes'. Divide by Total Suspicious (4)."
+                },
+                {
+                    targetCell: "F8",
+                    result: "0.75",
+                    displayFormula: "=COUNTIFS(C:C,\"Yes\", D:D,\"Yes\")/4",
+                    title: "3. Likelihood: Weekend",
+                    desc: "Count where Col C is 'Yes' AND Col D is 'Yes'. Divide by Total Suspicious (4)."
+                },
+                {
+                    targetCell: "F11",
+                    result: "0.375",
+                    displayFormula: "=F4 * F7 * F8",
+                    title: "4. Posterior Score",
+                    desc: "Multiply Prior * Likelihood 1 * Likelihood 2 to get the Risk Score."
+                }
+            ];
+
+            const handleCellClick = (cellId) => {
+                if (cellId === steps[step].targetCell) {
+                    setUserInputs({ ...userInputs, [cellId]: steps[step].displayFormula });
+                    setFeedback("Correct!");
+                    setTimeout(() => {
+                        if (step < steps.length - 1) {
+                            setStep(step + 1);
+                            setFeedback("");
+                        } else {
+                            setFeedback("Analysis Complete. See interpretation below.");
+                        }
+                    }, 1000);
+                }
+            };
+
+            const data = [
+                { id: 1, high: "Yes", wknd: "Yes", susp: "Yes" },
+                { id: 2, high: "No", wknd: "No", susp: "No" },
+                { id: 3, high: "Yes", wknd: "No", susp: "Yes" },
+                { id: 4, high: "No", wknd: "Yes", susp: "No" },
+                { id: 5, high: "Yes", wknd: "Yes", susp: "Yes" },
+                { id: 6, high: "No", wknd: "No", susp: "No" },
+                { id: 7, high: "Yes", wknd: "No", susp: "No" },
+                { id: 8, high: "Yes", wknd: "Yes", susp: "Yes" },
+            ];
+
+            return (
+                <div className="flex flex-col h-full gap-4 animate-fade-in">
+                    <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100 flex-none">
+                        <h3 className="font-bold text-emerald-900">{steps[step].title}</h3>
+                        <p className="text-sm text-emerald-800">{steps[step].desc}</p>
+                        {feedback && <div className="mt-2 text-sm font-bold text-emerald-600 animate-pulse">{feedback}</div>}
+                    </div>
+                    
+                    <div className="flex flex-col xl:flex-row gap-4 h-full overflow-hidden">
+                        {/* Data Table */}
+                        <div className="flex-none xl:flex-1 bg-white border border-gray-300 shadow-sm overflow-auto max-h-[40vh] xl:max-h-full">
+                            <div className="bg-gray-100 p-2 font-bold text-xs text-gray-700 border-b sticky top-0 z-10">Historical Data (Training Set)</div>
+                            <div className="grid grid-cols-[3rem_1fr_1fr_1fr_1fr] min-w-[400px]">
+                                <div className="bg-gray-100 border-r border-b border-gray-300"></div>
+                                <ExcelCell colHeader value="A" />
+                                <ExcelCell colHeader value="B" />
+                                <ExcelCell colHeader value="C" />
+                                <ExcelCell colHeader value="D" />
+                                <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500">1</div>
+                                <ExcelCell isHeader value="ID" />
+                                <ExcelCell isHeader value="HighAmt" />
+                                <ExcelCell isHeader value="Weekend" />
+                                <ExcelCell isHeader value="Suspicious" />
+                                {data.map((r, i) => (
+                                    <React.Fragment key={r.id}>
+                                        <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">{i + 2}</div>
+                                        <ExcelCell value={r.id} className="text-center" />
+                                        <ExcelCell value={r.high} className="text-center" />
+                                        <ExcelCell value={r.wknd} className="text-center" />
+                                        <ExcelCell value={r.susp} className={`text-center font-bold ${r.susp === 'Yes' ? 'text-red-600' : 'text-green-600'}`} />
+                                    </React.Fragment>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Analysis Panel - FIXED LAYOUT */}
+                        <div className="flex-none xl:flex-1 flex flex-col gap-4 overflow-hidden">
+                            <div className="bg-white border border-gray-300 shadow-sm flex flex-col h-full overflow-hidden">
+                                <div className="bg-gray-100 p-2 font-bold text-xs text-gray-700 border-b flex-none">Analysis Panel</div>
+                                <div className="overflow-auto excel-scroll flex-1">
+                                    <div className="grid grid-cols-[3rem_120px_minmax(200px,1fr)] min-w-[320px]">
+                                        {/* Headers */}
+                                        <div className="bg-gray-100 border-r border-b border-gray-300"></div>
+                                        <ExcelCell colHeader value="E" />
+                                        <ExcelCell colHeader value="F" />
+
+                                        {/* Row 4 */}
+                                        <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">4</div>
+                                        <ExcelCell value="Prior Prob" className="text-left font-medium" />
+                                        <ExcelCell 
+                                            result={userInputs.F4 ? steps[0].result : null}
+                                            value=""
+                                            onClick={() => handleCellClick("F4")} 
+                                            formula={userInputs.F4} 
+                                            isSelected={steps[step].targetCell==="F4"} 
+                                            className={!userInputs.F4 ? "bg-yellow-50" : ""} 
+                                        />
+
+                                        {/* Row 7 */}
+                                        <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">7</div>
+                                        <ExcelCell value="Likelihood 1" className="text-left font-medium" />
+                                        <ExcelCell 
+                                            result={userInputs.F7 ? steps[1].result : null}
+                                            value=""
+                                            onClick={() => handleCellClick("F7")} 
+                                            formula={userInputs.F7} 
+                                            isSelected={steps[step].targetCell==="F7"} 
+                                            className={!userInputs.F7 ? "bg-yellow-50" : ""} 
+                                        />
+
+                                        {/* Row 8 */}
+                                        <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">8</div>
+                                        <ExcelCell value="Likelihood 2" className="text-left font-medium" />
+                                        <ExcelCell 
+                                            result={userInputs.F8 ? steps[2].result : null}
+                                            value=""
+                                            onClick={() => handleCellClick("F8")} 
+                                            formula={userInputs.F8} 
+                                            isSelected={steps[step].targetCell==="F8"} 
+                                            className={!userInputs.F8 ? "bg-yellow-50" : ""} 
+                                        />
+
+                                        {/* Row 11 */}
+                                        <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">11</div>
+                                        <ExcelCell value="Posterior Score" className="text-left font-bold text-emerald-800" />
+                                        <ExcelCell 
+                                            result={userInputs.F11 ? steps[3].result : null}
+                                            value=""
+                                            onClick={() => handleCellClick("F11")} 
+                                            formula={userInputs.F11} 
+                                            isSelected={steps[step].targetCell==="F11"} 
+                                            className={`font-bold ${!userInputs.F11 ? "bg-yellow-50" : "bg-emerald-50 text-emerald-700"}`} 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {userInputs.F11 && (
+                                <div className="bg-white border border-gray-300 shadow-sm p-4 rounded animate-fade-in flex-none">
+                                    <h4 className="font-bold text-slate-800 text-sm mb-2 flex items-center">
+                                        <Info size={16} className="mr-2 text-blue-500"/> What does 0.375 mean?
+                                    </h4>
+                                    <p className="text-xs text-slate-600 leading-relaxed mb-2">
+                                        This is your <strong>Risk Factor</strong>. It is not a direct percentage (like 37%), but a relative score.
+                                    </p>
+                                    <p className="text-xs text-slate-600 leading-relaxed font-bold">Action Plan:</p>
+                                    <ol className="list-decimal list-inside text-xs text-slate-600 pl-2 space-y-1">
+                                        <li>Calculate this score for ALL 10,000 transactions in your ledger.</li>
+                                        <li>Sort the Excel sheet by Column F (Posterior Score) Largest to Smallest.</li>
+                                        <li>Select the top 50 transactions.</li>
+                                        <li>Request invoices for these 50 specific items.</li>
+                                    </ol>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 2. K-Means Simulator ---
+
+        const KMeansSimulator = () => {
+            const [iteration, setIteration] = useState(0);
+            const [stepPhase, setStepPhase] = useState(0); // 0: Init, 1: Measure, 2: Assign, 3: Move
+            const [feedback, setFeedback] = useState("Initialization: We place 2 random Centroids (C1, C2).");
+            const [mathLog, setMathLog] = useState(["Waiting to start..."]);
+            const [isConverged, setIsConverged] = useState(false);
+
+            const points = [
+                { id: 1, x: 20, y: 80, label: "T1" },
+                { id: 2, x: 25, y: 75, label: "T2" },
+                { id: 3, x: 80, y: 30, label: "T3" },
+                { id: 4, x: 85, y: 25, label: "T4" },
+                { id: 5, x: 50, y: 55, label: "T5" },
+            ];
+
+            const initialCentroids = [
+                { name: "C1", x: 10, y: 90 }, 
+                { name: "C2", x: 90, y: 10 } 
+            ];
+
+            const [centroids, setCentroids] = useState(initialCentroids);
+            const [assignments, setAssignments] = useState([null, null, null, null, null]);
+
+            const getDistance = (p, c) => Math.sqrt(Math.pow(p.x - c.x, 2) + Math.pow(p.y - c.y, 2));
+
+            const resetSim = () => {
+                setIteration(0);
+                setStepPhase(0);
+                setIsConverged(false);
+                setCentroids(initialCentroids);
+                setAssignments([null, null, null, null, null]);
+                setFeedback("Initialization: We place 2 random Centroids (C1, C2).");
+                setMathLog(["Simulation Reset."]);
+            };
+
+            const nextStep = () => {
+                if (isConverged) {
+                    resetSim();
+                    return;
+                }
+
+                let nextPhase = stepPhase + 1;
+                if (nextPhase > 3) nextPhase = 1;
+                setStepPhase(nextPhase);
+
+                if (nextPhase === 1) {
+                    setFeedback("Phase 1: Measuring Distances...");
+                    const logs = points.map(p => {
+                        const d1 = getDistance(p, centroids[0]).toFixed(1);
+                        const d2 = getDistance(p, centroids[1]).toFixed(1);
+                        return `${p.label}: Dist to C1=${d1}, Dist to C2=${d2}`;
+                    });
+                    setMathLog(logs);
+                } else if (nextPhase === 2) {
+                    const newAssignments = points.map(p => {
+                        const d1 = getDistance(p, centroids[0]);
+                        const d2 = getDistance(p, centroids[1]);
+                        return d1 < d2 ? 0 : 1;
+                    });
+                    setAssignments(newAssignments);
+                    setFeedback("Phase 2: Assigning Clusters based on shortest distance.");
+                    setMathLog(["Points colored Blue are closer to C1.", "Points colored Amber are closer to C2."]);
+                } else if (nextPhase === 3) {
+                    const newCentroids = [...centroids];
+                    const logs = [];
+                    let maxMovement = 0;
+
+                    [0, 1].forEach(cIdx => {
+                        const assignedPoints = points.filter((_, i) => assignments[i] === cIdx);
+                        if (assignedPoints.length > 0) {
+                            const avgX = assignedPoints.reduce((sum, p) => sum + p.x, 0) / assignedPoints.length;
+                            const avgY = assignedPoints.reduce((sum, p) => sum + p.y, 0) / assignedPoints.length;
+                            
+                            // Check movement
+                            const distMoved = Math.sqrt(Math.pow(avgX - centroids[cIdx].x, 2) + Math.pow(avgY - centroids[cIdx].y, 2));
+                            if (distMoved > maxMovement) maxMovement = distMoved;
+
+                            newCentroids[cIdx] = { ...newCentroids[cIdx], x: avgX, y: avgY };
+                            logs.push(`C${cIdx+1} moved to Average X:${avgX.toFixed(0)}, Y:${avgY.toFixed(0)}`);
+                        }
+                    });
+
+                    setCentroids(newCentroids);
+                    setIteration(prev => prev + 1);
+
+                    if (maxMovement < 1.0) {
+                        setIsConverged(true);
+                        setFeedback("Converged! Centroids stopped moving. The groups are final.");
+                        setMathLog([...logs, "CONVERGENCE REACHED."]);
+                    } else {
+                        setFeedback("Phase 3: Moving Centroids to center. Loop continues...");
+                        setMathLog(logs);
+                    }
+                }
+            };
+
+            return (
+                <div className="flex flex-col h-full gap-4 animate-fade-in">
+                    <div className="bg-purple-50 p-4 rounded-lg border border-purple-100 flex justify-between items-center flex-none">
+                        <div>
+                            <h3 className="font-bold text-purple-900">K-Means Control Panel (Loop {Math.max(1, Math.ceil(iteration/3))})</h3>
+                            <p className="text-sm text-purple-800 font-medium">{feedback}</p>
+                        </div>
+                        <button onClick={nextStep} className={`px-4 py-2 text-white rounded font-bold shadow-sm text-sm transition
+                            ${isConverged ? 'bg-slate-700 hover:bg-slate-800' : 'bg-purple-600 hover:bg-purple-700'}`}>
+                            {isConverged ? "Reset Simulation" : 
+                             stepPhase === 0 ? "Start: Measure Distances" : 
+                             stepPhase === 1 ? "Next: Assign Clusters" : 
+                             stepPhase === 2 ? "Next: Move Centroids" : "Next: Measure Distances"}
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col lg:flex-row gap-4 h-full overflow-hidden">
+                        <div className="flex-1 flex flex-col gap-4 overflow-auto">
+                            {/* Data Points Table */}
+                            <div className="bg-white border border-gray-300 shadow-sm">
+                                <div className="bg-gray-100 p-2 font-bold text-xs text-gray-700 border-b">1. Transaction Data (Points)</div>
+                                <div className="grid grid-cols-[3rem_1fr_1fr_1fr_1fr]">
+                                    <div className="bg-gray-100 border-r border-b border-gray-300"></div>
+                                    <ExcelCell colHeader value="A" />
+                                    <ExcelCell colHeader value="B" />
+                                    <ExcelCell colHeader value="C" />
+                                    <ExcelCell colHeader value="D" />
+                                    
+                                    <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500">1</div>
+                                    <ExcelCell isHeader value="ID" />
+                                    <ExcelCell isHeader value="Amt (X)" />
+                                    <ExcelCell isHeader value="Risk (Y)" />
+                                    <ExcelCell isHeader value="Cluster" />
+                                    
+                                    {points.map((p, i) => (
+                                        <React.Fragment key={p.id}>
+                                            <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">{i + 2}</div>
+                                            <ExcelCell value={p.label} className="text-center" />
+                                            <ExcelCell value={p.x} className="text-center" />
+                                            <ExcelCell value={p.y} className="text-center" />
+                                            <ExcelCell 
+                                                value={assignments[i] === null ? "-" : assignments[i] === 0 ? "C1" : "C2"} 
+                                                className={`text-center font-bold ${assignments[i] === 0 ? 'text-blue-600' : assignments[i] === 1 ? 'text-amber-600' : ''}`} 
+                                            />
+                                        </React.Fragment>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Centroids Table */}
+                            <div className="bg-white border border-gray-300 shadow-sm">
+                                <div className="bg-gray-100 p-2 font-bold text-xs text-gray-700 border-b">2. Centroid Locations (Reference)</div>
+                                <div className="grid grid-cols-[3rem_1fr_1fr_1fr_1fr]">
+                                    <div className="bg-gray-100 border-r border-b border-gray-300"></div>
+                                    <ExcelCell colHeader value="G" />
+                                    <ExcelCell colHeader value="H" />
+                                    <ExcelCell colHeader value="I" />
+                                    <ExcelCell colHeader value="J" />
+                                    
+                                    <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500">1</div>
+                                    <ExcelCell isHeader value="Name" />
+                                    <ExcelCell isHeader value="X Pos" />
+                                    <ExcelCell isHeader value="Y Pos" />
+                                    <ExcelCell isHeader value="" />
+
+                                    <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">2</div>
+                                    <ExcelCell value="C1" className="text-center font-bold text-blue-600" />
+                                    <ExcelCell value={Math.round(centroids[0].x)} className="text-center bg-blue-50" />
+                                    <ExcelCell value={Math.round(centroids[0].y)} className="text-center bg-blue-50" />
+                                    <ExcelCell value="" />
+
+                                    <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">3</div>
+                                    <ExcelCell value="C2" className="text-center font-bold text-amber-600" />
+                                    <ExcelCell value={Math.round(centroids[1].x)} className="text-center bg-amber-50" />
+                                    <ExcelCell value={Math.round(centroids[1].y)} className="text-center bg-amber-50" />
+                                    <ExcelCell value="" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 flex flex-col gap-4">
+                            <div className="bg-white border border-gray-300 shadow-sm relative p-4 flex flex-col items-center justify-center bg-slate-50 min-h-[300px]">
+                                <h4 className="absolute top-2 left-2 text-xs font-bold text-gray-400 uppercase">Visual Plot</h4>
+                                <div className="relative w-64 h-64 border-l-2 border-b-2 border-gray-400 bg-white">
+                                    <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 pointer-events-none">
+                                        {[...Array(16)].map((_, i) => <div key={i} className="border-r border-t border-gray-100"></div>)}
+                                    </div>
+                                    <div className="absolute -left-6 top-0 text-[10px] text-gray-400">100</div>
+                                    <div className="absolute -left-6 bottom-0 text-[10px] text-gray-400">0</div>
+                                    <div className="absolute left-0 -bottom-5 text-[10px] text-gray-400">0</div>
+                                    <div className="absolute right-0 -bottom-5 text-[10px] text-gray-400">100</div>
+                                    {points.map((p, i) => (
+                                        <div 
+                                            key={p.id}
+                                            className={`absolute w-3 h-3 -ml-1.5 -mt-1.5 rounded-full border border-gray-600 z-10 transition-colors duration-500
+                                                ${assignments[i] === 0 ? 'bg-blue-500' : assignments[i] === 1 ? 'bg-amber-500' : 'bg-gray-400'}
+                                            `}
+                                            style={{ left: `${p.x}%`, bottom: `${p.y}%` }}
+                                        >
+                                            <span className="absolute -top-4 -left-1 text-[10px] text-gray-500 font-bold">{p.label}</span>
+                                        </div>
+                                    ))}
+                                    {centroids.map((c, i) => (
+                                        <div 
+                                            key={i}
+                                            className={`absolute w-6 h-6 -ml-3 -mt-3 flex items-center justify-center rounded border-2 z-20 shadow-md transition-all duration-1000 ease-in-out
+                                                ${i === 0 ? 'border-blue-600 bg-blue-100 text-blue-700' : 'border-amber-600 bg-amber-100 text-amber-700'}
+                                            `}
+                                            style={{ left: `${c.x}%`, bottom: `${c.y}%` }}
+                                        >
+                                            <span className="text-xs font-bold">C{i+1}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-8 flex space-x-6 text-xs text-gray-500">
+                                    <div className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span> Cluster 1</div>
+                                    <div className="flex items-center"><span className="w-2 h-2 bg-amber-500 rounded-full mr-1"></span> Cluster 2</div>
+                                </div>
+                            </div>
+                            
+                            {isConverged ? (
+                                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200 animate-fade-in flex-1">
+                                    <h4 className="font-bold text-purple-900 mb-2 flex items-center">
+                                        <CheckCircle size={18} className="mr-2" />
+                                        Final Interpretation
+                                    </h4>
+                                    <p className="text-xs text-purple-800 mb-2">
+                                        The algorithm has separated the data into two distinct groups based on Amount (X) and Risk Score (Y).
+                                    </p>
+                                    <ul className="list-disc pl-4 text-xs text-purple-700 space-y-1">
+                                        <li><strong>Cluster 1 (Blue):</strong> High Risk (Y &gt; 50). In an audit, this group represents "High Priority" for fraud review.</li>
+                                        <li><strong>Cluster 2 (Amber):</strong> Low Risk (Y &lt; 50) and High Amount (X &gt; 50). These might be large but standard vendor payments.</li>
+                                    </ul>
+                                </div>
+                            ) : (
+                                <div className="bg-slate-800 text-slate-100 p-4 rounded-lg text-xs font-mono h-full overflow-auto flex-1">
+                                    <div className="uppercase text-slate-400 font-bold mb-2 pb-1 border-b border-slate-700">Algorithm Math Log</div>
+                                    {mathLog.map((log, i) => (
+                                        <div key={i} className="mb-1">{"> " + log}</div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 3. Regression Simulator ---
+
+        const RegSimulator = () => {
+            const [step, setStep] = useState(0);
+            const [feedback, setFeedback] = useState("");
+            const [userInputs, setUserInputs] = useState({});
+
+            const steps = [
+                {
+                    targetCell: "E3",
+                    result: "0.11",
+                    displayFormula: "=SLOPE(C2:C7, B2:B7)",
+                    desc: "1. Calculate Slope (Trend) for Months 1-6.",
+                    title: "Step 1: The Slope"
+                },
+                {
+                    targetCell: "E4",
+                    result: "-0.5",
+                    displayFormula: "=INTERCEPT(C2:C7, B2:B7)",
+                    desc: "2. Calculate Intercept (Baseline) for Months 1-6.",
+                    title: "Step 2: The Intercept"
+                },
+                {
+                    targetCell: "E7",
+                    result: "$21.5k",
+                    displayFormula: "=E3 * B8 + E4",
+                    desc: "3. Predict Month 7 using the Slope and Intercept.",
+                    title: "Step 3: The Prediction"
+                }
+            ];
+
+            const handleCellClick = (cellId) => {
+                if (cellId === steps[step].targetCell) {
+                    setUserInputs({ ...userInputs, [cellId]: steps[step].displayFormula });
+                    setFeedback("Correct!");
+                    setTimeout(() => {
+                        if (step < steps.length - 1) {
+                            setStep(step + 1);
+                            setFeedback("");
+                        } else {
+                            setFeedback("Model Complete. See Analysis below.");
+                        }
+                    }, 1500);
+                }
+            };
+
+            const data = [
+                { mo: 1, rev: 100, ar: 10 },
+                { mo: 2, rev: 120, ar: 12 },
+                { mo: 3, rev: 130, ar: 14 },
+                { mo: 4, rev: 150, ar: 15 },
+                { mo: 5, rev: 170, ar: 18 },
+                { mo: 6, rev: 180, ar: 19 },
+            ];
+
+            return (
+                <div className="flex flex-col h-full gap-4 animate-fade-in">
+                    <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100 flex-none">
+                        <h3 className="font-bold text-indigo-900">{steps[step].title}</h3>
+                        <p className="text-sm text-indigo-800">{steps[step].desc}</p>
+                        {feedback && <div className="mt-2 text-sm font-bold text-indigo-600 animate-pulse">{feedback}</div>}
+                    </div>
+
+                    <div className="flex flex-col xl:flex-row gap-4 h-full overflow-hidden">
+                        {/* Data Table */}
+                        <div className="flex-none xl:flex-1 bg-white border border-gray-300 shadow-sm overflow-auto max-h-[40vh] xl:max-h-full">
+                            <div className="bg-gray-100 p-2 font-bold text-xs text-gray-700 border-b sticky top-0 z-10">Training Set (Mos 1-6)</div>
+                            <div className="grid grid-cols-[3rem_1fr_1fr_1fr] min-w-[300px]">
+                                <div className="bg-gray-100 border-r border-b border-gray-300"></div>
+                                <ExcelCell colHeader value="A" />
+                                <ExcelCell colHeader value="B" />
+                                <ExcelCell colHeader value="C" />
+                                <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">1</div>
+                                <ExcelCell isHeader value="Month" />
+                                <ExcelCell isHeader value="Rev (X)" />
+                                <ExcelCell isHeader value="AR (Y)" />
+                                {data.map((r, i) => (
+                                    <React.Fragment key={r.mo}>
+                                        <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">{i + 2}</div>
+                                        <ExcelCell value={r.mo} className="text-center" />
+                                        <ExcelCell value={`$${r.rev}k`} className="text-center" />
+                                        <ExcelCell value={`$${r.ar}k`} className="text-center" />
+                                    </React.Fragment>
+                                ))}
+                                <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">8</div>
+                                <ExcelCell value="7" className="bg-yellow-50 text-center font-bold" />
+                                <ExcelCell value="$200k" className="bg-yellow-50 text-center font-bold" />
+                                <ExcelCell value="$40k" className="bg-red-50 text-center font-bold text-red-600" />
+                            </div>
+                        </div>
+
+                        {/* Analysis Panel - FIXED LAYOUT */}
+                        <div className="flex-none xl:flex-1 flex flex-col gap-4 overflow-hidden">
+                            <div className="bg-white border border-gray-300 shadow-sm flex flex-col h-full overflow-hidden">
+                                <div className="bg-gray-100 p-2 font-bold text-xs text-gray-700 border-b flex-none">Regression Output</div>
+                                <div className="overflow-auto excel-scroll flex-1">
+                                    <div className="grid grid-cols-[3rem_120px_minmax(200px,1fr)] min-w-[320px]">
+                                        <div className="bg-gray-100 border-r border-b border-gray-300"></div>
+                                        <ExcelCell colHeader value="D" />
+                                        <ExcelCell colHeader value="E" />
+                                        
+                                        <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">3</div>
+                                        <ExcelCell value="Slope" className="font-medium" />
+                                        <ExcelCell 
+                                            result={userInputs.E3 ? steps[0].result : null}
+                                            value=""
+                                            onClick={() => handleCellClick("E3")} 
+                                            formula={userInputs.E3} 
+                                            isSelected={steps[step].targetCell==="E3"} 
+                                            className={!userInputs.E3 ? "bg-yellow-50" : ""} 
+                                        />
+
+                                        <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">4</div>
+                                        <ExcelCell value="Intercept" className="font-medium" />
+                                        <ExcelCell 
+                                            result={userInputs.E4 ? steps[1].result : null}
+                                            value=""
+                                            onClick={() => handleCellClick("E4")} 
+                                            formula={userInputs.E4} 
+                                            isSelected={steps[step].targetCell==="E4"} 
+                                            className={!userInputs.E4 ? "bg-yellow-50" : ""} 
+                                        />
+
+                                        <div className="bg-gray-100 border-r border-b border-gray-300 font-bold text-center text-xs py-1 text-slate-500 flex items-center justify-center">7</div>
+                                        <ExcelCell value="Mo 7 Forecast" className="font-bold text-indigo-700" />
+                                        <ExcelCell 
+                                            result={userInputs.E7 ? steps[2].result : null}
+                                            value=""
+                                            onClick={() => handleCellClick("E7")} 
+                                            formula={userInputs.E7} 
+                                            isSelected={steps[step].targetCell==="E7"} 
+                                            className={`font-bold ${!userInputs.E7 ? "bg-yellow-50" : "bg-indigo-50 text-indigo-700"}`} 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {userInputs.E7 && (
+                                <div className="bg-white border border-gray-300 shadow-sm p-4 rounded animate-fade-in flex-none">
+                                    <h4 className="font-bold text-slate-800 text-sm mb-2 flex items-center">
+                                        <AlertTriangle size={16} className="mr-2 text-red-500"/> Anomaly Detection
+                                    </h4>
+                                    <p className="text-xs text-slate-600 mb-2">
+                                        We compare the <strong>Actual Value</strong> ($40k) vs. <strong>Predicted Value</strong> ($21.5k).
+                                    </p>
+                                    <div className="bg-red-50 p-2 rounded border border-red-100 text-xs font-mono text-red-800 mb-2">
+                                        Residual = 40.0 - 21.5 = <span className="font-bold">+18.5k</span>
+                                    </div>
+                                    <p className="text-xs text-slate-600">
+                                        Because the Residual ($18.5k) is almost double the prediction, this is mathematically significant (not just subjective). In Excel, you can use the <strong>Data Analysis Toolpak</strong> to calculate "Standard Residuals" to automate this flagging.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- 4. Warranty Data Gen ---
+
+        const WarrantyDataGen = () => {
+            const downloadExcel = () => {
+                 // 1. Create Instructions Sheet
+                 const instructionsData = [
+                    ["INSTRUCTIONS: Warranty Claims Analysis"],
+                    [""],
+                    ["Goal:", "Build a regression model or cluster analysis to find fraud in warranty claims."],
+                    [""],
+                    ["STEP 1: PREPARE"],
+                    ["1. Go to the 'Claims_Data' tab."],
+                    ["2. Randomize the data."],
+                    ["3. Use 80% of rows for training, 20% for validation."],
+                    [""],
+                    ["STEP 2: ANALYSIS IDEAS"],
+                    ["1. Regression: Plot 'ProductAge' vs 'ClaimAmount'."],
+                    ["   - Do older products generally have lower claim amounts? If so, find outliers."],
+                    ["2. K-Means: Use columns B and C as X and Y coordinates."],
+                    ["   - Find clusters of 'High Amount / Low Age'."]
+                ];
+
+                // 2. Generate Data
+                const dataRows = [
+                    ["ClaimID", "ProductAgeMonths", "ClaimAmount", "Region", "FraudLabel"]
+                ];
+                
+                for (let i = 1; i <= 100; i++) {
+                    const age = Math.floor(Math.random() * 36) + 1; 
+                    let amount = Math.floor(Math.random() * 500) + 50; 
+                    const regions = ["North", "South", "East", "West"];
+                    const region = regions[Math.floor(Math.random() * regions.length)];
+                    let label = "Valid";
+
+                    if (age < 3 && amount > 400) label = "Fraud";
+                    if (amount > 480) label = "Fraud";
+                    if (Math.random() > 0.9) label = (label === "Fraud" ? "Valid" : "Fraud");
+
+                    dataRows.push([1000 + i, age, amount, region, label]);
+                }
+
+                // 3. Create Workbook
+                const wb = XLSX.utils.book_new();
+                const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
+                const wsData = XLSX.utils.aoa_to_sheet(dataRows);
+                
+                wsInstructions['!cols'] = [{wch: 60}];
+                wsData['!cols'] = [{wch: 10}, {wch: 20}, {wch: 15}, {wch: 10}, {wch: 10}];
+
+                XLSX.utils.book_append_sheet(wb, wsInstructions, "ReadMe");
+                XLSX.utils.book_append_sheet(wb, wsData, "Claims_Data");
+
+                XLSX.writeFile(wb, "Warranty_Claims_Data.xlsx");
+            };
+
+            return (
+                <div className="space-y-6 animate-fade-in">
+                    <ModuleCard title="Data Generator: Warranty Claims">
+                        <div className="flex flex-col md:flex-row gap-8">
+                            <div className="flex-1">
+                                <p className="mb-4 text-sm">
+                                    Use this tool to generate a raw dataset of 100 warranty claims.
+                                </p>
+                                <div className="bg-slate-50 border border-slate-200 rounded p-4 mb-4">
+                                    <h4 className="font-bold text-xs text-slate-500 uppercase mb-2">Instructions</h4>
+                                    <ul className="list-disc list-inside text-sm space-y-2 text-slate-700">
+                                        <li>Download the <strong>.xlsx</strong> file below.</li>
+                                        <li>It contains two tabs: <strong>ReadMe</strong> (Instructions) and <strong>Claims_Data</strong>.</li>
+                                        <li>Use this data to practice the K-Means and Regression concepts taught in the previous modules.</li>
+                                    </ul>
+                                </div>
+                                <button 
+                                    onClick={downloadExcel}
+                                    className="flex items-center px-6 py-3 bg-emerald-600 text-white font-bold rounded shadow hover:bg-emerald-700 transition"
+                                >
+                                    <Download size={20} className="mr-2" /> Download Dataset (.xlsx)
+                                </button>
+                            </div>
+                            <div className="w-full md:w-1/3 bg-slate-100 p-4 rounded border border-slate-200 flex flex-col items-center justify-center text-slate-400">
+                                <Database size={48} className="mb-2" />
+                                <span className="text-xs font-mono">100 Records Generated</span>
+                            </div>
+                        </div>
+                    </ModuleCard>
+                </div>
+            );
+        };
+
+        // --- Main App ---
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('concept-nb');
+            const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+            const renderContent = () => {
+                switch(activeTab) {
+                    case 'concept-nb': return <ConceptNB />;
+                    case 'concept-reg': return <ConceptReg />;
+                    case 'concept-km': return <ConceptKM />;
+                    case 'foundation-train': return <TrainingSetModule />;
+                    case 'case-uber': return <CaseStudyUber />;
+                    case 'nb-simulator': return <NBSimulator />;
+                    case 'reg-simulator': return <RegSimulator />;
+                    case 'km-simulator': return <KMeansSimulator />;
+                    case 'warranty-data': return <WarrantyDataGen />;
+                    default: return <ConceptNB />;
+                }
+            };
+
+            return (
+                <div className="flex h-screen w-full bg-slate-50 font-sans text-slate-900">
+                    <div className={`bg-white border-r border-slate-200 flex flex-col transition-all duration-300 relative ${isSidebarCollapsed ? 'w-20' : 'w-72'}`}>
+                        <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="absolute -right-3 top-8 bg-white border border-slate-200 rounded-full p-1 shadow-sm hover:bg-slate-50 z-20 text-slate-500">
+                            {isSidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                        </button>
+
+                        <div className={`p-6 border-b border-slate-100 flex items-center ${isSidebarCollapsed ? 'justify-center' : ''}`}>
+                            <div className="bg-indigo-600 rounded-lg p-2 text-white shadow-lg">
+                                <Activity size={24} />
+                            </div>
+                            {!isSidebarCollapsed && (
+                                <div className="ml-3">
+                                    <h1 className="font-bold text-lg text-slate-800">AuditAI</h1>
+                                    <p className="text-xs text-slate-500">Forensic Suite v4.0</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto px-3 py-4">
+                            <SectionHeader title="0. Concepts" collapsed={isSidebarCollapsed} />
+                            <SidebarItem icon={BookOpen} label="Naive Bayes" active={activeTab === 'concept-nb'} onClick={() => setActiveTab('concept-nb')} collapsed={isSidebarCollapsed} />
+                            <SidebarItem icon={BookOpen} label="Regression" active={activeTab === 'concept-reg'} onClick={() => setActiveTab('concept-reg')} collapsed={isSidebarCollapsed} />
+                            <SidebarItem icon={BookOpen} label="K-Means" active={activeTab === 'concept-km'} onClick={() => setActiveTab('concept-km')} collapsed={isSidebarCollapsed} />
+
+                            <SectionHeader title="1. Foundations" collapsed={isSidebarCollapsed} />
+                            <SidebarItem icon={Scissors} label="Training vs. Testing" active={activeTab === 'foundation-train'} onClick={() => setActiveTab('foundation-train')} collapsed={isSidebarCollapsed} />
+
+                            <SectionHeader title="2. Practice Labs" collapsed={isSidebarCollapsed} />
+                            <SidebarItem icon={Briefcase} label="Uber Lab: Cash Agents" active={activeTab === 'case-uber'} onClick={() => setActiveTab('case-uber')} collapsed={isSidebarCollapsed} />
+
+                            <SectionHeader title="3. Forensic Simulators" collapsed={isSidebarCollapsed} />
+                            <SidebarItem icon={Calculator} label="Naive Bayes Sim" active={activeTab === 'nb-simulator'} onClick={() => setActiveTab('nb-simulator')} collapsed={isSidebarCollapsed} />
+                            <SidebarItem icon={Sigma} label="Regression Sim" active={activeTab === 'reg-simulator'} onClick={() => setActiveTab('reg-simulator')} collapsed={isSidebarCollapsed} />
+                            <SidebarItem icon={Layout} label="K-Means Sim" active={activeTab === 'km-simulator'} onClick={() => setActiveTab('km-simulator')} collapsed={isSidebarCollapsed} />
+
+                            <SectionHeader title="4. Data" collapsed={isSidebarCollapsed} />
+                            <SidebarItem icon={Database} label="Warranty Data Gen" active={activeTab === 'warranty-data'} onClick={() => setActiveTab('warranty-data')} collapsed={isSidebarCollapsed} />
+                        </div>
+                    </div>
+
+                    <div className="flex-1 flex flex-col h-full overflow-hidden">
+                        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm flex-none">
+                            <h2 className="text-xl font-bold text-slate-800">
+                                {activeTab === 'concept-nb' && "Concept: Naive Bayes"}
+                                {activeTab === 'concept-reg' && "Concept: Regression"}
+                                {activeTab === 'concept-km' && "Concept: K-Means"}
+                                {activeTab === 'foundation-train' && "Machine Learning Foundations"}
+                                {activeTab === 'case-uber' && "Uber Lab: Cash Intermediaries"}
+                                {activeTab === 'nb-simulator' && "Naive Bayes Lab"}
+                                {activeTab === 'reg-simulator' && "Regression Lab"}
+                                {activeTab === 'km-simulator' && "K-Means Clustering Lab"}
+                                {activeTab === 'warranty-data' && "Warranty Data Generator"}
+                            </h2>
+                        </header>
+                        <main className="flex-1 overflow-auto bg-slate-50 p-6 md:p-8">
+                            <div className="max-w-6xl mx-auto h-full flex flex-col">
+                                {renderContent()}
+                            </div>
+                        </main>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

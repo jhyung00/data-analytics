@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The AI Auditor: Fraud Detection Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+        .hint-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom scrollbar for the CSV data */
+        .csv-data::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .csv-data::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .csv-data::-webkit-scrollbar-thumb {
+            background: #888; 
+            border-radius: 4px;
+        }
+        .csv-data::-webkit-scrollbar-thumb:hover {
+            background: #555; 
+        }
+        /* Scrollbar for modal content */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-800">
+
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-magnifying-glass-chart text-2xl"></i>
+                <div>
+                    <h1 class="text-xl font-bold">The AI Auditor</h1>
+                    <p class="text-xs text-blue-100">Exploratory Data Analysis Simulation</p>
+                </div>
+            </div>
+            <!-- Time Limit Removed -->
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 space-y-8 max-w-5xl">
+
+        <!-- STEP 0: THE DATA -->
+        <section id="step-0" class="glass-panel rounded-xl p-6 border-l-4 border-blue-600">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <span class="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm mr-3">0</span>
+                Acquire the Dataset
+            </h2>
+            <p class="mb-4 text-slate-600">You have been handed the Accounts Payable ledger for <strong>"Company X"</strong>. Your job is to find the fraud hiding in these transactions.</p>
+            
+            <div class="bg-slate-800 rounded-lg p-4 relative group">
+                <button onclick="copyData()" class="absolute top-2 right-2 bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded transition-colors">
+                    <i class="fa-regular fa-copy mr-1"></i> Copy CSV
+                </button>
+                <textarea id="csvData" readonly class="csv-data w-full h-48 bg-transparent text-green-400 font-mono text-xs resize-none focus:outline-none" spellcheck="false">Invoice_ID,Vendor_Name,Invoice_Date,Amount,Description,Payment_Terms
+INV-1001,Apex Solutions,2025-10-14,423.50,IT Support Services,Net 30
+INV-1002,Global Services Inc,2025-10-15,9800.00,Strategic Consulting,Net 15
+INV-1003,Office Depot,2025-10-15,124.99,Office Supplies,Net 30
+INV-1004,FedEx,2025-10-16,89.45,Shipping Charges,Net 30
+INV-1005,Uline,2025-10-16,450.22,Warehouse Packaging,Net 30
+INV-1006,Global Services Inc,2025-10-18,9200.00,Management Fees,Net 15
+INV-1007,City Power & Light,2025-10-20,1250.33,Utilities - Oct,Net 30
+INV-1008,Dell,2025-10-21,2499.00,Laptop Workstations,Net 30
+INV-1009,Clean Co,2025-10-21,600.00,Janitorial Services,Net 30
+INV-1010,Apex Solutions,2025-10-22,5000.00,Retainer Fee,Net 30
+INV-1011,Global Services Inc,2025-10-23,9600.00,Advisory Services,Net 15
+INV-1012,Office Depot,2025-10-24,45.67,Pens and Paper,Net 30
+INV-1013,Legal Corp,2025-10-25,2500.00,Legal Consultation,Net 30
+INV-1014,FedEx,2025-10-27,230.15,Overnight Shipping,Net 30
+INV-1015,Global Services Inc,2025-10-28,9450.00,Compliance Audit,Net 15
+INV-1016,Uline,2025-10-29,120.50,Bubble Wrap,Net 30
+INV-1017,Apex Solutions,2025-10-22,5000.00,Retainer Fee,Net 30
+INV-1018,City Power & Light,2025-10-31,1100.20,Utilities - Nov Est,Net 30
+INV-1019,Dell,2025-11-03,899.99,Monitor Upgrade,Net 30
+INV-1020,Global Services Inc,2025-11-04,9100.00,Process Improvement,Net 15
+INV-1021,Clean Co,2025-11-05,500.00,Deep Cleaning,Net 30
+INV-1022,Office Depot,2025-11-06,230.45,Printer Toner,Net 30
+INV-1023,Global Services Inc,2025-11-07,9900.00,System Integration,Net 15
+INV-1024,FedEx,2025-11-08,125.60,Shipping Charges,Net 30
+INV-1025,Legal Corp,2025-11-10,3000.00,Contract Review,Net 30
+INV-1026,Uline,2025-11-11,875.25,Pallet Wrap,Net 30
+INV-1027,Global Services Inc,2025-11-12,9300.00,Risk Assessment,Net 15
+INV-1028,Apex Solutions,2025-11-13,215.75,Software License,Net 30
+INV-1029,City Power & Light,2025-11-14,1340.55,Utilities - Nov Final,Net 30
+INV-1030,Global Services Inc,2025-11-15,9750.00,Efficiency Audit,Net 15
+INV-1031,Dell,2025-11-17,450.00,Docking Stations,Net 30
+INV-1032,Clean Co,2025-11-18,600.00,Janitorial Services,Net 30
+INV-1033,Office Depot,2025-11-19,89.99,Binders,Net 30
+INV-1034,FedEx,2025-11-20,340.20,Freight Shipping,Net 30
+INV-1035,Uline,2025-11-21,200.00,Tape Dispensers,Net 30
+INV-1036,Legal Corp,2025-11-24,1500.00,Litigation Support,Net 30
+INV-1037,Apex Solutions,2025-11-25,675.50,Hardware Repair,Net 30
+INV-1038,City Power & Light,2025-11-26,1200.10,Utilities - Dec Est,Net 30
+INV-1039,Dell,2025-11-27,1200.00,Server Rack,Net 30
+INV-1040,Clean Co,2025-11-28,600.00,Janitorial Services,Net 30
+INV-1041,Office Depot,2025-12-01,34.50,Post-its,Net 30
+INV-1042,FedEx,2025-12-02,90.25,Shipping Charges,Net 30
+INV-1043,Uline,2025-12-03,560.80,Cardboard Boxes,Net 30
+INV-1044,Legal Corp,2025-12-04,1850.75,Trademark Filing,Net 30
+INV-1045,Apex Solutions,2025-12-05,925.00,Network Setup,Net 30
+INV-1046,City Power & Light,2025-12-08,1280.40,Utilities - Dec Final,Net 30
+INV-1047,Dell,2025-12-09,150.00,Keyboard/Mouse,Net 30
+INV-1048,Clean Co,2025-12-10,600.00,Janitorial Services,Net 30
+INV-1049,Office Depot,2025-12-11,210.30,Whiteboard Markers,Net 30
+INV-1050,FedEx,2025-12-12,115.50,Shipping Charges,Net 30
+INV-1051,Uline,2025-12-15,340.25,Packing Peanuts,Net 30
+INV-1052,Legal Corp,2025-12-16,4000.00,Merger Consult,Net 30
+INV-1053,Apex Solutions,2025-12-17,110.00,Cable Management,Net 30
+INV-1054,City Power & Light,2025-12-18,1310.20,Utilities - Jan Est,Net 30
+INV-1055,Dell,2025-12-19,3200.50,Server Maintenance,Net 30
+INV-1056,Clean Co,2025-12-22,600.00,Janitorial Services,Net 30
+INV-1057,Office Depot,2025-12-23,65.40,Staples,Net 30
+INV-1058,FedEx,2025-12-24,205.80,Holiday Shipping,Net 30
+INV-1059,Uline,2026-01-05,120.90,Shrink Wrap,Net 30
+INV-1060,Legal Corp,2026-01-06,2200.00,Contract Drafting,Net 30
+INV-1061,Apex Solutions,2026-01-07,350.25,Cloud Storage,Net 30
+INV-1062,City Power & Light,2026-01-08,1260.75,Utilities - Jan Final,Net 30
+INV-1063,Dell,2026-01-09,950.00,Laptop,Net 30
+INV-1064,Clean Co,2026-01-12,600.00,Janitorial Services,Net 30
+INV-1065,Office Depot,2026-01-13,140.50,Desk Organizer,Net 30
+INV-1066,FedEx,2026-01-14,98.20,Shipping Charges,Net 30
+INV-1067,Uline,2026-01-15,410.60,Safety Vests,Net 30
+INV-1068,Legal Corp,2026-01-16,1750.00,Labor Law Consult,Net 30
+INV-1069,Apex Solutions,2026-01-19,420.00,Cybersecurity Training,Net 30
+INV-1070,City Power & Light,2026-01-20,1290.30,Utilities - Feb Est,Net 30
+INV-1071,Dell,2026-01-21,110.99,Webcam,Net 30
+INV-1072,Clean Co,2026-01-22,600.00,Janitorial Services,Net 30
+INV-1073,Office Depot,2026-01-23,55.00,Batteries,Net 30
+INV-1074,FedEx,2026-01-26,130.45,Shipping Charges,Net 30
+INV-1075,Uline,2026-01-27,230.10,Hand Trucks,Net 30
+INV-1076,Legal Corp,2026-01-28,2900.00,Patent Application,Net 30
+INV-1077,Apex Solutions,2026-01-29,80.00,Domain Renewal,Net 30
+INV-1078,City Power & Light,2026-01-30,1275.60,Utilities - Feb Final,Net 30
+INV-1079,Dell,2026-02-02,2400.50,Graphic Design PC,Net 30
+INV-1080,Clean Co,2026-02-03,600.00,Janitorial Services,Net 30
+INV-1081,Office Depot,2026-02-04,42.20,Paper Clips,Net 30
+INV-1082,FedEx,2026-02-05,145.75,Shipping Charges,Net 30
+INV-1083,Uline,2026-02-06,350.40,Warehouse Shelving,Net 30
+INV-1084,Legal Corp,2026-02-09,1600.00,Policy Review,Net 30
+INV-1085,Apex Solutions,2026-02-10,560.30,CRM Software,Net 30
+INV-1086,City Power & Light,2026-02-11,1305.80,Utilities - Mar Est,Net 30
+INV-1087,Dell,2026-02-12,180.00,Headsets,Net 30
+INV-1088,Clean Co,2026-02-13,600.00,Janitorial Services,Net 30
+INV-1089,Office Depot,2026-02-16,95.60,Calculators,Net 30
+INV-1090,FedEx,2026-02-17,160.90,Shipping Charges,Net 30
+INV-1091,Uline,2026-02-18,275.50,Industrial Scales,Net 30
+INV-1092,Legal Corp,2026-02-19,2100.00,Dispute Resolution,Net 30
+INV-1093,Apex Solutions,2026-02-20,125.00,Email Hosting,Net 30
+INV-1094,City Power & Light,2026-02-23,1288.40,Utilities - Mar Final,Net 30
+INV-1095,Dell,2026-02-24,210.00,External Hard Drives,Net 30
+INV-1096,Clean Co,2026-02-25,600.00,Janitorial Services,Net 30
+INV-1097,Office Depot,2026-02-26,78.90,Folders,Net 30
+INV-1098,FedEx,2026-02-27,112.30,Shipping Charges,Net 30
+INV-1099,Apex Solutions,2025-10-22,5000.00,Retainer Fee,Net 30
+INV-1100,Clean Co,2025-11-28,600.00,Janitorial Services,Net 30</textarea>
+            </div>
+            
+            <!-- NEW WARNING: PRIVACY ALERT -->
+            <div class="mt-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded shadow-sm">
+                <div class="font-bold flex items-center mb-1">
+                    <i class="fa-solid fa-shield-halved mr-2"></i> DATA PRIVACY ALERT
+                </div>
+                <p><strong>Do NOT paste this dataset into ChatGPT or any AI.</strong></p>
+                <p class="text-xs mt-1 text-red-600">In a real audit, uploading client ledgers to public AI is a security violation. For this simulation, you must practice strict data hygiene. Copy the data <strong>only</strong> to Excel.</p>
+            </div>
+
+            <div class="mt-2 text-sm text-slate-500">
+                <strong>Instruction:</strong> Click "Copy CSV". Open Excel. Paste into cell A1. Use <em>Data > Text to Columns</em> (Comma delimited) if needed.
+            </div>
+        </section>
+
+        <!-- NEW STEP 1: PRIME THE AI -->
+        <section class="glass-panel rounded-xl p-6 border-l-4 border-yellow-500">
+            <h2 class="text-xl font-bold mb-2 flex items-center">
+                <span class="bg-yellow-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm mr-3">1</span>
+                Step 1: Configure Your AI Assistant
+            </h2>
+            <p class="text-slate-600 mb-4">To learn the <em>process</em>, you must instruct your AI to act as a generic <strong>Excel Tutor</strong>, not a fraud analyst. </p>
+            
+            <div class="bg-yellow-50 border border-yellow-200 rounded p-4 mb-4 relative group">
+                 <button onclick="copyPrompt()" class="absolute top-2 right-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs px-3 py-1 rounded transition-colors shadow-sm">
+                    <i class="fa-regular fa-copy mr-1"></i> Copy Prompt
+                </button>
+                <h3 class="font-bold text-yellow-800 text-sm mb-2">Mandatory System Prompt</h3>
+                <p id="systemPrompt" class="text-sm text-slate-700 font-mono bg-white p-3 rounded border border-yellow-100">"I am an auditing student analyzing a CSV file in Excel. I want you to act as my Excel Technical Coach. <br><br>
+RULES:<br>
+1. Do NOT ask for the data values.<br>
+2. Do NOT analyze the data for me.<br>
+3. Only provide Excel formulas and step-by-step guides for tools like Pivot Tables and Conditional Formatting.<br>
+4. I will only provide you with the Column Headers.<br><br>
+Please confirm you are ready to help me write formulas."</p>
+            </div>
+             <p class="text-xs text-slate-500"><strong>Action:</strong> Copy the text above and paste it into your AI chat <em>before</em> asking any questions.</p>
+        </section>
+
+        <!-- STEP 2: CLIENT INTERVIEW (Renumbered) -->
+        <section class="glass-panel rounded-xl p-6 border-l-4 border-indigo-500">
+            <h2 class="text-xl font-bold mb-2 flex items-center">
+                <span class="bg-indigo-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm mr-3">2</span>
+                Phase 2: The Client Interview
+            </h2>
+            <p class="text-slate-600 mb-4">Now that your AI is configured, ask it to help you identify risks based <strong>only on the headers</strong>.</p>
+            
+            <div class="bg-indigo-50 border border-indigo-100 rounded p-4 mb-4">
+                <h3 class="font-bold text-indigo-800 text-sm mb-2"><i class="fa-solid fa-robot mr-2"></i>Prompt Strategy</h3>
+                <p class="text-sm text-slate-700 italic">"I have an Excel sheet with these headers: Invoice_ID, Vendor_Name, Invoice_Date, Amount, Description. What are the top 5 fraud risks I should look for in this specific type of data? For each risk, tell me what Excel tool detects it."</p>
+            </div>
+
+            <button onclick="toggleHint('hint1')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 focus:outline-none">
+                <i class="fa-regular fa-lightbulb mr-1"></i> Stuck? Click for a Hint
+            </button>
+            <div id="hint1" class="hint-content mt-3 text-sm bg-yellow-50 p-3 rounded border border-yellow-200">
+                <strong>Hint:</strong> The AI should suggest looking for <strong>Duplicate Invoices</strong>, <strong>Round Numbers</strong>, and violations of <strong>Benford's Law</strong>.
+            </div>
+        </section>
+
+        <!-- STEP 3: TECHNICAL ANALYSIS (Expanded) -->
+        <section class="glass-panel rounded-xl p-6 border-l-4 border-emerald-500">
+            <h2 class="text-xl font-bold mb-2 flex items-center">
+                <span class="bg-emerald-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm mr-3">3</span>
+                Phase 3: Technical Execution
+            </h2>
+            <p class="text-slate-600 mb-4">Now, ask the AI <strong>how</strong> to find these red flags in Excel.</p>
+
+            <div class="grid md:grid-cols-2 gap-4">
+                <!-- Task A -->
+                <div class="bg-white p-4 rounded shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-700 mb-2">Task A: Duplicate Payments</h3>
+                    <p class="text-sm text-slate-600 mb-3">Ask AI: <em>"How do I find double payments in Excel where Vendor and Amount are the same?"</em></p>
+                    <button onclick="toggleHint('hint2a')" class="text-xs text-emerald-600 font-bold"><i class="fa-solid fa-key mr-1"></i> Reveal Excel Formula</button>
+                    <div id="hint2a" class="hint-content mt-2 text-xs bg-slate-100 p-2 rounded font-mono text-slate-600">
+                        =COUNTIFS(B:B, B2, D:D, D2) > 1
+                    </div>
+                </div>
+
+                <!-- Task B -->
+                <div class="bg-white p-4 rounded shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-700 mb-2">Task B: Round Numbers</h3>
+                    <p class="text-sm text-slate-600 mb-3">Ask AI: <em>"How do I filter for amounts that end in .00 (no cents) in Excel?"</em></p>
+                    <button onclick="toggleHint('hint2b')" class="text-xs text-emerald-600 font-bold"><i class="fa-solid fa-key mr-1"></i> Reveal Excel Formula</button>
+                    <div id="hint2b" class="hint-content mt-2 text-xs bg-slate-100 p-2 rounded font-mono text-slate-600">
+                        =MOD(D2, 1) = 0
+                    </div>
+                </div>
+
+                <!-- Task C: Weekend Warriors -->
+                <div class="bg-white p-4 rounded shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-700 mb-2">Task C: Weekend Activity</h3>
+                    <p class="text-sm text-slate-600 mb-3">Fraudsters often process fake invoices when the office is empty (Sat/Sun). Ask AI: <em>"How do I highlight dates that fall on a weekend in Excel?"</em></p>
+                    <button onclick="toggleHint('hint2c')" class="text-xs text-emerald-600 font-bold"><i class="fa-solid fa-key mr-1"></i> Reveal Excel Formula</button>
+                    <div id="hint2c" class="hint-content mt-2 text-xs bg-slate-100 p-2 rounded font-mono text-slate-600">
+                        =WEEKDAY(C2, 2) > 5 <br> (This checks if Day is Sat/Sun)
+                    </div>
+                </div>
+
+                <!-- Task D: Structuring -->
+                <div class="bg-white p-4 rounded shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-700 mb-2">Task D: Structuring</h3>
+                    <p class="text-sm text-slate-600 mb-3">To avoid approval limits (e.g., $10k), fraudsters bill just under the limit. Ask AI: <em>"How do I filter for amounts between $9,000 and $10,000?"</em></p>
+                    <button onclick="toggleHint('hint2d')" class="text-xs text-emerald-600 font-bold"><i class="fa-solid fa-key mr-1"></i> Reveal Excel Formula</button>
+                    <div id="hint2d" class="hint-content mt-2 text-xs bg-slate-100 p-2 rounded font-mono text-slate-600">
+                        Use Filter > Number Filters > Between... <br> OR =AND(D2>9000, D2<10000)
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STEP 4: BENFORD'S LAW (Renumbered) -->
+        <section class="glass-panel rounded-xl p-6 border-l-4 border-purple-600">
+            <h2 class="text-xl font-bold mb-2 flex items-center">
+                <span class="bg-purple-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm mr-3">4</span>
+                Phase 4: The Benford's Law Trap
+            </h2>
+            
+            <!-- EXPLANATION BLOCK: ENHANCED (Removed 4-step answer) -->
+            <div class="mb-6">
+                <!-- History & Theory -->
+                <div class="bg-white/50 rounded p-4 text-sm text-slate-700 border border-purple-100">
+                    <h3 class="font-bold text-purple-900 mb-2 text-base">
+                        <i class="fa-solid fa-book-open mr-1"></i> Origin Story
+                    </h3>
+                    <p class="mb-2"><strong>History:</strong> Originally observed by <em>Simon Newcomb</em> in 1881 and formalized by physicist <em>Frank Benford</em> in 1938. They noticed that pages in logarithm tables starting with "1" were more worn than others.</p>
+                    <p class="mb-2"><strong>The Law:</strong> In natural datasets, the leading digit is <strong>1</strong> about 30% of the time. The frequency drops as digits get larger, with <strong>9</strong> appearing less than 5% of the time.</p>
+                    <p class="text-xs italic bg-purple-100 p-2 rounded mt-2">
+                        <strong>Limitations:</strong> Works best on large, natural datasets (rivers, sales). Does NOT work on constrained numbers (phone numbers, zip codes) or psychological pricing ($9.99).
+                    </p>
+                </div>
+            </div>
+
+            <!-- Video Embed -->
+             <div class="mb-6">
+                 <p class="text-xs font-bold text-slate-500 uppercase mb-2">Video Tutorial: Benford's Law in Excel</p>
+                 <div class="relative w-full pb-[56.25%] h-0 rounded-lg overflow-hidden shadow-md bg-slate-900">
+                    <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/kWPb9a6vEZI" title="Benford's Law Tutorial" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                 </div>
+                 <p class="text-xs text-center text-slate-400 mt-1">Recommended Watch: 0:00 to 4:13</p>
+             </div>
+            
+            <div class="bg-purple-50 border border-purple-100 rounded p-4 mb-4">
+                <h3 class="font-bold text-purple-800 text-sm mb-2"><i class="fa-solid fa-robot mr-2"></i>Ask the AI</h3>
+                <ol class="list-decimal list-inside text-sm text-slate-700 space-y-1">
+                    <li>"What is the standard '4-Step Model' for using Benford's Law in fraud detection?"</li>
+                    <li>"How do I extract the first digit of the Amount column in Excel?"</li>
+                    <li>"What is the expected frequency of digits 1-9 in Benford's Law?"</li>
+                    <li>"Create a Pivot Table to count my actual first digits."</li>
+                </ol>
+            </div>
+
+            <button onclick="toggleHint('hint3')" class="text-xs font-bold text-purple-600 hover:text-purple-800 focus:outline-none">
+                <i class="fa-regular fa-lightbulb mr-1"></i> Visualization Hint
+            </button>
+            <div id="hint3" class="hint-content mt-3 text-sm bg-yellow-50 p-3 rounded border border-yellow-200">
+                <strong>Check the digit 9.</strong> Benford's law says '9' should appear about <strong>4.6%</strong> of the time. Does a specific vendor have way more '9's than that?
+            </div>
+        </section>
+
+        <!-- STEP 5: DEBRIEF (Updated with Download) -->
+        <section class="glass-panel rounded-xl p-6 border-l-4 border-orange-500 mb-12">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <span class="bg-orange-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm mr-3">5</span>
+                The Verdict
+            </h2>
+            <div class="space-y-4">
+                
+                <!-- NEW: Student Details Inputs -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Student Name <span class="text-red-500">*</span></label>
+                        <input id="studentName" type="text" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500 focus:outline-none" placeholder="Enter Full Name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Student Email <span class="text-red-500">*</span></label>
+                        <input id="studentEmail" type="email" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500 focus:outline-none" placeholder="Enter Email Address">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Who is the primary fraudulent vendor?</label>
+                    <input id="verdictVendor" type="text" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500 focus:outline-none" placeholder="Enter Vendor Name...">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Select all techniques used:</label>
+                    <div class="space-y-2 text-sm text-slate-700 bg-white p-4 rounded border border-slate-300">
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" class="form-checkbox text-orange-500 verdict-checkbox">
+                            <span>Duplicate Payments (Same amount, same date)</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" class="form-checkbox text-orange-500 verdict-checkbox">
+                            <span>Structuring/Split Invoices (Just under approval limit)</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" class="form-checkbox text-orange-500 verdict-checkbox">
+                            <span>Weekend Invoicing (Saturday/Sunday postings)</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" class="form-checkbox text-orange-500 verdict-checkbox">
+                            <span>Benford's Law Violation (Too many 9s)</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Recommended Action:</label>
+                    <textarea id="verdictAction" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-orange-500 focus:outline-none h-20" placeholder="e.g., Audit Global Services, recover duplicate cash..."></textarea>
+                </div>
+
+                <div class="pt-4 border-t border-slate-200 mt-4">
+                    <div id="downloadError" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-2 text-sm">
+                        <i class="fa-solid fa-circle-exclamation mr-1"></i> Please enter your <strong>Student Name</strong> and <strong>Email</strong> above to generate the report.
+                    </div>
+                    <button onclick="downloadReport()" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-bold transition-colors w-full md:w-auto mb-2">
+                        <i class="fa-solid fa-download mr-2"></i> Download Report
+                    </button>
+                    <p class="text-sm text-slate-600">
+                        <i class="fa-solid fa-cloud-arrow-up mr-1"></i> <strong>Submission Instructions:</strong> Upload the downloaded <code>Fraud_Audit_Report.txt</code> AND your Excel workbook to the Course Canvas page.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer with Hidden Admin Key -->
+    <footer class="bg-slate-800 text-slate-400 py-6 text-center text-xs relative">
+        <p>&copy; 2026 AI Accounting Simulations. All Data is Fictional.</p>
+        
+        <!-- THE HIDDEN KEY TRIGGER -->
+        <div class="absolute bottom-4 right-4 opacity-40 hover:opacity-100 transition-opacity cursor-pointer p-2 rounded-full hover:bg-slate-700" onclick="openInstructorModal()">
+            <i class="fa-solid fa-key text-lg" title="Instructor Access"></i>
+        </div>
+    </footer>
+
+    <!-- INSTRUCTOR MODAL (UPDATED) -->
+    <div id="instructorModal" class="fixed inset-0 bg-black/80 hidden z-[100] flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-lg w-full relative mx-4">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            
+            <!-- STATE 1: LOGIN -->
+            <div id="modalLogin" class="text-center space-y-4">
+                <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-lock text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">Instructor Access</h2>
+                <p class="text-slate-500 text-sm">Enter the session password to view the answer key.</p>
+                <div class="flex gap-2">
+                    <input type="password" id="passwordInput" class="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Password: teacher" onkeyup="if(event.key==='Enter') checkPassword()">
+                    <button onclick="checkPassword()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold transition-colors">
+                        Unlock
+                    </button>
+                </div>
+                <p id="loginError" class="text-red-500 text-xs font-bold hidden"><i class="fa-solid fa-circle-exclamation mr-1"></i> Incorrect Password</p>
+            </div>
+
+            <!-- STATE 2: CONTENT (Updated with full report) -->
+            <div id="modalContent" class="hidden">
+                <h2 class="text-2xl font-bold text-red-600 mb-4 border-b pb-2 flex items-center">
+                    <i class="fa-solid fa-user-secret mr-2"></i>Full Audit Report
+                </h2>
+                
+                <div class="space-y-4 overflow-y-auto max-h-[60vh] text-sm text-slate-700 pr-2 custom-scrollbar">
+                    
+                    <div>
+                        <h3 class="font-bold text-slate-900 border-b border-slate-200 pb-1 mb-2">1. Duplicate Payments (High Risk)</h3>
+                        <p class="mb-1"><strong>Apex Solutions:</strong> Triple payment of $5,000.00 (Rows 10, 17, 1099).</p>
+                        <p><strong>Clean Co:</strong> Double payment of $600.00 (Rows 40, 1100).</p>
+                        <p class="text-xs text-slate-500 italic">Action: Immediate cash recovery.</p>
+                    </div>
+
+                    <div class="bg-red-50 p-3 rounded border border-red-200">
+                        <h3 class="font-bold text-red-800 border-b border-red-200 pb-1 mb-2">2. Structuring & Split Invoices</h3>
+                        <p class="mb-2"><strong>Vendor:</strong> Global Services Inc.</p>
+                        <p class="mb-2"><strong>Finding:</strong> 8 transactions billed just under $10,000 (e.g., $9,800, $9,200). This is a classic "Structuring" scheme to avoid higher-level management approval limits.</p>
+                        <p><strong>Benford's Connection:</strong> This causes the massive spike in the digit "9" on the Benford's curve.</p>
+                    </div>
+
+                    <div>
+                        <h3 class="font-bold text-slate-900 border-b border-slate-200 pb-1 mb-2">3. Weekend Postings</h3>
+                        <p class="mb-1"><strong>Global Services Inc:</strong> Billed on Saturdays (Oct 18, Nov 15).</p>
+                        <p class="mb-1"><strong>FedEx & Legal Corp:</strong> Also have weekend dates.</p>
+                        <p class="text-xs text-slate-500 italic">Observation: Weekend invoices often indicate the fraudster was working when the office was empty.</p>
+                    </div>
+
+                    <div>
+                        <h3 class="font-bold text-slate-900 border-b border-slate-200 pb-1 mb-2">4. Round Dollar Amounts</h3>
+                        <p class="mb-1"><strong>Legal Corp:</strong> Almost all invoices are round ($2500.00, $3000.00). Check retainer contracts.</p>
+                    </div>
+
+                     <div>
+                        <h3 class="font-bold text-slate-900 border-b border-slate-200 pb-1 mb-2">5. Sequential Numbers (Bonus)</h3>
+                        <p>If vendor Invoice IDs were available, we would likely see sequential numbers for "Clean Co", indicating we are their only customer (a shell company risk).</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleHint(id) {
+            const el = document.getElementById(id);
+            if (el.style.display === 'block') {
+                el.style.display = 'none';
+            } else {
+                el.style.display = 'block';
+            }
+        }
+
+        function copyData() {
+            const copyText = document.getElementById("csvData");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); 
+            // navigator.clipboard.writeText(copyText.value);
+             document.execCommand('copy');
+            
+            // Visual feedback
+            const btn = document.querySelector('button[onclick="copyData()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Copied!';
+            btn.classList.remove('bg-blue-600');
+            btn.classList.add('bg-green-600');
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.add('bg-blue-600');
+                btn.classList.remove('bg-green-600');
+            }, 2000);
+        }
+
+        // Copy function for the System Prompt
+        function copyPrompt() {
+            const promptText = document.getElementById("systemPrompt").innerText;
+            const tempInput = document.createElement("textarea");
+            tempInput.value = promptText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+             // Visual feedback for prompt button
+            const btn = document.querySelector('button[onclick="copyPrompt()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Copied!';
+            btn.classList.remove('bg-yellow-500');
+            btn.classList.add('bg-green-600');
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.add('bg-yellow-500');
+                btn.classList.remove('bg-green-600');
+            }, 2000);
+        }
+
+        // Download Report Function
+        function downloadReport() {
+            const name = document.getElementById('studentName').value.trim();
+            const email = document.getElementById('studentEmail').value.trim();
+            const errorMsg = document.getElementById('downloadError');
+            
+            if (!name || !email) {
+                // Show visual error instead of alert
+                if(errorMsg) errorMsg.classList.remove('hidden');
+                return;
+            }
+            // Hide error if previously shown
+            if(errorMsg) errorMsg.classList.add('hidden');
+
+            const vendor = document.getElementById('verdictVendor').value || "Not specified";
+            const checkboxes = document.querySelectorAll('.verdict-checkbox:checked');
+            const techniques = Array.from(checkboxes).map(cb => cb.nextElementSibling.innerText).join(', ');
+            const action = document.getElementById('verdictAction').value || "Not specified";
+
+            const text = `AI Auditor Simulation - Student Report
+----------------------------------------
+Student Name: ${name}
+Student Email: ${email}
+Date: ${new Date().toLocaleString()}
+----------------------------------------
+Primary Fraudulent Vendor: ${vendor}
+
+Techniques Identified:
+${techniques || "None selected"}
+
+Recommended Actions:
+${action}
+`;
+            
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = 'Fraud_Audit_Report.txt';
+            
+            // Required for download to work in some browsers/iframes
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+            
+            // Clean up
+            setTimeout(() => window.URL.revokeObjectURL(url), 0);
+        }
+
+        // New Logic to handle Modal & Password without "prompt()"
+        function openInstructorModal() {
+            document.getElementById('instructorModal').classList.remove('hidden');
+            // Reset to Login State
+            document.getElementById('modalLogin').classList.remove('hidden');
+            document.getElementById('modalContent').classList.add('hidden');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('passwordInput').classList.remove('border-red-500');
+            
+            setTimeout(() => document.getElementById('passwordInput').focus(), 100);
+        }
+
+        function checkPassword() {
+            const input = document.getElementById('passwordInput').value;
+            if (input === 'teacher') {
+                document.getElementById('modalLogin').classList.add('hidden');
+                document.getElementById('modalContent').classList.remove('hidden');
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+                document.getElementById('passwordInput').classList.add('border-red-500');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('instructorModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

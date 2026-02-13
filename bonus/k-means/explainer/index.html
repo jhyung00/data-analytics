@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uber Cash Agents: K-Means Clustering Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <!-- MathJax for nice equations -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* Custom Resizer Styles */
+        body, html { height: 100%; overflow: hidden; }
+        #app-container { display: flex; height: 100vh; width: 100vw; }
+        #sidebar {
+            width: 340px;
+            min-width: 280px;
+            max-width: 50%;
+            background-color: #f8fafc;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            position: relative;
+        }
+        #resizer {
+            width: 5px;
+            cursor: col-resize;
+            background-color: transparent;
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 10;
+            transition: background 0.2s;
+        }
+        #resizer:hover, #resizer.active { background-color: #3b82f6; }
+        #main-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            background-color: #ffffff;
+            padding: 2rem;
+        }
+
+        /* Excel-like Table Styles */
+        .excel-table {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .excel-table th, .excel-table td {
+            border: 1px solid #cbd5e1;
+            padding: 8px;
+            text-align: center;
+        }
+        .excel-table th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+        }
+        .excel-table tr:nth-child(even) { background-color: #f8fafc; }
+        .highlight-row { background-color: #fef08a !important; transition: background 0.3s; }
+        
+        /* Step Navigation Buttons */
+        .step-btn {
+            text-align: left;
+            padding: 12px 16px;
+            width: 100%;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+        .step-btn:hover { background-color: #e2e8f0; }
+        .step-btn.active {
+            background-color: #dbeafe;
+            border-left-color: #2563eb;
+            font-weight: 600;
+            color: #1e40af;
+        }
+
+        /* Math display */
+        .math-block {
+            background: #1e293b;
+            color: #a5f3fc;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 1rem 0;
+            white-space: pre-wrap;
+            font-size: 0.85rem;
+        }
+
+        /* Diagram Styles */
+        .diagram-container {
+            position: relative;
+            height: 160px;
+            width: 100%;
+            border: 1px dashed #cbd5e1;
+            background: #f8fafc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+<div id="app-container">
+    <!-- Sidebar -->
+    <div id="sidebar">
+        <div class="p-4 border-b border-slate-200 bg-slate-100">
+            <h1 class="font-bold text-lg text-slate-800">Uber Analytics</h1>
+            <p class="text-xs text-slate-500">Unsupervised Risk Detection</p>
+        </div>
+        <div class="flex-grow overflow-y-auto">
+            <nav class="flex flex-col py-2">
+                <button onclick="loadStep(0)" id="btn-0" class="step-btn active">1. Context & Background</button>
+                <button onclick="loadStep(1)" id="btn-1" class="step-btn">2. Data Simulation (Excel)</button>
+                <button onclick="loadStep(2)" id="btn-2" class="step-btn">3. K-Means Algorithm Concept</button>
+                <button onclick="loadStep(3)" id="btn-3" class="step-btn">4. Step 1: Initialization</button>
+                <button onclick="loadStep(4)" id="btn-4" class="step-btn">5. Step 2: Assignment Logic</button>
+                <button onclick="loadStep(5)" id="btn-5" class="step-btn">6. Step 3: Calculating Means</button>
+                <button onclick="loadStep(6)" id="btn-6" class="step-btn">7. Step 4: Updating Centroids</button>
+                <button onclick="loadStep(7)" id="btn-7" class="step-btn">8. Result & Prediction</button>
+                <button onclick="loadStep(8)" id="btn-8" class="step-btn">9. Excel Tutorial Guide</button>
+            </nav>
+        </div>
+        <div class="p-4">
+             <button onclick="downloadExcel()" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded flex items-center justify-center gap-2 text-sm transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download Excel Tutorial
+            </button>
+        </div>
+        <div class="p-2 border-t border-slate-200 text-xs text-center text-slate-400">
+            Drag edge to resize pane &rarr;
+        </div>
+        <div id="resizer"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content">
+        <div id="content-area" class="max-w-4xl mx-auto">
+            <!-- Content injected via JS -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Data Simulation ---
+    const rawData = [
+        { id: "AGT-001", volume: 15, flags: 5, label: "Low Risk" },
+        { id: "AGT-002", volume: 12, flags: 8, label: "Low Risk" },
+        { id: "AGT-003", volume: 25, flags: 10, label: "Low Risk" },
+        { id: "AGT-004", volume: 18, flags: 6, label: "Low Risk" },
+        { id: "AGT-005", volume: 85, flags: 80, label: "High Risk" }, 
+        { id: "AGT-006", volume: 92, flags: 88, label: "High Risk" }, 
+        { id: "AGT-007", volume: 45, flags: 40, label: "Medium" },
+        { id: "AGT-008", volume: 50, flags: 45, label: "Medium" },
+        { id: "AGT-009", volume: 48, flags: 42, label: "Medium" },
+        { id: "AGT-010", volume: 10, flags: 12, label: "Low Risk" },
+        { id: "AGT-011", volume: 90, flags: 78, label: "High Risk" }, 
+        { id: "AGT-012", volume: 55, flags: 50, label: "Medium" }
+    ];
+
+    // State
+    let chartInstance = null;
+    let selectedAgentForCalc = null; 
+
+    // --- Content Templates ---
+    const steps = [
+        {
+            title: "Context: Uber Cash Intermediaries",
+            content: `
+                <h2 class="text-2xl font-bold mb-4">The Business Problem</h2>
+                <p class="mb-4 leading-relaxed">
+                    Uber operates in regions where standard corporate "Procure-to-Pay" systems fail because vendors only accept cash. 
+                    To solve this, Uber uses <strong>"Agents"</strong>—intermediaries who take corporate funds to pay local vendors (e.g., florists, mechanics).
+                </p>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                    <h3 class="font-bold text-blue-700">The Risk</h3>
+                    <p class="text-sm">Uncontrolled agents create risks: <strong>kickbacks, bribery, and lack of transparency.</strong></p>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Why K-Means?</h3>
+                <p class="mb-4">
+                    We often don't know ahead of time which agents are "Bad". We only have their raw transaction data.
+                    We will use <strong>K-Means (Unsupervised Learning)</strong> to automatically group agents based on their behavior.
+                    We hope the algorithm will naturally separate "Normal" agents from "Suspicious" ones without us telling it which is which.
+                </p>
+            `
+        },
+        {
+            title: "Data Simulation (Excel View)",
+            content: `
+                <h2 class="text-2xl font-bold mb-4">The Dataset</h2>
+                <p class="mb-4">We have extracted transaction logs for 12 Agents. We focus on two features:</p>
+                <ul class="list-disc ml-6 mb-6 space-y-2">
+                    <li>
+                        <strong>Transaction Volume (Normalized):</strong> How much money they handle (0-100 scale).
+                    </li>
+                    <li>
+                        <strong>Risk Flags Score (0-100):</strong> A composite score derived from suspicious patterns. This includes <strong>structuring</strong> (splitting large payments to avoid reporting limits), <strong>round-dollar transactions</strong> (e.g., exactly $500), and <strong>velocity</strong> (too many transactions in a short time). Higher = Risky.
+                    </li>
+                </ul>
+                <div class="overflow-x-auto shadow-md rounded-lg">
+                    <table class="excel-table">
+                        <thead>
+                            <tr>
+                                <th>Agent ID</th>
+                                <th>Tx Volume (X)</th>
+                                <th>Risk Flags (Y)</th>
+                                <th>Current Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rawData.map(row => `
+                                <tr>
+                                    <td>${row.id}</td>
+                                    <td>${row.volume}</td>
+                                    <td>${row.flags}</td>
+                                    <td class="text-gray-400 italic">Unknown</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="mt-4 text-sm text-gray-500">
+                    *Note: In a real scenario (1:10 imbalance), legitimate agents would vastly outnumber risky ones.
+                </p>
+            `
+        },
+        {
+            title: "The K-Means Algorithm",
+            content: `
+                <h2 class="text-2xl font-bold mb-4">How K-Means Works</h2>
+                <p class="mb-4">K-Means tries to find <strong>K</strong> centers (centroids) in the data. It's an iterative process:</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-white border rounded p-4 shadow-sm text-center">
+                        <div class="text-3xl font-bold text-blue-500 mb-2">1</div>
+                        <h4 class="font-bold">Initialize</h4>
+                        <p class="text-sm">Pick K random points as starting centers.</p>
+                    </div>
+                    <div class="bg-white border rounded p-4 shadow-sm text-center">
+                        <div class="text-3xl font-bold text-blue-500 mb-2">2</div>
+                        <h4 class="font-bold">Assign</h4>
+                        <p class="text-sm">Every data point joins the team of the <strong>closest</strong> center.</p>
+                    </div>
+                    <div class="bg-white border rounded p-4 shadow-sm text-center">
+                        <div class="text-3xl font-bold text-blue-500 mb-2">3</div>
+                        <h4 class="font-bold">Update</h4>
+                        <p class="text-sm">The center moves to the <strong>average</strong> position of its new team.</p>
+                    </div>
+                </div>
+                <p>We will set <strong>K = 3</strong>. We suspect there might be 3 types of agents: Low Risk, Medium Risk, and High Risk.</p>
+            `
+        },
+        {
+            title: "Step 1: Initialization",
+            content: `
+                <h2 class="text-2xl font-bold mb-4">Step 1: Random Initialization</h2>
+                <p class="mb-4">We place 3 centroids (Red, Blue, Yellow) at random locations on the chart.</p>
+                <div class="h-96 w-full border rounded p-2 mb-4 bg-white">
+                    <canvas id="kmeansChart"></canvas>
+                </div>
+                <div class="bg-slate-100 p-4 rounded text-sm">
+                    <strong>Initial Random Coordinates:</strong>
+                    <ul class="list-disc ml-5 mt-2 font-mono">
+                        <li class="font-bold text-rose-500">Centroid 1 (Red): X=20, Y=80</li>
+                        <li class="font-bold text-blue-500">Centroid 2 (Blue): X=25, Y=85</li>
+                        <li class="font-bold text-yellow-500">Centroid 3 (Yellow): X=80, Y=20</li>
+                    </ul>
+                </div>
+            `,
+            chartData: { showLines: false, step: 'init' }
+        },
+        {
+            title: "Step 2: Assignment Logic",
+            content: `
+                <h2 class="text-2xl font-bold mb-4">Step 2: Calculating Distance</h2>
+                <p class="mb-4">Every Agent calculates its distance to the 3 centroids and joins the closest one.</p>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                         <div class="h-64 w-full border rounded p-2 mb-4 bg-white relative">
+                            <canvas id="kmeansChart"></canvas>
+                        </div>
+                        <div class="bg-slate-50 border p-3 rounded text-sm">
+                            <strong>Interactive Learning:</strong>
+                            <p class="mb-2">Click below to see math for different points:</p>
+                            <div class="flex gap-2">
+                                <button onclick="changeCalcAgent('AGT-001')" class="px-3 py-1 bg-white border hover:bg-gray-50 rounded text-xs font-bold">AGT-001 (Safe)</button>
+                                <button onclick="changeCalcAgent('AGT-005')" class="px-3 py-1 bg-white border hover:bg-gray-50 rounded text-xs font-bold">AGT-005 (Risky)</button>
+                                <button onclick="changeCalcAgent('AGT-008')" class="px-3 py-1 bg-white border hover:bg-gray-50 rounded text-xs font-bold">AGT-008 (Med)</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold border-b pb-2 mb-2">Visualizing Distance</h3>
+                        <!-- Simple SVG for Euclidean Distance -->
+                        <div class="diagram-container flex-col p-4 text-center">
+                            <div class="text-lg font-mono mb-2">
+                                d = &radic;<span style="border-top:1px solid black">(x<sub>2</sub> - x<sub>1</sub>)&sup2; + (y<sub>2</sub> - y<sub>1</sub>)&sup2;</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-2">Where (x2, y2) are the Centroid coordinates</p>
+                            
+                            <svg width="100%" height="100" viewBox="0 0 250 100">
+                                <!-- Triangle -->
+                                <line x1="50" y1="80" x2="200" y2="80" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4"/>
+                                <line x1="200" y1="80" x2="200" y2="20" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4"/>
+                                <line x1="50" y1="80" x2="200" y2="20" stroke="#ef4444" stroke-width="3"/>
+                                
+                                <!-- Points -->
+                                <circle cx="50" cy="80" r="4" fill="black" />
+                                <circle cx="200" cy="20" r="4" fill="#ef4444" />
+                                
+                                <text x="50" y="95" font-size="12" text-anchor="middle">Pt(x1,y1)</text>
+                                <text x="200" y="15" font-size="12" fill="#ef4444" text-anchor="middle">Centroid(x2,y2)</text>
+                            </svg>
+                        </div>
+
+                        <div id="math-display-area" class="mt-4">
+                            <p class="text-sm text-gray-400 italic">Click a button on the left to see the calculation.</p>
+                        </div>
+                    </div>
+                </div>
+            `,
+            chartData: { showLines: true, step: 'assign' }
+        },
+        {
+            title: "Step 3: Calculating Means",
+            content: `
+                <h2 class="text-2xl font-bold mb-4">Step 3: Calculating the Mean</h2>
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                     <p class="text-sm text-yellow-800">Before we move the centroids, we must find the "center of gravity" for each new team. This involves summing up all the X coordinates and Y coordinates of the team members and dividing by the count.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="h-64 w-full border rounded p-2 bg-white">
+                        <canvas id="kmeansChart"></canvas>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-yellow-600 mb-2">Focus: The Yellow Cluster</h3>
+                        <p class="text-xs mb-3">The yellow centroid is currently at (80, 20). But its team members (Low Risk agents) are all near (16, 7). Let's calculate the average.</p>
+                        
+                        <div class="overflow-y-auto max-h-40 border rounded text-xs mb-3">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-100 font-bold"><tr><th class="p-1">Agent</th><th class="p-1">X (Vol)</th><th class="p-1">Y (Flag)</th></tr></thead>
+                                <tbody>
+                                    <tr><td>AGT-001</td><td>15</td><td>5</td></tr>
+                                    <tr><td>AGT-002</td><td>12</td><td>8</td></tr>
+                                    <tr><td>AGT-003</td><td>25</td><td>10</td></tr>
+                                    <tr><td>AGT-004</td><td>18</td><td>6</td></tr>
+                                    <tr><td>AGT-010</td><td>10</td><td>12</td></tr>
+                                </tbody>
+                                <tfoot class="bg-yellow-100 font-bold border-t-2 border-yellow-300">
+                                    <tr>
+                                        <td class="p-1">Sum:</td>
+                                        <td class="p-1">80</td>
+                                        <td class="p-1">41</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-1">Count:</td>
+                                        <td class="p-1">5</td>
+                                        <td class="p-1">5</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-1">Average:</td>
+                                        <td class="p-1 text-blue-600">16.0</td>
+                                        <td class="p-1 text-blue-600">8.2</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <div class="math-block text-xs">
+New Centroid X = Sum(X) / Count = 80 / 5 = 16.0
+New Centroid Y = Sum(Y) / Count = 41 / 5 = 8.2
+
+The centroid will move from (80, 20) to (16, 8.2).
+                        </div>
+                    </div>
+                </div>
+            `,
+            chartData: { showLines: false, step: 'calculate_mean' }
+        },
+        {
+            title: "Step 4: Update Centroids",
+            content: `
+                <h2 class="text-2xl font-bold mb-4">Step 4: Moving the Centroids</h2>
+                <p class="mb-4">We now shift the centroids from their old random positions (ghosted) to the new calculated averages.</p>
+                <div class="h-80 w-full border rounded p-2 mb-4 bg-white">
+                    <canvas id="kmeansChart"></canvas>
+                </div>
+                <div class="bg-green-50 p-4 border rounded border-green-200">
+                    <h4 class="font-bold text-green-800">Result of Iteration 1</h4>
+                    <ul class="list-disc ml-5 text-sm mt-2 text-green-900">
+                        <li><strong>Yellow Centroid:</strong> Moved from (80,20) to (16,8).</li>
+                        <li><strong>Blue Centroid:</strong> Moved from (25,85) to (50,45).</li>
+                        <li><strong>Red Centroid:</strong> Moved from (20,80) to (88,82).</li>
+                    </ul>
+                </div>
+            `,
+            chartData: { showLines: false, step: 'update' }
+        },
+        {
+            title: "Conclusion & Prediction",
+            content: `
+                <h2 class="text-2xl font-bold mb-4">Final Clusters</h2>
+                <div class="h-64 w-full border rounded p-2 mb-4 bg-white">
+                    <canvas id="kmeansChart"></canvas>
+                </div>
+                
+                <h3 class="text-xl font-bold mt-6 mb-2">Interpretation</h3>
+                <p class="mb-4">After several iterations, the algorithm has stabilized into 3 distinct groups:</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="p-4 bg-green-100 rounded border border-green-200">
+                        <h4 class="font-bold text-green-800">Cluster A (Low Values)</h4>
+                        <p class="text-sm">Low Volume, Low Flags. These are likely <strong>Safe Agents</strong> buying small items.</p>
+                    </div>
+                    <div class="p-4 bg-orange-100 rounded border border-orange-200">
+                        <h4 class="font-bold text-orange-800">Cluster B (Medium)</h4>
+                        <p class="text-sm">Moderate volume. Valid business, but worth occasional monitoring.</p>
+                    </div>
+                    <div class="p-4 bg-red-100 rounded border border-red-200">
+                        <h4 class="font-bold text-red-800">Cluster C (High Values)</h4>
+                        <p class="text-sm">High Volume, High Flags. These are <strong>High Risk</strong>. Need audit for kickbacks.</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-100 p-4 rounded border-l-4 border-gray-600 mb-6">
+                    <h4 class="font-bold text-gray-700">Why this matters</h4>
+                    <p class="text-sm mt-1">
+                        A common pitfall in fraud detection is "Null Accuracy." If 99% of transactions are safe, a model that says "All are Safe" is 99% accurate but useless.
+                    </p>
+                    <p class="text-sm mt-2 font-semibold text-gray-800">
+                        K-Means helps here because it doesn't care about the ratio. It simply highlights: "Here is a group of 3 people (red cluster) that look very different from the other 97." It isolates the anomaly regardless of class imbalance.
+                    </p>
+                </div>
+
+                <!-- Prediction Tester -->
+                <div class="border-t pt-6">
+                    <h3 class="font-bold text-lg mb-4">Test New Data</h3>
+                    <div class="flex gap-4 items-end bg-slate-50 p-4 rounded border">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Volume (0-100)</label>
+                            <input type="number" id="test-vol" value="88" class="border p-2 rounded w-24">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase">Flags (0-100)</label>
+                            <input type="number" id="test-flags" value="82" class="border p-2 rounded w-24">
+                        </div>
+                        <button onclick="predictCluster()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Check Cluster</button>
+                    </div>
+                    <div id="prediction-result" class="mt-2 text-sm font-bold hidden"></div>
+                </div>
+            `,
+             chartData: { showLines: false, step: 'final' }
+        },
+        {
+            title: "Excel Tutorial Guide",
+            content: `
+                <h2 class="text-2xl font-bold mb-4">Excel Tutorial Instructions</h2>
+                <div class="bg-white border rounded p-6 shadow-sm">
+                    <h3 class="font-bold border-b pb-2 mb-4">Follow these steps in the downloaded Excel file:</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-bold text-blue-600">1. Review the Data</h4>
+                            <p class="text-sm text-gray-700">Open the 'Transaction Data' tab. Notice the 'Volume' and 'Risk Flags' columns. This is your raw input.</p>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold text-blue-600">2. Manual K-Means Logic</h4>
+                            <p class="text-sm text-gray-700">We will manually replicate the algorithm logic:</p>
+                            <ul class="list-disc ml-5 text-sm text-gray-600 mt-1">
+                                <li>Pick 3 random rows to be your initial "Centroids".</li>
+                                <li>Create 3 new columns: <em>Dist to C1</em>, <em>Dist to C2</em>, <em>Dist to C3</em>.</li>
+                                <li>Use the formula: <code>=SQRT((A2-C1_Vol)^2 + (B2-C1_Flag)^2)</code>.</li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold text-blue-600">3. Assign Clusters</h4>
+                            <p class="text-sm text-gray-700">Create a column "Assigned Cluster". Use <code>=MIN()</code> to find the smallest distance, and <code>=IF()</code> to label it (e.g., if Col D is min, then Cluster 1).</p>
+                        </div>
+
+                        <div>
+                            <h4 class="font-bold text-blue-600">4. Recalculate Centroids</h4>
+                            <p class="text-sm text-gray-700">Use a Pivot Table or <code>=AVERAGEIFS()</code> to find the average Volume and Flags for everyone in Cluster 1. These are your NEW Centroid coordinates.</p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-bold text-blue-600">5. Repeat</h4>
+                            <p class="text-sm text-gray-700">Use these new coordinates to measure distance again. You will see the points "move" between clusters until they stabilize.</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+    ];
+
+    // --- Core Logic ---
+
+    function loadStep(index) {
+        // UI Updates
+        document.querySelectorAll('.step-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-${index}`).classList.add('active');
+        
+        const stepData = steps[index];
+        const contentDiv = document.getElementById('content-area');
+        contentDiv.innerHTML = stepData.content;
+
+        // Reset selected agent logic if we leave step 2
+        if (index !== 4) {
+            selectedAgentForCalc = null;
+        }
+
+        // If we ARE on Step 2 (Assignment) and have a selection, update math
+        if (index === 4 && selectedAgentForCalc) {
+             updateMathBlock(selectedAgentForCalc);
+        }
+
+        // Render Chart if needed
+        if (stepData.chartData) {
+            setTimeout(() => {
+                renderChart(stepData.chartData.step, stepData.chartData.showLines);
+            }, 100);
+        }
+    }
+
+    // --- Dynamic Math Calculation Logic ---
+    function changeCalcAgent(agentId) {
+        selectedAgentForCalc = agentId;
+        updateMathBlock(agentId);
+        // Re-render chart to move the blinker
+        renderChart('assign', true); 
+    }
+
+    function updateMathBlock(agentId) {
+        const agent = rawData.find(a => a.id === agentId);
+        const div = document.getElementById('math-display-area');
+        if(!agent || !div) return;
+
+        // Temporary centroid positions for this step (matches visuals)
+        const c1 = {x:20, y:80, name:"Red"};
+        const c2 = {x:25, y:85, name:"Blue"};
+        const c3 = {x:80, y:20, name:"Yellow"};
+
+        const d1 = calculateRawDist(agent, c1).toFixed(2);
+        const d2 = calculateRawDist(agent, c2).toFixed(2);
+        const d3 = calculateRawDist(agent, c3).toFixed(2);
+
+        let winner = "Yellow";
+        let colorClass = "text-yellow-400";
+        let min = Math.min(d1, d2, d3);
+        
+        if (Math.abs(min - d1) < 0.01) { winner = "Red"; colorClass = "text-rose-500"; }
+        else if (Math.abs(min - d2) < 0.01) { winner = "Blue"; colorClass = "text-blue-500"; }
+
+        div.innerHTML = `
+            <h3 class="font-bold mb-2">Calculation for <span>${agentId}</span></h3>
+            <p class="text-sm mb-2">Data: <span class="font-mono">Volume=${agent.volume}, Flags=${agent.flags}</span></p>
+            <div class="math-block text-xs">
+1. Dist to Red (x2=${c1.x}, y2=${c1.y}):
+   √(( ${agent.volume} - ${c1.x} )² + ( ${agent.flags} - ${c1.y} )²) 
+   = ${d1}
+
+2. Dist to Blue (x2=${c2.x}, y2=${c2.y}):
+   √(( ${agent.volume} - ${c2.x} )² + ( ${agent.flags} - ${c2.y} )²)
+   = ${d2}
+
+3. Dist to Yellow (x2=${c3.x}, y2=${c3.y}):
+   √(( ${agent.volume} - ${c3.x} )² + ( ${agent.flags} - ${c3.y} )²)
+   = ${d3}
+   
+WINNER: <span class="${colorClass} font-bold">${winner}</span> (${min} is smallest)
+            </div>
+            <p class="text-xs italic">So ${agentId} is assigned to the ${winner} Cluster.</p>
+        `;
+    }
+
+    function calculateRawDist(p1, p2) {
+        return Math.sqrt(Math.pow(p1.volume - p2.x, 2) + Math.pow(p1.flags - p2.y, 2));
+    }
+
+    // --- Chart Logic ---
+
+    // Define custom plugin for blinking target
+    const pulsePlugin = {
+        id: 'pulsePlugin',
+        afterDraw: (chart) => {
+            // Only draw if we have a selected target
+            if (!chart.config.options.selectedTarget) return;
+
+            const targetId = chart.config.options.selectedTarget;
+            const meta = chart.getDatasetMeta(0); // Agents are dataset 0
+            const dataIndex = rawData.findIndex(d => d.id === targetId);
+            
+            if (dataIndex >= 0) {
+                const point = meta.data[dataIndex];
+                const ctx = chart.ctx;
+                
+                // Draw Concentric Rings
+                const time = Date.now() / 300; // Speed
+                const opacity = (Math.sin(time) + 1) / 2 * 0.5 + 0.2; // 0.2 to 0.7
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 20, 0, 2 * Math.PI);
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = `rgba(220, 38, 38, ${opacity})`; // Red
+                ctx.stroke();
+                
+                // Inner ring
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 12, 0, 2 * Math.PI);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = `rgba(220, 38, 38, 0.8)`;
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+    };
+
+    // Define custom plugin for arrows (used in multiple steps now)
+    const arrowPlugin = {
+        id: 'arrowPlugin',
+        afterDraw: (chart) => {
+            if (!chart.config.options.drawArrow) return;
+            
+            const ctx = chart.ctx;
+            const xScale = chart.scales.x;
+            const yScale = chart.scales.y;
+            const arrows = chart.config.options.arrows || [];
+
+            arrows.forEach(arrow => {
+                const x1 = xScale.getPixelForValue(arrow.x1);
+                const y1 = yScale.getPixelForValue(arrow.y1);
+                const x2 = xScale.getPixelForValue(arrow.x2);
+                const y2 = yScale.getPixelForValue(arrow.y2);
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = arrow.color || '#eab308';
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+
+                // Arrowhead
+                const angle = Math.atan2(y2 - y1, x2 - x1);
+                ctx.beginPath();
+                ctx.moveTo(x2, y2);
+                ctx.lineTo(x2 - 10 * Math.cos(angle - Math.PI / 6), y2 - 10 * Math.sin(angle - Math.PI / 6));
+                ctx.lineTo(x2 - 10 * Math.cos(angle + Math.PI / 6), y2 - 10 * Math.sin(angle + Math.PI / 6));
+                ctx.closePath();
+                ctx.fillStyle = arrow.color || '#eab308';
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+    };
+
+    Chart.register(pulsePlugin, arrowPlugin);
+
+    function calculateDistance(point, centroid) {
+        return Math.sqrt(Math.pow(point.volume - centroid.x, 2) + Math.pow(point.flags - centroid.y, 2));
+    }
+
+    function renderChart(step, showLines) {
+        const ctx = document.getElementById('kmeansChart');
+        if (!ctx) return;
+
+        // Determine Centroid Positions based on step
+        let currentCentroids = [];
+        let previousCentroids = []; // New for overlap visualization
+        let pointColors = [];
+        let selectedTarget = null;
+        let drawArrow = false;
+        let arrows = [];
+        
+        // This is a simplified state machine for the visuals
+        if (step === 'init') {
+            // Random start
+            currentCentroids = [
+                { x: 20, y: 80, label: 'Centroid 1 (Red)' },
+                { x: 25, y: 85, label: 'Centroid 2 (Blue)' },
+                { x: 80, y: 20, label: 'Centroid 3 (Yellow)' }
+            ];
+            pointColors = rawData.map(() => '#cbd5e1'); // All gray
+        } else if (step === 'assign') {
+            // Still bad centroids, but points colored by closest
+            currentCentroids = [
+                { x: 20, y: 80, label: 'Centroid 1 (Red)' },
+                { x: 25, y: 85, label: 'Centroid 2 (Blue)' },
+                { x: 80, y: 20, label: 'Centroid 3 (Yellow)' }
+            ];
+            pointColors = rawData.map(p => {
+                const dists = currentCentroids.map(c => calculateDistance(p, c));
+                const minIndex = dists.indexOf(Math.min(...dists));
+                return minIndex === 0 ? 'rgb(255, 99, 132)' : minIndex === 1 ? 'rgb(54, 162, 235)' : 'rgb(255, 205, 86)';
+            });
+            selectedTarget = selectedAgentForCalc;
+
+        } else if (step === 'calculate_mean') {
+            // Ghosting effect: Highlight Yellow cluster only
+            currentCentroids = [
+                { x: 80, y: 20, label: 'C3 (Old)' } 
+            ];
+            
+            // "Safe" agents (indices 0,1,2,3,9) are Yellow
+            const safeIds = ["AGT-001", "AGT-002", "AGT-003", "AGT-004", "AGT-010"];
+            
+            pointColors = rawData.map(p => {
+                if (safeIds.includes(p.id)) return 'rgb(255, 205, 86)'; // Bright Yellow
+                return 'rgba(200, 200, 200, 0.2)'; // Faded out
+            });
+            drawArrow = true;
+            arrows = [{x1: 80, y1: 20, x2: 16, y2: 8.2, color: '#eab308'}];
+
+        } else if (step === 'update') {
+            // VISUALIZE OVERLAP: Show Old AND New
+            previousCentroids = [
+                { x: 20, y: 80 }, // Red Old
+                { x: 25, y: 85 }, // Blue Old
+                { x: 80, y: 20 }  // Yellow Old
+            ];
+
+            currentCentroids = [
+                { x: 88, y: 82, label: 'C1 (High Risk)' }, 
+                { x: 50, y: 45, label: 'C2 (Med Risk)' },  
+                { x: 16, y: 8, label: 'C3 (Low Risk)' } // Use calculated value   
+            ];
+            
+            drawArrow = true;
+            arrows = [
+                {x1: 20, y1: 80, x2: 88, y2: 82, color: 'rgb(255, 99, 132)'},
+                {x1: 25, y1: 85, x2: 50, y2: 45, color: 'rgb(54, 162, 235)'},
+                {x1: 80, y1: 20, x2: 16, y2: 8, color: 'rgb(255, 205, 86)'}
+            ];
+
+            pointColors = rawData.map(p => {
+                 const dists = currentCentroids.map(c => calculateDistance(p, c));
+                 const minIndex = dists.indexOf(Math.min(...dists));
+                 return minIndex === 0 ? 'rgb(255, 99, 132)' : minIndex === 1 ? 'rgb(54, 162, 235)' : 'rgb(255, 205, 86)';
+            });
+
+        } else if (step === 'final') {
+             currentCentroids = [
+                { x: 90, y: 85, label: 'C1 (Risky)' }, 
+                { x: 49, y: 44, label: 'C2 (Medium)' },  
+                { x: 17, y: 7, label: 'C3 (Safe)' }   
+            ];
+            pointColors = rawData.map(p => {
+                 const dists = currentCentroids.map(c => calculateDistance(p, c));
+                 const minIndex = dists.indexOf(Math.min(...dists));
+                 return minIndex === 0 ? 'rgb(255, 99, 132)' : minIndex === 1 ? 'rgb(54, 162, 235)' : 'rgb(255, 205, 86)';
+            });
+        }
+
+        const datasets = [
+            {
+                label: 'Agents',
+                data: rawData.map(r => ({x: r.volume, y: r.flags})),
+                backgroundColor: pointColors,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }
+        ];
+        
+        // FIX: Add centroids as separate datasets for correct Legend Colors
+        // Using a fixed color map for consistency
+        const centroidColors = ['rgb(255, 99, 132)', 'rgb(54, 162, 235)', 'rgb(255, 205, 86)'];
+        
+        currentCentroids.forEach((c, i) => {
+             // Handle the "calculate_mean" step where only 1 centroid exists but we want correct color
+             let colorIndex = i;
+             if (step === 'calculate_mean') colorIndex = 2; // Force Yellow color for the 3rd centroid ghost
+
+             datasets.push({
+                label: c.label || `Centroid ${i+1}`,
+                data: [c],
+                backgroundColor: centroidColors[colorIndex] || centroidColors[i],
+                borderColor: 'black',
+                borderWidth: 2,
+                pointStyle: 'rectRot',
+                pointRadius: 10,
+                pointHoverRadius: 12
+            });
+        });
+
+        // Add ghost centroids if we are in update step
+        if (previousCentroids.length > 0) {
+            datasets.push({
+                label: 'Old Centroids',
+                data: previousCentroids,
+                backgroundColor: 'transparent',
+                borderColor: 'gray',
+                borderWidth: 2,
+                borderDash: [5,5],
+                pointStyle: 'rectRot',
+                pointRadius: 10,
+                pointHoverRadius: 10
+            });
+        }
+
+        if (chartInstance) chartInstance.destroy();
+
+        chartInstance = new Chart(ctx, {
+            type: 'scatter',
+            data: { datasets: datasets },
+            options: {
+                selectedTarget: selectedTarget, // Pass to plugin
+                drawArrow: drawArrow,         // Pass to plugin
+                arrows: arrows,               // Pass to plugin
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    // Force re-render for the pulse effect loop
+                    onComplete: () => {
+                        if (selectedTarget) {
+                            setTimeout(() => chartInstance.draw(), 50); // Loop for pulse
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        title: { display: true, text: 'Transaction Volume (Normalized)' },
+                        min: 0, max: 100
+                    },
+                    y: {
+                        title: { display: true, text: 'Risk Flags Score' },
+                        min: 0, max: 100
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.x !== null) {
+                                    label += `(${context.parsed.x}, ${context.parsed.y})`;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // --- Interactive Predictor ---
+    function predictCluster() {
+        const vol = parseFloat(document.getElementById('test-vol').value);
+        const flags = parseFloat(document.getElementById('test-flags').value);
+        const resDiv = document.getElementById('prediction-result');
+
+        // Final Centroids
+        const c1 = { x: 90, y: 85 }; // Risky (Red)
+        const c2 = { x: 49, y: 44 }; // Medium (Blue/Orange) - using Medium color from logic
+        const c3 = { x: 17, y: 7 };  // Safe (Yellow/Green)
+
+        const d1 = Math.sqrt(Math.pow(vol - c1.x, 2) + Math.pow(flags - c1.y, 2));
+        const d2 = Math.sqrt(Math.pow(vol - c2.x, 2) + Math.pow(flags - c2.y, 2));
+        const d3 = Math.sqrt(Math.pow(vol - c3.x, 2) + Math.pow(flags - c3.y, 2));
+
+        const min = Math.min(d1, d2, d3);
+        let msg = "";
+        
+        if (min === d1) msg = "<span class='text-red-600'>High Risk Cluster (Red)</span>: High volume and flags. Needs Audit.";
+        else if (min === d2) msg = "<span class='text-orange-600'>Medium Risk Cluster</span>: Moderate activity.";
+        else msg = "<span class='text-green-600'>Low Risk Cluster</span>: Looks safe.";
+
+        resDiv.innerHTML = msg;
+        resDiv.classList.remove('hidden');
+    }
+
+    // --- Excel Generation ---
+    function downloadExcel() {
+        const wb = XLSX.utils.book_new();
+
+        // 1. Read Me Sheet
+        const readmeData = [
+            ["Project:", "Uber Cash Agent Risk Detection using K-Means"],
+            ["Description:", "This dataset simulates transaction volumes and risk flags for cash agents."],
+            [""],
+            ["INSTRUCTIONS:"],
+            ["1.", "Review the 'Data' tab for raw agent scores."],
+            ["2.", "Notice the high variance in 'Volume' and 'Flags'."],
+            ["3.", "Goal: Group agents into 3 clusters (Low, Medium, High Risk)."],
+            [""],
+            ["ALGORITHM STEPS (K-Means):"],
+            ["Step 1", "Initialize K=3 random centroids."],
+            ["Step 2", "Calculate Euclidean distance from each agent to centroids."],
+            ["Step 3", "Assign agent to nearest centroid."],
+            ["Step 4", "Update centroid location to the average of its group."],
+            ["Step 5", "Repeat until stable."]
+        ];
+        const wsReadme = XLSX.utils.aoa_to_sheet(readmeData);
+        XLSX.utils.book_append_sheet(wb, wsReadme, "Read Me");
+
+        // 2. Data Sheet
+        // Convert rawData objects to arrays
+        const tableHeader = ["Agent ID", "Volume (0-100)", "Risk Flags (0-100)", "Notes"];
+        const tableData = rawData.map(r => [r.id, r.volume, r.flags, r.label]);
+        const wsData = XLSX.utils.aoa_to_sheet([tableHeader, ...tableData]);
+        XLSX.utils.book_append_sheet(wb, wsData, "Transaction Data");
+
+        // Write file
+        XLSX.writeFile(wb, "Uber_KMeans_Tutorial.xlsx");
+    }
+
+    // --- Resizer Logic ---
+    const resizer = document.getElementById('resizer');
+    const sidebar = document.getElementById('sidebar');
+    let resizeStartX = 0;
+    let sidebarStartWidth = 0;
+
+    const mouseDownHandler = function(e) {
+        resizeStartX = e.clientX;
+        const sbWidth = window.getComputedStyle(sidebar).width;
+        sidebarStartWidth = parseInt(sbWidth, 10);
+        document.addEventListener('mousemove', mouseMoveHandler);
+        document.addEventListener('mouseup', mouseUpHandler);
+        resizer.classList.add('active');
+    };
+
+    const mouseMoveHandler = function(e) {
+        const dx = e.clientX - resizeStartX;
+        sidebar.style.width = `${sidebarStartWidth + dx}px`;
+    };
+
+    const mouseUpHandler = function() {
+        document.removeEventListener('mousemove', mouseMoveHandler);
+        document.removeEventListener('mouseup', mouseUpHandler);
+        resizer.classList.remove('active');
+    };
+
+    resizer.addEventListener('mousedown', mouseDownHandler);
+
+    // Initialize
+    loadStep(0);
+
+</script>
+</body>
+</html>
