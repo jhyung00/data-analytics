@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Removed user-scalable=no to allow desktop zooming -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Apex Auditor: Stats Challenge (Desktop)</title>
     <!-- Tailwind CSS -->
@@ -22,7 +21,6 @@
             background-color: #f0fdf4; /* Very light green tint */
             height: 100vh; /* Standard viewport height for desktop */
             overflow: hidden;
-            /* touch-action removed to allow standard desktop interactions */
         }
         .fade-in { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn {
@@ -41,7 +39,7 @@
             color: transparent;
             cursor: pointer;
             border-radius: 4px;
-            padding: 0 6px; /* Increased padding */
+            padding: 0 6px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             user-select: none;
             position: relative;
@@ -54,17 +52,17 @@
         .blur-reveal.revealed {
             filter: blur(0);
             background-color: transparent;
-            color: #4f46e5; /* Indigo 600 */
+            color: #4f46e5;
             font-weight: 700;
             cursor: default;
         }
         .blur-reveal::after {
-            content: 'CLICK'; /* Changed TAP to CLICK for desktop */
+            content: 'CLICK';
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 12px; /* Larger font */
+            font-size: 12px;
             color: #64748b;
             font-weight: bold;
             opacity: 1;
@@ -73,23 +71,22 @@
         .blur-reveal.revealed::after { opacity: 0; }
 
         /* Custom Scroll */
-        .custom-scroll::-webkit-scrollbar { width: 10px; } /* Wider scrollbar for mouse */
+        .custom-scroll::-webkit-scrollbar { width: 10px; }
         .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #a7f3d0; border-radius: 6px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #34d399; }
 
         .nav-active {
-            background-color: #10b981; /* Emerald 500 */
+            background-color: #10b981;
             color: white;
             box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
         }
         
-        /* Sidebar Widths - Increased for Desktop */
         .sidebar-expanded { width: 20rem; } 
         .sidebar-collapsed { width: 6rem; }
         
         .instructor-reveal {
-            border: 2px solid #8b5cf6 !important; /* Violet */
+            border: 2px solid #8b5cf6 !important;
             background-color: #f5f3ff !important;
             position: relative;
         }
@@ -101,7 +98,7 @@
             transform: translateY(-50%);
             background: #8b5cf6;
             color: white;
-            font-size: 0.75rem; /* Larger font */
+            font-size: 0.75rem;
             padding: 3px 8px;
             border-radius: 4px;
             font-weight: bold;
@@ -115,18 +112,16 @@
             80% { height: 100%; top: 0; opacity: 1; }
             100% { height: 100%; top: 0; opacity: 0; }
         }
-        /* More dynamic pile-in from top */
         .pile-dot { animation: pileIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes pileIn { from { transform: translate(-50%, -100px) scale(0.5); opacity: 0; } to { transform: translate(-50%, 0) scale(1); opacity: 1; } }
     </style>
 </head>
-<body class="text-slate-800 min-h-screen flex flex-col text-base"> <!-- Base text size increased -->
+<body class="text-slate-800 min-h-screen flex flex-col text-lg">
 
     <!-- Header -->
     <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50 h-20 flex-none border-b-4 border-emerald-500">
         <div class="max-w-screen-2xl mx-auto px-6 h-full flex justify-between items-center w-full">
             <div class="flex items-center space-x-4">
-                <!-- Mobile Menu Button (Hidden on Desktop mostly) -->
                 <button onclick="toggleMobileSidebar()" class="lg:hidden text-white p-2 hover:bg-slate-800 rounded-lg transition-colors">
                     <i class="fa-solid fa-bars text-2xl"></i>
                 </button>
@@ -140,7 +135,6 @@
                 </div>
             </div>
             <div class="flex items-center space-x-6">
-                <!-- Data Download Button -->
                 <a href="data/Audit_Analytics.xlsx" download class="hidden md:flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg border border-slate-700 text-sm font-bold transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
                     <i class="fa-solid fa-download text-emerald-400"></i> Download Data
                 </a>
@@ -160,18 +154,15 @@
     <!-- Main Layout -->
     <div class="flex-grow flex max-w-screen-2xl mx-auto w-full pt-6 pb-6 h-[calc(100vh-80px)] gap-6 px-6 overflow-hidden relative">
         
-        <!-- Mobile Sidebar Backdrop -->
         <div id="mobile-backdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 hidden lg:hidden transition-opacity"></div>
 
         <!-- Sidebar Navigation -->
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 transform -translate-x-full lg:relative lg:translate-x-0 lg:flex flex-col flex-none h-full overflow-hidden border-r lg:border border-slate-100 transition-all duration-300 bg-white shadow-2xl lg:shadow-xl lg:rounded-2xl sidebar-expanded">
             <div class="p-5 border-b border-slate-100 font-extrabold text-slate-700 bg-slate-50 flex-none tracking-wide text-sm uppercase flex justify-between items-center h-16">
                 <span id="sidebar-title">Mission Map</span>
-                <!-- Desktop Collapse Button -->
                 <button onclick="toggleSidebarDesktop()" class="hidden lg:block text-slate-400 hover:text-indigo-600 transition-colors p-2">
                     <i id="sidebar-icon" class="fa-solid fa-chevron-left text-lg"></i>
                 </button>
-                <!-- Mobile Close Button -->
                 <button onclick="toggleMobileSidebar()" class="lg:hidden text-slate-400 hover:text-red-500 transition-colors">
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
@@ -192,7 +183,6 @@
             <!-- Welcome Screen -->
             <div id="start-screen" class="w-full h-full bg-white rounded-2xl shadow-2xl overflow-y-auto custom-scroll fade-in absolute inset-0 z-20 flex flex-col items-center justify-center p-8">
                 <div class="max-w-4xl w-full relative">
-                    <!-- Decor -->
                     <div class="absolute -top-16 -right-16 text-8xl opacity-10 rotate-12 hidden md:block">🎲</div>
                     <div class="absolute -bottom-16 -left-16 text-8xl opacity-10 -rotate-12 hidden md:block">📉</div>
 
@@ -207,11 +197,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-default">
                                 <h3 class="font-bold text-indigo-800 mb-3 flex items-center text-xl"><span class="bg-indigo-200 w-8 h-8 rounded flex items-center justify-center text-sm mr-3">1</span> The Lesson</h3>
-                                <p class="text-base text-indigo-600 leading-relaxed">Interactive concepts. Click hidden terms to reveal the secrets of statistics.</p>
+                                <p class="text-lg text-indigo-600 leading-relaxed">Interactive concepts. Click hidden terms to reveal the secrets of statistics.</p>
                             </div>
                             <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-default">
                                 <h3 class="font-bold text-emerald-800 mb-3 flex items-center text-xl"><span class="bg-emerald-200 w-8 h-8 rounded flex items-center justify-center text-sm mr-3">2</span> The Audit</h3>
-                                <p class="text-base text-emerald-600 leading-relaxed">Real-world scenarios. Make the call: Is it fraud, error, or clean?</p>
+                                <p class="text-lg text-emerald-600 leading-relaxed">Real-world scenarios. Make the call: Is it fraud, error, or clean?</p>
                             </div>
                         </div>
                         <div class="pt-8 text-center">
@@ -237,7 +227,7 @@
                     <!-- Dynamic Lesson Content Area - Scrollable -->
                     <div class="flex-grow overflow-y-auto custom-scroll p-8 lg:p-10 bg-white" id="lesson-content-scroll">
                         <h2 id="lesson-title" class="text-3xl lg:text-4xl font-extrabold text-slate-800 mb-6 lg:mb-8 leading-tight">Concept Title</h2>
-                        <div id="lesson-content-area" class="space-y-6 lg:space-y-8 text-lg leading-relaxed text-slate-600">
+                        <div id="lesson-content-area" class="space-y-6 lg:space-y-8 text-xl leading-relaxed text-slate-600">
                             <!-- Content injected here via JS -->
                         </div>
                     </div>
@@ -286,7 +276,7 @@
                             </div>
                         </div>
                         
-                        <div class="text-slate-600 mb-6 leading-loose text-lg flex-none font-medium" id="scenario-desc">Description goes here.</div>
+                        <div class="text-slate-600 mb-6 leading-loose text-xl flex-none font-medium" id="scenario-desc">Description goes here.</div>
                         
                         <!-- Dynamic Chart Container -->
                         <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 flex-grow relative shadow-inner flex items-center justify-center min-h-[350px] overflow-hidden">
@@ -312,7 +302,7 @@
                     <!-- Feedback Area (Hidden initially) -->
                     <div id="feedback-panel" class="hidden mt-6 pt-6 border-t-2 border-dashed border-slate-200 bg-slate-50 -mx-8 -mb-8 p-8 rounded-b-2xl flex-none animate-slide-up">
                         <div id="feedback-header" class="font-bold text-xl mb-3 flex items-center gap-2"></div>
-                        <p id="feedback-text" class="text-base text-slate-600 leading-relaxed mb-6"></p>
+                        <p id="feedback-text" class="text-lg text-slate-600 leading-relaxed mb-6"></p>
                         <div class="flex gap-2">
                             <button id="next-btn" onclick="nextStep()" class="w-full bg-slate-900 text-white py-4 rounded-xl hover:bg-slate-800 transition-colors font-bold shadow-lg flex items-center justify-center gap-2 text-lg">
                                 Next <i class="fa-solid fa-forward"></i>
@@ -372,7 +362,6 @@
     </footer>
 
     <script>
-        // --- Game State ---
         const state = {
             currentLevel: 0,
             currentChallenge: 0,
@@ -383,18 +372,15 @@
             maxLessonSlides: 0,
             instructorMode: false,
             totalPossibleScore: 0,
-            sidebarOpenDesktop: true, // Renamed for clarity
-            sidebarOpenMobile: false  // New state for mobile
+            sidebarOpenDesktop: true,
+            sidebarOpenMobile: false
         };
 
-        // --- Sidebar Logic ---
-        // Desktop Toggle
         function toggleSidebarDesktop() {
             state.sidebarOpenDesktop = !state.sidebarOpenDesktop;
             updateSidebarUI();
         }
 
-        // Mobile Toggle
         function toggleMobileSidebar() {
             state.sidebarOpenMobile = !state.sidebarOpenMobile;
             updateSidebarUI();
@@ -407,8 +393,7 @@
             const teacherTxt = document.getElementById('instructor-text');
             const backdrop = document.getElementById('mobile-backdrop');
 
-            // Mobile State Handling
-            if (window.innerWidth < 1024) { // Changed breakpoint to LG for desktop mode
+            if (window.innerWidth < 1024) { 
                 if (state.sidebarOpenMobile) {
                     sb.classList.remove('-translate-x-full');
                     backdrop.classList.remove('hidden');
@@ -416,16 +401,13 @@
                     sb.classList.add('-translate-x-full');
                     backdrop.classList.add('hidden');
                 }
-                // Ensure desktop classes don't interfere
                 sb.classList.remove('sidebar-collapsed'); 
-                sb.classList.add('sidebar-expanded', 'w-72'); // Larger width
+                sb.classList.add('sidebar-expanded', 'w-72'); 
                 title.classList.remove('hidden');
                 teacherTxt.classList.remove('hidden');
-            } 
-            // Desktop State Handling
-            else {
-                backdrop.classList.add('hidden'); // Always hide backdrop on desktop
-                sb.classList.remove('absolute', 'z-40', '-translate-x-full'); // Reset mobile classes
+            } else {
+                backdrop.classList.add('hidden'); 
+                sb.classList.remove('absolute', 'z-40', '-translate-x-full'); 
                 
                 if (state.sidebarOpenDesktop) {
                     sb.classList.replace('sidebar-collapsed', 'sidebar-expanded');
@@ -439,16 +421,13 @@
                     teacherTxt.classList.add('hidden');
                 }
             }
-            // Re-render list to ensure visibility classes are correct
             initSidebar(); 
         }
 
-        // Add resize listener to reset states if window changes
         window.addEventListener('resize', () => {
             updateSidebarUI();
         });
 
-        // --- Global Utils ---
         function attachRevealHandlers() {
             document.querySelectorAll('.blur-reveal').forEach(el => {
                 el.onclick = function() {
@@ -457,8 +436,6 @@
             });
         }
 
-        // --- Content Blocks ---
-        // UPDATED FONT CLASSES IN STRINGS
         const lessonVariableTypes = {
             title: "Qualitative vs Quantitative",
             slides: [
@@ -467,8 +444,8 @@
                     <div class="p-6 bg-indigo-50 rounded-xl border border-indigo-100 relative overflow-hidden shadow-sm">
                         <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🏷️</div>
                         <strong class="text-indigo-800 block mb-2 text-xl">Qualitative (Categorical)</strong>
-                        <p class="text-base mb-3">Labels or groups. <span class="blur-reveal">You cannot perform math on these.</span></p>
-                        <ul class="list-disc pl-5 mt-2 text-slate-600 text-sm space-y-2">
+                        <p class="text-lg mb-3">Labels or groups. <span class="blur-reveal">You cannot perform math on these.</span></p>
+                        <ul class="list-disc pl-5 mt-2 text-slate-600 text-base space-y-2">
                             <li>Vendor Type ("Domestic")</li>
                             <li>Audit Result (Pass/Fail)</li>
                         </ul>
@@ -476,8 +453,8 @@
                     <div class="p-6 bg-emerald-50 rounded-xl border border-emerald-100 relative overflow-hidden shadow-sm">
                         <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl">🔢</div>
                         <strong class="text-emerald-800 block mb-2 text-xl">Quantitative (Numerical)</strong>
-                        <p class="text-base mb-3">Measurable amounts. <span class="blur-reveal">Math (averages, sums) applies here.</span></p>
-                        <ul class="list-disc pl-5 mt-2 text-slate-600 text-sm space-y-2">
+                        <p class="text-lg mb-3">Measurable amounts. <span class="blur-reveal">Math (averages, sums) applies here.</span></p>
+                        <ul class="list-disc pl-5 mt-2 text-slate-600 text-base space-y-2">
                             <li>Invoice Amount ($3,000)</li>
                             <li>Inventory Count (120 units)</li>
                         </ul>
@@ -487,29 +464,29 @@
                 <div class="space-y-6">
                     <div class="p-6 bg-white rounded-xl border-l-8 border-slate-400 shadow-md">
                         <strong class="text-xl text-slate-800">Nominal (No Order)</strong>
-                        <p class="text-base text-slate-500 mt-2">Just names. You cannot rank them.</p>
-                        <div class="mt-3 text-sm bg-slate-100 p-3 rounded inline-block font-mono">Ex: Regions (West, East), Payment Method</div>
+                        <p class="text-lg text-slate-500 mt-2">Just names. You cannot rank them.</p>
+                        <div class="mt-3 text-base bg-slate-100 p-3 rounded inline-block font-mono">Ex: Regions (West, East), Payment Method</div>
                     </div>
                     <div class="p-6 bg-white rounded-xl border-l-8 border-purple-400 shadow-md">
                         <strong class="text-xl text-purple-900">Ordinal (Ordered)</strong>
-                        <p class="text-base text-slate-500 mt-2">Order matters, but the mathematical difference between categories is undefined.</p>
-                        <div class="mt-3 text-sm bg-purple-50 text-purple-700 p-3 rounded inline-block font-mono">Ex: Risk (Low < High), Star Ratings (1-5)</div>
+                        <p class="text-lg text-slate-500 mt-2">Order matters, but the mathematical difference between categories is undefined.</p>
+                        <div class="mt-3 text-base bg-purple-50 text-purple-700 p-3 rounded inline-block font-mono">Ex: Risk (Low < High), Star Ratings (1-5)</div>
                     </div>
                 </div>`,
                 `<h3 class="font-bold mb-6 text-2xl">3. Types of Quantitative Data</h3>
-                <div class="space-y-6 text-base">
+                <div class="space-y-6 text-lg">
                     <div class="bg-indigo-50 p-5 rounded-lg border border-indigo-100 shadow-sm">
-                        <strong class="text-indigo-900 text-lg">1️⃣ Discrete (Countable)</strong>
+                        <strong class="text-indigo-900 text-xl">1️⃣ Discrete (Countable)</strong>
                         <p class="mt-1">Whole numbers only. No fractions.</p>
-                        <ul class="list-disc pl-5 mt-2 text-sm text-indigo-800">
+                        <ul class="list-disc pl-5 mt-2 text-base text-indigo-800">
                             <li>Errors (4, not 4.6)</li>
                             <li>Employees (18, not 18.3)</li>
                         </ul>
                     </div>
                     <div class="bg-emerald-50 p-5 rounded-lg border border-emerald-100 shadow-sm">
-                        <strong class="text-emerald-900 text-lg">2️⃣ Continuous (Measured)</strong>
+                        <strong class="text-emerald-900 text-xl">2️⃣ Continuous (Measured)</strong>
                         <p class="mt-1">Can have decimals. Infinite possibilities.</p>
-                        <ul class="list-disc pl-5 mt-2 text-sm text-emerald-800">
+                        <ul class="list-disc pl-5 mt-2 text-base text-emerald-800">
                             <li>Dollars ($2,456.37)</li>
                             <li>Time (3.27 hours)</li>
                             <li>Error Rate (6.4%)</li>
@@ -521,7 +498,7 @@
                 container.innerHTML = `<div class="w-full max-w-md text-center"><h3 class="font-bold text-2xl mb-6">Data Classifier 🤖</h3><div id="classifier-box" class="bg-white border-4 border-dashed border-slate-300 rounded-3xl p-8 mb-8 min-h-[120px] flex items-center justify-center font-mono text-xl text-slate-400 transition-all shadow-inner">Click a button below</div><div class="grid grid-cols-2 gap-4 text-base font-bold"><button class="bg-white border-2 border-slate-200 p-4 rounded-2xl hover:bg-indigo-50 hover:border-indigo-300 text-slate-600 transition-all shadow-md hover:-translate-y-1" onclick="classify('Invoice ID', 'Nominal')">Invoice #</button><button class="bg-white border-2 border-slate-200 p-4 rounded-2xl hover:bg-emerald-50 hover:border-emerald-300 text-slate-600 transition-all shadow-md hover:-translate-y-1" onclick="classify('Amount ($)', 'Quantitative')">Amount ($)</button><button class="bg-white border-2 border-slate-200 p-4 rounded-2xl hover:bg-purple-50 hover:border-purple-300 text-slate-600 transition-all shadow-md hover:-translate-y-1" onclick="classify('Risk (L/M/H)', 'Ordinal')">Risk Level</button><button class="bg-white border-2 border-slate-200 p-4 rounded-2xl hover:bg-orange-50 hover:border-orange-300 text-slate-600 transition-all shadow-md hover:-translate-y-1" onclick="classify('Vendor Name', 'Nominal')">Vendor Name</button><button class="bg-white border-2 border-slate-200 p-4 rounded-2xl hover:bg-blue-50 hover:border-blue-300 text-slate-600 transition-all shadow-md hover:-translate-y-1" onclick="classify('Staff Count', 'Discrete')">Staff Count</button><button class="bg-white border-2 border-slate-200 p-4 rounded-2xl hover:bg-teal-50 hover:border-teal-300 text-slate-600 transition-all shadow-md hover:-translate-y-1" onclick="classify('Fuel (Liters)', 'Continuous')">Fuel Vol</button></div></div>`;
                 window.classify = (item, type) => {
                     const box = document.getElementById('classifier-box');
-                    box.innerHTML = `<div class="animate-bounce"><strong>${item}</strong><br><span class="text-lg text-slate-500 font-normal">is ${type}</span></div>`;
+                    box.innerHTML = `<div class="animate-bounce"><strong>${item}</strong><br><span class="text-xl text-slate-500 font-normal">is ${type}</span></div>`;
                     box.className = "bg-white border-4 border-slate-800 rounded-3xl p-8 mb-8 min-h-[120px] flex items-center justify-center text-center shadow-xl text-2xl";
                 }
             }
@@ -530,41 +507,31 @@
         const lessonCentralTendency = {
             title: "The 'Wealthy Uncle' Effect",
             slides: [
-                `<div class="flex items-center gap-6 mb-6 bg-slate-100 p-6 rounded-2xl border border-slate-200 shadow-sm"><span class="text-6xl">☕</span><p class="text-lg">Imagine you are chilling in a coffee shop with 9 friends. The <strong>Mean (Average)</strong> income is <strong>$46k/year</strong>.</p></div>`,
-                `<div class="flex items-center gap-6 mb-6 bg-yellow-50 p-6 rounded-2xl border border-yellow-200 animate-pulse shadow-sm"><span class="text-6xl">🚁</span><div><p class="font-bold text-yellow-800 uppercase text-sm tracking-widest">Alert</p><p class="font-bold text-xl">ENTER BILL GATES!</p></div></div><p class="text-lg">Suddenly, a billionaire walks in. He earns <strong>$50,000,000/year</strong>.</p>`,
-                `<div class="bg-red-50 p-6 rounded-2xl border-l-8 border-red-500 mb-6 shadow-md"><p class="font-bold text-red-700 text-2xl">Mean jumps to $5M!</p><p class="text-base text-red-600 mt-2">Does everyone feel richer? <span class="blur-reveal">No. The Mean is lying.</span></p></div>`,
-                `<div class="bg-emerald-50 p-6 rounded-2xl border-l-8 border-emerald-500 mb-6 shadow-md"><p class="font-bold text-emerald-700 text-2xl">Solution: The Median</p><p class="text-base text-emerald-600 mt-2">The middle value. Even with Bill Gates, the median stays around <span class="blur-reveal">$50k</span>. It resists outliers.</p></div>`,
-                `<div class="bg-indigo-50 p-6 rounded-2xl border-l-8 border-indigo-500 mb-6 shadow-md"><p class="font-bold text-indigo-700 text-2xl">Definition: The Mode</p><p class="text-base text-indigo-600 mt-2">The most frequently occurring value in a dataset. In this example, it is $46k.</p></div>`
+                `<div class="flex items-center gap-6 mb-6 bg-slate-100 p-6 rounded-2xl border border-slate-200 shadow-sm"><span class="text-6xl">☕</span><p class="text-xl">Imagine you are chilling in a coffee shop with 9 friends. The <strong>Mean (Average)</strong> income is <strong>$46k/year</strong>.</p></div>`,
+                `<div class="flex items-center gap-6 mb-6 bg-yellow-50 p-6 rounded-2xl border border-yellow-200 animate-pulse shadow-sm"><span class="text-6xl">🚁</span><div><p class="font-bold text-yellow-800 uppercase text-sm tracking-widest">Alert</p><p class="font-bold text-2xl">ENTER BILL GATES!</p></div></div><p class="text-xl">Suddenly, a billionaire walks in. He earns <strong>$50,000,000/year</strong>.</p>`,
+                `<div class="bg-red-50 p-6 rounded-2xl border-l-8 border-red-500 mb-6 shadow-md"><p class="font-bold text-red-700 text-2xl">Mean jumps to $5M!</p><p class="text-lg text-red-600 mt-2">Does everyone feel richer? <span class="blur-reveal">No. The Mean is lying.</span></p></div>`,
+                `<div class="bg-emerald-50 p-6 rounded-2xl border-l-8 border-emerald-500 mb-6 shadow-md"><p class="font-bold text-emerald-700 text-2xl">Solution: The Median</p><p class="text-lg text-emerald-600 mt-2">The middle value. Even with Bill Gates, the median stays around <span class="blur-reveal">$50k</span>. It resists outliers.</p></div>`,
+                `<div class="bg-indigo-50 p-6 rounded-2xl border-l-8 border-indigo-500 mb-6 shadow-md"><p class="font-bold text-indigo-700 text-2xl">Definition: The Mode</p><p class="text-lg text-indigo-600 mt-2">The most frequently occurring value in a dataset. In this example, it is $46k.</p></div>`
             ],
             renderInteractive: (container) => {
-                // Unified interactive view
                 container.innerHTML = `
                     <div class="w-full h-full flex flex-col max-w-lg">
-                        <!-- Controls -->
                         <div class="flex p-2 bg-slate-100 rounded-2xl mb-6 flex-none border border-slate-200 gap-2 shadow-inner">
-                            <button onclick="setScenario('normal')" id="btn-normal" class="flex-1 py-3 rounded-xl text-sm font-bold bg-white shadow-sm text-slate-800 transition-all border border-transparent hover:shadow-md">Normal</button>
-                            <button onclick="setScenario('pos')" id="btn-pos" class="flex-1 py-3 rounded-xl text-sm font-bold text-slate-500 hover:text-purple-600 transition-all border border-transparent hover:bg-white">Pos Skew</button>
-                            <button onclick="setScenario('neg')" id="btn-neg" class="flex-1 py-3 rounded-xl text-sm font-bold text-slate-500 hover:text-purple-600 transition-all border border-transparent hover:bg-white">Neg Skew</button>
+                            <button onclick="setScenario('normal')" id="btn-normal" class="flex-1 py-3 rounded-xl text-base font-bold bg-white shadow-sm text-slate-800 transition-all border border-transparent hover:shadow-md">Normal</button>
+                            <button onclick="setScenario('pos')" id="btn-pos" class="flex-1 py-3 rounded-xl text-base font-bold text-slate-500 hover:text-purple-600 transition-all border border-transparent hover:bg-white">Pos Skew</button>
+                            <button onclick="setScenario('neg')" id="btn-neg" class="flex-1 py-3 rounded-xl text-base font-bold text-slate-500 hover:text-purple-600 transition-all border border-transparent hover:bg-white">Neg Skew</button>
                         </div>
-
-                        <!-- Room Simulation -->
-                        <div id="room" class="grid grid-cols-5 gap-4 mb-6 bg-slate-200 p-6 rounded-3xl min-h-[220px] content-center justify-items-center relative overflow-hidden shadow-inner flex-none border-4 border-slate-300">
-                            <!-- Generated via JS -->
-                        </div>
-
-                        <!-- Stats Bar -->
+                        <div id="room" class="grid grid-cols-5 gap-4 mb-6 bg-slate-200 p-6 rounded-3xl min-h-[220px] content-center justify-items-center relative overflow-hidden shadow-inner flex-none border-4 border-slate-300"></div>
                         <div class="space-y-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-lg flex-none mb-6">
                             <div>
-                                <div class="flex justify-between text-sm font-bold mb-2 uppercase tracking-wider"><span class="text-blue-500">Mean</span><span id="mean-val" class="text-slate-700">$46k</span></div>
+                                <div class="flex justify-between text-base font-bold mb-2 uppercase tracking-wider"><span class="text-blue-500">Mean</span><span id="mean-val" class="text-slate-700">$46k</span></div>
                                 <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden shadow-inner"><div id="mean-bar" class="bg-blue-500 h-4 rounded-full transition-all duration-700 shadow-md" style="width: 50%"></div></div>
                             </div>
                             <div>
-                                <div class="flex justify-between text-sm font-bold mb-2 uppercase tracking-wider"><span class="text-emerald-500">Median</span><span id="median-val" class="text-slate-700">$46k</span></div>
+                                <div class="flex justify-between text-base font-bold mb-2 uppercase tracking-wider"><span class="text-emerald-500">Median</span><span id="median-val" class="text-slate-700">$46k</span></div>
                                 <div class="w-full bg-slate-100 rounded-full h-4 overflow-hidden shadow-inner"><div id="median-bar" class="bg-emerald-500 h-4 rounded-full transition-all duration-500 shadow-md" style="width: 50%"></div></div>
                             </div>
                         </div>
-
-                        <!-- Shape Canvas -->
                         <div class="relative w-full bg-white border border-slate-200 rounded-2xl shadow-md flex-grow overflow-hidden min-h-[160px]">
                             <canvas id="skewCanvas" class="absolute inset-0 w-full h-full"></canvas>
                             <div id="curve-label" class="absolute top-3 right-3 text-xs font-bold text-slate-500 bg-white/90 px-3 py-1 rounded-lg backdrop-blur-md shadow-sm border border-slate-100">Normal Distribution</div>
@@ -572,28 +539,24 @@
                     </div>
                 `;
 
-                // Data sets
                 const baseFriends = [40, 42, 44, 45, 46, 46, 46, 50, 55];
                 
                 window.setScenario = (type) => {
-                    // Update Buttons
                     ['normal', 'pos', 'neg'].forEach(t => {
                         const btn = document.getElementById(`btn-${t}`);
-                        if(t === type) btn.className = "flex-1 py-3 rounded-xl text-sm font-bold bg-white shadow-md text-indigo-600 border border-indigo-100 transition-all transform scale-105";
-                        else btn.className = "flex-1 py-3 rounded-xl text-sm font-bold text-slate-400 hover:text-slate-600 border border-transparent transition-all";
+                        if(t === type) btn.className = "flex-1 py-3 rounded-xl text-base font-bold bg-white shadow-md text-indigo-600 border border-indigo-100 transition-all transform scale-105";
+                        else btn.className = "flex-1 py-3 rounded-xl text-base font-bold text-slate-400 hover:text-slate-600 border border-transparent transition-all";
                     });
 
-                    // Build Data
-                    let data = [...baseFriends];
-                    let guest = null; // The 10th person
+                    let fullData = [...baseFriends];
+                    let guest = null;
                     
                     if (type === 'pos') {
-                        guest = { val: 50000, icon: '🚁', label: '$50M' }; // Bill Gates
+                        guest = { val: 50000, icon: '🚁', label: '$50M' };
                     } else if (type === 'neg') {
                         guest = { val: 0, icon: '📉', label: '$0' };
                     }
 
-                    // Render Room
                     const room = document.getElementById('room');
                     let html = baseFriends.map(v => `
                         <div class="text-center transition-all hover:scale-110 cursor-pointer group">
@@ -603,28 +566,18 @@
                     `).join('');
 
                     if (guest) {
-                        html += `
-                        <div class="text-center transition-all scale-110 animate-pile-in">
-                            <div class="text-4xl drop-shadow-md">${guest.icon}</div>
-                            <div class="text-xs font-bold text-indigo-700 bg-indigo-100 rounded px-2 py-0.5 shadow-sm border border-indigo-200 mt-1">${guest.label}</div>
-                        </div>
-                        `;
+                        html += `<div class="text-center transition-all scale-110 animate-pile-in"><div class="text-4xl drop-shadow-md">${guest.icon}</div><div class="text-xs font-bold text-indigo-700 bg-indigo-100 rounded px-2 py-0.5 shadow-sm border border-indigo-200 mt-1">${guest.label}</div></div>`;
                     }
                     room.innerHTML = html;
 
-                    // Calculate Stats
-                    let fullData = [...baseFriends];
                     if (guest) fullData.push(guest.val);
-                    
                     const sum = fullData.reduce((a,b)=>a+b,0);
                     const mean = sum / fullData.length;
                     
-                    // Median
                     fullData.sort((a,b)=>a-b);
                     const mid = Math.floor(fullData.length/2);
                     const median = fullData.length % 2 !== 0 ? fullData[mid] : (fullData[mid-1] + fullData[mid])/2;
 
-                    // Render Bars
                     const mVal = document.getElementById('mean-val');
                     const medVal = document.getElementById('median-val');
                     const mBar = document.getElementById('mean-bar');
@@ -642,18 +595,14 @@
                         mBar.style.width = "20%"; mBar.className = "bg-purple-500 h-4 rounded-full transition-all duration-700 shadow-md";
                         mVal.className = "text-purple-600";
                     }
-
-                    // Draw Curve
                     drawSkewCurve(type);
                 };
 
-                // Canvas Logic
                 const drawSkewCurve = (type) => {
                     const cvs = document.getElementById('skewCanvas');
                     if(!cvs) return;
                     const ctx = cvs.getContext('2d');
                     
-                    // High DPI
                     const dpr = window.devicePixelRatio || 1;
                     const rect = cvs.getBoundingClientRect();
                     cvs.width = rect.width * dpr;
@@ -663,13 +612,8 @@
                     const h = rect.height;
 
                     ctx.clearRect(0,0,w,h);
-                    
-                    // Labels
                     const lbl = document.getElementById('curve-label');
-                    
                     let peakX = w * 0.5;
-                    
-                    // Positions for Mean, Median, Mode Lines
                     let meanX, medianX, modeX;
 
                     ctx.beginPath();
@@ -677,7 +621,6 @@
 
                     if (type === 'normal') {
                         lbl.textContent = "Normal (Symmetrical)";
-                        // Bell Curve
                         for(let x=10; x<=w-10; x+=5) {
                             const normalized = (x - peakX) / (w * 0.15);
                             const y = (h-10) - (Math.exp(-0.5 * normalized * normalized) * (h * 0.8));
@@ -687,63 +630,39 @@
                     } else if (type === 'pos') {
                         lbl.textContent = "Positive Skew (Tail Right)";
                         peakX = w * 0.3;
-                        ctx.bezierCurveTo(peakX - 30, h-10, peakX - 20, 20, peakX, 20); // Up to peak left
-                        ctx.bezierCurveTo(peakX + 50, 20, w * 0.8, h-30, w-10, h-10); // Long tail right
-                        
-                        modeX = peakX;
-                        medianX = w * 0.45;
-                        meanX = w * 0.6;
+                        ctx.bezierCurveTo(peakX - 30, h-10, peakX - 20, 20, peakX, 20); 
+                        ctx.bezierCurveTo(peakX + 50, 20, w * 0.8, h-30, w-10, h-10); 
+                        modeX = peakX; medianX = w * 0.45; meanX = w * 0.6;
                     } else {
                         lbl.textContent = "Negative Skew (Tail Left)";
                         peakX = w * 0.7;
-                        ctx.bezierCurveTo(w*0.2, h-30, peakX - 50, 20, peakX, 20); // Long tail left
-                        ctx.bezierCurveTo(peakX + 20, 20, peakX + 30, h-10, w-10, h-10); // Down fast right
-                        
-                        modeX = peakX;
-                        medianX = w * 0.55;
-                        meanX = w * 0.4;
+                        ctx.bezierCurveTo(w*0.2, h-30, peakX - 50, 20, peakX, 20); 
+                        ctx.bezierCurveTo(peakX + 20, 20, peakX + 30, h-10, w-10, h-10);
+                        modeX = peakX; medianX = w * 0.55; meanX = w * 0.4;
                     }
 
-                    ctx.lineWidth = 4; // Thicker lines for desktop
+                    ctx.lineWidth = 4;
                     ctx.strokeStyle = type === 'normal' ? "#3b82f6" : type === 'pos' ? "#ef4444" : "#a855f7";
                     ctx.stroke();
-                    
-                    // Fill
-                    ctx.lineTo(w-10, h-10);
-                    ctx.lineTo(10, h-10);
+                    ctx.lineTo(w-10, h-10); ctx.lineTo(10, h-10);
                     ctx.fillStyle = type === 'normal' ? "rgba(59, 130, 246, 0.1)" : type === 'pos' ? "rgba(239, 68, 68, 0.1)" : "rgba(168, 85, 247, 0.1)";
                     ctx.fill();
 
-                    // Function to draw distinct lines
                     const drawLine = (x, label, color, heightPct) => {
-                        ctx.beginPath();
-                        ctx.moveTo(x, h - 10);
-                        ctx.lineTo(x, h - (h * heightPct));
-                        ctx.strokeStyle = color;
-                        ctx.setLineDash([6, 6]);
-                        ctx.lineWidth = 2;
-                        ctx.stroke();
-                        ctx.setLineDash([]);
-
-                        // Label
-                        ctx.fillStyle = color;
-                        ctx.font = "bold 12px sans-serif"; // Larger font
-                        ctx.textAlign = "center";
+                        ctx.beginPath(); ctx.moveTo(x, h - 10); ctx.lineTo(x, h - (h * heightPct));
+                        ctx.strokeStyle = color; ctx.setLineDash([6, 6]); ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
+                        ctx.fillStyle = color; ctx.font = "bold 12px sans-serif"; ctx.textAlign = "center";
                         ctx.fillText(label, x, h - (h * heightPct) - 8);
                     };
 
-                    // Draw Lines
                     if (type === 'normal') {
-                        // Draw single central line
                         drawLine(peakX, "Mean = Med = Mode", "#2563eb", 0.9);
                     } else {
-                        drawLine(modeX, "Mode", "#db2777", 0.85); // Pink
-                        drawLine(medianX, "Median", "#10b981", 0.65); // Emerald
-                        drawLine(meanX, "Mean", "#2563eb", 0.45); // Blue
+                        drawLine(modeX, "Mode", "#db2777", 0.85); 
+                        drawLine(medianX, "Median", "#10b981", 0.65); 
+                        drawLine(meanX, "Mean", "#2563eb", 0.45); 
                     }
                 };
-
-                // Init
                 setTimeout(() => setScenario('normal'), 50);
             }
         };
@@ -751,12 +670,12 @@
         const lessonStdDev = {
             title: "Risk: Crypto vs. Index Funds",
             slides: [
-                `<h3 class="font-bold mb-6 text-2xl">1. Averages Hide Risk 🙈</h3><p class="mb-6 text-lg">Consider two investments. Both return an <strong>average of 8% per year</strong>. They sound the same, right?</p>`,
-                `<div class="bg-blue-50 p-6 rounded-2xl mb-4 border border-blue-200"><strong class="text-blue-800 text-xl">S&P 500 (Consistent)</strong><p class="mt-2 text-base">+8%, +9%, +7%.</p><span class="text-sm bg-white px-3 py-1.5 rounded inline-block mt-2 border border-blue-100 shadow-sm font-bold text-slate-500">Low Standard Deviation</span></div><div class="bg-orange-50 p-6 rounded-2xl border border-orange-200"><strong class="text-orange-800 text-xl">Meme Coin (Volatile)</strong><p class="mt-2 text-base">+100%, -90%, +50%.</p><span class="text-sm bg-white px-3 py-1.5 rounded inline-block mt-2 border border-orange-100 shadow-sm font-bold text-slate-500">Huge Standard Deviation</span></div>`,
-                `<p class="mb-6 text-lg"><strong>Standard Deviation</strong> measures this "spread".</p><p class="font-bold bg-slate-900 text-white p-6 rounded-2xl text-center shadow-xl text-xl">High Spread = High Risk ⚠️</p>`
+                `<h3 class="font-bold mb-6 text-2xl">1. Averages Hide Risk 🙈</h3><p class="mb-6 text-xl">Consider two investments. Both return an <strong>average of 8% per year</strong>. They sound the same, right?</p>`,
+                `<div class="bg-blue-50 p-6 rounded-2xl mb-4 border border-blue-200"><strong class="text-blue-800 text-xl">S&P 500 (Consistent)</strong><p class="mt-2 text-lg">+8%, +9%, +7%.</p><span class="text-base bg-white px-3 py-1.5 rounded inline-block mt-2 border border-blue-100 shadow-sm font-bold text-slate-500">Low Standard Deviation</span></div><div class="bg-orange-50 p-6 rounded-2xl border border-orange-200"><strong class="text-orange-800 text-xl">Meme Coin (Volatile)</strong><p class="mt-2 text-lg">+100%, -90%, +50%.</p><span class="text-base bg-white px-3 py-1.5 rounded inline-block mt-2 border border-orange-100 shadow-sm font-bold text-slate-500">Huge Standard Deviation</span></div>`,
+                `<p class="mb-6 text-xl"><strong>Standard Deviation</strong> measures this "spread".</p><p class="font-bold bg-slate-900 text-white p-6 rounded-2xl text-center shadow-xl text-2xl">High Spread = High Risk ⚠️</p>`
             ],
             renderInteractive: (container) => {
-                container.innerHTML = `<div class="w-full max-w-md text-center"><h4 class="font-bold mb-6 text-slate-400 uppercase text-sm tracking-widest">Volatility Simulator</h4><div class="flex justify-center gap-6 mb-6"><button id="btn-safe" class="px-6 py-3 bg-blue-100 text-blue-700 rounded-xl text-base font-bold hover:bg-blue-200 transition-colors shadow-sm">Index Fund</button><button id="btn-risky" class="px-6 py-3 bg-orange-100 text-orange-700 rounded-xl text-base font-bold hover:bg-orange-200 transition-colors shadow-sm">Crypto</button></div><div class="h-64 bg-white border border-slate-200 rounded-3xl relative flex flex-col items-center justify-center overflow-hidden shadow-md" id="dispersion-box"><div class="absolute h-full w-0.5 bg-slate-300 left-1/2"></div><div id="dots-container" class="w-full h-full relative"></div></div><p class="text-sm mt-4 text-slate-500 font-bold" id="dispersion-text">Select an investment.</p></div>`;
+                container.innerHTML = `<div class="w-full max-w-md text-center"><h4 class="font-bold mb-6 text-slate-400 uppercase text-sm tracking-widest">Volatility Simulator</h4><div class="flex justify-center gap-6 mb-6"><button id="btn-safe" class="px-6 py-3 bg-blue-100 text-blue-700 rounded-xl text-lg font-bold hover:bg-blue-200 transition-colors shadow-sm">Index Fund</button><button id="btn-risky" class="px-6 py-3 bg-orange-100 text-orange-700 rounded-xl text-lg font-bold hover:bg-orange-200 transition-colors shadow-sm">Crypto</button></div><div class="h-64 bg-white border border-slate-200 rounded-3xl relative flex flex-col items-center justify-center overflow-hidden shadow-md" id="dispersion-box"><div class="absolute h-full w-0.5 bg-slate-300 left-1/2"></div><div id="dots-container" class="w-full h-full relative"></div></div><p class="text-base mt-4 text-slate-500 font-bold" id="dispersion-text">Select an investment.</p></div>`;
                 const box = document.getElementById('dots-container');
                 const txt = document.getElementById('dispersion-text');
                 const drawReturns = (returns, color) => {
@@ -778,12 +697,12 @@
         const lessonDistributions = {
             title: "The Normal Distribution",
             slides: [
-                `<h3 class="font-bold mb-6 text-2xl">1. The Bell Curve 🔔</h3><p class="mb-4 text-lg">The <strong>Normal Distribution</strong> is the superstar of statistics.</p><ul class="list-disc pl-6 text-base space-y-3"><li><strong>Symmetrical:</strong> Left side mirrors right side.</li><li><strong>Predictable:</strong> We know exactly how much data falls where.</li></ul>`,
-                `<h3 class="font-bold mb-6 text-2xl">2. The 68-95-99.7 Rule</h3><p class="text-base mb-4">Memorize this for audit sampling!</p><div class="space-y-4 text-sm font-bold"><div class="bg-indigo-100 text-indigo-800 p-4 rounded-xl flex justify-between items-center shadow-sm"><span>1 Standard Dev (σ)</span> <span class="bg-white px-3 py-1 rounded-lg">68% of data</span></div><div class="bg-indigo-200 text-indigo-900 p-4 rounded-xl flex justify-between items-center shadow-sm"><span>2 Standard Dev (2σ)</span> <span class="bg-white px-3 py-1 rounded-lg">95% of data</span></div><div class="bg-indigo-300 text-indigo-950 p-4 rounded-xl flex justify-between items-center shadow-sm"><span>3 Standard Dev (3σ)</span> <span class="bg-white px-3 py-1 rounded-lg">99.7% of data</span></div></div>`,
-                `<h3 class="font-bold mb-6 text-2xl">3. Z-Score: The "Weirdness" Metric</h3><p class="mb-6 text-base">A <strong>Z-Score</strong> tells you exactly how far a data point is from the Mean.</p><div class="bg-slate-100 p-6 rounded-2xl font-mono text-center text-base mb-6 border border-slate-200 shadow-inner">Z = (Value - Mean) / StdDev<br><span class="text-sm text-slate-500 block mt-3 pt-3 border-t border-slate-200">Ex: ($300k - $60k) / $10k = 24</span></div><div class="grid grid-cols-3 gap-4 text-center text-sm"><div class="bg-white p-4 rounded-xl shadow-md border border-slate-100">Z=0<br><span class="text-slate-400 text-xs">Average</span></div><div class="bg-white p-4 rounded-xl shadow-md border border-slate-100">Z=2<br><span class="text-slate-400 text-xs">High</span></div><div class="bg-red-50 text-red-600 font-bold p-4 rounded-xl shadow-md border border-red-200">Z=3+<br><span class="blur-reveal mt-1 block">Suspicious!</span></div></div>`
+                `<h3 class="font-bold mb-6 text-2xl">1. The Bell Curve 🔔</h3><p class="mb-4 text-xl">The <strong>Normal Distribution</strong> is the superstar of statistics.</p><ul class="list-disc pl-6 text-lg space-y-3"><li><strong>Symmetrical:</strong> Left side mirrors right side.</li><li><strong>Predictable:</strong> We know exactly how much data falls where.</li></ul>`,
+                `<h3 class="font-bold mb-6 text-2xl">2. The 68-95-99.7 Rule</h3><p class="text-lg mb-4">Memorize this for audit sampling!</p><div class="space-y-4 text-base font-bold"><div class="bg-indigo-100 text-indigo-800 p-4 rounded-xl flex justify-between items-center shadow-sm"><span>1 Standard Dev (σ)</span> <span class="bg-white px-3 py-1 rounded-lg">68% of data</span></div><div class="bg-indigo-200 text-indigo-900 p-4 rounded-xl flex justify-between items-center shadow-sm"><span>2 Standard Dev (2σ)</span> <span class="bg-white px-3 py-1 rounded-lg">95% of data</span></div><div class="bg-indigo-300 text-indigo-950 p-4 rounded-xl flex justify-between items-center shadow-sm"><span>3 Standard Dev (3σ)</span> <span class="bg-white px-3 py-1 rounded-lg">99.7% of data</span></div></div>`,
+                `<h3 class="font-bold mb-6 text-2xl">3. Z-Score: The "Weirdness" Metric</h3><p class="mb-6 text-lg">A <strong>Z-Score</strong> tells you exactly how far a data point is from the Mean.</p><div class="bg-slate-100 p-6 rounded-2xl font-mono text-center text-lg mb-6 border border-slate-200 shadow-inner">Z = (Value - Mean) / StdDev<br><span class="text-base text-slate-500 block mt-3 pt-3 border-t border-slate-200">Ex: ($300k - $60k) / $10k = 24</span></div><div class="grid grid-cols-3 gap-4 text-center text-base"><div class="bg-white p-4 rounded-xl shadow-md border border-slate-100">Z=0<br><span class="text-slate-400 text-sm">Average</span></div><div class="bg-white p-4 rounded-xl shadow-md border border-slate-100">Z=2<br><span class="text-slate-400 text-sm">High</span></div><div class="bg-red-50 text-red-600 font-bold p-4 rounded-xl shadow-md border border-red-200">Z=3+<br><span class="blur-reveal mt-1 block">Suspicious!</span></div></div>`
             ],
             renderInteractive: (container) => {
-                container.innerHTML = `<div class="w-full max-w-md text-center"><h4 class="font-bold mb-4 text-slate-400 uppercase text-sm tracking-widest">Distribution Scanner</h4><div class="relative bg-white border border-slate-200 rounded-3xl flex items-end justify-center overflow-hidden h-64 shadow-md mb-6"><canvas id="bellCanvas" width="400" height="200" class="absolute bottom-0"></canvas></div><div class="flex justify-center gap-3"><button class="text-sm font-bold bg-white text-indigo-600 px-5 py-3 rounded-xl hover:bg-indigo-50 border border-slate-200 shadow-md transition-all hover:-translate-y-0.5" onclick="highlightArea(1)">68% (1σ)</button><button class="text-sm font-bold bg-white text-indigo-600 px-5 py-3 rounded-xl hover:bg-indigo-50 border border-slate-200 shadow-md transition-all hover:-translate-y-0.5" onclick="highlightArea(2)">95% (2σ)</button><button class="text-sm font-bold bg-white text-indigo-600 px-5 py-3 rounded-xl hover:bg-indigo-50 border border-slate-200 shadow-md transition-all hover:-translate-y-0.5" onclick="highlightArea(3)">99% (3σ)</button></div><p id="dist-info" class="text-base font-bold text-slate-500 mt-4 min-h-[24px]">Tap a range to visualize.</p></div>`;
+                container.innerHTML = `<div class="w-full max-w-md text-center"><h4 class="font-bold mb-4 text-slate-400 uppercase text-sm tracking-widest">Distribution Scanner</h4><div class="relative bg-white border border-slate-200 rounded-3xl flex items-end justify-center overflow-hidden h-64 shadow-md mb-6"><canvas id="bellCanvas" width="400" height="200" class="absolute bottom-0"></canvas></div><div class="flex justify-center gap-3"><button class="text-base font-bold bg-white text-indigo-600 px-5 py-3 rounded-xl hover:bg-indigo-50 border border-slate-200 shadow-md transition-all hover:-translate-y-0.5" onclick="highlightArea(1)">68% (1σ)</button><button class="text-base font-bold bg-white text-indigo-600 px-5 py-3 rounded-xl hover:bg-indigo-50 border border-slate-200 shadow-md transition-all hover:-translate-y-0.5" onclick="highlightArea(2)">95% (2σ)</button><button class="text-base font-bold bg-white text-indigo-600 px-5 py-3 rounded-xl hover:bg-indigo-50 border border-slate-200 shadow-md transition-all hover:-translate-y-0.5" onclick="highlightArea(3)">99% (3σ)</button></div><p id="dist-info" class="text-lg font-bold text-slate-500 mt-4 min-h-[24px]">Tap a range to visualize.</p></div>`;
                 const canvas = document.getElementById('bellCanvas');
                 const ctx = canvas.getContext('2d');
                 const drawBell = (sigmaHighlight = 0) => {
@@ -827,42 +746,42 @@
             title: "Benford's Law 📊",
             slides: [
                 `<h3 class="font-bold mb-6 text-2xl">1. The First Digit Law</h3>
-                 <p class="mb-6 text-base"><strong>Benford’s Law</strong> predicts that in natural datasets (like invoices), the first digit is <strong>not</strong> random.</p>
+                 <p class="mb-6 text-lg"><strong>Benford’s Law</strong> predicts that in natural datasets (like invoices), the first digit is <strong>not</strong> random.</p>
                  <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-200 mb-6 shadow-sm">
-                    <div class="flex justify-between text-sm font-bold text-indigo-800 mb-2">
+                    <div class="flex justify-between text-base font-bold text-indigo-800 mb-2">
                         <span>Digit 1</span><span>Digit 9</span>
                     </div>
-                    <div class="w-full bg-white rounded-full h-6 mb-4 flex overflow-hidden shadow-inner">
-                        <div class="bg-indigo-600 h-full flex items-center justify-center text-[10px] text-white font-bold" style="width: 30.1%">30%</div>
-                        <div class="bg-indigo-400 h-full flex items-center justify-center text-[10px] text-white font-bold" style="width: 17.6%">17%</div>
+                    <div class="w-full bg-white rounded-full h-8 mb-4 flex overflow-hidden shadow-inner">
+                        <div class="bg-indigo-600 h-full flex items-center justify-center text-xs text-white font-bold" style="width: 30.1%">30%</div>
+                        <div class="bg-indigo-400 h-full flex items-center justify-center text-xs text-white font-bold" style="width: 17.6%">17%</div>
                         <div class="bg-indigo-300 h-full" style="width: 52.3%"></div>
                     </div>
-                    <p class="text-sm text-indigo-900 leading-relaxed">
+                    <p class="text-base text-indigo-900 leading-relaxed">
                         <strong>1</strong> appears ~30.1% of the time.<br>
                         <strong>9</strong> appears only ~4.6% of the time.
                     </p>
                  </div>
-                 <p class="text-sm text-slate-500 italic">Why? Because numbers grow exponentially (1 to 2 is a 100% jump, 8 to 9 is small).</p>`,
+                 <p class="text-base text-slate-500 italic">Why? Because numbers grow exponentially (1 to 2 is a 100% jump, 8 to 9 is small).</p>`,
 
                 `<h3 class="font-bold mb-6 text-2xl">2. Detecting Fraud 🕵️‍♀️</h3>
-                 <p class="mb-6 text-base">When people <strong>invent</strong> numbers, they try to be "random" and use digits equally (11.1% each).</p>
-                 <div class="space-y-4 text-base">
+                 <p class="mb-6 text-lg">When people <strong>invent</strong> numbers, they try to be "random" and use digits equally (11.1% each).</p>
+                 <div class="space-y-4 text-lg">
                     <div class="p-5 bg-white border-l-8 border-emerald-500 shadow-md rounded-r-xl">
-                        <strong class="text-lg text-slate-800">Natural Data</strong><br>Follows the curve (Lots of 1s and 2s).
+                        <strong class="text-xl text-slate-800">Natural Data</strong><br>Follows the curve (Lots of 1s and 2s).
                     </div>
                     <div class="p-5 bg-white border-l-8 border-red-500 shadow-md rounded-r-xl">
-                        <strong class="text-lg text-slate-800">Manipulated Data</strong><br>Too flat, or strange spikes (e.g., many 9s to stay under a limit).
+                        <strong class="text-xl text-slate-800">Manipulated Data</strong><br>Too flat, or strange spikes (e.g., many 9s to stay under a limit).
                     </div>
                  </div>
-                 <p class="mt-6 text-sm font-bold text-red-500 bg-red-50 p-3 rounded-lg inline-block border border-red-100">⚠️ Deviation ≠ Fraud, but it signals a need for investigation.</p>`,
+                 <p class="mt-6 text-base font-bold text-red-500 bg-red-50 p-3 rounded-lg inline-block border border-red-100">⚠️ Deviation ≠ Fraud, but it signals a need for investigation.</p>`,
 
                 `<h3 class="font-bold mb-6 text-2xl">3. When to Use It</h3>
-                 <ul class="space-y-3 text-base list-disc pl-6 text-slate-700">
+                 <ul class="space-y-3 text-lg list-disc pl-6 text-slate-700">
                     <li><strong>Large Datasets:</strong> 50+ observations needed.</li>
                     <li><strong>Wide Range:</strong> Numbers must span multiple magnitudes (e.g., $10 to $10,000).</li>
                     <li><strong>Natural Origin:</strong> Sales, expenses, payments.</li>
                  </ul>
-                 <div class="mt-6 bg-slate-100 p-4 rounded-xl text-sm border border-slate-200">
+                 <div class="mt-6 bg-slate-100 p-4 rounded-xl text-base border border-slate-200">
                     <strong>Don't use on:</strong> ATM withdrawals ($20, $40), fixed prices, or restricted data.
                  </div>`
             ],
@@ -874,10 +793,10 @@
                         <canvas id="benfordCanvas" height="250"></canvas>
                     </div>
                     <div class="flex gap-4 mt-6">
-                        <button class="flex-1 bg-emerald-100 text-emerald-700 font-bold py-3 rounded-xl text-sm hover:bg-emerald-200 transition-colors shadow-sm" onclick="loadBenfordData('real')">Authentic Data</button>
-                        <button class="flex-1 bg-red-100 text-red-700 font-bold py-3 rounded-xl text-sm hover:bg-red-200 transition-colors shadow-sm" onclick="loadBenfordData('fake')">Fake Data</button>
+                        <button class="flex-1 bg-emerald-100 text-emerald-700 font-bold py-3 rounded-xl text-base hover:bg-emerald-200 transition-colors shadow-sm" onclick="loadBenfordData('real')">Authentic Data</button>
+                        <button class="flex-1 bg-red-100 text-red-700 font-bold py-3 rounded-xl text-base hover:bg-red-200 transition-colors shadow-sm" onclick="loadBenfordData('fake')">Fake Data</button>
                     </div>
-                    <p id="benford-feedback" class="text-base font-bold text-slate-400 mt-4 min-h-[24px]">Load data to analyze.</p>
+                    <p id="benford-feedback" class="text-lg font-bold text-slate-400 mt-4 min-h-[24px]">Load data to analyze.</p>
                 </div>`;
                 
                 const ctx = document.getElementById('benfordCanvas').getContext('2d');
@@ -891,16 +810,13 @@
                     let feedback = '';
 
                     if(type === 'real') {
-                        // Slightly noisy Benford
                         actual = expected.map(v => v + (Math.random() * 4 - 2)); 
                         color = '#10b981';
                         feedback = "Matches Expected Pattern ✅";
                     } else {
-                        // Uniform / Random
                         actual = labels.map(() => 11.1 + (Math.random() * 10 - 5));
-                        // Add a spike
-                        actual[3] += 15; // Spike at 4
-                        actual[0] -= 10; // Drop at 1
+                        actual[3] += 15; 
+                        actual[0] -= 10; 
                         color = '#ef4444';
                         feedback = "Suspicious Deviation (Too few 1s, too many 4s) 🚩";
                     }
@@ -936,9 +852,8 @@
                         }
                     });
                     document.getElementById('benford-feedback').textContent = feedback;
-                    document.getElementById('benford-feedback').className = type === 'real' ? "text-base font-bold text-emerald-600 mt-4 min-h-[24px]" : "text-base font-bold text-red-600 mt-4 min-h-[24px]";
+                    document.getElementById('benford-feedback').className = type === 'real' ? "text-lg font-bold text-emerald-600 mt-4 min-h-[24px]" : "text-lg font-bold text-red-600 mt-4 min-h-[24px]";
                 };
-                
                 setTimeout(() => window.loadBenfordData('real'), 100);
             }
         };
@@ -946,15 +861,15 @@
         const lessonCorrelation = {
             title: "Connections between Variables",
             slides: [
-                `<h3 class="font-bold mb-6 text-2xl">Dancing Variables</h3><p class="mb-6 text-lg"><strong>Correlation</strong> measures how two numbers move together.</p><ul class="space-y-4 text-base"><li class="flex items-center gap-3"><span class="bg-green-100 p-2 rounded-lg text-xl">↗️</span> <strong>Positive:</strong> As X goes up, Y goes up (e.g., Ad Spend & Sales).</li><li class="flex items-center gap-3"><span class="bg-red-100 p-2 rounded-lg text-xl">↘️</span> <strong>Negative:</strong> As X goes up, Y goes down (e.g., Safety Training & Accidents).</li><li class="flex items-center gap-3"><span class="bg-slate-100 p-2 rounded-lg text-xl">🤷</span> <strong>Zero:</strong> No pattern (e.g., Shoe size & IQ).</li></ul>`,
-                `<h3 class="font-bold mb-6 text-2xl text-red-600"><i class="fa-solid fa-triangle-exclamation"></i> Warning: Correlation ≠ Causation</h3><p class="mb-4 text-base">Just because X and Y move together, doesn't mean X <em>causes</em> Y. They might both be caused by Z.</p><div class="bg-blue-50 p-6 rounded-2xl text-sm border border-blue-200 shadow-sm leading-relaxed"><strong class="text-base text-blue-900 block mb-2">Example:</strong> Ice Cream Sales and Shark Attacks are correlated.<br><br><strong>Why?</strong> <span class="blur-reveal">Not because ice cream attracts sharks! Summer causes both to rise.</span></div>`
+                `<h3 class="font-bold mb-6 text-2xl">Dancing Variables</h3><p class="mb-6 text-xl"><strong>Correlation</strong> measures how two numbers move together.</p><ul class="space-y-4 text-lg"><li class="flex items-center gap-3"><span class="bg-green-100 p-2 rounded-lg text-xl">↗️</span> <strong>Positive:</strong> As X goes up, Y goes up (e.g., Ad Spend & Sales).</li><li class="flex items-center gap-3"><span class="bg-red-100 p-2 rounded-lg text-xl">↘️</span> <strong>Negative:</strong> As X goes up, Y goes down (e.g., Safety Training & Accidents).</li><li class="flex items-center gap-3"><span class="bg-slate-100 p-2 rounded-lg text-xl">🤷</span> <strong>Zero:</strong> No pattern (e.g., Shoe size & IQ).</li></ul>`,
+                `<h3 class="font-bold mb-6 text-2xl text-red-600"><i class="fa-solid fa-triangle-exclamation"></i> Warning: Correlation ≠ Causation</h3><p class="mb-4 text-lg">Just because X and Y move together, doesn't mean X <em>causes</em> Y. They might both be caused by Z.</p><div class="bg-blue-50 p-6 rounded-2xl text-base border border-blue-200 shadow-sm leading-relaxed"><strong class="text-lg text-blue-900 block mb-2">Example:</strong> Ice Cream Sales and Shark Attacks are correlated.<br><br><strong>Why?</strong> <span class="blur-reveal">Not because ice cream attracts sharks! Summer causes both to rise.</span></div>`
             ],
             renderInteractive: (container) => {
-                container.innerHTML = `<div class="w-full max-w-md text-center"><h4 class="font-bold mb-6 text-slate-400 uppercase text-sm tracking-widest">Correlation Builder</h4><div class="flex justify-center gap-4 mb-6"><button class="text-sm font-bold bg-white px-5 py-3 rounded-xl border border-slate-200 hover:bg-indigo-50 transition-all shadow-sm hover:-translate-y-0.5" onclick="setCorr('pos')">Positive ↗️</button><button class="text-sm font-bold bg-white px-5 py-3 rounded-xl border border-slate-200 hover:bg-indigo-50 transition-all shadow-sm hover:-translate-y-0.5" onclick="setCorr('neg')">Negative ↘️</button><button class="text-sm font-bold bg-white px-5 py-3 rounded-xl border border-slate-200 hover:bg-indigo-50 transition-all shadow-sm hover:-translate-y-0.5" onclick="setCorr('none')">None 🤷</button></div><div id="corr-canvas" class="h-64 bg-white border border-slate-200 rounded-3xl relative shadow-md overflow-hidden"></div></div>`;
+                container.innerHTML = `<div class="w-full max-w-md text-center"><h4 class="font-bold mb-6 text-slate-400 uppercase text-sm tracking-widest">Correlation Builder</h4><div class="flex justify-center gap-4 mb-6"><button class="text-base font-bold bg-white px-5 py-3 rounded-xl border border-slate-200 hover:bg-indigo-50 transition-all shadow-sm hover:-translate-y-0.5" onclick="setCorr('pos')">Positive ↗️</button><button class="text-base font-bold bg-white px-5 py-3 rounded-xl border border-slate-200 hover:bg-indigo-50 transition-all shadow-sm hover:-translate-y-0.5" onclick="setCorr('neg')">Negative ↘️</button><button class="text-base font-bold bg-white px-5 py-3 rounded-xl border border-slate-200 hover:bg-indigo-50 transition-all shadow-sm hover:-translate-y-0.5" onclick="setCorr('none')">None 🤷</button></div><div id="corr-canvas" class="h-64 bg-white border border-slate-200 rounded-3xl relative shadow-md overflow-hidden"></div></div>`;
                 window.setCorr = (type) => {
                     const box = document.getElementById('corr-canvas');
                     box.innerHTML = '';
-                    for(let i=0; i<40; i++) { // More dots for desktop
+                    for(let i=0; i<40; i++) { 
                         let x = Math.random() * 100;
                         let y;
                         if(type === 'pos') y = x + (Math.random()*20 - 10);
@@ -970,44 +885,77 @@
             }
         };
 
-        // ... (Remaining Logic kept as is, but ensuring string templates use larger font classes) ...
-        // ... Skipping full repetition of regression/p-values unless font size changes are needed inside strings ...
-        // I will assume the pattern of updating classes inside the JS strings continues for the remaining lessons.
-        // For brevity in the file response, I will include the corrected JS logic for the remaining lessons with updated classes.
-
         const lessonRegression = {
             title: "Regression Analysis",
             slides: [
-                `<h3 class="font-bold text-2xl mb-6 text-indigo-600">Part 1: Linear Regression</h3><p class="mb-4 text-lg">You are auditing <strong>Payroll Expense</strong>. You expect it to go up as headcount goes up.</p><p class="bg-indigo-50 p-4 rounded-xl text-base border border-indigo-100">This is <strong>Linear Regression</strong>: <br>Expense = (Headcount * Avg Wage) + Fixed Costs.</p>`,
+                `<h3 class="font-bold text-2xl mb-6 text-indigo-600">Part 1: Linear Regression</h3><p class="mb-4 text-xl">You are auditing <strong>Payroll Expense</strong>. You expect it to go up as headcount goes up.</p><p class="bg-indigo-50 p-4 rounded-xl text-lg border border-indigo-100">This is <strong>Linear Regression</strong>: <br>Expense = (Headcount * Avg Wage) + Fixed Costs.</p>`,
                 `<h3 class="font-bold mb-6 text-2xl">Variables: Who drives who?</h3>
                 <div class="space-y-6">
                     <div class="p-5 bg-white border-l-8 border-indigo-500 shadow-md rounded-r-xl">
-                        <strong class="text-indigo-900 text-lg">Independent Variable (X)</strong>
-                        <p class="text-base text-slate-600 mt-2">The driver that influences the outcome.<br><span class="text-sm text-slate-400 italic">Example: Temperature, Ad Spend, Headcount.</span></p>
+                        <strong class="text-indigo-900 text-xl">Independent Variable (X)</strong>
+                        <p class="text-lg text-slate-600 mt-2">The driver that influences the outcome.<br><span class="text-base text-slate-400 italic">Example: Temperature, Ad Spend, Headcount.</span></p>
                     </div>
                     <div class="p-5 bg-white border-l-8 border-emerald-500 shadow-md rounded-r-xl">
-                        <strong class="text-emerald-900 text-lg">Dependent Variable (Y)</strong>
-                        <p class="text-base text-slate-600 mt-2">The output or "Result". This reacts to X.<br><span class="text-sm text-slate-400 italic">Example: Ice Cream Sales, Revenue, Total Payroll.</span></p>
+                        <strong class="text-emerald-900 text-xl">Dependent Variable (Y)</strong>
+                        <p class="text-lg text-slate-600 mt-2">The output or "Result". This reacts to X.<br><span class="text-base text-slate-400 italic">Example: Ice Cream Sales, Revenue, Total Payroll.</span></p>
                     </div>
                     <div class="mt-6 p-6 bg-slate-100 rounded-2xl border border-slate-200">
-                        <p class="font-bold text-base mb-3 text-slate-700">Quiz: We predict <em>Sales</em> based on <em>Ad Spend</em>.</p>
-                        <p class="text-sm mb-3 text-slate-500">Which is the Dependent Variable?</p>
-                        <span class="blur-reveal bg-white px-3 py-1.5 rounded border border-slate-300 text-sm">Sales (Y) depends on Ad Spending (X).</span>
+                        <p class="font-bold text-lg mb-3 text-slate-700">Quiz: We predict <em>Sales</em> based on <em>Ad Spend</em>.</p>
+                        <p class="text-base mb-3 text-slate-500">Which is the Dependent Variable?</p>
+                        <span class="blur-reveal bg-white px-3 py-1.5 rounded border border-slate-300 text-base">Sales (Y) depends on Ad Spending (X).</span>
                     </div>
                 </div>`,
-                `<h3 class="font-bold mb-6 text-2xl">R-Squared (Fit)</h3><p class="mb-4 text-lg">How trustworthy is the line?</p><p class="mb-4 text-base"><strong>R²</strong> tells you how well the line fits the data (0 to 1).</p><ul class="list-disc pl-6 text-base space-y-3"><li><span class="blur-reveal">R² = 1.0: Perfect fit.</span></li><li><span class="blur-reveal">R² > 0.8: Strong audit evidence.</span></li><li><span class="blur-reveal">R² < 0.5: Weak relationship.</span></li><li><span class="blur-reveal">R² = 0: No explanatory power.</span></li></ul>`,
-                `<h3 class="font-bold text-2xl mb-6 text-purple-600">Part 2: Multiple Regression</h3><p class="mb-6 text-lg">Reality is COMPLEX. <strong>Cost of Goods Sold (COGS)</strong> depends on multiple drivers.</p><p class="text-xl font-mono bg-slate-100 p-4 rounded-xl border border-slate-200 mb-6">COGS = (A * Units) + (B * Oil Price) + Fixed</p><p class="text-base bg-white p-4 rounded-xl border border-slate-200 shadow-sm">We can visualize this as a plane cutting through a 3D cloud of data points (Sales, Ads, Quality).</p>`
+                `<h3 class="font-bold mb-6 text-2xl">R-Squared (Fit)</h3><p class="mb-4 text-xl">How trustworthy is the line?</p><p class="mb-4 text-lg"><strong>R²</strong> tells you how well the line fits the data (0 to 1).</p><ul class="list-disc pl-6 text-lg space-y-3"><li><span class="blur-reveal">R² = 1.0: Perfect fit.</span></li><li><span class="blur-reveal">R² > 0.8: Strong audit evidence.</span></li><li><span class="blur-reveal">R² < 0.5: Weak relationship.</span></li><li><span class="blur-reveal">R² = 0: No explanatory power.</span></li></ul>`,
+                `<h3 class="font-bold text-2xl mb-6 text-purple-600">Part 2: Multiple Regression</h3><p class="mb-6 text-xl">Reality is COMPLEX. <strong>Cost of Goods Sold (COGS)</strong> depends on multiple drivers.</p><p class="text-xl font-mono bg-slate-100 p-4 rounded-xl border border-slate-200 mb-6">COGS = (A * Units) + (B * Oil Price) + Fixed</p><p class="text-lg bg-white p-4 rounded-xl border border-slate-200 shadow-sm">We can visualize this as a plane cutting through a 3D cloud of data points (Sales, Ads, Quality).</p>`
             ],
             renderInteractive: (container) => {
                  container.innerHTML = `
                 <div id="reg-interactive-1" class="w-full max-w-md text-center">
-                    <h4 class="font-bold mb-4 text-slate-400 uppercase text-sm tracking-widest">R-Squared Simulator</h4>
-                    <canvas id="rsqCanvas" width="400" height="200" class="bg-white border border-slate-200 rounded-3xl mx-auto mb-6 shadow-md"></canvas>
-                    <input type="range" min="0" max="100" value="10" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" id="noise-slider-r2">
-                    <div id="rsq-display" class="font-mono font-bold text-emerald-600 text-3xl mt-4">R² = 0.98</div>
-                    <p class="text-sm text-slate-400 mt-2">Slide right to add noise.</p>
-                    <p class="text-xs text-slate-500 mt-4 italic bg-slate-50 p-3 rounded-lg border border-slate-100">Regression line is where sum of squared errors are minimized.</p>
+                    <div class="flex justify-center mb-6 bg-slate-100 p-1 rounded-xl inline-flex shadow-inner">
+                        <button onclick="switchRegMode('r2')" id="btn-mode-r2" class="px-6 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-indigo-600 transition-all">Explore R²</button>
+                        <button onclick="switchRegMode('fit')" id="btn-mode-fit" class="px-6 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-indigo-600 transition-all">Game: Fit Line</button>
+                    </div>
+
+                    <div id="view-r2">
+                        <h4 class="font-bold mb-4 text-slate-400 uppercase text-sm tracking-widest">R-Squared Simulator</h4>
+                        <canvas id="rsqCanvas" width="400" height="200" class="bg-white border border-slate-200 rounded-3xl mx-auto mb-6 shadow-md"></canvas>
+                        <input type="range" min="0" max="100" value="10" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" id="noise-slider-r2">
+                        <div id="rsq-display" class="font-mono font-bold text-emerald-600 text-3xl mt-4">R² = 0.98</div>
+                        <p class="text-base text-slate-400 mt-2">Slide right to add noise.</p>
+                        <p class="text-sm text-slate-500 mt-4 italic bg-slate-50 p-3 rounded-lg border border-slate-100">Regression line is where sum of squared errors are minimized.</p>
+                    </div>
+
+                    <div id="view-fit" class="hidden">
+                        <h4 class="font-bold mb-4 text-slate-400 uppercase text-sm tracking-widest">Minimize the Error (SSE)</h4>
+                        <div class="relative">
+                            <canvas id="fitCanvas" width="400" height="220" class="bg-white border border-slate-200 rounded-3xl mx-auto mb-4 shadow-md cursor-crosshair"></canvas>
+                            <div id="sse-feedback" class="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-3 py-1 rounded-full hidden font-bold shadow-lg animate-bounce border border-slate-600">Regression Line Found! 🎯</div>
+                        </div>
+                        
+                        <div class="flex gap-4 mb-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <div class="w-1/2">
+                                <label class="text-xs font-bold text-slate-500 uppercase block mb-2">Rotate Line</label>
+                                <input type="range" min="-20" max="40" value="0" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600" id="fit-slope">
+                            </div>
+                            <div class="w-1/2">
+                                <label class="text-xs font-bold text-slate-500 uppercase block mb-2">Move Up/Down</label>
+                                <input type="range" min="20" max="180" value="100" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600" id="fit-intercept">
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-left">
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Squared Error (SSE)</span>
+                                <span id="sse-val" class="text-xl font-mono font-bold text-slate-700">0</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden shadow-inner">
+                                <div id="sse-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-2 italic text-center">Goal: Make the error bar as small as possible.</p>
+                        </div>
+                    </div>
                 </div>
+
                 <div id="reg-interactive-2" class="w-full max-w-lg text-center relative h-80 hidden">
                     <h4 class="font-bold mb-4 text-slate-400 uppercase text-sm tracking-widest">3D Regression Visualizer</h4>
                     <div id="three-container" class="w-full h-full rounded-3xl overflow-hidden shadow-xl border border-slate-200 relative bg-slate-50">
@@ -1017,7 +965,91 @@
                     </div>
                 </div>`;
                 
-                // Logic for Linear R-Squared Simulator (Noise Slider)
+                window.switchRegMode = (mode) => {
+                    const vR2 = document.getElementById('view-r2');
+                    const vFit = document.getElementById('view-fit');
+                    const bR2 = document.getElementById('btn-mode-r2');
+                    const bFit = document.getElementById('btn-mode-fit');
+
+                    if (mode === 'r2') {
+                        vR2.classList.remove('hidden');
+                        vFit.classList.add('hidden');
+                        bR2.className = "px-6 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-indigo-600 transition-all";
+                        bFit.className = "px-6 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-indigo-600 transition-all";
+                    } else {
+                        vR2.classList.add('hidden');
+                        vFit.classList.remove('hidden');
+                        bFit.className = "px-6 py-2 rounded-lg text-sm font-bold bg-white shadow-sm text-purple-600 transition-all";
+                        bR2.className = "px-6 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-purple-600 transition-all";
+                        if(window.drawFitGame) window.drawFitGame();
+                    }
+                };
+
+                const fitCanvas = document.getElementById('fitCanvas');
+                const fitCtx = fitCanvas.getContext('2d');
+                const sliderM = document.getElementById('fit-slope'); 
+                const sliderB = document.getElementById('fit-intercept');
+                const sseDisplay = document.getElementById('sse-val');
+                const sseBar = document.getElementById('sse-bar');
+                
+                const fitPoints = [];
+                for(let i=0; i<20; i++) {
+                    const x = 40 + (i * 16); 
+                    const trueY = 180 - (x * 0.4); 
+                    fitPoints.push({x: x, y: trueY + (Math.random() * 50 - 25)});
+                }
+
+                window.drawFitGame = () => {
+                    if(!fitCanvas.offsetParent) return; 
+                    fitCtx.clearRect(0,0,400,220);
+                    
+                    const m = parseInt(sliderM.value) / 40; 
+                    const b = parseInt(sliderB.value);
+
+                    fitCtx.fillStyle = "#334155";
+                    fitPoints.forEach(p => {
+                        fitCtx.beginPath(); fitCtx.arc(p.x, p.y, 4, 0, Math.PI*2); fitCtx.fill();
+                    });
+
+                    fitCtx.beginPath();
+                    fitCtx.strokeStyle = "#8b5cf6"; 
+                    fitCtx.lineWidth = 3;
+                    fitCtx.moveTo(0, b);
+                    fitCtx.lineTo(400, b - (m * 400)); 
+                    fitCtx.stroke();
+
+                    let sse = 0;
+                    fitCtx.lineWidth = 1;
+                    fitPoints.forEach(p => {
+                        const lineY = b - (m * p.x);
+                        const error = p.y - lineY;
+                        sse += error * error;
+
+                        fitCtx.beginPath();
+                        fitCtx.strokeStyle = "rgba(239, 68, 68, 0.4)"; 
+                        fitCtx.moveTo(p.x, p.y);
+                        fitCtx.lineTo(p.x, lineY);
+                        fitCtx.stroke();
+                    });
+
+                    sseDisplay.textContent = Math.round(sse).toLocaleString();
+                    const pct = Math.min(100, (sse / 40000) * 100);
+                    sseBar.style.width = pct + "%";
+                    
+                    if (sse < 3500) {
+                        document.getElementById('sse-feedback').classList.remove('hidden');
+                        sseBar.className = "bg-emerald-500 h-full w-full transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]";
+                        sseDisplay.className = "text-xl font-mono font-bold text-emerald-600";
+                    } else {
+                        document.getElementById('sse-feedback').classList.add('hidden');
+                        sseBar.className = "bg-red-500 h-full w-full transition-all duration-300";
+                        sseDisplay.className = "text-xl font-mono font-bold text-slate-700";
+                    }
+                };
+
+                sliderM.oninput = window.drawFitGame;
+                sliderB.oninput = window.drawFitGame;
+                
                 const r2Cvs = document.getElementById('rsqCanvas');
                 const r2Ctx = r2Cvs.getContext('2d');
                 const r2Slider = document.getElementById('noise-slider-r2');
@@ -1026,30 +1058,20 @@
                 function drawR2() {
                     const noise = parseInt(r2Slider.value);
                     r2Ctx.clearRect(0,0,400,200);
-                    
-                    // Draw Line
                     r2Ctx.strokeStyle = "#94a3b8"; r2Ctx.lineWidth = 3; r2Ctx.setLineDash([8,8]);
                     r2Ctx.beginPath(); r2Ctx.moveTo(30, 170); r2Ctx.lineTo(370, 30); r2Ctx.stroke(); r2Ctx.setLineDash([]);
-                    
-                    // Draw Points and Error Bars
                     r2Ctx.fillStyle = "#ef4444";
                     const pointsX = [50, 80, 110, 140, 170, 200, 230, 260, 290, 320, 350];
                     pointsX.forEach((x, i) => {
                         const idealY = 170 - ((x-30) * (140/340));
                         const offset = (Math.sin(i * 132) * noise) + ((Math.cos(i * 45) * noise)); 
                         const actualY = idealY + offset;
-
                         if (Math.abs(offset) > 2) {
-                            r2Ctx.beginPath();
-                            r2Ctx.moveTo(x, idealY);
-                            r2Ctx.lineTo(x, actualY);
-                            r2Ctx.strokeStyle = "rgba(239, 68, 68, 0.4)";
-                            r2Ctx.lineWidth = 2;
-                            r2Ctx.stroke();
+                            r2Ctx.beginPath(); r2Ctx.moveTo(x, idealY); r2Ctx.lineTo(x, actualY);
+                            r2Ctx.strokeStyle = "rgba(239, 68, 68, 0.4)"; r2Ctx.lineWidth = 2; r2Ctx.stroke();
                         }
                         r2Ctx.beginPath(); r2Ctx.arc(x, actualY, 5, 0, Math.PI*2); r2Ctx.fill();
                     });
-
                     let r2 = 1 - (noise / 80);
                     if(r2 < 0) r2 = 0;
                     r2Display.textContent = `R² = ${r2.toFixed(2)}`;
@@ -1058,7 +1080,6 @@
                 r2Slider.oninput = drawR2;
                 drawR2();
 
-                 // Logic for 3D Init (Lazy Loaded)
                 let threeInitialized = false;
                 
                 window.updateRegressionInteractive = (slideIndex) => {
@@ -1068,7 +1089,6 @@
                     if (slideIndex === 3) { 
                         container1.classList.add('hidden');
                         container2.classList.remove('hidden');
-                        
                         if (!threeInitialized) {
                             threeInitialized = true;
                             setTimeout(initThreeJS, 100);
@@ -1092,7 +1112,7 @@
                     el.appendChild(renderer.domElement);
 
                     const geometry = new THREE.BufferGeometry();
-                    const count = 80; // More dots for desktop
+                    const count = 80; 
                     const positions = new Float32Array(count * 3);
                     for(let i=0; i<count*3; i+=3) {
                         const x = (Math.random() - 0.5) * 4; 
@@ -1103,7 +1123,7 @@
                         positions[i+2] = z;
                     }
                     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-                    const material = new THREE.PointsMaterial({ color: 0x4f46e5, size: 0.15 }); // Bigger dots
+                    const material = new THREE.PointsMaterial({ color: 0x4f46e5, size: 0.15 }); 
                     const points = new THREE.Points(geometry, material);
                     scene.add(points);
 
@@ -1139,45 +1159,49 @@
         const lessonPValues = {
             title: "P-Values: Evidence vs. The Null",
             slides: [
-                `<h3 class="font-bold mb-6 text-2xl">1. Is Your Friend Cheating? 🎲</h3>
-                <div class="space-y-4 text-base">
-                    <p>You believe your friend is fair.</p>
-                    <p>You roll the dice 20 times. It lands on '6' ... 18 times.</p>
-                    <p>You ask: "If the dice was normal, how likely is this?"</p>
+                `<h3 class="font-bold mb-6 text-2xl">1. The Coin Flip Game 🪙</h3>
+                <div class="space-y-4 text-lg">
+                    <p><strong>The Setup:</strong> You think a coin is fair. This "default guess" is called the <strong>Null Hypothesis</strong>.</p>
+                    <p><strong>The Test:</strong> You flip it 10 times and get <strong>10 heads</strong>.</p>
+                    <p>You ask: "If the coin is fair, how likely is this extreme result just by luck?"</p>
                     <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-200 text-indigo-900 mt-4 shadow-sm">
-                        <strong>The P-Value Answer:</strong><br>
-                        Very unlikely (e.g., 0.0001%). Something weird is happening.
+                        <strong>The P-Value Definition:</strong><br>
+                        It is the "Surprise Level".<br>
+                        <ul class="list-disc pl-5 mt-2 text-base">
+                            <li><strong>Small p-value:</strong> "Whoa! That's rare. The coin is probably rigged."</li>
+                            <li><strong>Big p-value:</strong> "Eh, that could happen easily. Nothing weird."</li>
+                        </ul>
                     </div>
+                    <p class="text-sm text-slate-500 italic mt-2">Important: It doesn't tell you the chance the coin is fair. It tells you how surprising the data is <em>if</em> it were fair.</p>
                 </div>`,
                 
                 `<h3 class="font-bold mb-6 text-2xl">2. The 0.05 Rule 📏 (common threshold)</h3>
-                <p class="mb-6 text-lg">If p-value = 0.05, it means there's a 5% chance this result is just luck.</p>
+                <p class="mb-6 text-xl">If p-value = 0.05, it means there's a 5% chance this result is just luck.</p>
                 <div class="space-y-4">
                     <div class="bg-red-50 p-5 rounded-xl border-l-8 border-red-400 shadow-sm">
-                        <strong class="text-lg">p < 0.05</strong><br>
+                        <strong class="text-xl">p < 0.05</strong><br>
                         "Unlikely to be random." (Something is up).
                     </div>
                     <div class="bg-slate-100 p-5 rounded-xl border-l-8 border-slate-300 shadow-sm">
-                        <strong class="text-lg">p >= 0.05</strong><br>
+                        <strong class="text-xl">p >= 0.05</strong><br>
                         "Could be random." (Meh).
                     </div>
                 </div>`,
 
-                `<h3 class="font-bold mb-6 text-2xl">3. Audit Example: Expense Reports 🧾</h3>
-                <div class="space-y-4 text-base">
-                    <p><strong>Policy:</strong> Receipts needed > $25. Management says: "Control is working."</p>
+                `<h3 class="font-bold mb-6 text-2xl">3. Audit Example: The "Bad Batch" 🧾</h3>
+                <div class="space-y-4 text-lg">
                     <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-200 shadow-sm">
-                        <strong>Step 1: Assume Neutral (Null)</strong><br>
-                        "There is no control problem." (Errors should be rare).
+                        <strong>Step 1: The Claim (Null Hypothesis)</strong><br>
+                        Management says: "Our error rate is low (Acceptable ≤ 5%)."
                     </div>
                     <div class="bg-red-50 p-4 rounded-xl border border-red-200 shadow-sm">
-                        <strong>Step 2: You Sample</strong><br>
-                        Test 30 reports. Find 6 errors (20%). <br>
-                        <strong>Alternative Hypothesis (H1):</strong> The error rate is > 5%.
+                        <strong>Step 2: The Sample</strong><br>
+                        You test 50 items and find <strong>10 errors (20%)</strong>.<br>
+                        That looks bad, but is it just a statistically unlucky sample?
                     </div>
                     <div class="font-bold text-slate-600 mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                        The Test:<br>
-                        <span class="blur-reveal font-normal">Can we reject the Null and adopt the Alternative? Here we use p-value to make decision.</span>
+                        The P-Value Verdict:<br>
+                        <span class="blur-reveal font-normal">P-Value is tiny (e.g., 0.001). This means getting 20% errors from a "good" population is nearly impossible. We reject their claim.</span>
                     </div>
                 </div>`
             ],
@@ -1185,16 +1209,12 @@
                 container.innerHTML = `<div class="w-full max-w-lg text-center"><h4 class="font-bold mb-4 text-slate-400 uppercase text-sm tracking-widest">P-Value Significance</h4><div class="relative bg-white border border-slate-200 rounded-3xl h-64 flex items-end justify-center px-6 pb-6 gap-2 shadow-md overflow-hidden"><div class="absolute inset-0 border-b border-slate-100" style="bottom: 25%"></div><div class="absolute inset-0 border-b border-slate-100" style="bottom: 50%"></div><div class="w-full bg-indigo-200 rounded-t-lg" style="height: 5%"></div><div class="w-full bg-indigo-200 rounded-t-lg" style="height: 5%"></div><div class="w-full bg-indigo-200 rounded-t-lg" style="height: 5%"></div><div class="w-full bg-indigo-200 rounded-t-lg" style="height: 10%"></div><div class="w-full bg-indigo-200 rounded-t-lg" style="height: 20%"></div><div class="w-full bg-indigo-200 rounded-t-lg" style="height: 40%"></div><div class="w-full bg-indigo-200 rounded-t-lg" style="height: 70%"></div><div class="w-full bg-indigo-200 rounded-t-lg" style="height: 40%"></div><div class="w-full bg-indigo-200 rounded-t-lg" style="height: 20%"></div><div class="w-full bg-red-500 hover:bg-red-600 transition-all rounded-t-lg relative group animate-pulse shadow-lg shadow-red-500/50" style="height: 5%"><div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded shadow-lg whitespace-nowrap">P=0.02</div></div></div><div class="flex justify-between px-6 text-xs font-bold text-slate-400 mt-3 uppercase"><span>Normal</span><span>Rare</span><span class="text-red-500 text-xl -mt-2">Extreme</span></div><div class="mt-6 bg-slate-900 text-white p-6 rounded-2xl border border-slate-700 shadow-xl"><div class="text-xs text-slate-400 uppercase tracking-widest mb-2">Result</div><div class="text-3xl font-mono font-bold text-red-400">Significant</div><div class="text-sm text-slate-300 mt-2">"Evidence against the Null is strong."</div></div></div>`;
             }
         };
-        
-        // ... (Repeating structure update for remaining lessons: StandardError, Simulation, ClusterAnalysis) ...
-        // ... Assuming similar font/size bumps applied ...
 
-        // Paste remaining lessons with updated strings (Summarized for length limit, but concept holds)
         const lessonStandardError = {
             title: "Standard Error: Precision",
-            slides: [`<h3 class="font-bold mb-6 text-2xl">1. Imagine a Big Cookie Factory 🥠</h3><p class="mb-6 text-lg">There are 2,000 fortune cookies in a huge box. You check 60 cookies (n=60) and find 4 are broken (~7%).</p><div class="bg-orange-50 p-6 rounded-2xl border border-orange-200 text-orange-900 mb-6 text-base"><strong>Important Question:</strong><br>If you grabbed a <em>different</em> 60 cookies, would you get exactly 4 broken again?</div><p class="text-lg">Maybe 3. Maybe 6. The number might <span class="blur-reveal">fluctuate</span>. Standard Error measures this "natural sampling variability".</p>`, `<h3 class="font-bold mb-6 text-2xl">2. The 95% Confidence Interval</h3><p class="mb-4 text-lg">Imagine True Rate = 7% and Standard Error (SE) = 3%.</p><div class="space-y-6 text-base"><div class="p-6 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm"><strong class="text-indigo-900 text-xl">95% Confidence (±2 SE)</strong><p class="font-mono text-sm mt-2">Estimate ± (2 × SE)</p><p class="font-mono text-sm text-indigo-700">7% ± (2 × 3%)</p><p class="font-mono text-sm text-indigo-700">7% ± 6%</p><p class="font-bold text-indigo-800 mt-2 text-lg">Range: 1% to 13%</p></div></div>`],
+            slides: [`<h3 class="font-bold mb-6 text-2xl">1. Imagine a Big Cookie Factory 🥠</h3><p class="mb-6 text-xl">There are 2,000 fortune cookies in a huge box. You check 60 cookies (n=60) and find 4 are broken (~7%).</p><div class="bg-orange-50 p-6 rounded-2xl border border-orange-200 text-orange-900 mb-6 text-lg"><strong>Important Question:</strong><br>If you grabbed a <em>different</em> 60 cookies, would you get exactly 4 broken again?</div><p class="text-xl">Maybe 3. Maybe 6. The number might <span class="blur-reveal">fluctuate</span>. Standard Error measures this "natural sampling variability".</p>`, `<h3 class="font-bold mb-6 text-2xl">2. The 95% Confidence Interval</h3><p class="mb-4 text-xl">Imagine True Rate = 7% and Standard Error (SE) = 3%.</p><div class="space-y-6 text-lg"><div class="p-6 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm"><strong class="text-indigo-900 text-2xl">95% Confidence (±2 SE)</strong><p class="font-mono text-base mt-2">Estimate ± (2 × SE)</p><p class="font-mono text-base text-indigo-700">7% ± (2 × 3%)</p><p class="font-mono text-base text-indigo-700">7% ± 6%</p><p class="font-bold text-indigo-800 mt-2 text-xl">Range: 1% to 13%</p></div></div>`],
             renderInteractive: (container) => {
-                 container.innerHTML = `<div class="w-full max-w-lg text-center"><h4 class="font-bold mb-4 text-slate-400 uppercase text-sm tracking-widest">Confidence Interval Builder</h4><div class="bg-white p-8 rounded-3xl shadow-lg border border-slate-100"><div class="mb-8"><div class="flex justify-between text-sm font-bold text-slate-500 mb-2"><span>Cookies Checked (n)</span><span id="n-val" class="text-orange-600 text-xl">60</span></div><input type="range" min="30" max="500" step="10" value="60" id="n-slider" class="w-full accent-orange-500 h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer"></div><div class="relative h-32 bg-slate-50 rounded-2xl border border-slate-200 mb-6 flex items-center justify-center overflow-hidden"><div class="absolute h-full w-0.5 bg-orange-500 z-10"></div><div class="absolute bg-white px-2 py-1 rounded text-xs font-bold text-orange-500 z-20 -top-3 shadow-sm border border-orange-100">7%</div><div id="ci-bar" class="h-12 bg-orange-200/50 border-x-4 border-orange-400 rounded-md transition-all duration-300 flex items-center justify-center relative"><div class="text-xs text-orange-800 font-bold whitespace-nowrap px-3">Confidence Interval</div></div></div><div class="grid grid-cols-2 gap-4 text-center"><div class="bg-slate-50 p-4 rounded-xl border border-slate-100"><div class="text-xs text-slate-400 uppercase font-bold tracking-wider">Standard Error</div><div id="se-display" class="font-bold text-slate-700 text-xl">3.2%</div></div><div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100"><div class="text-xs text-emerald-600 uppercase font-bold tracking-wider">Range</div><div id="range-display" class="font-bold text-emerald-700 text-xl">0.7% - 13.3%</div></div></div><p class="text-sm text-slate-400 mt-4 italic">More cookies = Less wiggle.</p></div></div>`;
+                 container.innerHTML = `<div class="w-full max-w-lg text-center"><h4 class="font-bold mb-4 text-slate-400 uppercase text-sm tracking-widest">Confidence Interval Builder</h4><div class="bg-white p-8 rounded-3xl shadow-lg border border-slate-100"><div class="mb-8"><div class="flex justify-between text-base font-bold text-slate-500 mb-2"><span>Cookies Checked (n)</span><span id="n-val" class="text-orange-600 text-2xl">60</span></div><input type="range" min="30" max="500" step="10" value="60" id="n-slider" class="w-full accent-orange-500 h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer"></div><div class="relative h-32 bg-slate-50 rounded-2xl border border-slate-200 mb-6 flex items-center justify-center overflow-hidden"><div class="absolute h-full w-0.5 bg-orange-500 z-10"></div><div class="absolute bg-white px-2 py-1 rounded text-xs font-bold text-orange-500 z-20 -top-3 shadow-sm border border-orange-100">7%</div><div id="ci-bar" class="h-12 bg-orange-200/50 border-x-4 border-orange-400 rounded-md transition-all duration-300 flex items-center justify-center relative"><div class="text-xs text-orange-800 font-bold whitespace-nowrap px-3">Confidence Interval</div></div></div><div class="grid grid-cols-2 gap-4 text-center"><div class="bg-slate-50 p-4 rounded-xl border border-slate-100"><div class="text-xs text-slate-400 uppercase font-bold tracking-wider">Standard Error</div><div id="se-display" class="font-bold text-slate-700 text-xl">3.2%</div></div><div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100"><div class="text-xs text-emerald-600 uppercase font-bold tracking-wider">Range</div><div id="range-display" class="font-bold text-emerald-700 text-xl">0.7% - 13.3%</div></div></div><p class="text-base text-slate-400 mt-4 italic">More cookies = Less wiggle.</p></div></div>`;
                 const slider = document.getElementById('n-slider');
                 function update() {
                     const n = parseInt(slider.value); const p = 0.07;
@@ -1210,7 +1230,7 @@
 
         const lessonSimulation = {
             title: "Lab: Sampling Simulation",
-            slides: [`<h3 class="font-bold mb-6 text-2xl">What is Audit Sampling?</h3><div class="space-y-6 text-lg leading-relaxed text-slate-600 mb-8"><p>Audit sampling is when an auditor tests <strong>less than 100%</strong> of a population to draw conclusions about the entire population.</p><ul class="list-disc pl-6 space-y-2"><li><strong>Why?</strong> <span class="blur-reveal">Testing every single transaction is too costly and time-consuming.</span></li><li><strong>How?</strong> <span class="blur-reveal">A properly selected sample provides reliable evidence.</span></li><li><strong>Goal:</strong> <span class="blur-reveal">To estimate whether the population contains material misstatement.</span></li></ul></div><div class="bg-slate-100 p-6 rounded-2xl border border-slate-200 shadow-sm"><strong class="text-slate-800 text-xl">The Simulation Next</strong><p class="text-sm mt-2 mb-4">Top Graph = Entire Population.<br>Bottom Graph = Sampling Distribution (Averages of sample averages).</p><div class="text-sm bg-white p-3 rounded-lg border border-slate-200 shadow-sm inline-block"><div class="mb-1"><strong>🐱 Cats :</strong> Represents Cat Weight.</div><div><strong>📋 Audit :</strong> Represents Inventory Counts (samples tested).</div></div></div>`],
+            slides: [`<h3 class="font-bold mb-6 text-2xl">What is Audit Sampling?</h3><div class="space-y-6 text-xl leading-relaxed text-slate-600 mb-8"><p>Audit sampling is when an auditor tests <strong>less than 100%</strong> of a population to draw conclusions about the entire population.</p><ul class="list-disc pl-6 space-y-2"><li><strong>Why?</strong> <span class="blur-reveal">Testing every single transaction is too costly and time-consuming.</span></li><li><strong>How?</strong> <span class="blur-reveal">A properly selected sample provides reliable evidence.</span></li><li><strong>Goal:</strong> <span class="blur-reveal">To estimate whether the population contains material misstatement.</span></li></ul></div><div class="bg-slate-100 p-6 rounded-2xl border border-slate-200 shadow-sm"><strong class="text-slate-800 text-xl">The Simulation Next</strong><p class="text-base mt-2 mb-4">Top Graph = Entire Population.<br>Bottom Graph = Sampling Distribution (Averages of sample averages).</p><div class="text-base bg-white p-3 rounded-lg border border-slate-200 shadow-sm inline-block"><div class="mb-1"><strong>🐱 Cats :</strong> Represents Cat Weight.</div><div><strong>📋 Audit :</strong> Represents Inventory Counts (samples tested).</div></div></div>`],
             renderInteractive: (container, isChallenge = false) => {
                  const pf = isChallenge ? 'c-' : 'l-'; 
                  container.innerHTML = `
@@ -1219,17 +1239,17 @@
                     <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-4 mb-4 flex-none">
                         <div class="flex flex-wrap justify-between items-center gap-4">
                             <div class="flex bg-slate-200 p-1 rounded-lg ${isChallenge ? 'hidden' : ''}">
-                                <button id="${pf}mode-cats" class="px-4 py-2 rounded-md text-sm font-bold transition-colors bg-white shadow text-blue-600">🐱 Cats</button>
-                                <button id="${pf}mode-audit" class="px-4 py-2 rounded-md text-sm font-bold transition-colors text-slate-500 hover:text-slate-700">📋 Audit</button>
+                                <button id="${pf}mode-cats" class="px-4 py-2 rounded-md text-base font-bold transition-colors bg-white shadow text-blue-600">🐱 Cats</button>
+                                <button id="${pf}mode-audit" class="px-4 py-2 rounded-md text-base font-bold transition-colors text-slate-500 hover:text-slate-700">📋 Audit</button>
                             </div>
                             <div class="flex items-center gap-3">
-                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Size (n) = <span id="${pf}n-val-display" class="text-slate-800 text-base">5</span></span>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Size (n) = <span id="${pf}n-val-display" class="text-slate-800 text-lg">5</span></span>
                                 <input type="range" min="2" max="25" value="5" id="${pf}sim-n-slider" class="w-24 accent-slate-600 h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer">
                             </div>
                             <div class="flex gap-2">
-                                <button id="${pf}sim-draw-btn" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-sm transition-all active:scale-95 shadow-md">Draw 1</button>
-                                <button id="${pf}sim-fast-btn" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold text-sm transition-all active:scale-95">Fast</button>
-                                <button id="${pf}sim-reset-btn" class="p-2 text-slate-400 hover:text-red-500 transition-colors text-lg"><i class="fa-solid fa-rotate-right"></i></button>
+                                <button id="${pf}sim-draw-btn" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-base transition-all active:scale-95 shadow-md">Draw 1</button>
+                                <button id="${pf}sim-fast-btn" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold text-base transition-all active:scale-95">Fast</button>
+                                <button id="${pf}sim-reset-btn" class="p-2 text-slate-400 hover:text-red-500 transition-colors text-xl"><i class="fa-solid fa-rotate-right"></i></button>
                             </div>
                         </div>
                     </div>
@@ -1247,7 +1267,7 @@
 
                     <!-- Drop Zone -->
                     <div class="h-12 bg-slate-100 border-x border-slate-200 flex items-center justify-center relative overflow-hidden flex-none">
-                         <div id="${pf}drop-msg" class="text-xs text-slate-400 flex items-center gap-2 font-medium">Dots drop down to form Sampling Distribution</div>
+                         <div id="${pf}drop-msg" class="text-sm text-slate-400 flex items-center gap-2 font-medium">Dots drop down to form Sampling Distribution</div>
                          <div id="${pf}drop-line" class="absolute top-0 h-full w-0.5 bg-indigo-500 opacity-0" style="left: 50%"></div>
                     </div>
 
@@ -1265,14 +1285,14 @@
                     </div>
                     
                     <!-- Sim Concepts -->
-                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600 flex-none ${isChallenge ? 'hidden' : ''}">
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-base text-slate-600 flex-none ${isChallenge ? 'hidden' : ''}">
                          <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                           <strong class="block text-slate-800 mb-1 text-base">Key Concepts</strong>
+                           <strong class="block text-slate-800 mb-1 text-lg">Key Concepts</strong>
                            Top graph = <span class="font-bold text-blue-600">Population</span>. <br>
                            When we take a sample, extremes cancel out, so the average lands near the middle.
                          </div>
                          <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                           <strong class="block text-slate-800 mb-1 text-base">"Tiny Spike" Effect</strong>
+                           <strong class="block text-slate-800 mb-1 text-lg">"Tiny Spike" Effect</strong>
                            n=2: Bottom pile is wide. <br>
                            n=25: Bottom pile is a sharp spike (Low SE, High Precision).
                          </div>
@@ -1358,8 +1378,8 @@
                     };
                     step();
                 };
-                const btnCats = document.getElementById(`${pf}mode-cats`); if(btnCats) btnCats.onclick = () => { mode = 'cats'; document.getElementById(`${pf}mode-cats`).className = "px-4 py-2 rounded-md text-sm font-bold transition-colors bg-white shadow text-blue-600"; document.getElementById(`${pf}mode-audit`).className = "px-4 py-2 rounded-md text-sm font-bold transition-colors text-slate-500 hover:text-slate-700"; initPop(); };
-                const btnAudit = document.getElementById(`${pf}mode-audit`); if(btnAudit) btnAudit.onclick = () => { mode = 'audit'; document.getElementById(`${pf}mode-audit`).className = "px-4 py-2 rounded-md text-sm font-bold transition-colors bg-white shadow text-emerald-600"; document.getElementById(`${pf}mode-cats`).className = "px-4 py-2 rounded-md text-sm font-bold transition-colors text-slate-500 hover:text-slate-700"; initPop(); };
+                const btnCats = document.getElementById(`${pf}mode-cats`); if(btnCats) btnCats.onclick = () => { mode = 'cats'; document.getElementById(`${pf}mode-cats`).className = "px-4 py-2 rounded-md text-base font-bold transition-colors bg-white shadow text-blue-600"; document.getElementById(`${pf}mode-audit`).className = "px-4 py-2 rounded-md text-base font-bold transition-colors text-slate-500 hover:text-slate-700"; initPop(); };
+                const btnAudit = document.getElementById(`${pf}mode-audit`); if(btnAudit) btnAudit.onclick = () => { mode = 'audit'; document.getElementById(`${pf}mode-audit`).className = "px-4 py-2 rounded-md text-base font-bold transition-colors bg-white shadow text-emerald-600"; document.getElementById(`${pf}mode-cats`).className = "px-4 py-2 rounded-md text-base font-bold transition-colors text-slate-500 hover:text-slate-700"; initPop(); };
                 document.getElementById(`${pf}sim-n-slider`).oninput = (e) => { sampleSize = parseInt(e.target.value); document.getElementById(`${pf}n-val-display`).textContent = sampleSize; initPop(); };
                 document.getElementById(`${pf}sim-reset-btn`).onclick = () => initPop();
                 document.getElementById(`${pf}sim-draw-btn`).onclick = () => runSim(false);
@@ -1371,11 +1391,11 @@
         const lessonClusterAnalysis = {
             title: "How Spotify Knows You 🎧",
             slides: [
-                `<h3 class="font-bold text-2xl mb-6 text-purple-600">The Recommendation Engine</h3><p class="mb-6 text-lg">How does Spotify know what to play next? It uses <strong>Cluster Analysis</strong>.</p><p class="text-base bg-purple-50 p-4 rounded-xl border border-purple-100">It groups songs based on features like 'Tempo' and 'Energy'.</p>`,
-                `<h3 class="font-bold mb-6 text-2xl">The Clusters</h3><ul class="space-y-4 text-base"><li><strong>Cluster A:</strong> Study Mode (Low Energy, Low Tempo).</li><li><strong>Cluster B:</strong> Workout Mode (High Energy, High Tempo).</li><li><strong>Outlier:</strong> A heavy metal song in a sleep playlist? That's an anomaly.</li></ul>`
+                `<h3 class="font-bold text-2xl mb-6 text-purple-600">The Recommendation Engine</h3><p class="mb-6 text-xl">How does Spotify know what to play next? It uses <strong>Cluster Analysis</strong>.</p><p class="text-lg bg-purple-50 p-4 rounded-xl border border-purple-100">It groups songs based on features like 'Tempo' and 'Energy'.</p>`,
+                `<h3 class="font-bold mb-6 text-2xl">The Clusters</h3><ul class="space-y-4 text-lg"><li><strong>Cluster A:</strong> Study Mode (Low Energy, Low Tempo).</li><li><strong>Cluster B:</strong> Workout Mode (High Energy, High Tempo).</li><li><strong>Outlier:</strong> A heavy metal song in a sleep playlist? That's an anomaly.</li></ul>`
             ],
             renderInteractive: (container) => {
-                container.innerHTML = `<div class="w-full max-w-lg text-center relative"><h4 class="font-bold mb-6 text-slate-400 uppercase text-sm tracking-widest">Playlist Clusterer</h4><canvas id="clusterCanvas" width="400" height="250" class="bg-white border border-slate-200 rounded-3xl mx-auto cursor-crosshair mb-6 relative z-10 shadow-lg"></canvas><div class="absolute top-[80px] left-[-10px] text-xs text-slate-400 -rotate-90 origin-center font-bold">Energy &uarr;</div><div class="absolute bottom-[70px] right-10 text-xs text-slate-400 font-bold">Tempo &rarr;</div><div class="flex justify-center gap-6 text-sm font-bold"><div class="flex items-center gap-2"><span class="w-4 h-4 bg-purple-400 rounded-full"></span> Chill</div><div class="flex items-center gap-2"><span class="w-4 h-4 bg-pink-500 rounded-full"></span> Party</div></div></div>`;
+                container.innerHTML = `<div class="w-full max-w-lg text-center relative"><h4 class="font-bold mb-6 text-slate-400 uppercase text-sm tracking-widest">Playlist Clusterer</h4><canvas id="clusterCanvas" width="400" height="250" class="bg-white border border-slate-200 rounded-3xl mx-auto cursor-crosshair mb-6 relative z-10 shadow-lg"></canvas><div class="absolute top-[80px] left-[-10px] text-xs text-slate-400 -rotate-90 origin-center font-bold">Energy &uarr;</div><div class="absolute bottom-[70px] right-10 text-xs text-slate-400 font-bold">Tempo &rarr;</div><div class="flex justify-center gap-6 text-base font-bold"><div class="flex items-center gap-2"><span class="w-4 h-4 bg-purple-400 rounded-full"></span> Chill</div><div class="flex items-center gap-2"><span class="w-4 h-4 bg-pink-500 rounded-full"></span> Party</div></div></div>`;
                 const canvas = document.getElementById('clusterCanvas');
                 const ctx = canvas.getContext('2d');
                 function drawCluster(cx, cy, color, count, spread) {
@@ -1385,15 +1405,15 @@
                         ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
                     }
                 }
-                drawCluster(100, 180, "#c084fc", 50, 60); // Chill
-                drawCluster(300, 70, "#ec4899", 50, 80); // Party
+                drawCluster(100, 180, "#c084fc", 50, 60); 
+                drawCluster(300, 70, "#ec4899", 50, 80); 
                 ctx.fillStyle = "#1e293b"; ctx.beginPath(); ctx.arc(360, 220, 6, 0, Math.PI*2); ctx.fill();
                 ctx.font = "bold 12px sans-serif"; ctx.fillText("Anomaly?", 320, 230);
             }
         };
 
         // --- Main Data Array ---
-        // Updated strings in Challenges to use larger font classes
+        // UPDATED FONT CLASSES IN STRINGS for Challenges (text-base -> text-lg, text-lg -> text-xl)
         const scenarios = [
              {
                 topic: "Variable Types",
@@ -1414,7 +1434,7 @@
                         title: "Data Validation: Vendor Name 🚚",
                         desc: "You are analyzing the field <strong>'Vendor Name'</strong> (e.g., 'Amazon', 'Staples'). How would you classify this variable?",
                         chartType: "none",
-                        customVisual: `<div class="p-8 text-center border-2 border-slate-200 rounded-2xl bg-white font-mono text-base shadow-sm text-slate-500">["Amazon", "Staples", "Delta"]</div>`,
+                        customVisual: `<div class="p-8 text-center border-2 border-slate-200 rounded-2xl bg-white font-mono text-lg shadow-sm text-slate-500">["Amazon", "Staples", "Delta"]</div>`,
                         options: [
                             { text: "Qualitative Nominal", correct: true, feedback: "Correct! Names are categories (Qualitative) with no inherent mathematical order (Nominal)." },
                             { text: "Qualitative Ordinal", correct: false, feedback: "Incorrect. Is 'Amazon' greater than 'Delta'? No." },
@@ -1425,7 +1445,7 @@
                         title: "Discrete vs Continuous 📏",
                         desc: "<strong>Variable A:</strong> Number of stored laptops (e.g., 40). <br><strong>Variable B:</strong> Weight of scrap metal (e.g., 40.5 kg). <br><br>Classify these.",
                         chartType: "none",
-                        customVisual: `<div class="flex justify-around items-center h-56 bg-white border border-slate-200 rounded-2xl p-6"><div class="text-center"><div class="text-6xl mb-4">💻</div><div class="text-sm font-bold text-slate-500">Countable</div></div><div class="w-px h-32 bg-slate-200"></div><div class="text-center"><div class="text-6xl mb-4">⚖️</div><div class="text-sm font-bold text-slate-500">Measurable</div></div></div>`,
+                        customVisual: `<div class="flex justify-around items-center h-56 bg-white border border-slate-200 rounded-2xl p-6"><div class="text-center"><div class="text-6xl mb-4">💻</div><div class="text-base font-bold text-slate-500">Countable</div></div><div class="w-px h-32 bg-slate-200"></div><div class="text-center"><div class="text-6xl mb-4">⚖️</div><div class="text-base font-bold text-slate-500">Measurable</div></div></div>`,
                         options: [
                             { text: "A: Continuous, B: Discrete", correct: false, feedback: "Incorrect. You can't have half a laptop (usually)." },
                             { text: "A: Discrete, B: Continuous", correct: true, feedback: "Correct! Counts are integers (Discrete). Measurements like weight can have decimals (Continuous)." },
@@ -1570,7 +1590,7 @@
                         title: "COGS Analysis (Multiple) 🏭",
                         desc: "Regression Coefficients: <br>Units Sold: +$50 <br>Oil Price: +$200 <br>Efficiency Upgrade: -$5,000. <br><br>What was the financial impact of the Upgrade?",
                         chartType: "none",
-                        customVisual: `<div class="font-mono bg-slate-900 text-white p-8 rounded-2xl shadow-xl text-lg"><span class="text-slate-400">COGS = </span><br><span class="text-blue-400">(50 * Units)</span> + <br><span class="text-orange-400">(200 * Oil)</span> + <br><span class="text-red-400">(-5000 * Upgrade)</span></div>`,
+                        customVisual: `<div class="font-mono bg-slate-900 text-white p-8 rounded-2xl shadow-xl text-xl"><span class="text-slate-400">COGS = </span><br><span class="text-blue-400">(50 * Units)</span> + <br><span class="text-orange-400">(200 * Oil)</span> + <br><span class="text-red-400">(-5000 * Upgrade)</span></div>`,
                         options: [
                             { text: "Increased costs by $5,000", correct: false, feedback: "Incorrect. The coefficient is negative." },
                             { text: "Saved $5,000", correct: true, feedback: "Correct! The negative coefficient means the upgrade lowered COGS." },
@@ -1587,7 +1607,7 @@
                         title: "Control Testing 🛑",
                         desc: "<strong>Scenario:</strong> You are auditing Accounts Payable. The tolerable deviation rate is 5%. You test a sample of 60 payments and find 7 errors. <br><br><strong>Statistical Test:</strong> <br>H0: Controls are effective (Rate &le; 5%) <br>Test Result: <strong>P-Value = 0.03</strong>. <br><br>Does the evidence support the control?",
                         chartType: "none",
-                        customVisual: `<div class="p-8 bg-white border border-slate-200 rounded-2xl text-center shadow-sm w-full"><div class="text-sm font-bold text-slate-400 mb-4 uppercase tracking-widest">P-Value Scale</div><div class="relative h-6 bg-slate-200 rounded-full mb-4 w-full"><div class="absolute left-[3%] w-6 h-6 bg-red-500 rounded-full top-0 shadow-lg border-2 border-white"></div></div><div class="flex justify-between text-xs font-bold text-slate-400 uppercase"><span>0.00</span><span class="text-slate-800 text-lg">0.03</span><span class="text-emerald-500">0.05 Threshold</span><span>1.00</span></div></div>`,
+                        customVisual: `<div class="p-8 bg-white border border-slate-200 rounded-2xl text-center shadow-sm w-full"><div class="text-base font-bold text-slate-400 mb-4 uppercase tracking-widest">P-Value Scale</div><div class="relative h-6 bg-slate-200 rounded-full mb-4 w-full"><div class="absolute left-[3%] w-6 h-6 bg-red-500 rounded-full top-0 shadow-lg border-2 border-white"></div></div><div class="flex justify-between text-xs font-bold text-slate-400 uppercase"><span>0.00</span><span class="text-slate-800 text-lg">0.03</span><span class="text-emerald-500">0.05 Threshold</span><span>1.00</span></div></div>`,
                         options: [
                             { text: "Reject H0 (Controls Failing)", correct: true, feedback: "Correct! P < 0.05 means the error rate is significantly higher than allowed." },
                             { text: "Accept H0 (Controls OK)", correct: false, feedback: "Incorrect." }
@@ -1597,7 +1617,7 @@
                         title: "Marketing Regression Significance 📈",
                         desc: "Run regression: Revenue Growth = β₀ + β₁(Ad Spending). <br>Result: <strong>β₁ = 0.8</strong>, <strong>p-value = 0.01</strong>. <br><br><strong>Interpretation:</strong> <br>1. Coeff (0.8): Ads drive revenue. <br>2. P-Value (0.01): If ads had NO real effect, there is only a 1% chance we'd see this coefficient.<br><br>Is the relationship statistically significant?",
                         chartType: "none",
-                        customVisual: `<div class="p-6 bg-slate-50 border border-slate-200 rounded-2xl text-center"><div class="text-5xl font-bold text-slate-800 mb-2">P = 0.01</div><div class="text-sm text-slate-500">Threshold: 0.05</div></div>`,
+                        customVisual: `<div class="p-6 bg-slate-50 border border-slate-200 rounded-2xl text-center"><div class="text-5xl font-bold text-slate-800 mb-2">P = 0.01</div><div class="text-lg text-slate-500">Threshold: 0.05</div></div>`,
                         options: [
                             { text: "Yes (Significant)", correct: true, feedback: "Correct! P < 0.05 means the relationship is statistically significant and likely real." },
                             { text: "No (Random Noise)", correct: false, feedback: "Incorrect. The low P-value suggests it is NOT random noise." }
@@ -1613,7 +1633,7 @@
                         title: "Interpreting Precision 🎯",
                         desc: "You estimate Payables error rate is 4%. <br><strong>Scenario A:</strong> SE = 0.5% (Confidence Interval: 3.5% - 4.5%) <br><strong>Scenario B:</strong> SE = 3.0% (Confidence Interval: 1.0% - 7.0%) <br><br>Which scenario gives you more comfort?",
                         chartType: "none",
-                        customVisual: `<div class="p-8 bg-white border border-slate-200 rounded-2xl text-center shadow-sm"><div class="text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest">Confidence Interval Width</div><div class="relative h-24 w-full bg-slate-100 rounded-xl overflow-hidden"><div class="absolute top-4 left-[45%] w-[10%] h-6 bg-emerald-400 rounded shadow-md text-[10px] text-white flex items-center justify-center font-bold">A</div><div class="absolute top-14 left-[15%] w-[70%] h-6 bg-red-400 rounded shadow-md text-[10px] text-white flex items-center justify-center font-bold">B</div></div></div>`,
+                        customVisual: `<div class="p-8 bg-white border border-slate-200 rounded-2xl text-center shadow-sm"><div class="text-base font-bold text-slate-400 mb-6 uppercase tracking-widest">Confidence Interval Width</div><div class="relative h-24 w-full bg-slate-100 rounded-xl overflow-hidden"><div class="absolute top-4 left-[45%] w-[10%] h-6 bg-emerald-400 rounded shadow-md text-[10px] text-white flex items-center justify-center font-bold">A</div><div class="absolute top-14 left-[15%] w-[70%] h-6 bg-red-400 rounded shadow-md text-[10px] text-white flex items-center justify-center font-bold">B</div></div></div>`,
                         options: [
                             { text: "Scenario A (Low SE)", correct: true, feedback: "Correct! Low Standard Error means your estimate is precise. The variability is small." },
                             { text: "Scenario B (High SE)", correct: false, feedback: "Incorrect. High SE means your estimate is unreliable." }
@@ -1623,7 +1643,7 @@
                         title: "Narrowing the Range 📏",
                         desc: "You calculated a Confidence Interval of 4% ± 10% (0% to 14%). The partner says this range is too wide to be useful. How do you narrow it?",
                         chartType: "none",
-                        customVisual: `<div class="p-8 bg-white border border-slate-200 rounded-2xl text-center"><div class="text-3xl font-mono text-slate-600 mb-4">Width = 14%</div><div class="w-full h-4 bg-slate-200 rounded overflow-hidden"><div class="h-full bg-orange-400 w-full animate-pulse"></div></div><p class="text-sm text-slate-400 mt-3">Too wide!</p></div>`,
+                        customVisual: `<div class="p-8 bg-white border border-slate-200 rounded-2xl text-center"><div class="text-3xl font-mono text-slate-600 mb-4">Width = 14%</div><div class="w-full h-4 bg-slate-200 rounded overflow-hidden"><div class="h-full bg-orange-400 w-full animate-pulse"></div></div><p class="text-base text-slate-400 mt-3">Too wide!</p></div>`,
                         options: [
                             { text: "Increase Sample Size", correct: true, feedback: "Correct! Larger samples reduce the Standard Error (the wobble), making the interval tighter." },
                             { text: "Decrease Sample Size", correct: false, feedback: "Incorrect. Fewer samples would make the interval even wider." }
@@ -1658,7 +1678,7 @@
                         title: "Netflix Account Sharing 🍿",
                         desc: "You are analyzing 'User Login Locations' for Netflix to find password sharers. <br><br><strong>Cluster A:</strong> Home (0km, High Freq). <br><strong>Cluster B:</strong> Commute (10km, Med Freq). <br><strong>Cluster C:</strong> 5000km away, High Freq (simultaneous with Home). <br><br>Which is the suspicious activity?",
                         chartType: "none",
-                        customVisual: `<div class="relative w-full h-80 bg-white border border-slate-200 rounded-3xl flex items-center justify-center shadow-sm"><canvas id="jeClusterChart" width="500" height="300"></canvas><div class="absolute bottom-4 right-4 text-sm text-slate-400 font-bold">X: Distance | Y: Frequency</div></div>`,
+                        customVisual: `<div class="relative w-full h-80 bg-white border border-slate-200 rounded-3xl flex items-center justify-center shadow-sm"><canvas id="jeClusterChart" width="500" height="300"></canvas><div class="absolute bottom-4 right-4 text-base text-slate-400 font-bold">X: Distance | Y: Frequency</div></div>`,
                         renderCustom: () => { 
                             const cvs = document.getElementById('jeClusterChart');
                             if(!cvs) return;
@@ -2008,7 +2028,7 @@
                 setTimeout(() => conf.remove(), 4000);
             }
         }
-        // Add simple CSS for confetti here since it was missing in original logic
+        
         const style = document.createElement('style');
         style.innerHTML = `
         @keyframes confetti-fall {
