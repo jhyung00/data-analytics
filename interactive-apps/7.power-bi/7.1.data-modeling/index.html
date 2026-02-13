@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Modeling & Joins Masterclass</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Drag & Drop */
+        .draggable-item { cursor: grab; transition: all 0.2s; user-select: none; }
+        .draggable-item:active { cursor: grabbing; transform: scale(0.95); }
+        .drop-zone { transition: all 0.2s; position: relative; z-index: 10; min-height: 120px; }
+        .drop-zone.drag-over { background-color: #eff6ff; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
+
+        /* Connections */
+        .connection-line { stroke-dasharray: 10; animation: dash 1s linear infinite; pointer-events: none; }
+        @keyframes dash { to { stroke-dashoffset: -20; } }
+
+        /* Blinking Animation for Venn Diagram */
+        @keyframes pulse-opacity {
+            0%, 100% { fill-opacity: 0.9; }
+            50% { fill-opacity: 0.5; }
+        }
+        .venn-blink { animation: pulse-opacity 2s infinite ease-in-out; }
+
+        /* Table Styles */
+        th, td { text-align: left; } 
+
+        .highlight-problem { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red {
+            0%, 100% { background-color: #fee2e2; color: #9f1239; font-weight: bold; }
+            50% { background-color: #fecaca; color: #881337; font-weight: bold; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 h-screen flex flex-col font-sans text-slate-800 overflow-hidden" onresize="redrawAllLines()">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white shadow-xl z-20 relative flex-shrink-0">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="relative p-4 flex justify-between items-center max-w-7xl mx-auto w-full">
+            <div class="flex items-center gap-4">
+                <div class="bg-indigo-500/20 p-2 rounded-lg backdrop-blur-sm border border-indigo-500/30">
+                    <i data-lucide="database-zap" class="w-8 h-8 text-indigo-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">Data Modeling Masterclass</h1>
+                    <p class="text-xs text-indigo-300 font-medium tracking-wide uppercase">Interactive Learning Environment</p>
+                </div>
+            </div>
+            <button onclick="downloadPracticeFile()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-full text-sm font-bold shadow-lg transition-all transform hover:-translate-y-0.5">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Download Lesson Data</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="bg-white border-r border-slate-200 flex-shrink-0 flex flex-col w-72 shadow-lg z-10 hidden md:flex">
+            <div class="p-6 border-b border-slate-100">
+                <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Learning Path</h2>
+                <div class="h-1 w-12 bg-indigo-500 rounded-full"></div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-2" id="module-list"></div>
+            
+            <div class="p-4 bg-slate-50 border-t border-slate-200">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-slate-500 uppercase">Total Progress</span>
+                    <span id="progress-text" class="text-xs font-bold text-indigo-600">0%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2">
+                    <div id="progress-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Content -->
+        <main class="flex-1 bg-slate-50/50 overflow-y-auto relative scroll-smooth p-2 md:p-8" id="main-content">
+            <div class="max-w-5xl mx-auto fade-in pb-20" id="content-container"></div>
+        </main>
+    </div>
+
+    <script>
+        // --- DATASETS ---
+        
+        // 1. The Messy Flat File
+        const messyData = [
+            { id: 1, fn: "John", ln: "Doe", addr: "123 Maple St.", title: "The Great Gatsby", auth: "F. Scott Fitzgerald", genre: "Fiction", ld: "5/1/24" },
+            { id: 3, fn: "Alice", ln: "Johnson", addr: "789 Pine St.", title: "The Great Gatsby", auth: "F. Scott Fitzgerald", genre: "Fiction", ld: "5/3/24" },
+            { id: 4, fn: "Jane", ln: "Smith", addr: "456 Oak St.", title: "1984", auth: "George Orwell", genre: "Dystopian", ld: "5/2/24" },
+            { id: 5, fn: "Alice", ln: "Johnson", addr: "789 Pine St.", title: "To Kill a Mockingbird", auth: "Harper Lee", genre: "Fiction", ld: "5/3/24" },
+            { id: 6, fn: "Jane", ln: "Smith", addr: "456 Oak St.", title: "The Great Gatsby", auth: "F. Scott Fitzgerald", genre: "Fiction", ld: "5/4/24" }
+        ];
+
+        // 2. Updated Fact Data
+        const finalFactData = [
+            { lid: 1, mid: 1, bid: 2, ld: "5/1/24", rd: "5/15/24" },
+            { lid: 2, mid: 3, bid: 1, ld: "5/3/24", rd: "5/17/24" },
+            { lid: 3, mid: 2, bid: 3, ld: "5/2/24", rd: "5/16/24" },
+            { lid: 4, mid: 3, bid: 2, ld: "5/3/24", rd: "5/17/24" },
+            { lid: 5, mid: 2, bid: 1, ld: "5/4/24", rd: "5/18/24" }
+        ];
+        const finalBookDim = [
+            { bid: 1, t: "The Great Gatsby", a: "F. Scott Fitzgerald", g: "Fiction" },
+            { bid: 2, t: "To Kill a Mockingbird", a: "Harper Lee", g: "Fiction" },
+            { bid: 3, t: "1984", a: "George Orwell", g: "Dystopian" }
+        ];
+        const finalCustDim = [
+            { mid: 1, fn: "John", ln: "Doe", ad: "123 Maple St." },
+            { mid: 2, fn: "Jane", ln: "Smith", ad: "456 Oak St." },
+            { mid: 3, fn: "Alice", ln: "Johnson", ad: "789 Pine St." }
+        ];
+
+        // Modules Config
+        const modules = [
+            { id: 'messy', title: '1. The Data Mess', icon: 'alert-triangle', desc: 'Identify redundancy issues' },
+            { id: 'star', title: '2. The Star Schema', icon: 'layout-dashboard', desc: 'Keys & Normalization' },
+            { id: 'cardinality', title: '3. Cardinality', icon: 'git-fork', desc: '1:1 vs 1:Many' },
+            { id: 'joins', title: '4. Visualizing Joins', icon: 'combine', desc: 'Interactive Venn Diagrams' },
+            { id: 'quiz', title: '5. Final Assessment', icon: 'trophy', desc: 'Prove your skills' }
+        ];
+
+        let state = { currentModule: 'messy', quizScore: 0, completedModules: new Set() };
+
+        // --- INIT ---
+        window.onload = function() {
+            if (typeof lucide === 'undefined') window.lucide = { createIcons: () => {} };
+            renderSidebar();
+            loadModule('messy');
+        };
+
+        function redrawAllLines() {
+            // Re-draw dynamic lines on resize if they exist
+            if(document.getElementById('final-schema-display') && !document.getElementById('final-schema-display').classList.contains('hidden')) {
+                drawStaticConnections();
+            }
+            // Re-draw drag and drop lines if connection exists
+            if(document.getElementById('line-mem') && !document.getElementById('line-mem').classList.contains('hidden')) {
+                 // Trigger checkDrag logic to redraw or simple redraw
+                 // For simplicity, we assume if lines are visible, we can just call this:
+                 const fb = document.getElementById('drag-feedback');
+                 if(fb && !fb.classList.contains('hidden')) drawConnections();
+            }
+        }
+
+        // --- RENDERERS ---
+        function renderSidebar() {
+            const list = document.getElementById('module-list');
+            if(!list) return; // Mobile check
+            list.innerHTML = modules.map(m => `
+                <button onclick="loadModule('${m.id}')" 
+                    class="group w-full text-left px-4 py-3 rounded-xl flex items-start gap-3 transition-all duration-200 border-2
+                    ${state.currentModule === m.id 
+                        ? 'bg-white border-indigo-500 shadow-md' 
+                        : 'bg-transparent border-transparent hover:bg-slate-100'}">
+                    <div class="mt-0.5 p-1.5 rounded-lg ${state.currentModule === m.id ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-200 text-slate-500'}">
+                        <i data-lucide="${m.icon}" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold ${state.currentModule === m.id ? 'text-indigo-900' : 'text-slate-600'}">${m.title}</div>
+                        <div class="text-[10px] uppercase font-bold tracking-wider ${state.currentModule === m.id ? 'text-indigo-400' : 'text-slate-400'}">${m.desc}</div>
+                    </div>
+                    ${state.completedModules.has(m.id) ? '<i data-lucide="check-circle" class="w-4 h-4 text-emerald-500 ml-auto self-center"></i>' : ''}
+                </button>
+            `).join('');
+            lucide.createIcons();
+            updateProgress();
+        }
+
+        function loadModule(id) {
+            state.currentModule = id;
+            renderSidebar();
+            const container = document.getElementById('content-container');
+            container.classList.remove('fade-in');
+            void container.offsetWidth; 
+            container.classList.add('fade-in');
+
+            // Route to content
+            if(id === 'messy') container.innerHTML = getMessyModule();
+            if(id === 'star') container.innerHTML = getStarModule();
+            if(id === 'cardinality') container.innerHTML = getCardinalityModule();
+            if(id === 'joins') container.innerHTML = getJoinModule();
+            if(id === 'quiz') container.innerHTML = getQuizModule();
+            
+            // Post-render init
+            lucide.createIcons();
+            if(id === 'star') initDragAndDrop();
+            if(id === 'joins') initJoinViz();
+            if(id === 'quiz') initQuiz();
+        }
+
+        function markComplete(id) {
+            state.completedModules.add(id);
+            renderSidebar();
+        }
+
+        // --- MODULE 1: THE MESS ---
+        function getMessyModule() {
+            return `
+                <div class="space-y-6">
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <h2 class="text-3xl font-black text-slate-900 mb-4">The "One Big Table" Problem</h2>
+                        <p class="text-slate-600 mb-6">This is a flat file. We haven't assigned Member IDs or Book IDs yet. We just typed everything in.</p>
+                        
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-inner">
+                            <table class="w-full text-xs text-left whitespace-nowrap bg-white">
+                                <thead class="bg-slate-100 text-slate-500 font-bold uppercase tracking-wider">
+                                    <tr>
+                                        <th class="px-4 py-3 border-b">LoanID (PK)</th>
+                                        <th class="px-4 py-3 border-b">First Name</th>
+                                        <th class="px-4 py-3 border-b">Last Name</th>
+                                        <th class="px-4 py-3 border-b">Address</th>
+                                        <th class="px-4 py-3 border-b">Book Title</th>
+                                        <th class="px-4 py-3 border-b">Author</th>
+                                        <th class="px-4 py-3 border-b">Genre</th>
+                                        <th class="px-4 py-3 border-b">Loan Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${messyData.map(r => `
+                                        <tr class="hover:bg-indigo-50 transition-colors">
+                                            <td class="px-4 py-3 font-mono text-slate-400">${r.id}</td>
+                                            <td class="px-4 py-3 redundancy">${r.fn}</td>
+                                            <td class="px-4 py-3 redundancy">${r.ln}</td>
+                                            <td class="px-4 py-3 redundancy">${r.addr}</td>
+                                            <td class="px-4 py-3 redundancy italic">${r.title}</td>
+                                            <td class="px-4 py-3 redundancy text-slate-500">${r.auth}</td>
+                                            <td class="px-4 py-3 redundancy text-slate-500">${r.genre}</td>
+                                            <td class="px-4 py-3 text-emerald-600 font-bold">${r.ld}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-6 flex gap-4">
+                            <button onclick="revealMess()" class="bg-rose-500 hover:bg-rose-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-rose-200 transition-all flex items-center gap-2">
+                                <i data-lucide="search"></i> Reveal the Problem
+                            </button>
+                            <div id="messy-feedback" class="hidden flex-1 bg-rose-50 border border-rose-100 text-rose-800 p-3 rounded-xl flex items-center gap-3 animate-pulse">
+                                <i data-lucide="alert-octagon"></i>
+                                <span class="text-sm font-bold">Redundancy Detected! Names, Addresses, and Book details are repeated.</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Check -->
+                    <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
+                        <h4 class="font-bold text-indigo-900 mb-3 flex items-center gap-2"><i data-lucide="help-circle" class="w-5 h-5"></i> Quick Check</h4>
+                        <p class="text-sm text-indigo-800 mb-4"><strong>Scenario:</strong> Look at <strong>Loan #1</strong>. It is the <em>only</em> time John Doe appears in this table. If we delete Loan #1, what happens to John's address?</p>
+                        <div class="flex gap-3">
+                            <button onclick="alert('Correct! This is a DELETE ANOMALY. Because we do not have a separate \\'Members\\' table, deleting the transaction deletes the customer existence.'); markComplete('messy')" class="px-4 py-2 bg-white border border-indigo-200 rounded-lg shadow-sm hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 font-bold text-sm transition-all">It is lost forever</button>
+                            <button onclick="alert('Incorrect. In this specific table, John only appears in row 1. If row 1 is gone, his data is gone.')" class="px-4 py-2 bg-white border border-indigo-200 rounded-lg shadow-sm hover:bg-rose-50 hover:text-rose-700 hover:border-rose-300 font-bold text-sm transition-all">It stays in the database</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function revealMess() {
+            document.querySelectorAll('.redundancy').forEach(el => el.classList.add('highlight-problem'));
+            document.getElementById('messy-feedback').classList.remove('hidden');
+        }
+
+        // --- MODULE 2: STAR SCHEMA & KEYS ---
+        function getStarModule() {
+            return `
+                <div class="space-y-12">
+                    <div class="text-center">
+                        <h2 class="text-3xl font-black text-slate-900">The Solution: Star Schema</h2>
+                        <p class="text-slate-500 mt-2">Connecting data with <span class="font-bold text-indigo-600">Keys</span>.</p>
+                    </div>
+
+                    <!-- KEYS CONCEPT SECTION -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-indigo-900 text-white p-8 rounded-2xl shadow-lg relative overflow-hidden">
+                            <div class="relative z-10">
+                                <h3 class="text-2xl font-bold mb-4 flex items-center gap-2"><i data-lucide="key" class="w-6 h-6 text-yellow-400"></i> Primary Key (PK)</h3>
+                                <p class="text-indigo-200 mb-4 text-sm leading-relaxed">A unique ID that identifies <strong>one specific row</strong> in a table. It cannot be repeated.</p>
+                                <div class="bg-white/10 p-4 rounded-lg cursor-pointer hover:bg-white/20 transition-colors" onclick="document.getElementById('pk-examples').classList.toggle('hidden')">
+                                    <div class="flex justify-between items-center">
+                                        <p class="text-xs font-bold uppercase text-indigo-300">Click to Reveal Real World Examples</p>
+                                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                                    </div>
+                                    <ul id="pk-examples" class="hidden list-disc pl-4 text-sm space-y-1 mt-2 text-indigo-100">
+                                        <li>Social Security Number (SSN)</li>
+                                        <li>Student ID Number</li>
+                                        <li>Email Address</li>
+                                        <li>Driver's License ID</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 relative overflow-hidden">
+                            <h3 class="text-2xl font-bold mb-4 text-slate-800 flex items-center gap-2"><i data-lucide="link" class="w-6 h-6 text-slate-400"></i> Foreign Key (FK)</h3>
+                            <p class="text-slate-600 mb-4 text-sm leading-relaxed">A column that <strong>points to a Primary Key</strong> in another table. It creates the relationship link.</p>
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                <p class="text-xs font-bold uppercase text-slate-500 mb-2">In Our Library App:</p>
+                                <div class="flex items-center gap-4 text-sm">
+                                    <div class="text-center">
+                                        <div class="font-mono bg-white border border-slate-300 px-2 py-1 rounded">MemberID</div>
+                                        <div class="text-[10px] text-slate-400 mt-1">Primary Key<br>(Members Table)</div>
+                                    </div>
+                                    <i data-lucide="arrow-right" class="text-slate-300"></i>
+                                    <div class="text-center">
+                                        <div class="font-mono bg-indigo-50 border border-indigo-300 px-2 py-1 rounded text-indigo-700">MemberID</div>
+                                        <div class="text-[10px] text-slate-400 mt-1">Foreign Key<br>(Loans Table)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Activity -->
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 relative">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="font-bold text-indigo-900 text-lg">Interactive Practice: Build the Tables</h3>
+                                <p class="text-xs text-indigo-700 mt-1">Drag fields to the correct table. Click a field to remove it.</p>
+                            </div>
+                            <button onclick="checkDrag()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md transition-all">Check My Schema</button>
+                        </div>
+
+                        <!-- Visualization Overlay -->
+                        <div id="connection-overlay-container" class="absolute inset-0 z-0 pointer-events-none">
+                            <svg class="w-full h-full" id="connection-svg">
+                                <line id="line-mem" stroke="#f59e0b" stroke-width="3" class="connection-line hidden" />
+                                <line id="line-book" stroke="#f59e0b" stroke-width="3" class="connection-line hidden" />
+                            </svg>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 relative z-10">
+                            <!-- Source -->
+                            <div class="md:col-span-1 bg-white p-3 rounded-xl border border-indigo-200 shadow-sm">
+                                <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">Field List</h4>
+                                <div id="source-zone" class="space-y-2 min-h-[250px] drop-zone" ondrop="drop(event, 'source')" ondragover="allowDrop(event)">
+                                    ${['LoanID (PK)', 'LoanDate', 'MemberID (FK)', 'BookID (FK)', 'MemberName', 'MemberAddress', 'MemberID (PK)', 'BookTitle', 'BookAuthor', 'BookGenre', 'BookID (PK)'].map(f => `
+                                        <div class="draggable-item bg-slate-100 hover:bg-white border border-slate-200 p-2 rounded text-xs font-bold text-slate-600 shadow-sm flex items-center gap-2" draggable="true" ondragstart="drag(event)" id="drag-${f.replace(/\s/g, '')}" data-id="${f}">
+                                            <i data-lucide="${f.includes('K)') ? 'key' : 'grip-vertical'}" class="w-3 h-3 ${f.includes('FK') ? 'text-amber-500' : (f.includes('PK') ? 'text-emerald-500' : 'text-slate-400')}"></i> ${f}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <!-- Targets -->
+                            <div class="md:col-span-3 grid grid-cols-3 gap-3">
+                                <!-- Fact -->
+                                <div id="zone-fact" class="drop-zone bg-orange-100/50 border-2 border-dashed border-orange-300 rounded-xl p-3" ondrop="drop(event, 'fact')" ondragover="allowDrop(event)" data-target="fact">
+                                    <div class="font-bold text-orange-800 text-xs mb-2 flex items-center gap-1"><i data-lucide="table" class="w-3 h-3"></i> LOANS (Fact)</div>
+                                    <div class="target-content space-y-1 min-h-[150px]"></div>
+                                </div>
+                                <!-- Mem Dim -->
+                                <div id="zone-mem" class="drop-zone bg-teal-100/50 border-2 border-dashed border-teal-300 rounded-xl p-3" ondrop="drop(event, 'mem')" ondragover="allowDrop(event)" data-target="mem">
+                                    <div class="font-bold text-teal-800 text-xs mb-2 flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i> MEMBERS (Dim)</div>
+                                    <div class="target-content space-y-1 min-h-[150px]"></div>
+                                </div>
+                                <!-- Book Dim -->
+                                <div id="zone-book" class="drop-zone bg-teal-100/50 border-2 border-dashed border-teal-300 rounded-xl p-3" ondrop="drop(event, 'book')" ondragover="allowDrop(event)" data-target="book">
+                                    <div class="font-bold text-teal-800 text-xs mb-2 flex items-center gap-1"><i data-lucide="book" class="w-3 h-3"></i> BOOKS (Dim)</div>
+                                    <div class="target-content space-y-1 min-h-[150px]"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="drag-feedback" class="hidden mt-4 text-center font-bold text-sm"></div>
+                    </div>
+
+                    <!-- Final Star Schema Result (Hidden initially) -->
+                    <div id="final-schema-display" class="hidden space-y-12 animate-fade-in pt-8 border-t border-slate-200">
+                        
+                        <!-- Visual Diagram -->
+                        <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 relative">
+                            <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i data-lucide="share-2" class="w-5 h-5"></i> Relationship Structure</h3>
+                            
+                            <!-- STAR SCHEMA LAYOUT: Hub & Spoke -->
+                            <div id="static-diagram-container" class="relative h-[400px] w-full bg-slate-50 rounded-xl border border-slate-200 overflow-hidden flex items-center justify-center">
+                                <!-- Background Star Graphic -->
+                                <svg class="absolute inset-0 w-full h-full z-0 opacity-10 pointer-events-none" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
+                                    <polygon points="200,20 240,140 380,140 260,220 300,360 200,280 100,360 140,220 20,140 160,140" fill="#f59e0b" />
+                                </svg>
+
+                                <!-- SVG Layer for Lines -->
+                                <svg class="absolute inset-0 w-full h-full z-0" id="static-lines-svg">
+                                    <line id="static-line-mem" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,5" />
+                                    <line id="static-line-book" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="5,5" />
+                                    <circle id="static-dot-mem" r="4" fill="#0f766e" />
+                                    <circle id="static-dot-book" r="4" fill="#0f766e" />
+                                </svg>
+
+                                <!-- Fact Table (CENTER HUB) -->
+                                <div class="absolute z-20 w-48 bg-orange-50 rounded-lg border-2 border-orange-400 shadow-xl" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                    <div class="bg-orange-500 text-white font-bold p-1.5 text-xs text-center">Loan (Fact Table)</div>
+                                    <div class="p-2 space-y-2 text-[10px] bg-white">
+                                        <div class="flex items-center justify-between border-b border-orange-100 pb-1 font-bold text-slate-700"><span>LoanID</span><i data-lucide="key" class="w-3 h-3 text-orange-500"></i></div>
+                                        <div class="flex items-center justify-between border-b border-orange-100 pb-1 font-bold text-slate-700" id="s-fact-mem"><span>MemberID (FK)</span><i data-lucide="link" class="w-3 h-3 text-slate-400"></i></div>
+                                        <div class="flex items-center justify-between border-b border-orange-100 pb-1 font-bold text-slate-700" id="s-fact-book"><span>BookID (FK)</span><i data-lucide="link" class="w-3 h-3 text-slate-400"></i></div>
+                                        <div class="text-slate-400">LoanDate</div>
+                                    </div>
+                                </div>
+
+                                <!-- Member Dim (TOP LEFT SPOKE) -->
+                                <div class="absolute z-20 w-48 bg-teal-50 rounded-lg border-2 border-teal-500 shadow-md" style="top: 10%; left: 10%;">
+                                     <div class="bg-teal-600 text-white font-bold p-1.5 text-xs text-center">Member Lookup (Dim)</div>
+                                     <div class="p-2 space-y-1 text-[10px] bg-white">
+                                         <div class="flex items-center gap-2 font-bold text-teal-800" id="s-dim-mem"><i data-lucide="key" class="w-3 h-3 text-amber-500"></i> MemberID (PK)</div>
+                                         <div class="text-slate-500">FirstName</div>
+                                         <div class="text-slate-500">LastName</div>
+                                     </div>
+                                </div>
+
+                                <!-- Book Dim (TOP RIGHT SPOKE) -->
+                                <div class="absolute z-20 w-48 bg-teal-50 rounded-lg border-2 border-teal-500 shadow-md" style="top: 10%; right: 10%;">
+                                     <div class="bg-teal-600 text-white font-bold p-1.5 text-xs text-center">Book Lookup (Dim)</div>
+                                     <div class="p-2 space-y-1 text-[10px] bg-white">
+                                         <div class="flex items-center gap-2 font-bold text-teal-800" id="s-dim-book"><i data-lucide="key" class="w-3 h-3 text-amber-500"></i> BookID (PK)</div>
+                                         <div class="text-slate-500">Title</div>
+                                         <div class="text-slate-500">Author</div>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Data Tables -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-2 shadow-sm">
+                                <div class="font-bold text-orange-800 mb-2 flex items-center gap-2"><i data-lucide="table" class="w-3 h-3"></i> Updated Loan (Fact)</div>
+                                <div class="overflow-y-auto">
+                                    <table class="w-full bg-white">
+                                        <thead class="bg-orange-100 font-bold text-orange-900"><tr><th class="p-1">LID</th><th class="p-1">MID</th><th class="p-1">BID</th><th class="p-1">LoanDate</th><th class="p-1">RetDate</th></tr></thead>
+                                        <tbody>${finalFactData.map(r => `<tr><td class="p-1 border-b">${r.lid}</td><td class="p-1 border-b font-bold text-orange-600">${r.mid}</td><td class="p-1 border-b font-bold text-orange-600">${r.bid}</td><td class="p-1 border-b">${r.ld}</td><td class="p-1 border-b">${r.rd}</td></tr>`).join('')}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="bg-teal-50 border border-teal-200 rounded-lg p-2 shadow-sm">
+                                <div class="font-bold text-teal-800 mb-2 flex items-center gap-2"><i data-lucide="book" class="w-3 h-3"></i> Book Lookup (Dim)</div>
+                                <table class="w-full bg-white">
+                                    <thead class="bg-teal-100 font-bold text-teal-900"><tr><th class="p-1">BID</th><th class="p-1">Title</th><th class="p-1">Author</th></tr></thead>
+                                    <tbody>${finalBookDim.map(r => `<tr><td class="p-1 border-b font-bold text-teal-600">${r.bid}</td><td class="p-1 border-b italic">${r.t}</td><td class="p-1 border-b">${r.a}</td></tr>`).join('')}</tbody>
+                                </table>
+                            </div>
+                            <div class="bg-teal-50 border border-teal-200 rounded-lg p-2 shadow-sm">
+                                <div class="font-bold text-teal-800 mb-2 flex items-center gap-2"><i data-lucide="user" class="w-3 h-3"></i> Member Lookup (Dim)</div>
+                                <table class="w-full bg-white">
+                                    <thead class="bg-teal-100 font-bold text-teal-900"><tr><th class="p-1">MID</th><th class="p-1">First</th><th class="p-1">Last</th><th class="p-1">Addr</th></tr></thead>
+                                    <tbody>${finalCustDim.map(r => `<tr><td class="p-1 border-b font-bold text-teal-600">${r.mid}</td><td class="p-1 border-b">${r.fn}</td><td class="p-1 border-b">${r.ln}</td><td class="p-1 border-b text-[10px]">${r.ad}</td></tr>`).join('')}</tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- MODULE 3: CARDINALITY ---
+        function getCardinalityModule() {
+             return `
+                 <div class="space-y-8">
+                    <div class="bg-gradient-to-r from-indigo-900 to-slate-900 text-white p-8 rounded-2xl shadow-lg relative overflow-hidden">
+                        <div class="relative z-10">
+                            <h2 class="text-3xl font-bold">Cardinality</h2>
+                            <p class="text-indigo-200 mt-2">Connecting Dimensions to Facts.</p>
+                        </div>
+                        <i data-lucide="git-fork" class="absolute right-8 top-1/2 -translate-y-1/2 w-24 h-24 text-white/10"></i>
+                    </div>
+
+                    <!-- 1 to Many -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-4 mb-6">
+                            <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm font-bold border border-emerald-200">1 : *</span>
+                            <h3 class="text-xl font-bold text-slate-800">One-to-Many</h3>
+                        </div>
+                        <p class="text-slate-600 mb-6"><strong>Example:</strong> A <span class="text-emerald-600 font-bold">Book (Dim)</span> table relates to a <span class="text-indigo-600 font-bold">Sales (Fact)</span> table.</p>
+                        
+                        <div class="flex items-center justify-center gap-8 bg-slate-50 p-6 rounded-xl border border-slate-100">
+                            <div class="text-center">
+                                <div class="bg-emerald-50 border border-emerald-200 px-4 py-3 rounded-lg shadow-sm font-bold text-emerald-800">
+                                    <i data-lucide="book" class="w-4 h-4 inline mr-1"></i> "1984"
+                                </div>
+                                <div class="text-xs text-slate-400 mt-1">BookID: 3 (PK)</div>
+                            </div>
+                            <div class="flex-1 h-0.5 bg-slate-300 relative mx-4">
+                                <div class="absolute -top-3 left-0 font-bold text-emerald-600 text-xs">1</div>
+                                <div class="absolute -top-3 right-0 font-bold text-indigo-600 text-xs">Many</div>
+                                <i data-lucide="arrow-right" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <div class="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded shadow-sm text-sm text-indigo-800">Sale #101</div>
+                                <div class="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded shadow-sm text-sm text-indigo-800">Sale #102</div>
+                                <div class="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded shadow-sm text-sm text-indigo-800">Sale #103</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1 to 1 -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 opacity-90">
+                         <div class="flex items-center gap-4 mb-6">
+                            <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded text-sm font-bold border border-purple-200">1 : 1</span>
+                            <h3 class="text-xl font-bold text-slate-800">One-to-One</h3>
+                        </div>
+                        <div class="flex items-center justify-center gap-8 bg-slate-50 p-6 rounded-xl border border-slate-100">
+                             <div class="bg-white border border-slate-300 px-4 py-2 rounded shadow text-sm font-bold">Person (John Doe)</div>
+                             <i data-lucide="arrow-right-left" class="w-4 h-4 text-purple-500"></i>
+                             <div class="bg-white border border-slate-300 px-4 py-2 rounded shadow text-sm font-bold">Passport (ID: 12345)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-center">
+                        <button onclick="markComplete('cardinality'); alert('Great job! Moving to Joins.'); loadModule('joins')" class="bg-slate-900 text-white px-6 py-3 rounded-full font-bold shadow hover:bg-slate-700 transition">Continue to Joins</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- MODULE 4: JOINS ---
+        function getJoinModule() {
+            return `
+                <div class="space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-end gap-4">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-900">Visualizing Joins</h2>
+                            <p class="text-slate-500 mt-1">Merging <strong class="text-blue-600">Customers</strong> (Left) and <strong class="text-rose-600">Invoices</strong> (Right).</p>
+                        </div>
+                        <div class="flex bg-slate-200 p-1 rounded-lg">
+                            <button onclick="updateJoin('inner')" class="px-4 py-1.5 rounded-md text-sm font-bold transition-all join-toggle" id="t-inner">Inner</button>
+                            <button onclick="updateJoin('left')" class="px-4 py-1.5 rounded-md text-sm font-bold transition-all join-toggle" id="t-left">Left</button>
+                            <button onclick="updateJoin('right')" class="px-4 py-1.5 rounded-md text-sm font-bold transition-all join-toggle" id="t-right">Right</button>
+                            <button onclick="updateJoin('full')" class="px-4 py-1.5 rounded-md text-sm font-bold transition-all join-toggle" id="t-full">Full</button>
+                        </div>
+                    </div>
+
+                    <!-- Source Tables -->
+                    <div class="grid grid-cols-2 gap-4 text-xs">
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <div class="font-bold text-blue-800 mb-2">LEFT: Customers</div>
+                            <table class="w-full bg-white rounded shadow-sm">
+                                <tr class="bg-blue-100 text-blue-800"><th class="p-1 pl-2 border-b-2 border-blue-200">CustID</th><th class="p-1 border-b-2 border-blue-200">Name</th></tr>
+                                <tr><td class="p-1 pl-2 border-b">1</td><td class="p-1 border-b">Alpha Corp</td></tr>
+                                <tr><td class="p-1 pl-2 border-b">2</td><td class="p-1 border-b">Beta LLC</td></tr>
+                                <tr class="bg-blue-200/50"><td class="p-1 pl-2 font-bold">3</td><td class="p-1 font-bold">Gamma Inc</td></tr>
+                            </table>
+                            <div class="mt-2 text-[10px] text-blue-600 italic">Gamma has NO invoices</div>
+                        </div>
+                        <div class="bg-rose-50 p-4 rounded-xl border border-rose-100">
+                            <div class="font-bold text-rose-800 mb-2">RIGHT: Invoices</div>
+                            <table class="w-full bg-white rounded shadow-sm">
+                                <tr class="bg-rose-100 text-rose-800"><th class="p-1 pl-2 border-b-2 border-rose-200">InvID</th><th class="p-1 border-b-2 border-rose-200">CustID</th><th class="p-1 border-b-2 border-rose-200">Amt</th></tr>
+                                <tr><td class="p-1 pl-2 border-b">101</td><td class="p-1 border-b">1</td><td class="p-1 border-b">500</td></tr>
+                                <tr><td class="p-1 pl-2 border-b">102</td><td class="p-1 border-b">2</td><td class="p-1 border-b">300</td></tr>
+                                <tr class="bg-rose-200/50"><td class="p-1 pl-2 font-bold">103</td><td class="p-1 font-bold">4</td><td class="p-1 font-bold">200</td></tr>
+                            </table>
+                            <div class="mt-2 text-[10px] text-rose-600 italic">CustID 4 is an orphan</div>
+                        </div>
+                    </div>
+
+                    <!-- Diagram & Result -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Venn -->
+                        <div class="flex flex-col items-center justify-center py-6 bg-white rounded-2xl shadow-inner border border-slate-200">
+                             <svg width="240" height="160" viewBox="0 0 240 160">
+                                <!-- Base Circles (Outlines) -->
+                                <circle cx="80" cy="80" r="50" fill="none" stroke="#3b82f6" stroke-width="2" class="opacity-20" />
+                                <circle cx="160" cy="80" r="50" fill="none" stroke="#f43f5e" stroke-width="2" class="opacity-20" />
+                                
+                                <!-- 1. Left Circle (Blue) -->
+                                <circle id="v-left-circle" cx="80" cy="80" r="50" fill="#3b82f6" class="transition-all duration-300 opacity-0" />
+                                
+                                <!-- 2. Right Circle (Red) -->
+                                <circle id="v-right-circle" cx="160" cy="80" r="50" fill="#f43f5e" class="transition-all duration-300 opacity-0" />
+                                
+                                <!-- 3. Intersection (Purple Lens) -->
+                                <!-- Intersection points calculated at x=120, y=50 and y=110 -->
+                                <path id="v-intersect" d="M 120 50 A 50 50 0 0 1 120 110 A 50 50 0 0 1 120 50" fill="#8b5cf6" class="transition-all duration-300 opacity-0" />
+                                
+                                <text x="40" y="85" class="text-xs font-bold fill-slate-500 pointer-events-none">Cust</text>
+                                <text x="175" y="85" class="text-xs font-bold fill-slate-500 pointer-events-none">Inv</text>
+                            </svg>
+                            <p id="join-desc" class="font-bold text-sm text-slate-500 mt-2">Select a join type</p>
+                        </div>
+
+                        <!-- Result Table -->
+                        <div class="bg-slate-800 p-4 rounded-xl text-slate-200 overflow-hidden">
+                            <h3 class="text-xs font-bold text-slate-400 mb-2 uppercase">Result Set</h3>
+                            <table class="w-full text-sm">
+                                <thead class="text-left text-slate-500 border-b border-slate-600">
+                                    <tr><th class="p-2">Name</th><th class="p-2">CustID</th><th class="p-2">InvID</th><th class="p-2">Amt</th></tr>
+                                </thead>
+                                <tbody id="join-result-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- MODULE 5: QUIZ ---
+        function getQuizModule() {
+            return `
+                <div class="max-w-2xl mx-auto space-y-8">
+                    <div class="text-center">
+                        <h2 class="text-3xl font-black text-slate-900">Final Assessment</h2>
+                        <p class="text-slate-500">Prove mastery to unlock the certificate.</p>
+                    </div>
+                    <div id="quiz-area" class="space-y-4"></div>
+                    <div id="quiz-results" class="hidden text-center bg-white p-8 rounded-2xl shadow-lg border border-indigo-100">
+                        <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
+                            <i data-lucide="award" class="w-10 h-10"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-800">Assessment Complete!</h3>
+                        <p class="text-lg text-slate-600 mb-6">You scored <span id="final-score" class="font-bold text-indigo-600 text-2xl"></span></p>
+                        <button onclick="loadModule('messy')" class="text-slate-400 hover:text-slate-600 font-bold text-sm">Review Course</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        const quizData = [
+            { q: "1. Why do we split the messy table into Fact and Dimension tables?", opts: ["To make it look prettier", "To reduce redundancy and anomalies", "To increase file size"], a: 1 },
+            { q: "2. In a Star Schema, which table is in the center?", opts: ["Dimension Table", "Fact Table", "Excel Sheet"], a: 1 },
+            { q: "3. If you want to keep ALL customers, even those who haven't bought anything, which join do you use?", opts: ["Inner Join", "Left Join (Customers on Left)", "Right Join (Customers on Left)"], a: 1 },
+            { q: "4. One Customer can have Many Orders. What is the cardinality?", opts: ["1 : 1", "1 : Many", "Many : Many"], a: 1 }
+        ];
+
+        function initQuiz() {
+            const area = document.getElementById('quiz-area');
+            area.innerHTML = quizData.map((item, idx) => `
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-4">${item.q}</h4>
+                    <div class="space-y-2">
+                        ${item.opts.map((opt, oIdx) => `
+                            <button onclick="checkAnswer(${idx}, ${oIdx}, this)" class="w-full text-left p-3 rounded-lg border border-slate-100 hover:bg-indigo-50 hover:border-indigo-200 transition-all text-sm font-medium text-slate-600 q-btn-${idx}" data-idx="${oIdx}">
+                                ${opt}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div id="fb-${idx}" class="hidden mt-3 text-xs font-bold"></div>
+                </div>
+            `).join('') + `<button onclick="finishQuiz()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition">Submit Answers</button>`;
+        }
+
+        function checkAnswer(qIdx, oIdx, btn) {
+            const isCorrect = quizData[qIdx].a === oIdx;
+            const fb = document.getElementById(`fb-${qIdx}`);
+            const allBtns = document.querySelectorAll(`.q-btn-${qIdx}`);
+            allBtns.forEach(b => {
+                b.disabled = true;
+                if(b.dataset.idx == quizData[qIdx].a) b.classList.add('bg-emerald-100', 'border-emerald-300', 'text-emerald-800');
+            });
+            if(isCorrect) {
+                state.quizScore++;
+                fb.innerText = "Correct!";
+                fb.className = "mt-3 text-xs font-bold text-emerald-600";
+            } else {
+                btn.classList.add('bg-rose-100', 'border-rose-300', 'text-rose-800');
+                fb.innerText = "Incorrect.";
+                fb.className = "mt-3 text-xs font-bold text-rose-600";
+            }
+            fb.classList.remove('hidden');
+        }
+
+        function finishQuiz() {
+            document.getElementById('quiz-area').classList.add('hidden');
+            document.getElementById('quiz-results').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${state.quizScore} / ${quizData.length}`;
+            markComplete('quiz');
+        }
+
+        // --- DRAG & DROP LOGIC ---
+        function allowDrop(ev) { ev.preventDefault(); ev.target.closest('.drop-zone').classList.add('drag-over'); }
+        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+
+        function drop(ev, targetZoneId) {
+            ev.preventDefault();
+            const zone = ev.target.closest('.drop-zone');
+            zone.classList.remove('drag-over');
+            
+            const data = ev.dataTransfer.getData("text");
+            const draggedElement = document.getElementById(data);
+
+            // If moving back to source
+            if (targetZoneId === 'source') {
+                zone.appendChild(draggedElement);
+                // Reset style to original draggable look
+                draggedElement.className = "draggable-item bg-slate-100 hover:bg-white border border-slate-200 p-2 rounded text-xs font-bold text-slate-600 shadow-sm flex items-center gap-2";
+                draggedElement.draggable = true;
+            } else {
+                // If moving to a target table
+                const contentArea = zone.querySelector('.target-content') || zone;
+                contentArea.appendChild(draggedElement);
+                // Style as "dropped item"
+                draggedElement.className = "cursor-pointer p-1.5 rounded bg-white shadow-sm text-[10px] font-bold text-slate-700 border border-slate-300 hover:bg-red-50 hover:border-red-300 transition-colors flex justify-between group";
+                // Add a small hint that it can be removed
+                if(!draggedElement.querySelector('.remove-hint')) {
+                   draggedElement.innerHTML += `<i data-lucide="x" class="w-3 h-3 text-slate-400 group-hover:text-red-500 remove-hint"></i>`;
+                   lucide.createIcons();
+                }
+                
+                // Add click listener to return to source
+                draggedElement.onclick = function() {
+                    const sourceZone = document.getElementById('source-zone');
+                    sourceZone.appendChild(draggedElement);
+                    draggedElement.className = "draggable-item bg-slate-100 hover:bg-white border border-slate-200 p-2 rounded text-xs font-bold text-slate-600 shadow-sm flex items-center gap-2";
+                    const hint = draggedElement.querySelector('.remove-hint');
+                    if(hint) hint.remove();
+                    draggedElement.onclick = null; // Remove click handler
+                };
+            }
+        }
+
+        function initDragAndDrop() {}
+
+        function checkDrag() {
+            const answers = {
+                fact: ['LoanID (PK)', 'LoanDate', 'MemberID (FK)', 'BookID (FK)'],
+                mem: ['MemberName', 'MemberAddress', 'MemberID (PK)'],
+                book: ['BookTitle', 'BookAuthor', 'BookGenre', 'BookID (PK)']
+            };
+            
+            let correctCount = 0;
+            const fb = document.getElementById('drag-feedback');
+            
+            // Validate
+            ['fact', 'mem', 'book'].forEach(type => {
+                const zone = document.querySelector(`.drop-zone[data-target="${type}"]`);
+                const items = [...zone.querySelectorAll('[data-id]')]; 
+                
+                items.forEach(item => {
+                    if (answers[type].includes(item.dataset.id)) {
+                        item.classList.remove('border-slate-300', 'border-rose-400', 'bg-rose-50');
+                        item.classList.add('border-emerald-400', 'bg-emerald-50');
+                        correctCount++;
+                    } else {
+                        item.classList.remove('border-slate-300', 'border-emerald-400', 'bg-emerald-50');
+                        item.classList.add('border-rose-400', 'bg-rose-50');
+                    }
+                });
+            });
+
+            // Total required items = 11
+            if (correctCount >= 11) {
+                fb.className = "mt-4 text-center font-bold text-sm text-emerald-600";
+                fb.innerText = "Excellent Work! Structure is correct. Connections Established.";
+                markComplete('star');
+                document.getElementById('final-schema-display').classList.remove('hidden');
+                
+                // 1. Draw Static Connections (Bottom Diagram)
+                setTimeout(() => {
+                    drawStaticConnections();
+                    lucide.createIcons(); // Ensure icons in new section render
+                }, 100);
+
+                // 2. Draw Drag & Drop Connections (Top Diagram)
+                setTimeout(drawConnections, 100); 
+            } else {
+                fb.className = "mt-4 text-center font-bold text-sm text-rose-600";
+                fb.innerText = "Not quite. Make sure PKs are in Dimension tables and FKs are in Fact tables. (Total items: 11)";
+            }
+            fb.classList.remove('hidden');
+        }
+
+        // --- DRAWING FUNCTIONS ---
+
+        // 1. For the Drag & Drop Activity
+        function drawConnections() {
+            // Helper to get element by data-id that is inside a drop zone (to ignore the one in source list)
+            const getDroppedEl = (id) => {
+                // Find element that is NOT in source-zone
+                const all = document.querySelectorAll(`[data-id="${id}"]`);
+                for(let el of all) {
+                     if(!el.closest('#source-zone')) return el;
+                }
+                return null;
+            }
+            
+            // Connect MemberID(FK) in Fact -> MemberID(PK) in Member Dim
+            const fkMem = getDroppedEl('MemberID (FK)');
+            const pkMem = getDroppedEl('MemberID (PK)');
+            
+            // Connect BookID(FK) in Fact -> BookID(PK) in Book Dim
+            const fkBook = getDroppedEl('BookID (FK)');
+            const pkBook = getDroppedEl('BookID (PK)');
+
+            if(!fkMem || !pkMem || !fkBook || !pkBook) return;
+
+            const drawLine = (startEl, endEl, lineId) => {
+                const containerRect = document.getElementById('connection-overlay-container').getBoundingClientRect();
+                const startRect = startEl.getBoundingClientRect();
+                const endRect = endEl.getBoundingClientRect();
+
+                // Start from Center-Right of Source
+                const x1 = startRect.left + startRect.width - containerRect.left; 
+                const y1 = startRect.top + startRect.height/2 - containerRect.top;
+                
+                // End at Center-Left of Target
+                const x2 = endRect.left - containerRect.left;
+                const y2 = endRect.top + endRect.height/2 - containerRect.top;
+
+                const line = document.getElementById(lineId);
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.classList.remove('hidden');
+            };
+
+            drawLine(fkMem, pkMem, 'line-mem');
+            drawLine(fkBook, pkBook, 'line-book');
+        }
+
+        // 2. For the Static Result Diagram
+        function drawStaticConnections() {
+            const container = document.getElementById('static-diagram-container');
+            if(!container) return;
+            const containerRect = container.getBoundingClientRect();
+
+            // IDs defined in the HTML string for getStarModule
+            const factMem = document.getElementById('s-fact-mem');
+            const dimMem = document.getElementById('s-dim-mem');
+            const factBook = document.getElementById('s-fact-book');
+            const dimBook = document.getElementById('s-dim-book');
+
+            if(!factMem || !dimMem || !factBook || !dimBook) return;
+
+            const draw = (startEl, endEl, lineId, dotId) => {
+                const s = startEl.getBoundingClientRect();
+                const e = endEl.getBoundingClientRect();
+
+                // Determine attachment points based on relative position
+                let startX, endX;
+
+                if (s.left < e.left) {
+                    // Start is Left of End -> Connect Start Right to End Left
+                    startX = s.right - containerRect.left;
+                    endX = e.left - containerRect.left;
+                } else {
+                    // Start is Right of End -> Connect Start Left to End Right
+                    startX = s.left - containerRect.left;
+                    endX = e.right - containerRect.left;
+                }
+
+                // Vertical center of the rows
+                const startY = (s.top + s.height/2) - containerRect.top;
+                const endY = (e.top + e.height/2) - containerRect.top;
+
+                const line = document.getElementById(lineId);
+                line.setAttribute('x1', startX);
+                line.setAttribute('y1', startY);
+                line.setAttribute('x2', endX);
+                line.setAttribute('y2', endY);
+
+                // Position dot at end
+                const dot = document.getElementById(dotId);
+                dot.setAttribute('cx', endX);
+                dot.setAttribute('cy', endY);
+            };
+
+            draw(factMem, dimMem, 'static-line-mem', 'static-dot-mem');
+            draw(factBook, dimBook, 'static-line-book', 'static-dot-book');
+        }
+
+        // --- UTILS ---
+        function updateProgress() {
+            const val = Math.round((state.completedModules.size / modules.length) * 100);
+            document.getElementById('progress-bar').style.width = `${val}%`;
+            document.getElementById('progress-text').innerText = `${val}%`;
+        }
+
+        function downloadPracticeFile() {
+             const wb = XLSX.utils.book_new();
+             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(messyData), "Messy_Raw");
+             XLSX.writeFile(wb, "DataModeling_Workshop.xlsx");
+        }
+        
+        // --- ADDING MISSING JOIN VIZ FUNCTIONS ---
+        function initJoinViz() { updateJoin('inner'); }
+
+        function updateJoin(type) {
+            document.querySelectorAll('.join-toggle').forEach(b => b.className = 'px-4 py-1.5 rounded-md text-sm font-bold transition-all join-toggle text-slate-500 hover:bg-slate-200');
+            const activeBtn = document.getElementById(`t-${type}`);
+            if(activeBtn) activeBtn.className = 'px-4 py-1.5 rounded-md text-sm font-bold transition-all join-toggle bg-indigo-600 text-white shadow';
+
+            // Paths
+            const pLeft = document.getElementById('v-left-circle'); 
+            const pRight = document.getElementById('v-right-circle');
+            const pMid = document.getElementById('v-intersect');   
+            const desc = document.getElementById('join-desc');
+
+            if (!pLeft || !pRight || !pMid) return;
+
+            // Reset (Low Opacity)
+            [pLeft, pRight, pMid].forEach(el => {
+                el.classList.remove('venn-blink');
+                el.style.opacity = '0.05';
+            });
+
+            if(type === 'inner') {
+                pMid.style.opacity = '0.9'; pMid.classList.add('venn-blink');
+                desc.innerText = "Inner: Only matching IDs (The Intersection).";
+            } else if (type === 'left') {
+                // Highlight full Left circle (which visually covers intersection partially) + Intersection on top
+                pLeft.style.opacity = '0.9'; pLeft.classList.add('venn-blink');
+                pMid.style.opacity = '0.9'; pMid.classList.add('venn-blink');
+                desc.innerText = "Left: All Customers (Left Circle Highlighted).";
+            } else if (type === 'right') {
+                // Highlight full Right circle + Intersection
+                pRight.style.opacity = '0.9'; pRight.classList.add('venn-blink');
+                pMid.style.opacity = '0.9'; pMid.classList.add('venn-blink');
+                desc.innerText = "Right: All Invoices (Right Circle Highlighted).";
+            } else if (type === 'full') {
+                 // All parts highlighted
+                pLeft.style.opacity = '0.9'; pLeft.classList.add('venn-blink');
+                pRight.style.opacity = '0.9'; pRight.classList.add('venn-blink');
+                pMid.style.opacity = '0.9'; pMid.classList.add('venn-blink');
+                desc.innerText = "Full: Everyone from both sides.";
+            }
+
+            // Table Data Logic
+            let html = '';
+            if(['inner','left','right','full'].includes(type)) {
+                html += `<tr class="border-b border-slate-700"><td class="p-2">Alpha Corp</td><td class="p-2">1</td><td class="p-2">101</td><td class="p-2">500</td></tr>`;
+                html += `<tr class="border-b border-slate-700"><td class="p-2">Beta LLC</td><td class="p-2">2</td><td class="p-2">102</td><td class="p-2">300</td></tr>`;
+            }
+            if(['left','full'].includes(type)) {
+                html += `<tr class="border-b border-slate-700 bg-blue-900/30 text-blue-200"><td class="p-2">Gamma Inc</td><td class="p-2">3</td><td class="p-2 italic opacity-50">null</td><td class="p-2 italic opacity-50">null</td></tr>`;
+            }
+            if(['right','full'].includes(type)) {
+                html += `<tr class="border-b border-slate-700 bg-rose-900/30 text-rose-200"><td class="p-2 italic opacity-50">null</td><td class="p-2">4</td><td class="p-2">103</td><td class="p-2">200</td></tr>`;
+            }
+            const tbody = document.getElementById('join-result-body');
+            if(tbody) tbody.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

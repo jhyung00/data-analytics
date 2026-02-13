@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Query Master Class: AP Transformation</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* --- CORE STYLING --- */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f2f1; overflow: hidden; user-select: none; }
+        
+        /* Layout */
+        .pq-header { background-color: #0b5336; color: white; height: 48px; }
+        .pq-ribbon { background-color: #f3f2f1; border-bottom: 1px solid #d1d1d1; height: 135px; flex-shrink: 0; z-index: 20; position: relative; }
+        
+        /* Tabs */
+        .pq-tab { cursor: pointer; padding: 6px 15px; font-size: 13px; border: 1px solid transparent; margin-top: 4px; border-radius: 4px 4px 0 0; }
+        .pq-tab.active { background-color: white; border-color: #d1d1d1; border-bottom-color: white; color: #0b5336; font-weight: 600; }
+        .tab-pulse { animation: tab-pulse 1.5s infinite; background-color: #d1e7dd; color: #0b5336; font-weight: bold; }
+
+        /* Ribbon Buttons */
+        .pq-group { border-right: 1px solid #e1dfdd; padding: 0 6px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 90px; }
+        .pq-group-label { font-size: 11px; color: #666; margin-top: auto; padding-bottom: 4px; }
+        .pq-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 6px; border-radius: 2px; cursor: pointer; font-size: 11px; text-align: center; color: #333; min-width: 50px; position: relative; }
+        .pq-btn:hover { background-color: #e6f2ea; outline: 1px solid #c7e0d1; }
+        .pq-btn i { font-size: 20px; margin-bottom: 6px; color: #444; }
+        .pq-btn.disabled { opacity: 0.4; pointer-events: none; }
+        .btn-pulse { animation: pulse 2s infinite; border: 1px solid #0b5336; background-color: #e6f2ea; }
+        .btn-dropdown-arrow { font-size: 8px; margin-top: 2px; }
+
+        /* Dropdown Menus */
+        .pq-menu { display: none; position: fixed; background: white; border: 1px solid #ccc; box-shadow: 2px 2px 10px rgba(0,0,0,0.2); z-index: 9999; min-width: 150px; }
+        .pq-menu-item { padding: 6px 20px 6px 10px; font-size: 12px; color: #333; cursor: pointer; display: flex; align-items: center; }
+        .pq-menu-item:hover { background-color: #e6f2ea; }
+        .pq-menu-item i { width: 20px; color: #666; }
+        .pq-menu-divider { border-top: 1px solid #e1dfdd; margin: 2px 0; }
+
+        /* Formula Bar */
+        .formula-bar { height: 28px; background: white; border-bottom: 1px solid #d1d1d1; font-family: 'Consolas', monospace; font-size: 12px; display: flex; align-items: center; padding: 0 8px; }
+
+        /* Grid */
+        .grid-area { overflow: auto; background: #e1dfdd; padding: 20px; }
+        .table-wrapper { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: inline-block; min-width: 100%; }
+        .pq-table { background: white; border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; }
+        .pq-table th { background: #f3f2f1; border-right: 1px solid #c8c8c8; border-bottom: 1px solid #c8c8c8; padding: 4px 8px; text-align: left; font-weight: 600; position: sticky; top: 0; z-index: 10; height: auto; white-space: nowrap; vertical-align: top; cursor: pointer; }
+        .pq-table th.selected-header { background-color: #0b5336 !important; color: white; border-color: #08402a; }
+        .pq-table th:hover { background-color: #e1dfdd; }
+        .pq-table td { border-right: 1px solid #e1dfdd; border-bottom: 1px solid #e1dfdd; padding: 4px 8px; white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; color: #201f1e; height: 24px; }
+        .pq-table tr:nth-child(even) { background-color: #f9f9f9; }
+
+        /* Data Profiling Bar */
+        .profiling-container { margin-top: 4px; font-size: 9px; color: #555; font-weight: normal; }
+        .quality-bar { height: 4px; width: 100%; display: flex; margin-bottom: 2px; }
+        .q-valid { background-color: #228b22; }
+        .q-error { background-color: #e02d2d; }
+        .q-empty { background-color: #333; }
+        .dist-chart { height: 16px; background: #f0f0f0; margin-top: 2px; display: flex; align-items: flex-end; gap: 1px; padding: 0 1px; border: 1px solid #e0e0e0; }
+        .dist-col { background: #888; width: 100%; }
+
+        /* Type Icons */
+        .type-indicator { font-size: 10px; margin-right: 4px; padding: 1px 3px; background: #f3f2f1; border: 1px solid #ccc; border-radius: 2px; font-family: monospace; color: #333; display: inline-block; width: 28px; text-align: center; cursor: pointer; }
+        .type-indicator:hover { background-color: #d1e7dd; }
+
+        /* Highlights */
+        .highlight-col { background-color: #fffde7 !important; border-left: 2px solid #fbc02d; border-right: 2px solid #fbc02d; }
+        .highlight-header { background-color: #fff9c4 !important; border-bottom: 2px solid #fbc02d; color: #000; }
+        .highlight-row { background-color: #fffde7 !important; outline: 2px dashed #fbc02d; z-index: 5; position: relative; }
+        .highlight-error-cell { background-color: #ffebee !important; outline: 2px solid #ef5350; }
+
+        /* Sidebars */
+        .sidebar { background: #f0f0f0; display: flex; flex-col; border-right: 1px solid #d1d1d1; font-size: 13px; }
+        .sidebar-right { border-left: 1px solid #d1d1d1; border-right: none; background: white; }
+        .sidebar-header { background: #e6e6e6; padding: 8px 12px; font-weight: bold; border-bottom: 1px solid #ccc; font-size: 12px; }
+        
+        /* Applied Steps */
+        .step-item { padding: 6px 12px; cursor: pointer; display: flex; align-items: center; font-size: 12px; }
+        .step-item:hover { background-color: #eaeaea; }
+        .step-item.active { background-color: #c7e0d1; border-left: 3px solid #0b5336; font-weight: 600; }
+        .step-icon { width: 16px; margin-right: 8px; color: #0b5336; }
+
+        /* Queries Pane Item */
+        .query-item { padding: 4px 12px; display: flex; align-items: center; cursor: pointer; }
+        .query-item:hover { background-color: #e6f2ea; }
+        .query-item.active { background-color: #c7e0d1; font-weight: 600; }
+        .query-icon { color: #0b5336; margin-right: 8px; font-size: 14px; }
+
+        /* Dialog/Modal Styling */
+        .dialog-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
+        .dialog-box { background: white; width: 600px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 1px solid #888; display: flex; flex-direction: column; max-height: 90vh; }
+        .dialog-header { padding: 8px 12px; background: white; font-weight: 600; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+        .dialog-body { padding: 20px; font-size: 13px; background: #fbfbfb; overflow-y: auto; }
+        .dialog-footer { padding: 12px; background: #f0f0f0; text-align: right; border-top: 1px solid #d1d1d1; }
+        .dialog-btn { padding: 4px 20px; border: 1px solid #888; background: #e1e1e1; cursor: pointer; margin-left: 8px; font-size: 12px; min-width: 70px; }
+        .dialog-btn-primary { background: #0b5336; color: white; border-color: #0b5336; }
+        .dialog-btn-primary:hover { background: #09422b; }
+        .dialog-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Merge/Dialog Specifics */
+        .preview-table { width: 100%; border-collapse: collapse; margin-top: 5px; background: white; border: 1px solid #ccc; }
+        .preview-table th, .preview-table td { border: 1px solid #ddd; padding: 4px; font-size: 11px; text-align: left; }
+        .preview-table th { background: #f0f0f0; cursor: pointer; }
+        .preview-table th.selected-col { background-color: #333; color: white; }
+        
+        .section-label { font-weight: 600; margin-bottom: 4px; display: block; margin-top: 10px; }
+
+        /* Animations */
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(11, 83, 54, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(11, 83, 54, 0); } 100% { box-shadow: 0 0 0 0 rgba(11, 83, 54, 0); } }
+        @keyframes tab-pulse { 0% { background-color: #f3f2f1; } 50% { background-color: #bbf7d0; } 100% { background-color: #f3f2f1; } }
+
+    </style>
+</head>
+<body class="flex flex-col h-screen" onclick="closeAllMenus(event)">
+
+    <!-- 1. HEADER -->
+    <div class="pq-header flex justify-between items-center px-4">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-table-cells text-xl"></i>
+            <div>
+                <div class="font-bold text-sm leading-tight">Power Query Editor</div>
+                <div class="text-xs opacity-80">AP_Cleaning_Master_Class.xlsx</div>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="undo()" id="btn-undo" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded border border-white/20 disabled:opacity-30 disabled:cursor-not-allowed">
+                <i class="fas fa-undo mr-1"></i> Undo
+            </button>
+            <button onclick="resetLesson()" class="text-xs bg-red-800 hover:bg-red-700 text-white px-3 py-1 rounded border border-white/20">
+                <i class="fas fa-sync-alt mr-1"></i> Reset
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. RIBBON -->
+    <div class="pq-ribbon flex flex-col">
+        <div class="flex px-1 bg-white pt-1 gap-1 border-b border-gray-200">
+            <div class="pq-tab active" id="tab-home" onclick="switchTab('home')">Home</div>
+            <div class="pq-tab" id="tab-transform" onclick="switchTab('transform')">Transform</div>
+            <div class="pq-tab" id="tab-add" onclick="switchTab('add')">Add Column</div>
+            <div class="pq-tab" id="tab-view" onclick="switchTab('view')">View</div>
+        </div>
+        
+        <div class="flex items-start overflow-x-auto h-full bg-gray-50 pt-1" id="ribbon-content">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- 3. FORMULA BAR -->
+    <div class="formula-bar">
+        <i class="fas fa-check text-gray-400 mr-2"></i>
+        <i class="fas fa-times text-gray-400 mr-2"></i>
+        <i class="fas fa-function text-gray-400 mr-3"></i>
+        <input type="text" id="formula-input" class="flex-grow border-none outline-none bg-transparent text-gray-700" value="= Source" readonly>
+    </div>
+
+    <!-- 4. MAIN WORKSPACE -->
+    <div class="flex flex-grow overflow-hidden">
+        
+        <!-- LEFT: Sidebar (Queries + Guide) -->
+        <div class="w-64 sidebar flex flex-col flex-shrink-0 bg-white border-r border-gray-300">
+            <!-- Queries Pane -->
+            <div class="sidebar-header flex justify-between items-center">
+                <span>Queries <span class="bg-gray-200 rounded-full px-1 text-xs" id="query-count">3</span></span>
+                <i class="fas fa-chevron-left text-gray-500 text-xs"></i>
+            </div>
+            <div class="overflow-y-auto max-h-40 border-b border-gray-300 bg-white py-1" id="queries-list">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Instructor Guide -->
+            <div class="sidebar-header bg-yellow-100 text-yellow-900 border-yellow-200 mt-2">
+                <i class="fas fa-graduation-cap mr-1"></i> INSTRUCTOR GUIDE
+            </div>
+            <div class="p-4 overflow-y-auto flex-grow bg-gray-50" id="guide-content">
+                <!-- Guide Text -->
+            </div>
+            
+            <!-- Navigation Footer -->
+            <div class="p-3 border-t bg-gray-50 border-gray-200">
+                <div class="flex justify-between items-center">
+                    <button onclick="prevStep()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-xs font-semibold border border-gray-300 transition-colors">
+                        <i class="fas fa-chevron-left"></i> Back
+                    </button>
+                    <div class="text-xs font-bold text-gray-500">Step <span id="step-counter">1</span>/21</div>
+                    <button onclick="nextStep()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-semibold border border-blue-700 shadow-sm transition-colors">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER: Grid -->
+        <div class="flex-grow grid-area" id="grid-container">
+            <div class="table-wrapper">
+                <table class="pq-table" id="data-table">
+                    <!-- Data Rows -->
+                </table>
+            </div>
+        </div>
+
+        <!-- RIGHT: Query Settings -->
+        <div class="w-64 sidebar sidebar-right flex flex-col flex-shrink-0">
+            <div class="sidebar-header">Query Settings</div>
+            
+            <div class="p-3 border-b border-gray-200 bg-white">
+                <div class="text-xs text-gray-500 mb-1">PROPERTIES</div>
+                <div class="text-xs mb-1 font-semibold">Name</div>
+                <input type="text" value="AP_Transactions" id="query-name-input" class="w-full border p-1 text-xs">
+            </div>
+
+            <div class="flex-grow flex flex-col bg-white min-h-0">
+                <div class="sidebar-header bg-white mt-1 border-t border-gray-200">APPLIED STEPS</div>
+                <div id="applied-steps" class="flex-grow overflow-y-auto py-2">
+                    <div class="step-item active"><i class="fas fa-database step-icon"></i>Source</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menus (Fixed Position) -->
+    <div id="type-menu" class="pq-menu">
+        <div class="pq-menu-item" onclick="executeTypeChange('1.2')"><i class="fas fa-hashtag"></i> Decimal Number</div>
+        <div class="pq-menu-item" onclick="executeTypeChange('123')"><i class="fas fa-sort-numeric-down"></i> Whole Number</div>
+        <div class="pq-menu-item" onclick="executeTypeChange('Cal')"><i class="fas fa-calendar-alt"></i> Date</div>
+        <div class="pq-menu-item" onclick="executeTypeChange('ABC')"><i class="fas fa-font"></i> Text</div>
+    </div>
+
+    <!-- 5. DIALOG MODAL (Generic) -->
+    <div id="dialog-overlay" class="dialog-overlay">
+        <div class="dialog-box" id="dialog-box-container">
+            <div class="dialog-header">
+                <span id="dialog-title">Dialog Title</span>
+                <i class="fas fa-times cursor-pointer text-gray-500 hover:text-red-500" onclick="closeDialog()"></i>
+            </div>
+            <div class="dialog-body" id="dialog-body">
+                <!-- Content Injected Here -->
+            </div>
+            <div class="dialog-footer">
+                <button class="dialog-btn" onclick="closeDialog()">Cancel</button>
+                <button class="dialog-btn dialog-btn-primary" id="dialog-ok-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // --- 1. DATA STATE MANAGEMENT ---
+
+        const rawImportData = [
+            { Col1: "Invoice_ID", Col2: "Invoice_Date", Col3: "Vendor", Col4: "Amount", Col5: "Dept", Col6: "Terms" }, // Row 1 (Headers)
+            { Col1: "INV-101", Col2: "1/7/25", Col3: " Staples Inc. ", Col4: "$1,200.00", Col5: "HR ", Col6: "NET 30" },
+            { Col1: "INV-102", Col2: "2025-01-08", Col3: "Dell Corp", Col4: "5500", Col5: "IT", Col6: "Net45" },
+            { Col1: "INV-103", Col2: "01/09/2025", Col3: "STAPLES", Col4: "120.50", Col5: "hr", Col6: "Net 30" },
+            { Col1: "INV-104", Col2: "Jan 10, 25", Col3: "Amazon", Col4: "250.00", Col5: "IT", Col6: "N30" },
+            { Col1: "INV-105", Col2: "1/11/25", Col3: "FedEx", Col4: "(50.00)", Col5: "OPS", Col6: "Immediate" },
+            { Col1: "INV-106", Col2: "1/12/25", Col3: "Staples", Col4: "error", Col5: "HR", Col6: "Net30" }
+        ];
+
+        // February Data
+        const febData = [
+            { Invoice_ID: "INV-201", Invoice_Date: "2/1/25", Vendor: "UBER", Amount: 45.00, Dept: "SALES", Terms: "Immediate", Index: 7, Tax_Calc: 4.5, Vendor_Category: "Travel" }
+        ];
+
+        // Vendor Map Table (Data for visualization)
+        const vendorMapData = [
+            { Vendor_Name: "STAPLES INC.", Category: "Office Supplies" },
+            { Vendor_Name: "DELL CORP", Category: "Hardware" },
+            { Vendor_Name: "AMAZON", Category: "Services" },
+            { Vendor_Name: "FEDEX", Category: "Logistics" }
+        ];
+
+        // Budget Data for Pivot/Unpivot
+        const budgetData = [
+            { Dept: "HR", Jan_Budget: 5000, Feb_Budget: 5000, Mar_Budget: 6000 },
+            { Dept: "IT", Jan_Budget: 12000, Feb_Budget: 15000, Mar_Budget: 12000 },
+            { Dept: "OPS", Jan_Budget: 8000, Feb_Budget: 8000, Mar_Budget: 9000 }
+        ];
+
+        // Mappings
+        const vendorMap = {
+            "STAPLES INC.": "Office Supplies", "STAPLES": "Office Supplies", "DELL CORP": "Hardware",
+            "AMAZON": "Services", "FEDEX": "Logistics", "UBER": "Travel"
+        };
+
+        // State
+        let currentData = JSON.parse(JSON.stringify(rawImportData));
+        let activeQuery = "AP_Transactions"; 
+        let historyStack = [];
+        let currentStepIndex = 0;
+        let activeTab = 'home';
+        let showProfiling = false;
+        let showDistribution = false;
+        let selectedColumns = []; // Track column selections
+        let activeHeaderForMenu = null; // Which column clicked for type menu
+        
+        // Tracks visual column types. Values: 'ABC', '1.2', '123', 'Cal'
+        let colTypes = { Col1: 'ABC', Col2: 'ABC', Col3: 'ABC', Col4: 'ABC', Col5: 'ABC', Col6: 'ABC' };
+
+        // --- 2. LESSON PLAN DEFINITION ---
+        
+        const lessonPlan = [
+            {
+                id: "headers",
+                title: "1. Promote Headers",
+                text: "The data loaded with generic headers.<br><br><strong>Task:</strong> Go to the <b>Home</b> tab and click <b>Use First Row as Headers</b>.",
+                tab: "home",
+                btn: "btn-promote",
+                highlightRow: 0
+            },
+            {
+                id: "profiling",
+                title: "2. Data Profiling",
+                text: "Now that we have headers, check data quality.<br><br><strong>Task:</strong> Go to the <b>View</b> tab and check <b>Column Quality</b> and <b>Column Distribution</b>. Look at the Amount column errors.",
+                tab: "view",
+                btn: "btn-profiling"
+            },
+            {
+                id: "split",
+                title: "3. Split Column",
+                text: "The Invoice_ID (e.g., INV-101) combines text and number. Let's split it.<br><br><strong>Task:</strong> Select the <b>Invoice_ID</b> column, go to <b>Transform</b>, and click <b>Split Column > By Delimiter</b>.",
+                tab: "transform",
+                btn: "btn-split",
+                highlightCols: ["Invoice_ID"],
+                isDialog: true,
+                dialogType: 'split'
+            },
+            {
+                id: "trim",
+                title: "4. Clean Text (Trim)",
+                text: "Remove extra spaces from Vendor names.<br><br><strong>Task:</strong> Select <b>Vendor</b>, click the <b>Format</b> dropdown in <b>Transform</b>, and choose <b>Trim</b>.",
+                tab: "transform",
+                btn: "menu-format", // Button that opens menu
+                subAction: "trim",
+                highlightCols: ["Vendor"]
+            },
+            {
+                id: "upper",
+                title: "5. Standardize Case",
+                text: "Make Vendor names Uppercase.<br><br><strong>Task:</strong> Select <b>Vendor</b>, click <b>Format</b> dropdown, and choose <b>Uppercase</b>.",
+                tab: "transform",
+                btn: "menu-format",
+                subAction: "upper",
+                highlightCols: ["Vendor"]
+            },
+            {
+                id: "replace",
+                title: "6. Clean Amounts",
+                text: "Remove '$' signs.<br><br><strong>Task:</strong> In <b>Transform</b>, click <b>Replace Values</b>.",
+                tab: "transform",
+                btn: "btn-replace",
+                highlightCols: ["Amount"],
+                isDialog: true,
+                dialogType: 'replace_amount'
+            },
+            {
+                id: "type_amt",
+                title: "7. Set Amount Type",
+                text: "Convert Amount to Decimal.<br><br><strong>Task:</strong> Click the small <b>ABC</b> icon in the <b>Amount</b> column header and select <b>Decimal Number</b> from the menu.",
+                tab: "home", 
+                btn: "header-menu", // Logic handles this
+                subAction: "1.2",
+                highlightCols: ["Amount"]
+            },
+            {
+                id: "errors",
+                title: "8. Remove Errors",
+                text: "Row 6 has an 'Error' (red bar).<br><br><strong>Task:</strong> In <b>Home</b>, click <b>Remove Rows > Remove Errors</b>.",
+                tab: "home",
+                btn: "btn-remove-errors",
+                highlightCols: ["Amount"],
+                highlightError: true
+            },
+            {
+                id: "type_date",
+                title: "9. Fix Dates",
+                text: "Convert Invoice_Date to Date (Power Query Smart Parse).<br><br><strong>Task:</strong> Click the <b>ABC</b> icon in the <b>Invoice_Date</b> header and select <b>Date</b>.",
+                tab: "home",
+                btn: "header-menu",
+                subAction: "Cal",
+                highlightCols: ["Invoice_Date"]
+            },
+            {
+                id: "terms",
+                title: "10. Fix Terms",
+                text: "Standardize 'Net30' to 'NET 30'.<br><br><strong>Task:</strong> In <b>Transform</b>, click <b>Replace Values</b>. Find 'Net30', Replace 'NET 30'.",
+                tab: "transform",
+                btn: "btn-replace",
+                highlightCols: ["Terms"],
+                isDialog: true,
+                dialogType: 'replace_terms'
+            },
+            {
+                id: "index",
+                title: "11. Add Index Column",
+                text: "Add a Primary Key.<br><br><strong>Task:</strong> Go to <b>Add Column</b> and click <b>Index Column</b>.",
+                tab: "add",
+                btn: "btn-index",
+            },
+            {
+                id: "custom",
+                title: "12. Custom Column",
+                text: "Calculate Tax (10%).<br><br><strong>Task:</strong> In <b>Add Column</b>, click <b>Custom Column</b>.",
+                tab: "add",
+                btn: "btn-custom",
+                isDialog: true,
+                dialogType: 'custom'
+            },
+            {
+                id: "merge",
+                title: "13. Merge Queries",
+                text: "Join with 'Vendor_Map' to get categories.<br><br><strong>Task:</strong> In <b>Home</b>, click <b>Merge Queries</b>. Match 'Vendor' columns.",
+                tab: "home",
+                btn: "btn-merge",
+                isDialog: true,
+                dialogType: 'merge_real',
+                highlightCols: ["Vendor"]
+            },
+            {
+                id: "append",
+                title: "14. Append Queries",
+                text: "Stack 'Feb_Data' rows onto this table.<br><br><strong>Task:</strong> In <b>Home</b>, click <b>Append Queries</b>.",
+                tab: "home",
+                btn: "btn-append",
+                isDialog: true,
+                dialogType: 'append_real'
+            },
+            {
+                id: "groupby",
+                title: "15. Group By (Summary)",
+                text: "Summarize total spend by Vendor.<br><br><strong>Task:</strong> In <b>Home</b>, click <b>Group By</b>. Use the <b>Advanced</b> mode to add groupings or aggregations.",
+                tab: "home",
+                btn: "btn-group",
+                isDialog: true,
+                dialogType: 'groupby_real',
+                highlightCols: ["Vendor", "Amount"]
+            },
+            {
+                id: "load_budget",
+                title: "16. Part 2: Reshaping Data",
+                text: "Let's work on the <b>Budget Table</b>.<br><br><strong>Task:</strong> Click <b>Recent Sources > Budget_Data</b> in the <b>Home</b> tab.",
+                tab: "home",
+                btn: "btn-load-budget"
+            },
+            {
+                id: "unpivot",
+                title: "17. Unpivot Columns",
+                text: "We need months in rows. You have two options:<br>1. Select month columns -> Unpivot Columns.<br>2. Select 'Dept' -> Unpivot Other Columns.<br><br><strong>Task:</strong> Try selecting <b>Dept</b> (click header), then click the <b>Unpivot</b> dropdown and choose <b>Unpivot Other Columns</b>.",
+                tab: "transform",
+                btn: "menu-unpivot",
+                subAction: "unpivot_other",
+                highlightCols: ["Dept"],
+                isDialog: false
+            },
+            {
+                id: "pivot",
+                title: "18. Pivot Columns",
+                text: "Now reverse it. Turn the Attribute (Month) column back into headers.<br><br><strong>Task:</strong> Select Attribute column, then click <b>Transform > Pivot Column</b>.",
+                tab: "transform",
+                btn: "btn-pivot",
+                highlightCols: ["Attribute"],
+                isDialog: true,
+                dialogType: 'pivot'
+            },
+            {
+                id: "close_load",
+                title: "19. Load Data",
+                text: "Everything looks great. Let's load the data back to Excel.<br><br><strong>Task:</strong> Go to the <b>Home</b> tab and click <b>Close & Load</b>.",
+                tab: "home",
+                btn: "btn-close",
+            },
+            {
+                id: "finish",
+                title: "20. Conclusion",
+                text: "Master Class Complete! You've mastered profiling, cleaning, merging, and reshaping data.<br><br>Click Reset to start over.",
+                tab: "home",
+                btn: "none"
+            }
+        ];
+
+        // --- 3. UI RENDERING ---
+
+        function renderRibbon(tab) {
+            const container = document.getElementById('ribbon-content');
+            container.innerHTML = '';
+            
+            document.querySelectorAll('.pq-tab').forEach(t => {
+                t.classList.remove('active');
+                t.classList.remove('tab-pulse');
+            });
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            activeTab = tab;
+
+            const step = lessonPlan[currentStepIndex];
+            // Only pulse if we are in the main workflow and not finished
+            if (step && step.tab !== tab && step.id !== "finish" && activeQuery === "AP_Transactions" && activeQuery !== "Budget_Data") {
+                document.getElementById(`tab-${step.tab}`).classList.add('tab-pulse');
+            }
+            if (step && (step.id === 'load_budget' || step.id === 'unpivot' || step.id === 'pivot')) {
+                 if(step.tab !== tab) document.getElementById(`tab-${step.tab}`).classList.add('tab-pulse');
+            }
+
+            const getPulse = (id) => {
+                if (activeQuery !== "AP_Transactions" && activeQuery !== "Budget_Data") return 'disabled';
+                if (step && step.tab === tab && step.btn === id) return 'btn-pulse';
+                return '';
+            };
+            
+            const isPreview = (activeQuery !== "AP_Transactions" && activeQuery !== "Budget_Data");
+            const disableClass = isPreview ? 'disabled opacity-50' : '';
+
+            // --- RIBBON TEMPLATES ---
+            if (tab === 'home') {
+                container.innerHTML = `
+                    <div class="pq-group">
+                        <div class="pq-btn ${getPulse('btn-close')} ${disableClass}" onclick="checkAction('btn-close')"><i class="fas fa-table-cells text-green-700"></i>Close & Load</div>
+                        <span class="pq-group-label">Close</span>
+                    </div>
+                    <div class="pq-group">
+                         <div class="pq-btn ${getPulse('btn-load-budget')} ${disableClass}" onclick="checkAction('btn-load-budget')"><i class="fas fa-table"></i>Recent Sources</div>
+                         <span class="pq-group-label">New Query</span>
+                    </div>
+                    <div class="pq-group">
+                        <div class="pq-btn ${getPulse('btn-merge')} ${disableClass}" onclick="checkAction('btn-merge')"><i class="fas fa-object-group"></i>Merge Queries</div>
+                        <div class="pq-btn ${getPulse('btn-append')} ${disableClass}" onclick="checkAction('btn-append')"><i class="fas fa-plus-square"></i>Append Queries</div>
+                        <span class="pq-group-label">Combine</span>
+                    </div>
+                    <div class="pq-group">
+                        <div class="pq-btn ${getPulse('btn-promote')} ${disableClass}" onclick="checkAction('btn-promote')"><i class="fas fa-heading"></i>Use First Row<br>as Headers</div>
+                        <div class="pq-btn ${getPulse('btn-group')} ${disableClass}" onclick="checkAction('btn-group')"><i class="fas fa-layer-group"></i>Group By</div>
+                        <span class="pq-group-label">Transform</span>
+                    </div>
+                    <div class="pq-group">
+                        <div class="pq-btn ${getPulse('btn-remove-errors')} ${disableClass}" onclick="checkAction('btn-remove-errors')"><i class="fas fa-eraser"></i>Remove Rows</div>
+                        <span class="pq-group-label">Manage</span>
+                    </div>
+                `;
+            } else if (tab === 'transform') {
+                container.innerHTML = `
+                    <div class="pq-group">
+                        <div class="pq-btn ${getPulse('btn-split')} ${disableClass}" onclick="checkAction('btn-split')"><i class="fas fa-columns"></i>Split Column</div>
+                        <div class="pq-btn ${getPulse('btn-group')} ${disableClass}" onclick="checkAction('btn-group')"><i class="fas fa-layer-group"></i>Group By</div>
+                        <span class="pq-group-label">Table</span>
+                    </div>
+                    <div class="pq-group">
+                        <!-- Unpivot Dropdown -->
+                        <div class="pq-btn ${getPulse('menu-unpivot')} ${disableClass}" onclick="toggleMenu('unpivot-menu', event)">
+                            <i class="fas fa-columns"></i>Unpivot Columns <i class="fas fa-chevron-down btn-dropdown-arrow"></i>
+                        </div>
+                        <div id="unpivot-menu" class="pq-menu">
+                             <div class="pq-menu-item" onclick="checkSubAction('menu-unpivot', 'unpivot_cols')">Unpivot Columns</div>
+                             <div class="pq-menu-item" onclick="checkSubAction('menu-unpivot', 'unpivot_other')">Unpivot Other Columns</div>
+                        </div>
+                        
+                        <div class="pq-btn ${getPulse('btn-pivot')} ${disableClass}" onclick="checkAction('btn-pivot')"><i class="fas fa-table"></i>Pivot Column</div>
+                        <span class="pq-group-label">Any Column</span>
+                    </div>
+                    <div class="pq-group">
+                        <!-- Format Dropdown -->
+                        <div class="pq-btn ${getPulse('menu-format')} ${disableClass}" onclick="toggleMenu('format-menu', event)">
+                            <i class="fas fa-font"></i>Format <i class="fas fa-chevron-down btn-dropdown-arrow"></i>
+                        </div>
+                        <div id="format-menu" class="pq-menu">
+                            <div class="pq-menu-item" onclick="checkSubAction('menu-format', 'lower')">Lowercase</div>
+                            <div class="pq-menu-item" onclick="checkSubAction('menu-format', 'upper')">Uppercase</div>
+                            <div class="pq-menu-item" onclick="checkSubAction('menu-format', 'capitalize')">Capitalize Each Word</div>
+                            <div class="pq-menu-divider"></div>
+                            <div class="pq-menu-item" onclick="checkSubAction('menu-format', 'trim')">Trim</div>
+                            <div class="pq-menu-item" onclick="checkSubAction('menu-format', 'clean')">Clean</div>
+                        </div>
+                        <span class="pq-group-label">Text Column</span>
+                    </div>
+                    <div class="pq-group">
+                        <div class="pq-btn ${getPulse('btn-replace')} ${disableClass}" onclick="checkAction('btn-replace')"><i class="fas fa-exchange-alt"></i>Replace Values</div>
+                        <span class="pq-group-label">Any Column</span>
+                    </div>
+                `;
+            } else if (tab === 'add') {
+                container.innerHTML = `
+                    <div class="pq-group">
+                        <div class="pq-btn ${getPulse('btn-custom')} ${disableClass}" onclick="checkAction('btn-custom')"><i class="fas fa-cogs"></i>Custom<br>Column</div>
+                        <span class="pq-group-label">General</span>
+                    </div>
+                    <div class="pq-group">
+                        <div class="pq-btn ${getPulse('btn-index')} ${disableClass}" onclick="checkAction('btn-index')"><i class="fas fa-list-ol"></i>Index<br>Column</div>
+                        <span class="pq-group-label">General</span>
+                    </div>
+                `;
+            } else if (tab === 'view') {
+                 container.innerHTML = `
+                    <div class="pq-group flex-row items-center justify-center pt-2">
+                        <div class="flex items-center mr-2"><input type="checkbox" ${showProfiling ? 'checked' : ''} class="mr-1" onclick="toggleProfiling('prof')"> Column Quality</div>
+                        <div class="flex items-center"><input type="checkbox" ${showDistribution ? 'checked' : ''} class="mr-1" onclick="toggleProfiling('dist')"> Column Distribution</div>
+                        <span class="pq-group-label w-full text-center">Data Preview</span>
+                    </div>
+                `;
+            }
+        }
+
+        function renderQueriesPane() {
+            const list = document.getElementById('queries-list');
+            let queries = [
+                { name: "AP_Transactions", icon: "fa-table", rows: currentData.length },
+                { name: "Vendor_Map", icon: "fa-database", rows: 4 },
+                { name: "Feb_Data", icon: "fa-database", rows: 1 }
+            ];
+            
+            // Show Budget Data in queries if active or step requires it
+            if(activeQuery === "Budget_Data" || lessonPlan[currentStepIndex].id === 'load_budget' || currentStepIndex > 15) {
+                queries.push({ name: "Budget_Data", icon: "fa-table", rows: 3 });
+            }
+
+            let html = '';
+            queries.forEach(q => {
+                const isActive = activeQuery === q.name ? 'active' : '';
+                html += `
+                <div class="query-item ${isActive}" onclick="loadQueryPreview('${q.name}')">
+                    <i class="fas ${q.icon} query-icon"></i> 
+                    <div class="flex flex-col">
+                        <span class="text-xs font-semibold">${q.name}</span>
+                        <span class="text-[10px] text-gray-500">${q.rows} rows</span>
+                    </div>
+                </div>`;
+            });
+            list.innerHTML = html;
+            document.getElementById('query-count').innerText = queries.length;
+            document.getElementById('query-name-input').value = activeQuery;
+        }
+
+        function renderGrid() {
+            const table = document.getElementById('data-table');
+            table.innerHTML = '';
+            
+            let dataToRender = currentData;
+            
+            // Override data if we are explicitly previewing a static lookup table
+            if (activeQuery === "Vendor_Map") dataToRender = vendorMapData;
+            if (activeQuery === "Feb_Data") dataToRender = febData;
+            
+            // Special handling for Budget Data:
+            // If we are looking at Budget Data, we must check if we are in the "editing phase" (step >= 16).
+            // If Step < 16, we show the static source. If Step >= 16, we show currentData (the transformed working copy).
+            if (activeQuery === "Budget_Data") {
+                const loadBudgetStepIndex = 15; // Index where 'load_budget' happens
+                if (currentStepIndex < loadBudgetStepIndex) {
+                    dataToRender = budgetData;
+                } else {
+                    dataToRender = currentData; // Show the transformed data
+                }
+            }
+
+            if (dataToRender.length === 0) return;
+
+            const step = lessonPlan[currentStepIndex];
+            // Only Highlight if we are in the main AP transaction flow or explicit steps
+            const isMainFlow = (activeQuery === "AP_Transactions" || activeQuery === "Budget_Data");
+            const colsToHighlight = (step && step.highlightCols && isMainFlow) ? step.highlightCols : [];
+            const rowToHighlight = (step && step.highlightRow !== undefined && isMainFlow) ? step.highlightRow : -1;
+            const highlightErrors = (step && step.highlightError && isMainFlow);
+
+            const keys = Object.keys(dataToRender[0]);
+
+            // HEADERS
+            const thead = document.createElement('thead');
+            const trHead = document.createElement('tr');
+            keys.forEach(k => {
+                const th = document.createElement('th');
+                
+                // Type Icon Logic
+                let typeCode = 'ABC';
+                if (activeQuery === "AP_Transactions" || activeQuery === "Budget_Data") {
+                     typeCode = colTypes[k] || 'ABC';
+                }
+                const iconHtml = `<span class="type-indicator" onclick="toggleTypeMenu(event, '${k}')">${getTypeIconStr(typeCode)}</span>`;
+                
+                if (colsToHighlight.includes(k)) th.classList.add('highlight-header');
+                
+                // Selection logic
+                if (selectedColumns.includes(k)) th.classList.add('selected-header');
+
+                // Header Click for Selection
+                th.onclick = (e) => {
+                    if(e.target.classList.contains('type-indicator')) return;
+                    toggleHeaderSelection(k, e.ctrlKey);
+                };
+
+                let profilingHtml = '';
+                // Dynamic Profiling Logic
+                if (showProfiling && (activeQuery === "AP_Transactions" || activeQuery === "Budget_Data")) {
+                     let rowCount = dataToRender.length;
+                     let emptyCount = dataToRender.filter(r => r[k] === null || r[k] === "").length;
+                     let errorCount = dataToRender.filter(r => r[k] === "error").length;
+                     let validCount = rowCount - emptyCount - errorCount;
+                     
+                     let validPct = Math.round((validCount / rowCount) * 100);
+                     let errorPct = Math.round((errorCount / rowCount) * 100);
+                     let emptyPct = Math.round((emptyCount / rowCount) * 100);
+
+                     profilingHtml = `
+                        <div class="profiling-container">
+                            <div class="quality-bar">
+                                <div class="q-valid" style="width:${validPct}%"></div>
+                                <div class="q-error" style="width:${errorPct}%"></div>
+                                <div class="q-empty" style="width:${emptyPct}%"></div>
+                            </div>
+                            <span class="profiling-text">Valid: ${validPct}% | Error: ${errorPct}% | Empty: ${emptyPct}%</span>
+                        </div>
+                     `;
+                }
+                
+                let distHtml = '';
+                if (showDistribution && (activeQuery === "AP_Transactions" || activeQuery === "Budget_Data")) {
+                     let distinct = new Set(dataToRender.map(r => r[k])).size;
+                     let unique = dataToRender.filter(r => dataToRender.filter(x => x[k] === r[k]).length === 1).length;
+                     
+                     let barsHtml = '';
+                     let barCount = Math.min(distinct, 20); 
+                     for(let i=0; i<barCount; i++) {
+                        let h = Math.floor(Math.random() * 12) + 2; 
+                        barsHtml += `<div class="dist-col" style="height:${h}px"></div>`;
+                     }
+
+                     distHtml = `
+                        <div class="profiling-container">
+                            <div class="dist-chart">${barsHtml}</div>
+                            <span class="profiling-text">${distinct} Distinct | ${unique} Unique</span>
+                        </div>
+                     `;
+                }
+
+                th.innerHTML = `${iconHtml} ${k} ${profilingHtml} ${distHtml}`;
+                trHead.appendChild(th);
+            });
+            thead.appendChild(trHead);
+            table.appendChild(thead);
+
+            // BODY
+            const tbody = document.createElement('tbody');
+            dataToRender.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                if (rowIndex === rowToHighlight) tr.classList.add('highlight-row');
+
+                keys.forEach(k => {
+                    const td = document.createElement('td');
+                    let val = row[k];
+                    
+                    if (colsToHighlight.includes(k)) td.classList.add('highlight-col');
+                    if (highlightErrors && val === 'error') td.classList.add('highlight-error-cell');
+                    if (selectedColumns.includes(k)) td.style.backgroundColor = '#e6f2ea';
+
+                    if (val === undefined || val === null) val = "<em>null</em>";
+                    if (val === "error") td.innerHTML = `<span class="text-red-500 italic">Error</span>`;
+                    else td.innerText = val;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+        }
+
+        function getTypeIconStr(type) {
+            if (type === '1.2') return '1.2';
+            if (type === '123') return '123';
+            if (type === 'Cal') return '<i class="fas fa-calendar-alt"></i>';
+            return 'ABC';
+        }
+
+        function renderGuide() {
+            const step = lessonPlan[currentStepIndex];
+            document.getElementById('step-counter').innerText = Math.min(currentStepIndex + 1, lessonPlan.length);
+            
+            const guide = document.getElementById('guide-content');
+            guide.innerHTML = `
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4">
+                    <div class="font-bold text-gray-800 mb-1">${step.title}</div>
+                    <div class="text-gray-700 text-sm leading-relaxed">${step.text}</div>
+                </div>
+                <div class="text-xs text-gray-500 mt-2 font-bold">Selected: ${selectedColumns.length > 0 ? selectedColumns.join(', ') : 'None'}</div>
+            `;
+            
+            if (activeQuery !== "AP_Transactions" && activeQuery !== "Budget_Data") {
+                 guide.innerHTML += `<div class="p-2 bg-blue-100 text-blue-800 text-xs rounded border border-blue-200 mt-2">
+                    <i class="fas fa-info-circle"></i> Preview Mode. Click <strong>AP_Transactions</strong> to edit.
+                 </div>`;
+            }
+
+            if (currentStepIndex > 0) {
+                 const lastAction = lessonPlan[currentStepIndex-1].title;
+                 document.getElementById('formula-input').value = `= Table.TransformSteps( #"${lastAction}" )`;
+            }
+
+            renderRibbon(activeTab);
+            renderAppliedSteps();
+            renderQueriesPane();
+            
+            document.getElementById('btn-undo').disabled = historyStack.length === 0;
+            if(historyStack.length === 0) document.getElementById('btn-undo').classList.add('opacity-50');
+            else document.getElementById('btn-undo').classList.remove('opacity-50');
+        }
+
+        function renderAppliedSteps() {
+            const container = document.getElementById('applied-steps');
+            container.innerHTML = '<div class="step-item"><i class="fas fa-database step-icon"></i>Source</div>';
+            if(activeQuery === "AP_Transactions" || activeQuery === "Budget_Data") {
+                for(let i=0; i<historyStack.length; i++) {
+                    const stepTitle = lessonPlan[i].title.split('. ')[1]; 
+                    container.innerHTML += `<div class="step-item"><i class="fas fa-check-circle step-icon"></i>${stepTitle}</div>`;
+                }
+                const steps = container.querySelectorAll('.step-item');
+                if(steps.length > 0) steps[steps.length-1].classList.add('active');
+            }
+        }
+
+        // --- 4. ACTIONS & INTERACTION ---
+
+        function toggleHeaderSelection(colName, multi) {
+            if (multi) {
+                if (selectedColumns.includes(colName)) {
+                    selectedColumns = selectedColumns.filter(c => c !== colName);
+                } else {
+                    selectedColumns.push(colName);
+                }
+            } else {
+                selectedColumns = [colName];
+            }
+            renderGrid();
+            renderGuide(); // updates selection text
+        }
+
+        function toggleMenu(menuId, event) {
+            event.stopPropagation();
+            // Close others
+            document.querySelectorAll('.pq-menu').forEach(m => m.style.display = 'none');
+            const menu = document.getElementById(menuId);
+            const rect = event.currentTarget.getBoundingClientRect();
+            // Use Fixed positioning
+            menu.style.position = 'fixed';
+            menu.style.left = rect.left + 'px';
+            menu.style.top = (rect.bottom + 2) + 'px';
+            menu.style.display = 'block';
+        }
+
+        function toggleTypeMenu(event, colName) {
+            event.stopPropagation();
+            activeHeaderForMenu = colName;
+            const menu = document.getElementById('type-menu');
+            const rect = event.currentTarget.getBoundingClientRect();
+            // Use Fixed positioning
+            menu.style.position = 'fixed';
+            menu.style.left = rect.left + 'px';
+            menu.style.top = (rect.bottom + 5) + 'px';
+            menu.style.display = 'block';
+        }
+
+        function closeAllMenus(event) {
+            document.querySelectorAll('.pq-menu').forEach(m => m.style.display = 'none');
+        }
+
+        function loadQueryPreview(name) {
+            activeQuery = name;
+            selectedColumns = [];
+            // Update colTypes context if switching
+            if(name === "Budget_Data") {
+                 colTypes = { Dept: 'ABC', Jan_Budget: '123', Feb_Budget: '123', Mar_Budget: '123' };
+            }
+            renderGrid();
+            renderGuide(); 
+        }
+        
+        function toggleProfiling(type) {
+            if(type === 'prof') showProfiling = !showProfiling;
+            if(type === 'dist') showDistribution = !showDistribution;
+            renderRibbon('view');
+            renderGrid();
+            if(lessonPlan[currentStepIndex].id === 'profiling') {
+                if(showProfiling && showDistribution) executeAction('profiling');
+            }
+        }
+
+        function nextStep() {
+            if (currentStepIndex >= lessonPlan.length - 1) return;
+            const step = lessonPlan[currentStepIndex];
+            
+            // Auto-select columns if needed for the action
+            if (selectedColumns.length === 0 && step.highlightCols) {
+                selectedColumns = step.highlightCols;
+            }
+            
+            // Special handling for menu-triggered actions or dialog types
+            if (step.btn.startsWith('menu-')) {
+                 executeAction(step.subAction);
+            } else {
+                 executeAction(step.id);
+            }
+        }
+
+        function prevStep() {
+            undo();
+        }
+
+        // --- 5. EXECUTION LOGIC ---
+
+        function executeTypeChange(newType) {
+            const step = lessonPlan[currentStepIndex];
+            if(step.btn === "header-menu" && step.subAction === newType && step.highlightCols.includes(activeHeaderForMenu)) {
+                executeAction(step.id);
+            }
+            closeAllMenus();
+        }
+
+        function checkSubAction(btnId, subId) {
+            const step = lessonPlan[currentStepIndex];
+            
+            // Allow general formatting to work even if not the current step
+            if(btnId === 'menu-format') {
+                if (step.btn === btnId && step.subAction === subId) {
+                    executeAction(step.id); // Advance lesson
+                } else {
+                    executeAction(subId, true); // Just transform, don't advance
+                }
+                closeAllMenus();
+                return;
+            }
+
+            // Unpivot Menu
+            if(btnId === 'menu-unpivot') {
+                const advance = (step.btn === btnId && step.subAction === subId);
+                executeAction(subId, !advance);
+                closeAllMenus();
+                return;
+            }
+
+            if (step.btn === btnId && step.subAction === subId) {
+                executeAction(step.id);
+            }
+            closeAllMenus();
+        }
+
+        function checkAction(btnId) {
+            const step = lessonPlan[currentStepIndex];
+            if (btnId !== step.btn) return;
+            if (step.isDialog) showDialog(step.dialogType);
+            else executeAction(step.id);
+        }
+
+        // --- DIALOGS ---
+        let mergeSelection = { t1: false, t2: false };
+        
+        // Advanced Group By Logic Helpers
+        window.addGroupRow = function() {
+            const div = document.createElement('div');
+            div.className = "flex gap-2 mb-2";
+            div.innerHTML = `<select class="dialog-select w-full">${getColOptions()}</select>`;
+            document.getElementById('gb-rows-container').appendChild(div);
+        }
+        window.addAggRow = function() {
+            const div = document.createElement('div');
+            div.className = "grid grid-cols-3 gap-2 mb-2";
+            div.innerHTML = `
+                <input class="border text-xs p-1" value="Count">
+                <select class="border text-xs p-1">
+                    <option>Sum</option><option>Count Rows</option><option>Average</option><option>Min</option><option>Max</option>
+                </select>
+                <select class="border text-xs p-1">${getColOptions()}</select>
+            `;
+            document.getElementById('gb-agg-container').appendChild(div);
+        }
+        function getColOptions() {
+            return Object.keys(currentData[0]).map(k => `<option>${k}</option>`).join('');
+        }
+
+        function showDialog(type) {
+            const overlay = document.getElementById('dialog-overlay');
+            const title = document.getElementById('dialog-title');
+            const body = document.getElementById('dialog-body');
+            const okBtn = document.getElementById('dialog-ok-btn');
+            
+            overlay.style.display = 'flex';
+            okBtn.disabled = false;
+            mergeSelection = { t1: false, t2: false }; 
+
+            if (type === 'replace_amount') {
+                title.innerText = "Replace Values";
+                body.innerHTML = `
+                    <label class="block font-bold mb-1">Value To Find</label>
+                    <input class="dialog-input" value="$">
+                    <label class="block font-bold mb-1">Replace With</label>
+                    <input class="dialog-input" value="">
+                `;
+                okBtn.onclick = () => { executeAction('replace_dollar'); closeDialog(); };
+            }
+            else if (type === 'replace_terms') {
+                title.innerText = "Replace Values";
+                body.innerHTML = `
+                    <label class="block font-bold mb-1">Value To Find</label>
+                    <input class="dialog-input" placeholder="e.g., Net30" id="inp-find">
+                    <label class="block font-bold mb-1">Replace With</label>
+                    <input class="dialog-input" placeholder="e.g., NET 30" id="inp-replace">
+                `;
+                okBtn.onclick = () => { executeAction('replace_terms_logic'); closeDialog(); };
+            } 
+            else if (type === 'split') {
+                title.innerText = "Split Column by Delimiter";
+                body.innerHTML = `
+                    <label class="block mb-2">Select or enter delimiter</label>
+                    <select class="dialog-select"><option>Custom</option></select>
+                    <input class="dialog-input w-12 text-center" value="-">
+                    <div class="mt-4">
+                        <label class="block mb-1"><input type="radio" name="split_opt" checked> Left-most delimiter</label>
+                        <label class="block mb-1"><input type="radio" name="split_opt"> Right-most delimiter</label>
+                        <label class="block mb-1"><input type="radio" name="split_opt"> Each occurrence</label>
+                    </div>
+                `;
+                okBtn.onclick = () => { executeAction('split'); closeDialog(); };
+            }
+            else if (type === 'custom') {
+                title.innerText = "Add Custom Column";
+                body.innerHTML = `
+                    <label class="block font-bold">New column name</label>
+                    <input class="dialog-input" value="Tax_Calc" readonly>
+                    <label class="block font-bold">Custom column formula</label>
+                    <div class="border p-2 bg-white font-mono h-24 text-sm">= [Amount] * 0.10</div>
+                `;
+                okBtn.onclick = () => { executeAction('custom'); closeDialog(); };
+            } 
+            else if (type === 'merge_real') {
+                title.innerText = "Merge Queries";
+                okBtn.disabled = true; 
+                let html = `<label class="block mb-2 text-gray-700">Select tables and matching columns.</label>`;
+                html += `<div class="bg-gray-100 p-1 mb-2 border border-gray-300"><select class="w-full bg-white border mb-1 p-1 text-sm"><option>AP_Transactions</option></select>
+                    <div class="overflow-x-auto"><table class="preview-table"><thead><tr>`;
+                Object.keys(currentData[0]).forEach(k => html += `<th onclick="selectMergeCol(this, 't1')" id="t1-${k}">${k}</th>`);
+                html += `</tr></thead><tbody><tr>`;
+                Object.keys(currentData[0]).forEach(k => html += `<td>${currentData[0][k]}</td>`);
+                html += `</tr></tbody></table></div></div>`;
+                html += `<div class="bg-gray-100 p-1 mb-2 border border-gray-300"><select class="w-full bg-white border mb-1 p-1 text-sm" onchange="enableTable2(this)"><option value="">Select...</option><option value="Vendor_Map">Vendor_Map</option></select>
+                    <div id="t2-container" class="opacity-50 pointer-events-none"><div class="overflow-x-auto"><table class="preview-table"><thead><tr><th onclick="selectMergeCol(this, 't2')" id="t2-Vendor_Name">Vendor_Name</th><th>Category</th></tr></thead><tbody><tr><td>STAPLES INC.</td><td>Office Supplies</td></tr></tbody></table></div></div></div>`;
+                
+                html += `<label class="block text-xs font-bold mt-2">Join Kind</label>
+                         <select class="dialog-select">
+                            <option>Left Outer (all from first, matching from second)</option>
+                            <option>Right Outer (all from second, matching from first)</option>
+                            <option>Full Outer (all rows from both)</option>
+                            <option>Inner (only matching rows)</option>
+                            <option>Left Anti (rows only in first)</option>
+                            <option>Right Anti (rows only in second)</option>
+                         </select>`;
+                
+                html += `<div id="merge-match-msg" class="text-xs text-gray-500 mt-2 h-4"></div>`;
+                body.innerHTML = html;
+                window.selectMergeCol = function(el, table) { el.closest('tr').querySelectorAll('th').forEach(th => th.classList.remove('selected-col')); el.classList.add('selected-col'); checkMergeReady(); };
+                window.enableTable2 = function(sel) { if(sel.value === "Vendor_Map") document.getElementById('t2-container').classList.remove('opacity-50', 'pointer-events-none'); }
+                window.checkMergeReady = function() {
+                    const btn = document.getElementById('dialog-ok-btn');
+                    const t1Sel = document.getElementById('t1-Vendor'); const t2Sel = document.getElementById('t2-Vendor_Name');
+                    if (t1Sel && t1Sel.classList.contains('selected-col') && t2Sel && t2Sel.classList.contains('selected-col')) {
+                        document.getElementById('merge-match-msg').innerText = "Selection matches 6 of 6 rows.";
+                        btn.disabled = false;
+                    }
+                }
+                okBtn.onclick = () => { executeAction('merge'); closeDialog(); };
+            } 
+            else if (type === 'append_real') {
+                title.innerText = "Append Queries";
+                body.innerHTML = `<label class="block mb-2">Concatenate rows.</label><div class="flex gap-4 mb-2"><label><input type="radio" checked> Two tables</label></div><label class="block font-bold text-xs mt-2">Primary Table</label><select class="dialog-select" disabled><option>AP_Transactions</option></select><label class="block font-bold text-xs">Table to append</label><select class="dialog-select"><option>Feb_Data</option></select>`;
+                okBtn.onclick = () => { executeAction('append'); closeDialog(); };
+            } 
+            else if (type === 'groupby_real') {
+                title.innerText = "Group By";
+                body.innerHTML = `
+                    <div class="flex gap-4 mb-4">
+                        <label><input type="radio" name="gb" onclick="toggleGb('basic')" checked> Basic</label>
+                        <label><input type="radio" name="gb" onclick="toggleGb('advanced')"> Advanced</label>
+                    </div>
+                    <div id="gb-basic">
+                        <label class="block font-bold text-xs">Group by</label><select class="dialog-select">${getColOptions()}</select>
+                        <label class="block font-bold text-xs mt-2">New column name</label><input class="dialog-input" value="Total_Spend">
+                        <label class="block font-bold text-xs">Operation</label>
+                        <select class="dialog-select"><option>Sum</option><option>Count Rows</option><option>Average</option><option>Min</option><option>Max</option></select>
+                        <label class="block font-bold text-xs">Column</label>
+                        <select class="dialog-select">${getColOptions()}</select>
+                    </div>
+                    <div id="gb-advanced" style="display:none">
+                         <label class="block font-bold text-xs">Group by</label>
+                         <div id="gb-rows-container"><div class="flex gap-2 mb-2"><select class="dialog-select w-full">${getColOptions()}</select></div></div>
+                         <button class="bg-gray-200 px-2 text-xs border rounded hover:bg-gray-300 mb-4" onclick="addGroupRow()">Add Grouping</button>
+                         <label class="block font-bold text-xs">Aggregations</label>
+                         <div class="grid grid-cols-3 gap-2 text-[10px] font-bold text-gray-500"><div>Name</div><div>Operation</div><div>Column</div></div>
+                         <div id="gb-agg-container">
+                             <div class="grid grid-cols-3 gap-2 mb-2">
+                                <input class="border text-xs p-1" value="Total_Spend">
+                                <select class="border text-xs p-1"><option>Sum</option><option>Count Rows</option><option>Average</option><option>Min</option><option>Max</option></select>
+                                <select class="border text-xs p-1">${getColOptions()}</select>
+                             </div>
+                         </div>
+                         <button class="bg-gray-200 px-3 py-1 text-xs border rounded hover:bg-gray-300 font-semibold" onclick="addAggRow()">+ Add aggregation</button>
+                    </div>
+                `;
+                window.toggleGb = function(mode) {
+                    document.getElementById('gb-basic').style.display = mode === 'basic' ? 'block' : 'none';
+                    document.getElementById('gb-advanced').style.display = mode === 'advanced' ? 'block' : 'none';
+                }
+                okBtn.onclick = () => { executeAction('groupby'); closeDialog(); };
+            }
+            else if (type === 'pivot') {
+                title.innerText = "Pivot Column";
+                body.innerHTML = `<label class="block mb-2">Use names in column "Attribute".</label><label class="block font-bold text-xs">Values Column</label><select class="dialog-select"><option>Value</option></select><label class="block font-bold text-xs">Aggregate Value Function</label>
+                <select class="dialog-select"><option>Sum</option><option>Count</option><option>Average</option><option>Min</option><option>Max</option></select>`;
+                okBtn.onclick = () => { executeAction('pivot'); closeDialog(); };
+            }
+        }
+
+        function closeDialog() {
+            document.getElementById('dialog-overlay').style.display = 'none';
+        }
+
+        function executeAction(actionId, noAdvance) {
+            saveState();
+
+            if (actionId === 'headers') {
+                const newData = [];
+                for(let i=1; i<currentData.length; i++) {
+                    const row = currentData[i];
+                    const newRow = {};
+                    newRow["Invoice_ID"] = row.Col1;
+                    newRow["Invoice_Date"] = row.Col2;
+                    newRow["Vendor"] = row.Col3;
+                    newRow["Amount"] = row.Col4;
+                    newRow["Dept"] = row.Col5;
+                    newRow["Terms"] = row.Col6;
+                    newData.push(newRow);
+                }
+                currentData = newData;
+                colTypes = { Invoice_ID: 'ABC', Invoice_Date: 'ABC', Vendor: 'ABC', Amount: 'ABC', Dept: 'ABC', Terms: 'ABC' };
+            } 
+            else if (actionId === 'split') {
+                currentData.forEach(row => {
+                    const val = row.Invoice_ID || "";
+                    const parts = val.includes('-') ? val.split('-') : [val, ""];
+                    row.Invoice_Prefix = parts[0];
+                    row.Invoice_Num = parts[1];
+                    delete row.Invoice_ID; 
+                });
+                const newData = [];
+                currentData.forEach(row => {
+                    newData.push({ Invoice_Prefix: row.Invoice_Prefix, Invoice_Num: row.Invoice_Num, ...row });
+                });
+                currentData = newData;
+                colTypes.Invoice_Prefix = 'ABC';
+                colTypes.Invoice_Num = '123';
+            }
+            else if (actionId === 'trim') {
+                if(selectedColumns.length > 0) {
+                    selectedColumns.forEach(c => {
+                        currentData.forEach(row => { if(row[c]) row[c] = String(row[c]).trim(); });
+                    });
+                } else {
+                    currentData.forEach(row => row.Vendor = row.Vendor.trim());
+                }
+            } 
+            else if (actionId === 'upper') {
+                if(selectedColumns.length > 0) {
+                    selectedColumns.forEach(c => {
+                        currentData.forEach(row => { if(row[c]) row[c] = String(row[c]).toUpperCase(); });
+                    });
+                } else {
+                    currentData.forEach(row => row.Vendor = row.Vendor.toUpperCase());
+                }
+            } 
+            else if (actionId === 'lower') {
+                selectedColumns.forEach(c => {
+                    currentData.forEach(row => { if(row[c]) row[c] = String(row[c]).toLowerCase(); });
+                });
+            }
+            else if (actionId === 'capitalize') {
+                selectedColumns.forEach(c => {
+                    currentData.forEach(row => { 
+                        if(row[c]) row[c] = String(row[c]).toLowerCase().replace(/\b\w/g, s => s.toUpperCase()); 
+                    });
+                });
+            }
+            else if (actionId === 'clean') {
+                selectedColumns.forEach(c => {
+                    currentData.forEach(row => { if(row[c]) row[c] = String(row[c]).trim(); });
+                });
+            }
+            else if (actionId === 'replace_dollar') {
+                currentData.forEach(row => row.Amount = row.Amount.replace('$', '').replace(',', ''));
+            }
+            else if (actionId === 'replace_terms_logic') {
+                const find = document.getElementById('inp-find').value.toLowerCase().replace(/\s/g,'');
+                currentData.forEach(row => {
+                    let t = row.Terms.toLowerCase().replace(/\s/g, ''); 
+                    if (t.includes('net30') || t.includes('n30')) row.Terms = "NET 30";
+                    if (t.includes('net45')) row.Terms = "NET 45";
+                    if (t.includes('imm')) row.Terms = "Immediate";
+                });
+            }
+            else if (actionId === 'type_amt') {
+                colTypes.Amount = '1.2';
+                currentData.forEach(row => {
+                    let val = row.Amount;
+                    if (val.includes('(')) val = '-' + val.replace(/[()]/g, '');
+                    if (isNaN(parseFloat(val))) row.Amount = "error";
+                    else row.Amount = parseFloat(val).toFixed(2);
+                });
+            }
+            else if (actionId === 'errors') {
+                currentData = currentData.filter(row => row.Amount !== 'error');
+            }
+            else if (actionId === 'type_date') {
+                colTypes.Invoice_Date = 'Cal';
+                currentData.forEach(row => {
+                    let d = row.Invoice_Date;
+                    if (d.includes('Jan')) d = "1/10/2025";
+                    else if (d.includes('-')) {
+                         const parts = d.split('-');
+                         if(parts[0].length === 4) d = `${parseInt(parts[1])}/${parseInt(parts[2])}/${parts[0]}`;
+                    } else {
+                        const parts = d.split('/');
+                        if (parts[2].length === 2) parts[2] = '20' + parts[2];
+                        d = `${parseInt(parts[0])}/${parseInt(parts[1])}/${parts[2]}`;
+                    }
+                    row.Invoice_Date = d;
+                });
+            }
+            else if (actionId === 'index') {
+                colTypes.Index = '123';
+                currentData.forEach((row, i) => row.Index = i + 1);
+            }
+            else if (actionId === 'custom') {
+                colTypes.Tax_Calc = '1.2';
+                currentData.forEach(row => {
+                    row.Tax_Calc = (parseFloat(row.Amount) * 0.10).toFixed(2);
+                });
+            }
+            else if (actionId === 'merge') {
+                colTypes.Vendor_Category = 'ABC';
+                currentData.forEach(row => {
+                    let v = row.Vendor.replace(', INC.', '').replace('.', '').trim(); 
+                    let cat = vendorMap[v] || "Other";
+                    row.Vendor_Category = cat;
+                });
+            }
+            else if (actionId === 'append') {
+                febData.forEach(row => currentData.push(row));
+            }
+            else if (actionId === 'groupby') {
+                const result = {};
+                currentData.forEach(row => {
+                    const v = row.Vendor;
+                    const amt = parseFloat(row.Amount);
+                    if(!result[v]) result[v] = 0;
+                    result[v] += amt;
+                });
+                const groupData = [];
+                Object.keys(result).forEach(k => {
+                    groupData.push({ Vendor: k, Total_Spend: result[k].toFixed(2) });
+                });
+                currentData = groupData;
+                colTypes = { Vendor: 'ABC', Total_Spend: '1.2' };
+            }
+            else if (actionId === 'load_budget') {
+                currentData = JSON.parse(JSON.stringify(budgetData)); 
+                activeQuery = "Budget_Data";
+                selectedColumns = [];
+                colTypes = { Dept: 'ABC', Jan_Budget: '123', Feb_Budget: '123', Mar_Budget: '123' };
+            }
+            else if (actionId === 'unpivot' || actionId === 'unpivot_other' || actionId === 'unpivot_cols') {
+                const allCols = Object.keys(currentData[0]);
+                let pivotCols = [];
+                let idCols = [];
+                
+                // Logic Fix: Distinguish between modes
+                if (actionId === 'unpivot_cols') {
+                    // Unpivot SELECTED columns
+                    pivotCols = selectedColumns;
+                    idCols = allCols.filter(c => !selectedColumns.includes(c));
+                } else if (actionId === 'unpivot_other') {
+                    // Unpivot EVERYTHING ELSE (Keep selected as IDs)
+                    idCols = selectedColumns;
+                    pivotCols = allCols.filter(c => !selectedColumns.includes(c));
+                }
+
+                if(pivotCols.length === 0 || idCols.length === 0) { 
+                    alert("Invalid selection for Unpivot. Please select columns correctly."); 
+                    historyStack.pop(); 
+                    return; 
+                }
+
+                const newData = [];
+                currentData.forEach(row => {
+                    pivotCols.forEach(m => {
+                        const newRow = {};
+                        idCols.forEach(id => newRow[id] = row[id]);
+                        newRow.Attribute = m;
+                        newRow.Value = row[m];
+                        newData.push(newRow);
+                    });
+                });
+                currentData = newData;
+                // Rebuild colTypes for new structure
+                colTypes = { Attribute: 'ABC', Value: '123' };
+                idCols.forEach(c => colTypes[c] = 'ABC');
+            }
+            else if (actionId === 'pivot') {
+                if(!currentData[0].hasOwnProperty('Attribute') || !currentData[0].hasOwnProperty('Value')) {
+                    alert("Cannot Pivot: Missing Attribute/Value columns. Did Unpivot work?");
+                    historyStack.pop();
+                    return;
+                }
+                const newData = [];
+                const depts = [...new Set(currentData.map(r => r.Dept))];
+                depts.forEach(d => {
+                    const rows = currentData.filter(r => r.Dept === d);
+                    const newRow = { Dept: d };
+                    rows.forEach(r => newRow[r.Attribute] = r.Value);
+                    newData.push(newRow);
+                });
+                currentData = newData;
+                colTypes = { Dept: 'ABC', Jan_Budget: '123', Feb_Budget: '123', Mar_Budget: '123' };
+            }
+            else if (actionId === 'btn-close') {
+                alert("Data Successfully Loaded to Excel Sheet!");
+            }
+
+            if(!noAdvance) currentStepIndex++;
+            selectedColumns = []; 
+            renderGrid();
+            renderGuide();
+            renderQueriesPane();
+        }
+
+        function saveState() {
+            historyStack.push({
+                data: JSON.parse(JSON.stringify(currentData)),
+                stepIndex: currentStepIndex,
+                cols: JSON.parse(JSON.stringify(colTypes)),
+                query: activeQuery
+            });
+        }
+
+        function undo() {
+            if (historyStack.length === 0) return;
+            const prevState = historyStack.pop();
+            currentData = prevState.data;
+            currentStepIndex = prevState.stepIndex;
+            colTypes = prevState.cols;
+            activeQuery = prevState.query;
+            selectedColumns = [];
+            renderGrid();
+            renderGuide();
+        }
+
+        function resetLesson() {
+            if(!confirm("Restart lesson?")) return;
+            currentData = JSON.parse(JSON.stringify(rawImportData));
+            currentStepIndex = 0;
+            historyStack = [];
+            activeQuery = "AP_Transactions";
+            colTypes = { Col1: 'ABC', Col2: 'ABC', Col3: 'ABC', Col4: 'ABC', Col5: 'ABC', Col6: 'ABC' };
+            switchTab('home');
+            renderGrid();
+            renderGuide();
+            renderQueriesPane();
+        }
+
+        function switchTab(tab) {
+            renderRibbon(tab);
+        }
+
+        // Initialize
+        renderRibbon('home');
+        renderGrid();
+        renderGuide();
+        renderQueriesPane();
+
+    </script>
+</body>
+</html>
