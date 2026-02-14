@@ -1432,26 +1432,141 @@
         };
 
         const lessonClusterAnalysis = {
-            title: "How Spotify Knows You 🎧",
+            title: "Cluster Analysis: Finding Patterns",
             slides: [
-                `<h3 class="font-bold text-2xl mb-6 text-purple-600">The Recommendation Engine</h3><p class="mb-6 text-xl">How does Spotify know what to play next? It uses <strong>Cluster Analysis</strong>.</p><p class="text-lg bg-purple-50 p-4 rounded-xl border border-purple-100">It groups songs based on features like 'Tempo' and 'Energy'.</p>`,
-                `<h3 class="font-bold mb-6 text-2xl">The Clusters</h3><ul class="space-y-4 text-lg"><li><strong>Cluster A:</strong> Study Mode (Low Energy, Low Tempo).</li><li><strong>Cluster B:</strong> Workout Mode (High Energy, High Tempo).</li><li><strong>Outlier:</strong> A heavy metal song in a sleep playlist? That's an anomaly.</li></ul>`
+                `<h3 class="font-bold text-2xl mb-6 text-purple-600">1. How Spotify Knows You 🎧</h3>
+                 <p class="mb-6 text-xl">How does Spotify know what to play next? It uses <strong>Cluster Analysis</strong> to group data points.</p>
+                 <div class="bg-purple-50 p-6 rounded-2xl border border-purple-100 mb-6">
+                    <strong class="text-purple-900 text-lg">The Recommendation Engine</strong>
+                    <p class="text-slate-600 mt-2 text-lg">It plots songs based on <strong>Tempo</strong> and <strong>Energy</strong>.</p>
+                 </div>
+                 <ul class="space-y-4 text-lg">
+                    <li><strong>Cluster A:</strong> Study Mode (Low Energy, Low Tempo).</li>
+                    <li><strong>Cluster B:</strong> Workout Mode (High Energy, High Tempo).</li>
+                    <li><strong>Outlier:</strong> A heavy metal song in a sleep playlist? That's an anomaly.</li>
+                 </ul>`,
+
+                `<h3 class="font-bold text-2xl mb-6 text-emerald-600">2. Audit: The 'Shell Company' 🐚</h3>
+                 <p class="mb-4 text-xl">Auditors use clustering to find vendors that don't fit normal payment patterns.</p>
+                 <div class="space-y-5 text-lg">
+                    <div class="p-5 bg-white border-l-8 border-slate-400 shadow-md rounded-r-xl">
+                        <strong class="text-slate-800">The Variables</strong>
+                        <p class="text-slate-600 mt-1">We plot vendors by <strong>Total Paid ($)</strong> and <strong>Invoice Count (#)</strong>.</p>
+                    </div>
+                    <ul class="space-y-3 pl-2">
+                        <li class="flex items-start gap-3">
+                            <span class="bg-emerald-100 text-emerald-600 p-1 rounded mt-1 text-xs"><i class="fa-solid fa-check"></i></span>
+                            <span><strong>Normal Clusters:</strong> Utility companies (High freq, steady pay) or Office Supplies (High freq, low pay).</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="bg-red-100 text-red-600 p-1 rounded mt-1 text-xs"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                            <span><strong>The Outlier:</strong> A vendor with <span class="blur-reveal">High Payments</span> but <span class="blur-reveal">Very Few Invoices</span> (often just below the approval limit).</span>
+                        </li>
+                    </ul>
+                    <div class="mt-2 p-4 bg-red-50 text-red-800 rounded-xl border border-red-100 font-bold text-center text-base shadow-inner">
+                        <i class="fa-solid fa-magnifying-glass"></i> Investigation: <span class="blur-reveal font-normal">This vendor has no physical address (PO Box only). Fraud detected!</span>
+                    </div>
+                 </div>`
             ],
             renderInteractive: (container) => {
-                container.innerHTML = `<div class="w-full max-w-lg text-center relative"><h4 class="font-bold mb-6 text-slate-400 uppercase text-sm tracking-widest">Playlist Clusterer</h4><canvas id="clusterCanvas" width="400" height="250" class="bg-white border border-slate-200 rounded-3xl mx-auto cursor-crosshair mb-6 relative z-10 shadow-lg"></canvas><div class="absolute top-[80px] left-[-10px] text-xs text-slate-400 -rotate-90 origin-center font-bold">Energy &uarr;</div><div class="absolute bottom-[70px] right-10 text-xs text-slate-400 font-bold">Tempo &rarr;</div><div class="flex justify-center gap-6 text-base font-bold"><div class="flex items-center gap-2"><span class="w-4 h-4 bg-purple-400 rounded-full"></span> Chill</div><div class="flex items-center gap-2"><span class="w-4 h-4 bg-pink-500 rounded-full"></span> Party</div></div></div>`;
+                container.innerHTML = `
+                <div class="w-full max-w-lg text-center relative">
+                    <h4 class="font-bold mb-4 text-slate-400 uppercase text-sm tracking-widest">Cluster Lab</h4>
+                    
+                    <div class="flex justify-center gap-4 mb-6">
+                        <button onclick="drawClusterMode('spotify')" id="btn-c-spotify" class="px-5 py-2 rounded-xl font-bold bg-purple-100 text-purple-700 shadow-sm transition-all hover:scale-105 border border-purple-200">
+                            🎧 Spotify Mode
+                        </button>
+                        <button onclick="drawClusterMode('audit')" id="btn-c-audit" class="px-5 py-2 rounded-xl font-bold bg-white text-slate-500 hover:text-emerald-600 shadow-sm transition-all hover:scale-105 border border-slate-200">
+                            🐚 Audit Mode
+                        </button>
+                    </div>
+
+                    <div class="relative bg-white border border-slate-200 rounded-3xl mx-auto shadow-lg overflow-hidden h-64 mb-4">
+                        <canvas id="clusterCanvas" width="400" height="256" class="absolute inset-0 w-full h-full"></canvas>
+                        <div id="y-axis-label" class="absolute top-[80px] left-[-15px] text-xs text-slate-400 -rotate-90 origin-center font-bold tracking-wider">Energy &uarr;</div>
+                        <div id="x-axis-label" class="absolute bottom-2 right-4 text-xs text-slate-400 font-bold tracking-wider">Tempo &rarr;</div>
+                    </div>
+
+                    <div id="cluster-legend" class="flex justify-center gap-6 text-sm font-bold bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        </div>
+                </div>`;
+
                 const canvas = document.getElementById('clusterCanvas');
                 const ctx = canvas.getContext('2d');
-                function drawCluster(cx, cy, color, count, spread) {
-                    ctx.fillStyle = color;
-                    for(let i=0; i<count; i++) {
-                        const x = cx + (Math.random() - 0.5) * spread; const y = cy + (Math.random() - 0.5) * spread;
-                        ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
+                
+                window.drawClusterMode = (mode) => {
+                    // Update Buttons
+                    const btnS = document.getElementById('btn-c-spotify');
+                    const btnA = document.getElementById('btn-c-audit');
+                    if(mode === 'spotify') {
+                        btnS.className = "px-5 py-2 rounded-xl font-bold bg-purple-100 text-purple-700 shadow-md transition-all border border-purple-200 transform scale-105";
+                        btnA.className = "px-5 py-2 rounded-xl font-bold bg-white text-slate-500 hover:text-emerald-600 shadow-sm transition-all border border-slate-200";
+                    } else {
+                        btnS.className = "px-5 py-2 rounded-xl font-bold bg-white text-slate-500 hover:text-purple-600 shadow-sm transition-all border border-slate-200";
+                        btnA.className = "px-5 py-2 rounded-xl font-bold bg-emerald-100 text-emerald-700 shadow-md transition-all border border-emerald-200 transform scale-105";
                     }
-                }
-                drawCluster(100, 180, "#c084fc", 50, 60); 
-                drawCluster(300, 70, "#ec4899", 50, 80); 
-                ctx.fillStyle = "#1e293b"; ctx.beginPath(); ctx.arc(360, 220, 6, 0, Math.PI*2); ctx.fill();
-                ctx.font = "bold 12px sans-serif"; ctx.fillText("Anomaly?", 320, 230);
+
+                    // Setup Canvas
+                    const w = canvas.width; const h = canvas.height;
+                    ctx.clearRect(0,0,w,h);
+
+                    const drawDots = (cx, cy, color, count, spread) => {
+                        ctx.fillStyle = color;
+                        for(let i=0; i<count; i++) {
+                            const x = cx + (Math.random() - 0.5) * spread; 
+                            const y = cy + (Math.random() - 0.5) * spread;
+                            ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
+                        }
+                    };
+
+                    const legend = document.getElementById('cluster-legend');
+                    const yLabel = document.getElementById('y-axis-label');
+                    const xLabel = document.getElementById('x-axis-label');
+
+                    if (mode === 'spotify') {
+                        yLabel.innerHTML = "Energy &uarr;";
+                        xLabel.innerHTML = "Tempo &rarr;";
+                        // Cluster A (Chill)
+                        drawDots(100, 180, "#c084fc", 40, 60); 
+                        // Cluster B (Party)
+                        drawDots(300, 70, "#ec4899", 40, 80); 
+                        // Anomaly
+                        ctx.fillStyle = "#1e293b"; ctx.beginPath(); ctx.arc(360, 220, 6, 0, Math.PI*2); ctx.fill();
+                        ctx.font = "bold 12px sans-serif"; ctx.fillText("Anomaly?", 320, 235);
+
+                        legend.innerHTML = `
+                            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-purple-400 rounded-full"></span> Chill</div>
+                            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-pink-500 rounded-full"></span> Party</div>
+                        `;
+                    } else {
+                        yLabel.innerHTML = "Total Paid ($) &uarr;";
+                        xLabel.innerHTML = "# of Invoices &rarr;";
+                        
+                        // Normal Cluster 1 (Office Supplies: Low $, High Vol)
+                        drawDots(300, 200, "#34d399", 50, 50); 
+                        // Normal Cluster 2 (Rent/Util: High $, Med Vol)
+                        drawDots(200, 80, "#60a5fa", 30, 40);
+
+                        // Anomaly (Shell Co: High $, Low Vol) - Top Left
+                        const ax = 80; const ay = 60;
+                        ctx.fillStyle = "#ef4444"; 
+                        ctx.beginPath(); ctx.arc(ax, ay, 8, 0, Math.PI*2); ctx.fill();
+                        // Pulse ring
+                        ctx.strokeStyle = "#ef4444"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(ax, ay, 12, 0, Math.PI*2); ctx.stroke();
+
+                        ctx.fillStyle = "#ef4444"; ctx.font = "bold 12px sans-serif"; ctx.fillText("Shell Co!", ax + 15, ay + 5);
+
+                        legend.innerHTML = `
+                            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-emerald-400 rounded-full"></span> Supplies</div>
+                            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-blue-400 rounded-full"></span> Rent</div>
+                            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-red-500 rounded-full"></span> Fraud</div>
+                        `;
+                    }
+                };
+
+                // Init
+                setTimeout(() => window.drawClusterMode('spotify'), 50);
             }
         };
 
