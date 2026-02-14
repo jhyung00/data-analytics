@@ -906,6 +906,22 @@
                     </div>
                 </div>`,
                 `<h3 class="font-bold mb-6 text-2xl">R-Squared (Fit)</h3><p class="mb-4 text-xl">How trustworthy is the line?</p><p class="mb-4 text-lg"><strong>R²</strong> tells you how well the line fits the data (0 to 1).</p><ul class="list-disc pl-6 text-lg space-y-3"><li><span class="blur-reveal">R² = 1.0: Perfect fit.</span></li><li><span class="blur-reveal">R² > 0.8: Strong audit evidence.</span></li><li><span class="blur-reveal">R² < 0.5: Weak relationship.</span></li><li><span class="blur-reveal">R² = 0: No explanatory power.</span></li></ul>`,
+                `<h3 class="font-bold text-2xl mb-6 text-purple-600">7️⃣ Regression Example (Analytics)</h3>
+                <div class="bg-slate-100 p-6 rounded-2xl mb-4 border border-slate-200 shadow-sm">
+                    <p class="font-mono text-base mb-2">Coefficient for Internal Control Score = -0.8</p>
+                    <p class="font-mono text-base">Standard Error of Coefficient = 0.3</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-white p-4 rounded-xl border-l-4 border-indigo-500 shadow-sm">
+                        <strong class="text-indigo-900 block mb-1">Interpretation</strong>
+                        <p class="text-slate-600">The coefficient estimate (-0.8) would typically vary by about 0.3 if we re-sampled data.</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border-l-4 border-emerald-500 shadow-sm">
+                        <strong class="text-emerald-900 block mb-1">Test Statistic (t)</strong>
+                        <p class="text-slate-600 font-mono">t = -0.8 / 0.3 ≈ -2.67</p>
+                        <p class="text-slate-500 text-sm mt-2">Large relative to SE (>2) → <span class="font-bold text-emerald-600">Statistically Meaningful</span>.</p>
+                    </div>
+                </div>`,
                 `<h3 class="font-bold text-2xl mb-6 text-purple-600">Part 2: Multiple Regression</h3><p class="mb-6 text-xl">Reality is COMPLEX. <strong>Cost of Goods Sold (COGS)</strong> depends on multiple drivers.</p><p class="text-xl font-mono bg-slate-100 p-4 rounded-xl border border-slate-200 mb-6">COGS = (A * Units) + (B * Oil Price) + Fixed</p><p class="text-lg bg-white p-4 rounded-xl border border-slate-200 shadow-sm">We can visualize this as a plane cutting through a 3D cloud of data points (Sales, Ads, Quality).</p>`
             ],
             renderInteractive: (container) => {
@@ -1086,7 +1102,7 @@
                     const container1 = document.getElementById('reg-interactive-1');
                     const container2 = document.getElementById('reg-interactive-2');
                     
-                    if (slideIndex === 3) { 
+                    if (slideIndex === 4) { // Updated index due to added slide
                         container1.classList.add('hidden');
                         container2.classList.remove('hidden');
                         if (!threeInitialized) {
@@ -1212,19 +1228,56 @@
 
         const lessonStandardError = {
             title: "Standard Error: Precision",
-            slides: [`<h3 class="font-bold mb-6 text-2xl">1. Imagine a Big Cookie Factory 🥠</h3><p class="mb-6 text-xl">There are 2,000 fortune cookies in a huge box. You check 60 cookies (n=60) and find 4 are broken (~7%).</p><div class="bg-orange-50 p-6 rounded-2xl border border-orange-200 text-orange-900 mb-6 text-lg"><strong>Important Question:</strong><br>If you grabbed a <em>different</em> 60 cookies, would you get exactly 4 broken again?</div><p class="text-xl">Maybe 3. Maybe 6. The number might <span class="blur-reveal">fluctuate</span>. Standard Error measures this "natural sampling variability".</p>`, `<h3 class="font-bold mb-6 text-2xl">2. The 95% Confidence Interval</h3><p class="mb-4 text-xl">Imagine True Rate = 7% and Standard Error (SE) = 3%.</p><div class="space-y-6 text-lg"><div class="p-6 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm"><strong class="text-indigo-900 text-2xl">95% Confidence (±2 SE)</strong><p class="font-mono text-base mt-2">Estimate ± (2 × SE)</p><p class="font-mono text-base text-indigo-700">7% ± (2 × 3%)</p><p class="font-mono text-base text-indigo-700">7% ± 6%</p><p class="font-bold text-indigo-800 mt-2 text-xl">Range: 1% to 13%</p></div></div>`],
+            slides: [
+                `<h3 class="font-bold mb-6 text-2xl">1. Imagine a Big Cookie Factory 🥠</h3><p class="mb-6 text-xl">There are 2,000 fortune cookies in a huge box. You check 60 cookies (n=60) and find 4 are broken (~7%).</p><div class="bg-orange-50 p-6 rounded-2xl border border-orange-200 text-orange-900 mb-6 text-lg"><strong>Important Question:</strong><br>If you grabbed a <em>different</em> 60 cookies, would you get exactly 4 broken again?</div><p class="text-xl">Maybe 3. Maybe 6. The number might <span class="blur-reveal">fluctuate</span>. Standard Error measures this "natural sampling variability".</p>`,
+                `<h3 class="font-bold mb-6 text-2xl">2. Audit Example (Very Concrete)</h3>
+                <div class="space-y-4 text-lg">
+                    <p class="mb-2"><strong>Population:</strong> 2,000 items. <strong>Sample (n):</strong> 50.</p>
+                    <p class="mb-2"><strong>Errors Found:</strong> 3 (Rate p = 3/50 = 0.06 or 6%).</p>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 font-mono text-base shadow-sm">
+                        SE = √[ p(1-p) / n ]<br>
+                        SE = √[ 0.06(0.94) / 50 ]<br>
+                        SE ≈ 0.033 (3.3%)
+                    </div>
+                    <p class="mt-4 text-slate-600"><strong>Interpretation:</strong> If you repeated the sampling many times, your estimated error rate would typically vary by about 3.3 percentage points.</p>
+                </div>`,
+                `<h3 class="font-bold mb-6 text-2xl">3. Why It Matters (Confidence Intervals)</h3>
+                <div class="space-y-4 text-lg">
+                     <p>We found 6% errors. But we need a range for the whole population.</p>
+                     <div class="p-6 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm">
+                        <strong class="text-indigo-900 text-xl block mb-2">95% Confidence Interval</strong>
+                        <p class="font-mono text-base mb-1">Estimate ± (1.96 × SE)</p>
+                        <p class="font-mono text-base mb-1">6% ± (1.96 × 3.3%)</p>
+                        <p class="font-mono text-base mb-3">6% ± 6.5%</p>
+                        <p class="font-bold text-indigo-800 text-lg">Range: -0.5% to 12.5%</p>
+                        <p class="text-sm text-indigo-600 italic mt-2">(We interpret this as 0% to 12.5%)</p>
+                    </div>
+                </div>`,
+                `<h3 class="font-bold mb-6 text-2xl">4. Noise in Data vs. Estimate</h3>
+                 <div class="grid grid-cols-1 gap-4 text-lg">
+                    <div class="bg-white p-5 rounded-xl border-l-8 border-slate-400 shadow-sm">
+                        <strong class="text-xl text-slate-800">Standard Deviation</strong>
+                        <p class="text-slate-600 mt-2">Measures noise in the <strong>data</strong>.<br>(e.g., Cat A is heavy, Cat B is light).</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border-l-8 border-orange-400 shadow-sm">
+                        <strong class="text-xl text-orange-800">Standard Error</strong>
+                        <p class="text-slate-600 mt-2">Measures noise in your <strong>estimate</strong>.<br>(e.g., How much the sample average bounces around).</p>
+                    </div>
+                 </div>`
+            ],
             renderInteractive: (container) => {
-                 container.innerHTML = `<div class="w-full max-w-lg text-center"><h4 class="font-bold mb-4 text-slate-400 uppercase text-sm tracking-widest">Confidence Interval Builder</h4><div class="bg-white p-8 rounded-3xl shadow-lg border border-slate-100"><div class="mb-8"><div class="flex justify-between text-base font-bold text-slate-500 mb-2"><span>Cookies Checked (n)</span><span id="n-val" class="text-orange-600 text-2xl">60</span></div><input type="range" min="30" max="500" step="10" value="60" id="n-slider" class="w-full accent-orange-500 h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer"></div><div class="relative h-32 bg-slate-50 rounded-2xl border border-slate-200 mb-6 flex items-center justify-center overflow-hidden"><div class="absolute h-full w-0.5 bg-orange-500 z-10"></div><div class="absolute bg-white px-2 py-1 rounded text-xs font-bold text-orange-500 z-20 -top-3 shadow-sm border border-orange-100">7%</div><div id="ci-bar" class="h-12 bg-orange-200/50 border-x-4 border-orange-400 rounded-md transition-all duration-300 flex items-center justify-center relative"><div class="text-xs text-orange-800 font-bold whitespace-nowrap px-3">Confidence Interval</div></div></div><div class="grid grid-cols-2 gap-4 text-center"><div class="bg-slate-50 p-4 rounded-xl border border-slate-100"><div class="text-xs text-slate-400 uppercase font-bold tracking-wider">Standard Error</div><div id="se-display" class="font-bold text-slate-700 text-xl">3.2%</div></div><div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100"><div class="text-xs text-emerald-600 uppercase font-bold tracking-wider">Range</div><div id="range-display" class="font-bold text-emerald-700 text-xl">0.7% - 13.3%</div></div></div><p class="text-base text-slate-400 mt-4 italic">More cookies = Less wiggle.</p></div></div>`;
+                 container.innerHTML = `<div class="w-full max-w-lg text-center"><h4 class="font-bold mb-4 text-slate-400 uppercase text-sm tracking-widest">Confidence Interval Builder</h4><div class="bg-white p-8 rounded-3xl shadow-lg border border-slate-100"><div class="mb-8"><div class="flex justify-between text-base font-bold text-slate-500 mb-2"><span>Items Checked (n)</span><span id="n-val" class="text-orange-600 text-2xl">50</span></div><input type="range" min="30" max="500" step="10" value="50" id="n-slider" class="w-full accent-orange-500 h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer"></div><div class="relative h-32 bg-slate-50 rounded-2xl border border-slate-200 mb-6 flex items-center justify-center overflow-hidden"><div class="absolute h-full w-0.5 bg-orange-500 z-10"></div><div class="absolute bg-white px-2 py-1 rounded text-xs font-bold text-orange-500 z-20 -top-3 shadow-sm border border-orange-100">6%</div><div id="ci-bar" class="h-12 bg-orange-200/50 border-x-4 border-orange-400 rounded-md transition-all duration-300 flex items-center justify-center relative"><div class="text-xs text-orange-800 font-bold whitespace-nowrap px-3">Confidence Interval</div></div></div><div class="grid grid-cols-2 gap-4 text-center"><div class="bg-slate-50 p-4 rounded-xl border border-slate-100"><div class="text-xs text-slate-400 uppercase font-bold tracking-wider">Standard Error</div><div id="se-display" class="font-bold text-slate-700 text-xl">3.3%</div></div><div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100"><div class="text-xs text-emerald-600 uppercase font-bold tracking-wider">Range</div><div id="range-display" class="font-bold text-emerald-700 text-xl">0% - 12.5%</div></div></div><p class="text-base text-slate-400 mt-4 italic">More samples = Less wobble.</p></div></div>`;
                 const slider = document.getElementById('n-slider');
                 function update() {
-                    const n = parseInt(slider.value); const p = 0.07;
+                    const n = parseInt(slider.value); const p = 0.06;
                     const se = Math.sqrt((p * (1-p)) / n); const sePercent = (se * 100).toFixed(1);
-                    const margin = 2.0 * se * 100; const lower = Math.max(0, 7 - margin).toFixed(1); const upper = (7 + margin).toFixed(1);
+                    const margin = 1.96 * se * 100; const lower = Math.max(0, 6 - margin).toFixed(1); const upper = (6 + margin).toFixed(1);
                     document.getElementById('n-val').textContent = n; document.getElementById('se-display').textContent = sePercent + "%";
                     document.getElementById('range-display').textContent = `${lower}% - ${upper}%`;
                     const widthPx = margin * 20; document.getElementById('ci-bar').style.width = Math.min(100, widthPx) + "%";
                 }
                 slider.oninput = update;
+                update(); // Init with defaults
             }
         };
 
@@ -1625,6 +1678,26 @@
                     }
                 ]
             },
+            // SWAPPED: Simulation is now before Std Error
+            {
+                topic: "Sampling Lab",
+                lesson: lessonSimulation,
+                challenges: [
+                    {
+                        title: "Lab Question: Effect of N 🔬",
+                        desc: "<strong>Run the simulation</strong> with n=2, then with n=25. <br><br>What happens to the pile of sample means (the sampling distribution) as 'n' increases?",
+                        chartType: "none",
+                        customVisual: `<div id="sim-challenge-container" class="w-full h-full relative"></div>`,
+                        renderCustom: () => {
+                            lessonSimulation.renderInteractive(document.getElementById('sim-challenge-container'), true);
+                        },
+                        options: [
+                            { text: "It gets wider (More Error)", correct: false, feedback: "Incorrect. Larger samples cancel out extremes." },
+                            { text: "It gets narrower (Less Error)", correct: true, feedback: "Correct! The 'Law of Large Numbers' creates a tight spike. This is why auditors want larger samples." }
+                        ]
+                    }
+                ]
+            },
             {
                 topic: "Std Error & Confidence",
                 lesson: lessonStandardError,
@@ -1648,24 +1721,15 @@
                             { text: "Increase Sample Size", correct: true, feedback: "Correct! Larger samples reduce the Standard Error (the wobble), making the interval tighter." },
                             { text: "Decrease Sample Size", correct: false, feedback: "Incorrect. Fewer samples would make the interval even wider." }
                         ]
-                    }
-                ]
-            },
-            {
-                topic: "Sampling Lab",
-                lesson: lessonSimulation,
-                challenges: [
+                    },
                     {
-                        title: "Lab Question: Effect of N 🔬",
-                        desc: "<strong>Run the simulation</strong> with n=2, then with n=25. <br><br>What happens to the pile of sample means (the sampling distribution) as 'n' increases?",
+                        title: "Interpreting the Interval 🧠",
+                        desc: "You compute a 95% Confidence Interval of 0% to 12.5%. <br>Which interpretation is <strong>statistically correct</strong>?",
                         chartType: "none",
-                        customVisual: `<div id="sim-challenge-container" class="w-full h-full relative"></div>`,
-                        renderCustom: () => {
-                            lessonSimulation.renderInteractive(document.getElementById('sim-challenge-container'), true);
-                        },
+                        customVisual: `<div class="p-8 bg-white border-2 border-slate-200 rounded-2xl text-center shadow-lg"><div class="text-6xl mb-4">🔮</div><div class="text-lg font-bold text-slate-700">The "Truth" vs "Probability"</div></div>`,
                         options: [
-                            { text: "It gets wider (More Error)", correct: false, feedback: "Incorrect. Larger samples cancel out extremes." },
-                            { text: "It gets narrower (Less Error)", correct: true, feedback: "Correct! The 'Law of Large Numbers' creates a tight spike. This is why auditors want larger samples." }
+                            { text: "There is a 95% probability the true rate is between 0% and 12.5%.", correct: false, feedback: "Incorrect. The true rate is a fixed number (it's already happened), not a random variable. The <em>Interval</em> is what changes." },
+                            { text: "If we repeated this process many times, 95% of the intervals would capture the true rate.", correct: true, feedback: "Correct! The Confidence Interval method captures the truth 95% of the time. The probability describes the method, not the single event." }
                         ]
                     }
                 ]
