@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Excel Analytics Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS Style Fork (xlsx-js-style) for colored cells and styling -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom Animations */
+        @keyframes flashSuccess {
+            0% { background-color: #ffffff; transform: scale(1); }
+            50% { background-color: #bbf7d0; transform: scale(1.05); color: #166534; font-weight: bold; }
+            100% { background-color: #eff6ff; transform: scale(1); }
+        }
+        .cell-changed {
+            animation: flashSuccess 1.5s ease-out forwards;
+        }
+        .pulse-highlight {
+            box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.6);
+            animation: pulse-ring 1.5s infinite;
+            z-index: 50;
+        }
+        
+        /* Solver Modal & Scenario Modal Z-Index Fix */
+        #modal-solver, #modal-scenario {
+            z-index: 1000; /* Ensure above grid highlights (z-50) and callouts (z-100) */
+        }
+
+        /* Specific Solver Highlights */
+        .highlight-objective {
+            box-shadow: 0 0 0 3px #ec4899; /* Pink-500 */
+            background-color: #fce7f3 !important; /* Pink-100 */
+            color: #831843 !important;
+            font-weight: bold;
+            z-index: 50;
+        }
+        .highlight-changing {
+            box-shadow: 0 0 0 3px #22c55e; /* Green-500 */
+            background-color: #dcfce7 !important; /* Green-100 */
+            color: #14532d !important;
+            font-weight: bold;
+            z-index: 50;
+        }
+        .highlight-constraint {
+            box-shadow: 0 0 0 3px #f97316; /* Orange-500 */
+            background-color: #ffedd5 !important; /* Orange-100 */
+            color: #7c2d12 !important;
+            font-weight: bold;
+            z-index: 50;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(250, 204, 21, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+        }
+        
+        /* Grid styling */
+        .excel-cell {
+            border: 1px solid #e5e7eb;
+            padding: 4px 8px;
+            font-size: 0.875rem;
+            height: 28px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.3s ease;
+            cursor: default;
+            position: relative; /* Added for absolute positioning of callouts */
+        }
+        
+        /* Allow overflow for cells with callouts */
+        .excel-cell.has-callout {
+            overflow: visible;
+            z-index: 100;
+        }
+
+        .excel-col-header {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            text-align: center;
+            color: #4b5563;
+            font-weight: normal;
+            font-size: 0.85rem;
+        }
+        .excel-row-header {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            text-align: center;
+            color: #6b7280;
+            font-weight: normal;
+            width: 40px;
+            font-size: 0.85rem;
+        }
+        
+        /* Draggable Header */
+        .draggable-header {
+            cursor: move;
+        }
+
+        /* Name Box interactive style */
+        .name-box-highlight {
+            border: 2px solid #facc15;
+            background-color: #fef9c3;
+            animation: pulse-ring 1.5s infinite;
+        }
+
+        /* Formula Callout Bubble */
+        .formula-callout {
+            position: absolute;
+            left: 50%;
+            bottom: 100%;
+            margin-bottom: 8px;
+            background-color: #2563eb; /* Blue-600 */
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            white-space: nowrap;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transform: translateX(-50%);
+            z-index: 60;
+            pointer-events: none;
+            border: 1px solid #1d4ed8;
+        }
+        
+        /* Arrow for callout */
+        .formula-callout::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #2563eb transparent transparent transparent;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen bg-gray-50 font-sans overflow-hidden text-gray-800">
+
+    <!-- HEADER -->
+    <header class="bg-[#217346] text-white flex items-center px-4 py-2 shadow-md z-10 shrink-0">
+        <i class="fa-solid fa-file-excel text-2xl mr-3"></i>
+        <h1 class="text-xl font-bold tracking-wide">Excel Data Analytics Lab</h1>
+        <div class="ml-auto flex gap-2">
+            <button onclick="setModule('solver')" id="btn-mod-solver" class="px-4 py-1.5 rounded text-sm font-semibold transition-colors bg-white text-[#217346]">
+                Module 1: Solver
+            </button>
+            <button onclick="setModule('scenario')" id="btn-mod-scenario" class="px-4 py-1.5 rounded text-sm font-semibold transition-colors bg-[#1e663e] hover:bg-[#195935] text-white">
+                Module 2: Scenarios
+            </button>
+            <button onclick="setModule('practice')" id="btn-mod-practice" class="px-4 py-1.5 rounded text-sm font-semibold transition-colors bg-[#1e663e] hover:bg-[#195935] text-white">
+                Module 3: Practice
+            </button>
+        </div>
+    </header>
+
+    <!-- EXCEL RIBBON -->
+    <div class="bg-gray-100 border-b border-gray-300 shadow-sm flex flex-col z-0 shrink-0 select-none">
+        <!-- Tabs -->
+        <div class="flex text-sm mt-1 px-2 gap-1" id="ribbon-tabs">
+            <!-- Injected via JS -->
+        </div>
+        
+        <!-- Ribbon Content -->
+        <div class="bg-white px-4 py-2 flex items-center gap-6 h-24 border border-gray-300 border-t-0 border-l-0 border-r-0" id="ribbon-content">
+            <!-- Injected via JS -->
+        </div>
+    </div>
+
+    <!-- FORMULA BAR -->
+    <div class="bg-white border-b border-gray-300 px-2 py-1 flex items-center text-sm shadow-sm z-0 shrink-0">
+        <div id="name-box-container" class="w-28 text-center border-r border-gray-300 pr-2 mr-2 transition-all">
+            <input type="text" id="name-box-input" readonly class="w-full text-center font-semibold text-gray-700 bg-transparent border-none focus:ring-0 cursor-default" value="A1">
+        </div>
+        <div class="px-2 text-gray-600 flex-1 truncate font-mono border-l border-white pl-3 flex items-center">
+            <span class="text-gray-400 mr-2">fx</span>
+            <span id="formula-bar-text">Product Mix Optimization</span>
+        </div>
+    </div>
+
+    <!-- MAIN WORKSPACE -->
+    <div class="flex-1 flex overflow-hidden relative">
+        
+        <!-- EXCEL GRID -->
+        <div class="flex-1 bg-[#e1e1e1] p-4 overflow-auto relative">
+            <div class="bg-white shadow-xl rounded-sm border border-gray-400 inline-block min-w-full">
+                <table class="border-collapse w-full table-fixed bg-white select-none text-sm" id="excel-grid">
+                    <!-- Injected via JS -->
+                </table>
+            </div>
+        </div>
+
+        <!-- TUTORIAL SIDEBAR -->
+        <div class="w-96 bg-white border-l border-gray-200 shadow-2xl flex flex-col z-20 shrink-0">
+            <div class="bg-[#217346]/10 p-4 border-b border-[#217346]/20 flex items-center">
+                <i class="fa-solid fa-graduation-cap text-[#217346] text-xl mr-3"></i>
+                <h2 class="text-lg font-bold text-[#217346]">Interactive Guide</h2>
+            </div>
+            
+            <div class="flex-1 p-6 overflow-y-auto flex flex-col">
+                <!-- Progress -->
+                <div class="flex justify-between mb-8" id="sidebar-progress">
+                    <!-- Injected via JS -->
+                </div>
+
+                <!-- Step Card -->
+                <div class="bg-white border border-gray-200 rounded-xl shadow-lg p-6 relative overflow-hidden transform transition-all flex-1 flex flex-col">
+                    <div class="absolute top-0 left-0 w-1.5 h-full bg-[#217346]"></div>
+                    
+                    <div class="flex items-center mb-4">
+                        <div class="bg-green-100 text-[#217346] w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3 border border-green-200" id="step-number">
+                            1
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800" id="step-title">Welcome!</h3>
+                    </div>
+                    
+                    <p class="text-gray-600 leading-relaxed mb-6 text-[15px]" id="step-content">
+                        Loading content...
+                    </p>
+
+                    <div id="step-action-container" class="mt-auto">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODALS -->
+        
+        <!-- Solver Modal -->
+        <div id="modal-solver" class="hidden absolute top-20 left-20 z-30 transition-opacity duration-300 shadow-2xl rounded-md overflow-hidden">
+            <div class="bg-gray-100 border border-gray-400 w-[450px] font-sans text-sm transform transition-transform" id="modal-solver-content">
+                <div id="drag-solver" class="draggable-header bg-white px-3 py-2 border-b border-gray-300 flex justify-between items-center font-semibold select-none">
+                    Solver Parameters
+                    <button class="text-gray-500 hover:text-red-500 text-lg leading-none" onclick="handleModalAction('close-solver')">&times;</button>
+                </div>
+                <div class="p-4 space-y-4">
+                    <div class="flex items-center">
+                        <span class="w-32 text-right pr-3 font-semibold text-gray-600">Set Objective:</span>
+                        <input type="text" readonly value="$D$6" id="solver-obj-input" class="border border-gray-400 p-1 bg-white w-full shadow-inner font-mono text-center font-medium"/>
+                    </div>
+                    <div class="flex items-center gap-4 pl-32">
+                        <span class="font-medium text-gray-600">To:</span>
+                        <label class="flex items-center"><input type="radio" checked readonly class="mr-1 accent-[#217346]"/> Max</label>
+                        <label class="flex items-center text-gray-400"><input type="radio" disabled class="mr-1"/> Min</label>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-32 text-right pr-3 leading-tight font-semibold text-gray-600">By Changing Cells:</span>
+                        <input type="text" readonly value="$B$4:$C$4" id="solver-change-input" class="border border-gray-400 p-1 bg-white w-full shadow-inner font-mono text-center font-medium"/>
+                    </div>
+                    <div id="solver-const-input" class="border border-gray-400 bg-white h-24 p-2 overflow-y-auto shadow-inner">
+                        <div class="text-xs font-semibold text-gray-500 mb-1">Subject to the Constraints:</div>
+                        <div class="text-sm font-mono">$B$9 &lt;= $D$9</div>
+                        <div class="text-sm font-mono">$B$10 &lt;= $D$10</div>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-3 border-t border-gray-300">
+                        <button onclick="handleModalAction('close-solver')" class="px-4 py-1.5 bg-gray-200 border border-gray-400 rounded hover:bg-gray-300">Close</button>
+                        <button onclick="handleModalAction('solve')" id="btn-solve" class="px-5 py-1.5 border rounded shadow text-white font-medium bg-[#217346] border-[#1a5c38] transition-all">
+                            Solve
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scenario Manager Modal -->
+        <div id="modal-scenario" class="hidden absolute top-24 left-1/4 z-30 transition-opacity duration-300 shadow-2xl rounded-md overflow-hidden">
+            <div class="bg-gray-100 border border-gray-400 w-[500px] font-sans text-sm transform transition-transform" id="modal-scenario-content">
+                <div id="drag-scenario" class="draggable-header bg-white px-3 py-2 border-b border-gray-300 flex justify-between items-center font-semibold select-none">
+                    Scenario Manager
+                    <button class="text-gray-500 hover:text-red-500 text-lg leading-none">&times;</button>
+                </div>
+                
+                <!-- Main View -->
+                <div id="scenario-view-main" class="p-4">
+                    <div class="mb-2 text-gray-700">Scenarios:</div>
+                    <div class="flex gap-4">
+                        <div class="flex-1 border border-gray-400 bg-white h-40 overflow-y-auto shadow-inner" id="scenario-list">
+                            <!-- Injected via JS -->
+                        </div>
+                        <div class="flex flex-col gap-2 w-28">
+                            <button onclick="handleModalAction('add')" id="btn-add-scen" class="px-2 py-1 bg-gray-200 border border-gray-400 rounded hover:bg-gray-300 text-gray-700">Add...</button>
+                            <button class="px-2 py-1 bg-gray-200 border border-gray-400 rounded hover:bg-gray-300 text-gray-700 text-gray-400 cursor-not-allowed">Delete</button>
+                            <button id="btn-edit-scen" class="px-2 py-1 bg-gray-200 border border-gray-400 rounded hover:bg-gray-300 text-gray-700 text-gray-400 cursor-not-allowed">Edit...</button>
+                            <div class="flex-1"></div>
+                            <button onclick="handleModalAction('show')" id="btn-show-scen" class="px-2 py-1 bg-gray-200 border border-gray-400 rounded hover:bg-gray-300 text-gray-700 mb-1">Show</button>
+                            <button onclick="handleModalAction('summary')" id="btn-summary" class="px-2 py-1.5 border rounded shadow text-gray-700 font-medium bg-gray-200 border-gray-400 transition-all mb-1">
+                                Summary...
+                            </button>
+                            <button class="px-2 py-1 bg-gray-200 border border-gray-400 rounded hover:bg-gray-300">Close</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Scenario View -->
+                <div id="scenario-view-add" class="hidden p-4 bg-gray-100 h-full">
+                      <div class="text-sm font-bold mb-3 text-gray-700">Add Scenario</div>
+                      <div class="mb-4">
+                        <label class="block text-xs font-semibold mb-1">Scenario name:</label>
+                        <input type="text" id="inp-scen-name" class="w-full border border-gray-400 p-1 text-sm"/>
+                      </div>
+                      <div class="mb-4">
+                        <label class="block text-xs font-semibold mb-1">Changing cells:</label>
+                        <input type="text" value="B4:B5" disabled class="w-full border border-gray-400 p-1 text-sm bg-gray-200 text-gray-500"/>
+                      </div>
+                      <div class="flex justify-end gap-2 pt-8">
+                        <button onclick="handleModalAction('confirm-add')" class="px-4 py-1 border border-gray-400 rounded bg-[#217346] text-white font-medium shadow-sm">OK</button>
+                        <button class="px-4 py-1 border border-gray-400 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Scenario Values View -->
+                <div id="scenario-view-values" class="hidden p-4 bg-gray-100 h-full">
+                    <div class="text-sm font-bold mb-3 text-gray-700">Scenario Values</div>
+                    <div class="text-xs mb-3 text-gray-600">Enter values for each of the changing cells.</div>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center gap-2">
+                            <label class="w-32 text-right font-mono text-gray-600">1: Sales_Growth</label>
+                            <input id="inp-scen-1" type="text" class="border border-gray-400 px-2 py-1 w-24 bg-white text-right font-mono" value="0.05">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="w-32 text-right font-mono text-gray-600">2:   COGS_Pct</label>
+                            <input id="inp-scen-2" type="text" class="border border-gray-400 px-2 py-1 w-24 bg-white text-right font-mono" value="0.60">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 border-t border-gray-300 pt-3">
+                        <button onclick="handleModalAction('confirm-values')" class="px-4 py-1 border border-gray-400 rounded bg-[#217346] text-white font-medium shadow-sm">OK</button>
+                        <button class="px-4 py-1 border border-gray-400 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // *** CONFIGURATION ***
+        // Instructor: Paste your Google Web App URL here after deployment
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyERf0xaLKs9aIXeyE1TQrpUdxM5jNiBHzVb1yMe5kYq-8yQ8xdAr4KHuJYllDOlyB2/exec"; 
+
+        // --- DATA STATE ---
+        const solverGrids = {
+            initial: {
+                'namebox': 'A1',
+                'formula': 'Product Mix Optimization',
+                'A1': 'Product Mix Optimization', 
+                'A3': 'Product', 'B3': 'Alpha', 'C3': 'Beta', 'D3': 'Total',
+                'A4': 'Units Produced', 'B4': '0', 'C4': '0', 
+                'A5': 'Profit per Unit', 'B5': '$40', 'C5': '$50', 
+                'A6': 'Total Profit', 'B6': '$0', 'C6': '$0', 'D6': '$0',
+                'A8': 'Constraints', 'B8': 'Used', 'D8': 'Available',
+                'A9': 'Labor Hours', 'B9': '0', 'C9': '<=', 'D9': '40',
+                'A10': 'Machine Hours', 'B10': '0', 'C10': '<=', 'D10': '120',
+            },
+            solved: {
+                'namebox': 'D6',
+                'formula': '=SUMPRODUCT(B4:C4, B5:C5)',
+                'A1': 'Product Mix Optimization', 
+                'A3': 'Product', 'B3': 'Alpha', 'C3': 'Beta', 'D3': 'Total',
+                'A4': 'Units Produced', 'B4': '24', 'C4': '8', 
+                'A5': 'Profit per Unit', 'B5': '$40', 'C5': '$50', 
+                'A6': 'Total Profit', 'B6': '$960', 'C6': '$400', 'D6': '$1,360',
+                'A8': 'Constraints', 'B8': 'Used', 'D8': 'Available',
+                'A9': 'Labor Hours', 'B9': '40', 'C9': '<=', 'D9': '40',
+                'A10': 'Machine Hours', 'B10': '120', 'C10': '<=', 'D10': '120',
+            }
+        };
+
+        const scenarioGrids = {
+            base: {
+                'namebox': 'A1',
+                'formula': 'Q4 Financial Forecast',
+                'A1': 'Q4 Financial Forecast', 
+                'A3': 'Key Assumptions', 'B3': 'Base Case', 
+                'A4': 'Sales Growth %', 'B4': '5.0%', 
+                'A5': 'COGS (% of Sales)', 'B5': '60.0%', 
+                'A7': 'Income Statement', 
+                'A8': 'Gross Sales', 'B8': '$105,000', 
+                'A9': 'COGS', 'B9': '$63,000', 
+                'A10': 'Gross Profit', 'B10': '$42,000', 
+                'A11': 'Op Expenses', 'B11': '$20,000', 
+                'A12': 'Net Income', 'B12': '$22,000', 
+            },
+            named: {
+                // Same as base but step context differs
+                'namebox': 'A1', // Changed from Net_Income to avoid flash during tutorial
+                'formula': '=Gross_Profit - Op_Expenses',
+                'A1': 'Q4 Financial Forecast', 
+                'A3': 'Key Assumptions', 'B3': 'Base Case', 
+                'A4': 'Sales Growth %', 'B4': '5.0%', 
+                'A5': 'COGS (% of Sales)', 'B5': '60.0%', 
+                'A7': 'Income Statement', 
+                'A8': 'Gross Sales', 'B8': '$105,000', 
+                'A9': 'COGS', 'B9': '$63,000', 
+                'A10': 'Gross Profit', 'B10': '$42,000', 
+                'A11': 'Op Expenses', 'B11': '$20,000', 
+                'A12': 'Net Income', 'B12': '$22,000', 
+            },
+            best: {
+                'namebox': 'A1',
+                'formula': 'Q4 Financial Forecast',
+                'A1': 'Q4 Financial Forecast', 
+                'A3': 'Key Assumptions', 'B3': 'Best Case', 
+                'A4': 'Sales Growth %', 'B4': '15.0%', 
+                'A5': 'COGS (% of Sales)', 'B5': '55.0%', 
+                'A7': 'Income Statement', 
+                'A8': 'Gross Sales', 'B8': '$115,000', 
+                'A9': 'COGS', 'B9': '$63,250', 
+                'A10': 'Gross Profit', 'B10': '$51,750', 
+                'A11': 'Op Expenses', 'B11': '$20,000', 
+                'A12': 'Net Income', 'B12': '$31,750', 
+            },
+            worst: {
+                'namebox': 'A1',
+                'formula': 'Q4 Financial Forecast',
+                'A1': 'Q4 Financial Forecast', 
+                'A3': 'Key Assumptions', 'B3': 'Worst Case', 
+                'A4': 'Sales Growth %', 'B4': '-5.0%', 
+                'A5': 'COGS (% of Sales)', 'B5': '65.0%', 
+                'A7': 'Income Statement', 
+                'A8': 'Gross Sales', 'B8': '$95,000', 
+                'A9': 'COGS', 'B9': '$61,750', 
+                'A10': 'Gross Profit', 'B10': '$33,250', 
+                'A11': 'Op Expenses', 'B11': '$20,000', 
+                'A12': 'Net Income', 'B12': '$13,250', 
+            },
+            summary: {
+                'namebox': 'A1',
+                'formula': '',
+                'type': 'report', 
+                'data': [
+                    ['Scenario Summary', '', '', '', ''],
+                    ['', 'Current Values', 'Base Case', 'Best Case', 'Worst Case'],
+                    ['Changing Cells:', '', '', '', ''],
+                    ['Sales_Growth', '5.0%', '5.0%', '15.0%', '-5.0%'],
+                    ['COGS_Pct', '60.0%', '60.0%', '55.0%', '65.0%'],
+                    ['Result Cells:', '', '', '', ''],
+                    ['Net_Income', '$22,000', '$22,000', '$31,750', '$13,250'],
+                    ['Notes: Current Values column represents values of changing cells at time Scenario Summary Report was created.', '', '', '', '']
+                ]
+            }
+        };
+
+        // --- APP STATE ---
+        let state = {
+            module: 'solver', 
+            step: 0,
+            gridKey: 'initial', 
+            activeTab: 'Home',
+            previousGridData: {},
+            scenarios: [], // Tracks added scenarios
+            selectedScenario: null // Tracks selection in Scenario Manager
+        };
+
+        // --- TUTORIAL CONTENT ---
+        const tutorials = {
+            solver: [
+                {
+                    title: "Goal: Maximize Profit",
+                    content: "Welcome! We want to optimize our product mix.<br><br><b>Objective (Pink):</b> Maximize 'Total Profit' (D6) by changing the 'Units Produced' (B4, C4).",
+                    actionText: "Check Constraints",
+                    actionType: "advance",
+                    highlights: ['D6', 'B4', 'C4'],
+                    colorCode: { 'D6': 'objective', 'B4': 'changing', 'C4': 'changing' }
+                },
+                {
+                    title: "The Constraints",
+                    content: "We have limited resources (Cell D9, D10).<br><br><b>Rules (Orange):</b><br>• Alpha takes <b>1 hr</b> labor.<br>• Beta takes <b>2 hrs</b> labor.<br><br>We can't use more than 40 labor hours total.",
+                    actionText: "Check Formulas",
+                    actionType: "advance",
+                    highlights: ['D9', 'D10'],
+                    colorCode: { 'D9': 'constraint', 'D10': 'constraint' }
+                },
+                {
+                    title: "Formula: Total Profit",
+                    content: "We use <b>=SUMPRODUCT(B4:C4, B5:C5)</b>.<br><br>It multiplies Units (Green) by Profit and sums them:<br><i>(Alpha Units × $40) + (Beta Units × $50)</i>",
+                    actionText: "Next Formula",
+                    actionType: "advance",
+                    highlights: ['D6', 'B4', 'C4', 'B5', 'C5'],
+                    formulaOverride: '=SUMPRODUCT(B4:C4, B5:C5)',
+                    callout: { cell: 'D6', text: '=SUMPRODUCT(B4:C4, B5:C5)' },
+                    colorCode: { 'D6': 'objective', 'B4': 'changing', 'C4': 'changing' }
+                },
+                {
+                    title: "Formula: Labor Used",
+                    content: "Cell B9 calculates Total Labor Used.<br><br>Formula: <b>=B4*1 + C4*2</b><br><br>This ensures we track hours based on how many units we decide to make.",
+                    actionText: "Open Data Tools",
+                    actionType: "advance",
+                    highlights: ['B9', 'B4', 'C4'],
+                    formulaOverride: '=B4*1 + C4*2',
+                    callout: { cell: 'B9', text: '=B4*1 + C4*2' },
+                    colorCode: { 'B9': 'constraint', 'B4': 'changing', 'C4': 'changing' }
+                },
+                {
+                    title: "Step 1: Open Data Tab",
+                    content: "Now that we understand the math, let's solve it.<br><br>👉 Click on the <b>'Data'</b> tab.",
+                    actionText: "Click 'Data'...",
+                    actionType: "wait",
+                    highlights: ['ribbon-data']
+                },
+                {
+                    title: "Step 2: Launch Solver",
+                    content: "👉 Click the <b>'Solver'</b> button.<br><br><i>Note: You can drag the Solver window if it covers your data.</i>",
+                    actionText: "Click 'Solver'...",
+                    actionType: "wait",
+                    highlights: ['ribbon-solver']
+                },
+                {
+                    title: "Step 3: Run the Engine",
+                    content: "We've set the <b>Objective (D6)</b> to Max and identified our <b>Changing Cells (B4:C4)</b>.<br><br>Notice how the parameters match the grid structure.",
+                    actionText: "Click 'Solve'...",
+                    actionType: "wait",
+                    highlights: ['modal-solve', 'D6', 'B4', 'C4', 'B9', 'B10', 'D9', 'D10'],
+                    colorCode: { 'D6': 'objective', 'B4': 'changing', 'C4': 'changing', 'B9': 'constraint', 'B10': 'constraint', 'D9': 'constraint', 'D10': 'constraint' }
+                },
+                {
+                    title: "Step 4: Success!",
+                    content: "Solver found the perfect mix: <b>24 Alphas</b> and <b>8 Betas</b>, maximizing profit to <b>$1,360</b>.<br><br>Next, let's learn Scenario Manager.",
+                    actionText: "Go to Module 2",
+                    actionType: "switch-scenario",
+                    highlights: ['B4', 'C4', 'D6']
+                }
+            ],
+            scenario: [
+                {
+                    title: "Setup: Logic Check",
+                    content: "In Scenario Planning, we check our driver formulas.<br><br>In Cell <b>B9</b>, the formula is:<br><b>=B8 * B5</b><br><i>(Gross Sales * COGS %)</i>",
+                    actionText: "Next Formula",
+                    actionType: "advance",
+                    highlights: ['B9', 'B8', 'B5'],
+                    formulaOverride: '=B8*B5',
+                    callout: { cell: 'B9', text: '=B8*B5' }
+                },
+                {
+                    title: "Setup: Gross Profit",
+                    content: "In Cell <b>B10</b>, the formula is:<br><b>=B8 - B9</b><br><i>(Sales - COGS)</i>",
+                    actionText: "Next Formula",
+                    actionType: "advance",
+                    highlights: ['B10', 'B8', 'B9'],
+                    formulaOverride: '=B8-B9',
+                    callout: { cell: 'B10', text: '=B8-B9' }
+                },
+                {
+                    title: "Setup: Net Income",
+                    content: "In Cell <b>B12</b>, the formula is:<br><b>=B10 - B11</b><br><i>(Gross Profit - Expenses)</i>",
+                    actionText: "Start Naming",
+                    actionType: "advance",
+                    highlights: ['B12', 'B10', 'B11'],
+                    formulaOverride: '=B10-B11',
+                    callout: { cell: 'B12', text: '=B10-B11' }
+                },
+                {
+                    title: "Step 1: Select Sales Growth",
+                    content: "We must name our cells. First, select the cell containing the value.<br><br>👉 Click cell <b>B4</b>.",
+                    actionText: "Select B4",
+                    actionType: "wait",
+                    highlights: ['B4'],
+                    nameBoxText: 'B4'
+                },
+                {
+                    title: "Step 2: Name Sales Growth",
+                    content: "Now click the <b>Name Box</b> (top left) to type <b>'Sales_Growth'</b>.",
+                    actionText: "Click Name Box",
+                    actionType: "wait",
+                    highlights: ['name-box-container'],
+                    overrideNameBox: 'B4',
+                    nameBoxText: 'B4'
+                },
+                {
+                    title: "Step 3: Select COGS",
+                    content: "Next, select the Cost of Goods Sold percentage.<br><br>👉 Click cell <b>B5</b>.",
+                    actionText: "Select B5",
+                    actionType: "wait",
+                    highlights: ['B5'],
+                    nameBoxText: 'B5'
+                },
+                {
+                    title: "Step 4: Name COGS",
+                    content: "Click the <b>Name Box</b> and type <b>'COGS_Pct'</b>.",
+                    actionText: "Click Name Box",
+                    actionType: "wait",
+                    highlights: ['name-box-container'],
+                    overrideNameBox: 'B5',
+                    nameBoxText: 'B5'
+                },
+                {
+                    title: "Step 5: Select Net Income",
+                    content: "Finally, select the result cell.<br><br>👉 Click cell <b>B12</b>.",
+                    actionText: "Select B12",
+                    actionType: "wait",
+                    highlights: ['B12'],
+                    nameBoxText: 'B12'
+                },
+                {
+                    title: "Step 6: Name Net Income",
+                    content: "Click the <b>Name Box</b> and type <b>'Net_Income'</b>.",
+                    actionText: "Click Name Box",
+                    actionType: "wait",
+                    highlights: ['name-box-container'],
+                    overrideNameBox: 'B12',
+                    nameBoxText: 'B12'
+                },
+                {
+                    title: "Step 7: Open Scenario Manager",
+                    content: "Names Defined!<br><br>Now, go to <b>Data</b> > <b>What-If Analysis</b> > <b>Scenario Manager</b>.",
+                    actionText: "Navigate to Manager...",
+                    actionType: "wait",
+                    highlights: ['ribbon-data', 'ribbon-whatif']
+                },
+                {
+                    title: "Step 8: Add Base Case",
+                    content: "We need to define our scenarios one by one.<br><br>1. Click <b>'Add...'</b><br>2. Name it <b>'Base Case'</b><br>3. Verify values (5%, 60%)",
+                    actionText: "Add Base Case...",
+                    actionType: "wait",
+                    highlights: ['btn-add-scen'],
+                    modalView: 'list'
+                },
+                {
+                    title: "Step 9: Add Best Case",
+                    content: "Now add the optimistic scenario.<br><br>1. Click <b>'Add...'</b><br>2. Name it <b>'Best Case'</b><br>3. Set Growth to <b>0.15</b>, COGS to <b>0.55</b>",
+                    actionText: "Add Best Case...",
+                    actionType: "wait",
+                    highlights: ['btn-add-scen'],
+                    modalView: 'list'
+                },
+                {
+                    title: "Step 10: Add Worst Case",
+                    content: "Finally, the pessimistic view.<br><br>1. Click <b>'Add...'</b><br>2. Name it <b>'Worst Case'</b><br>3. Set Growth to <b>-0.05</b>, COGS to <b>0.65</b>",
+                    actionText: "Add Worst Case...",
+                    actionType: "wait",
+                    highlights: ['btn-add-scen'],
+                    modalView: 'list'
+                },
+                {
+                    title: "Step 11: View Scenarios",
+                    content: "All 3 scenarios are created. <br><br>Select a scenario (like Best Case) and click <b>'Show'</b> to see the grid update instantly.",
+                    actionText: "Toggle Scenarios",
+                    actionType: "advance",
+                    highlights: ['btn-show-scen', 'modal-scenario-list'],
+                    modalView: 'list'
+                },
+                {
+                    title: "Step 12: Generate Report",
+                    content: "Now for the grand finale.<br><br>👉 Click the <b>'Summary...'</b> button to generate the comparative report.",
+                    actionText: "Click 'Summary'...",
+                    actionType: "wait",
+                    highlights: ['btn-summary'],
+                    modalView: 'list'
+                },
+                {
+                    title: "Step 13: The Report",
+                    content: "Excel generated a new sheet comparing all cases side-by-side.<br><br>Because we used Named Ranges, the report is easy to read.",
+                    actionText: "Go to Practice",
+                    actionType: "switch-practice",
+                    highlights: ['grid-summary']
+                }
+            ],
+            practice: [
+                 {
+                    title: "Practice on Real Data",
+                    content: "Great job! You've learned Solver and Scenario Manager.<br><br>Download this practice workbook to try it yourself in Excel. It includes instructions and a practice dataset.",
+                    actionText: "Download Workbook",
+                    actionType: "download",
+                    highlights: []
+                }
+            ]
+        };
+
+        // --- SUBMISSION LOGIC ---
+        function submitAnswers() {
+            if (!GOOGLE_SCRIPT_URL) {
+                alert("Error: The instructor has not configured the Google Script URL in the code.");
+                return;
+            }
+
+            const data = {
+                studentName: document.getElementById('inp-student-name').value,
+                ex1: document.getElementById('inp-ex1').value,
+                ex2: document.getElementById('inp-ex2').value,
+                ex3: document.getElementById('inp-ex3').value,
+                ex4: document.getElementById('inp-ex4').value,
+                timestamp: new Date().toISOString()
+            };
+
+            if (!data.studentName) {
+                alert("Please enter your name.");
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-answers');
+            const originalText = btn.innerText;
+            btn.innerText = "Sending...";
+            btn.disabled = true;
+
+            // Send data to Google Apps Script
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors", // Important for Google Apps Script Web Apps
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                alert("Success! Your answers have been submitted to the instructor.");
+                btn.innerText = "Submitted!";
+                btn.classList.remove('bg-[#217346]', 'hover:bg-[#1a5c38]');
+                btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("There was an error submitting your answers. Please check your internet connection.");
+                btn.innerText = originalText;
+                btn.disabled = false;
+            });
+        }
+
+        // --- DRAGGABLE MODAL LOGIC ---
+        function makeDraggable(elementId, handleId) {
+            const elmnt = document.getElementById(elementId);
+            const handle = document.getElementById(handleId);
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            handle.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        // --- RENDER FUNCTIONS ---
+
+        function renderAll() {
+            renderHeader();
+            renderRibbon();
+            renderGrid();
+            renderSidebar();
+            renderModals();
+        }
+
+        function renderHeader() {
+            const btnSolver = document.getElementById('btn-mod-solver');
+            const btnScenario = document.getElementById('btn-mod-scenario');
+            const btnPractice = document.getElementById('btn-mod-practice');
+            
+            // Reset all
+            [btnSolver, btnScenario, btnPractice].forEach(btn => {
+                btn.className = "px-4 py-1.5 rounded text-sm font-semibold transition-colors bg-[#1e663e] hover:bg-[#195935] text-white opacity-90 hover:opacity-100";
+            });
+
+            // Activate current
+            if (state.module === 'solver') {
+                btnSolver.className = "px-4 py-1.5 rounded text-sm font-semibold transition-colors bg-white text-[#217346] shadow-sm";
+            } else if (state.module === 'scenario') {
+                btnScenario.className = "px-4 py-1.5 rounded text-sm font-semibold transition-colors bg-white text-[#217346] shadow-sm";
+            } else if (state.module === 'practice') {
+                 btnPractice.className = "px-4 py-1.5 rounded text-sm font-semibold transition-colors bg-white text-[#217346] shadow-sm";
+            }
+        }
+
+        function renderRibbon() {
+            if (state.module === 'practice') {
+                document.getElementById('ribbon-tabs').innerHTML = '';
+                document.getElementById('ribbon-content').innerHTML = '<div class="text-gray-400 italic text-sm w-full text-center flex items-center justify-center h-full">Practice Mode</div>';
+                return;
+            }
+
+            const currentStepData = tutorials[state.module][state.step];
+            const highlights = currentStepData.highlights || [];
+            
+            // Tabs
+            const tabs = ['Home', 'Insert', 'Page Layout', 'Formulas', 'Data', 'Review', 'View'];
+            const tabsHtml = tabs.map(tab => {
+                const isActive = state.activeTab === tab;
+                let isHighlight = false;
+                if (tab === 'Data' && highlights.includes('ribbon-data')) isHighlight = true;
+                
+                let classes = `px-3 py-1 pb-2 -mb-[1px] rounded-t-sm transition-all cursor-pointer select-none `;
+                if (isActive) {
+                    classes += `bg-white border border-gray-300 border-b-white text-[#217346] font-semibold z-10 relative `;
+                } else {
+                    classes += `text-gray-600 hover:bg-gray-200 border border-transparent `;
+                }
+                
+                if (isHighlight && !isActive) {
+                    classes += `pulse-highlight bg-yellow-100 font-bold text-yellow-800 `;
+                }
+                
+                return `<div onclick="handleTabClick('${tab}')" class="${classes}">${tab}</div>`;
+            }).join('');
+            document.getElementById('ribbon-tabs').innerHTML = tabsHtml;
+
+            // Content
+            let contentHtml = '';
+            
+            if (state.activeTab === 'Data') {
+                const hlWhatIf = highlights.includes('ribbon-whatif') ? 'pulse-highlight bg-yellow-100 ring-2 ring-yellow-400' : '';
+                const hlSolver = highlights.includes('ribbon-solver') ? 'pulse-highlight bg-yellow-100 ring-2 ring-yellow-400' : '';
+
+                contentHtml = `
+                    <div class="flex flex-col items-center justify-center opacity-50 cursor-not-allowed px-3 border-r border-gray-200 grayscale">
+                        <i class="fa-solid fa-table text-gray-500 text-lg mb-1"></i>
+                        <span class="text-[10px] text-gray-600">Get Data</span>
+                    </div>
+                    
+                    <div class="flex-1"></div>
+
+                    <!-- What-If Analysis -->
+                    <div class="flex items-center gap-2 border-r border-gray-200 pr-4">
+                        <button onclick="handleWhatIfClick()" class="flex flex-col items-center justify-center p-2 rounded hover:bg-green-50 transition-colors ${hlWhatIf}">
+                            <i class="fa-solid fa-chart-line text-xl mb-1 text-[#217346]"></i>
+                            <span class="text-[11px] font-medium text-gray-700 flex items-center">
+                                What-If Analysis <i class="fa-solid fa-chevron-down text-[8px] ml-1"></i>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Solver -->
+                    <div class="flex items-center pl-2">
+                        <button onclick="handleSolverClick()" class="flex flex-col items-center justify-center p-2 rounded hover:bg-green-50 transition-colors ${hlSolver}">
+                            <i class="fa-solid fa-calculator text-xl mb-1 text-[#217346]"></i>
+                            <span class="text-[11px] font-medium text-gray-700">Solver</span>
+                        </button>
+                    </div>
+                `;
+            } else {
+                contentHtml = `<div class="text-gray-400 italic text-sm w-full text-center flex items-center justify-center h-full">Tool disabled for this lesson step.</div>`;
+            }
+            document.getElementById('ribbon-content').innerHTML = contentHtml;
+
+            // Highlight Name Box if needed
+            const nameBoxContainer = document.getElementById('name-box-container');
+            const nameBoxInput = document.getElementById('name-box-input');
+            if (highlights.includes('name-box-container')) {
+                nameBoxContainer.classList.add('name-box-highlight');
+                nameBoxInput.style.cursor = 'pointer';
+                nameBoxContainer.onclick = handleNameBoxClick;
+            } else {
+                nameBoxContainer.classList.remove('name-box-highlight');
+                nameBoxInput.style.cursor = 'default';
+                nameBoxContainer.onclick = null;
+            }
+        }
+
+        function renderGrid() {
+            if (state.module === 'practice') {
+                 // Replace grid contents with Instructions View
+                 document.getElementById('excel-grid').innerHTML = `
+                    <tbody>
+                        <tr>
+                            <td class="p-8 align-top bg-white h-full">
+                                <div class="max-w-4xl mx-auto font-sans pb-20">
+                                    <h2 class="text-2xl font-bold text-[#217346] mb-4">Practice Lab Instructions</h2>
+                                    
+                                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                                        <p class="text-blue-700">
+                                            <i class="fa-solid fa-circle-info mr-2"></i>
+                                            Download the workbook from the sidebar to complete these exercises in Excel.
+                                        </p>
+                                    </div>
+
+                                    <div class="space-y-8">
+                                        <section>
+                                            <h3 class="text-xl font-semibold text-gray-800 mb-3 border-b pb-2">Exercise 1: Solver Optimization</h3>
+                                            <p class="text-gray-600 mb-2"><strong>Goal:</strong> Determine the optimal production quantity for products "Gamma" and "Delta" to maximize Total Profit.</p>
+                                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                                                <li><strong>Sheet:</strong> Go to <em>'Practice Problem'</em> sheet.</li>
+                                                <li><strong>Objective (<span class="text-green-600">Green</span>):</strong> Maximize <em>Total Profit</em> (B13).</li>
+                                                <li><strong>Changing Variable (<span class="text-yellow-600">Yellow</span>):</strong> <em>Units Produced</em> (B10:C10).</li>
+                                                <li><strong>Constraints (<span class="text-orange-500">Orange</span>):</strong> Total Labor Used (B17) <= Available (D17), Total Machine Hours Used (B18) <= Available (D18).</li>
+                                            </ul>
+                                        </section>
+
+                                        <section>
+                                            <h3 class="text-xl font-semibold text-gray-800 mb-3 border-b pb-2">Exercise 2: Scenario Manager</h3>
+                                            <p class="text-gray-600 mb-2"><strong>Goal:</strong> Forecast financials based on changing market conditions.</p>
+                                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                                                <li><strong>Sheet:</strong> Go to <em>'Scenario Practice'</em> sheet.</li>
+                                                <li><strong>Preparation:</strong> Name your cells first!
+                                                    <ul class="list-circle pl-5 mt-1 text-gray-600">
+                                                        <li>Name B4: <em>Unit_Price</em></li>
+                                                        <li>Name B5: <em>Unit_Cost</em></li>
+                                                        <li>Name B11: <em>Net_Profit</em></li>
+                                                    </ul>
+                                                </li>
+                                                <li><strong>Tasks:</strong> Create scenarios for High Margin (Price 25, Cost 8) and Low Margin (Price 18, Cost 12).</li>
+                                            </ul>
+                                        </section>
+
+                                        <section>
+                                            <h3 class="text-xl font-semibold text-gray-800 mb-3 border-b pb-2">Exercise 3: Logistics Optimization</h3>
+                                            <p class="text-gray-600 mb-2"><strong>Goal:</strong> Minimize shipping costs from warehouses to stores.</p>
+                                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                                                <li><strong>Sheet:</strong> Go to <em>'Logistics Model'</em> sheet.</li>
+                                                <li><strong>Objective (<span class="text-green-600">Green</span>):</strong> Minimize <em>Total Shipping Cost</em> (B18).</li>
+                                                <li><strong>Changing Variable (<span class="text-yellow-600">Yellow</span>):</strong> <em>Units Shipped</em> (B11:D12).</li>
+                                                <li><strong>Constraints (<span class="text-orange-500">Orange</span>):</strong>
+                                                    <ul class="list-disc pl-5 mt-1 text-gray-600">
+                                                        <li>Total Sent from WH (E11:E12) <= Capacity (F11:F12).</li>
+                                                        <li>Total Received in Region (B13:D13) >= Demand (B7:D7).</li>
+                                                    </ul>
+                                                </li>
+                                                <li><strong>Note:</strong> <span class="text-red-600 font-semibold">Formulas are missing!</span> You must construct the Sum/Sumproduct logic yourself in the empty colored cells.</li>
+                                            </ul>
+                                        </section>
+
+                                        <section>
+                                            <h3 class="text-xl font-semibold text-gray-800 mb-3 border-b pb-2">Exercise 4: Portfolio Allocation</h3>
+                                            <p class="text-gray-600 mb-2"><strong>Goal:</strong> Maximize investment return subject to strict allocation policies.</p>
+                                            <ul class="list-disc pl-5 space-y-2 text-gray-700 text-sm">
+                                                <li><strong>Sheet:</strong> Go to <em>'Portfolio Model'</em> sheet.</li>
+                                                <li><strong>Preparation:</strong> Name your cells first!
+                                                    <ul class="list-circle pl-5 mt-1 text-gray-600">
+                                                        <li>Name C4: <em>US_Stocks</em></li>
+                                                        <li>Name C5: <em>Intl_Stocks</em></li> 
+                                                        <li>Name C6: <em>Bonds</em></li>
+                                                        <li>Name C7: <em> Cash</em></li>
+                                                        <li>Name B9: <em>Total_Return</em></li>
+                                                    </ul>
+                                                </li>
+                                                <li><strong>Objective (<span class="text-green-600">Green</span>):</strong> Maximize <em>Total Return</em> (B9).</li>
+                                                <li><strong>Changing Variable (<span class="text-yellow-600">Yellow</span>):</strong> <em>Amount Invested</em> (C4:C7).</li>
+                                                <li><strong>Base Constraints (<span class="text-orange-500">Orange</span>):</strong>
+                                                    <ul class="list-disc pl-5 mt-1 text-gray-600">
+                                                        <li>Total Invested (B13) = $100,000 (D13).</li>
+                                                        <li>US Stocks Limit (B14) <= 50,000 (D14).</li>
+                                                        <li>Cash Allocation (B15) >= 5,000 (D15).</li>
+                                                    </ul>
+                                                </li>
+                                                <li><strong>Scenario 1: Base Portfolio.</strong> Run Solver for the base constraints. When Solver finishes, click <strong>Save Scenario...</strong> in the dialog box and name it "Base Portfolio". Click OK.</li>
+                                                <li><strong>Scenario 2: Conservative.</strong> Open Solver again. Add a constraint ensuring Bonds (C6) >= 30,000. Solve, click <strong>Save Scenario...</strong>, and name it "Conservative".</li>
+                                                <li><strong>Scenario 3: Domestic Only.</strong> Open Solver again. Add a constraint ensuring Intl Stocks (C5) = 0. Solve, click <strong>Save Scenario...</strong>, and name it "Domestic Only".</li>
+                                                <li>Finally, use Scenario Manager to generate a Summary Report comparing the three investment strategies!</li>
+                                            </ul>
+                                        </section>
+                                    </div>
+
+                                    <!-- SUBMISSION FORM -->
+                                    <div class="bg-white p-6 rounded-lg shadow-md mt-8 border-t-4 border-[#217346]">
+                                        <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Results</h3>
+                                        <div class="grid grid-cols-1 gap-4 mb-4">
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-1">Student Name:</label>
+                                                <input type="text" id="inp-student-name" class="w-full border border-gray-300 p-2 rounded text-sm" placeholder="Enter your full name">
+                                            </div>
+                                            
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Ex 1: How many units are produced for Gamma?</label>
+                                                    <input type="number" id="inp-ex1" class="w-full border border-gray-300 p-2 rounded text-sm">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Ex 2: What is the High Margin Case Net Profit?</label>
+                                                    <div class="relative">
+                                                        <span class="absolute left-2 top-2 text-gray-500 text-sm">$</span>
+                                                        <input type="number" id="inp-ex2" class="w-full border border-gray-300 p-2 pl-6 rounded text-sm">
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Ex 3: What is the total shipping cost?</label>
+                                                    <div class="relative">
+                                                        <span class="absolute left-2 top-2 text-gray-500 text-sm">$</span>
+                                                        <input type="number" id="inp-ex3" class="w-full border border-gray-300 p-2 pl-6 rounded text-sm">
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Ex 4: What is the Base Portfolio US Stocks Investment?</label>
+                                                    <div class="relative">
+                                                        <span class="absolute left-2 top-2 text-gray-500 text-sm">$</span>
+                                                        <input type="number" id="inp-ex4" class="w-full border border-gray-300 p-2 pl-6 rounded text-sm">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button onclick="submitAnswers()" id="btn-submit-answers" class="w-full bg-[#217346] hover:bg-[#1a5c38] text-white font-bold py-3 rounded transition-colors">
+                                            Submit to Instructor
+                                        </button>
+                                        <p class="text-xs text-gray-500 mt-2 text-center">Note: Upload your Excel File On Canvas as well for full Lab Credit. </p>
+                                    </div>
+
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>  
+                 `;
+                 
+                 document.getElementById('formula-bar-text').innerText = 'Practice Instructions';
+                 document.getElementById('name-box-input').value = '';
+                 return;
+            }
+
+            const currentStepData = tutorials[state.module][state.step];
+            const highlights = currentStepData.highlights || [];
+            const colorCode = currentStepData.colorCode || {};
+            const gridData = state.module === 'solver' ? solverGrids[state.gridKey] : scenarioGrids[state.gridKey];
+            
+            // Setup DOM
+            const gridEl = document.getElementById('excel-grid');
+            let html = '';
+
+            // Handle Summary Report Special Render
+            if (gridData.type === 'report') {
+                document.getElementById('formula-bar-text').innerText = '';
+                document.getElementById('name-box-input').value = 'A1';
+                
+                html = '<tbody>';
+                gridData.data.forEach((row, rIdx) => {
+                    html += `<tr class="h-6">`;
+                    html += `<td class="w-8 bg-gray-200 border border-gray-300 text-center text-xs text-gray-500">${rIdx + 1}</td>`;
+                    
+                    row.forEach((cell, cIdx) => {
+                        let cellClass = "border border-gray-300 px-2 text-sm ";
+                        if (rIdx === 0 && cIdx === 0) cellClass += "font-bold text-lg border-none ";
+                        else if (rIdx === 2 || rIdx === 5) cellClass += "font-bold text-gray-600 bg-gray-100 ";
+                        else if (cIdx === 0 && cell !== '') cellClass += "bg-gray-100 text-gray-600 ";
+                        else if (rIdx === 1 && cIdx > 0) cellClass += "font-bold text-center bg-gray-100 border-b-2 border-b-gray-400 ";
+                        else if (cIdx > 0) cellClass += "text-right ";
+
+                        if (cell === 'Net_Income') cellClass += "font-bold text-[#217346] ";
+                        if (cell === 'Sales_Growth' || cell === 'COGS_Pct') cellClass += "font-medium text-gray-700 ";
+
+                        html += `<td class="${cellClass}">${cell}</td>`;
+                    });
+                    html += `</tr>`;
+                });
+                html += '</tbody>';
+            } else {
+                // Standard Grid Render
+                const formulaText = currentStepData.formulaOverride || gridData['formula'] || '';
+                document.getElementById('formula-bar-text').innerText = formulaText;
+                
+                // Name Box Logic
+                // Use temp value if we are simulating typing, otherwise use grid data
+                const nameBoxInput = document.getElementById('name-box-input');
+                if (!nameBoxInput.classList.contains('simulating-type')) {
+                      // Prefer tutorial override (for selection step), else grid data
+                      nameBoxInput.value = currentStepData.nameBoxText || gridData['namebox'] || 'A1';
+                }
+
+                // Header
+                html = `<thead><tr><th class="excel-row-header"></th>`;
+                ['A', 'B', 'C', 'D'].forEach(col => {
+                    html += `<th class="excel-col-header w-32 py-1">${col}</th>`;
+                });
+                html += `</tr></thead><tbody>`;
+
+                // Rows
+                for (let row = 1; row <= 14; row++) {
+                    html += `<tr><td class="excel-row-header">${row}</td>`;
+                    ['A', 'B', 'C', 'D'].forEach(col => {
+                        const cellId = `${col}${row}`;
+                        const val = gridData[cellId] || '';
+                        const isHighlight = highlights.includes(cellId);
+                        
+                        // Check for highlight/change
+                        const prevVal = state.previousGridData[cellId] || '';
+                        const didChange = (prevVal !== val) && (prevVal !== '');
+
+                        let classes = "excel-cell ";
+                        let cellContent = val;
+                        let extraContent = ""; // For tooltip
+                        
+                        // Handle callouts logic
+                        if (currentStepData.callout && currentStepData.callout.cell === cellId) {
+                            classes += "has-callout ";
+                            extraContent = `<div class="formula-callout">${currentStepData.callout.text}</div>`;
+                        }
+
+                        // Apply highlights (either generic pulse or specific color code)
+                        if (isHighlight) {
+                            classes += "cursor-pointer "; // Add pointer for interactive steps
+                            if (colorCode[cellId] === 'objective') {
+                                classes += "highlight-objective ";
+                            } else if (colorCode[cellId] === 'changing') {
+                                classes += "highlight-changing ";
+                            } else if (colorCode[cellId] === 'constraint') {
+                                classes += "highlight-constraint ";
+                            } else {
+                                classes += "pulse-highlight bg-orange-50 font-bold text-orange-900 border-orange-300 relative z-10 ";
+                            }
+                        } else if (didChange) {
+                            classes += "cell-changed ";
+                        } 
+                        
+                        // Content Styling
+                        if (val.startsWith('$') || val.endsWith('%')) {
+                            classes += "text-right font-medium text-gray-800 ";
+                        } else if (!isNaN(val) && val !== '') {
+                            classes += "text-right text-blue-700 font-semibold bg-blue-50/20 ";
+                        } else if (val === '<=') {
+                            classes += "text-center text-gray-400 ";
+                        } else if ((row === 3 || row === 7) && val !== '') {
+                            classes += "border-b-2 border-b-gray-400 font-semibold bg-gray-50 text-gray-700 ";
+                        } else {
+                            classes += "text-gray-600 ";
+                        }
+
+                        // Named Cell Visuals - Apply after naming steps
+                        if (state.module === 'scenario' && state.step >= 8) {
+                             if (cellId === 'B12') classes += " bg-green-50/50 text-green-900";
+                             if (cellId === 'B4' || cellId === 'B5') classes += " bg-blue-50/30 text-blue-900";
+                        } else if (state.gridKey === 'named') {
+                             // Fallback if needed
+                             if (cellId === 'B12') classes += " bg-green-50/50 text-green-900";
+                             if (cellId === 'B4' || cellId === 'B5') classes += " bg-blue-50/30 text-blue-900";
+                        }
+
+                        html += `<td class="${classes}" id="cell-${cellId}" onclick="handleCellClick('${cellId}')">${cellContent}${extraContent}</td>`;
+                    });
+                    html += `</tr>`;
+                }
+                html += `</tbody>`;
+                
+                state.previousGridData = {...gridData};
+            }
+            gridEl.innerHTML = html;
+        }
+
+        function renderSidebar() {
+            const totalSteps = tutorials[state.module].length;
+            const currentStepData = tutorials[state.module][state.step];
+
+            // Progress Bar
+            let progressHtml = '';
+            for (let i = 0; i < totalSteps; i++) {
+                const color = i <= state.step ? 'bg-[#217346]' : 'bg-gray-200';
+                progressHtml += `<div class="h-2 flex-1 mx-1 rounded-full transition-colors duration-500 ${color}"></div>`;
+            }
+            document.getElementById('sidebar-progress').innerHTML = progressHtml;
+
+            // Content
+            document.getElementById('step-number').innerText = state.step + 1;
+            document.getElementById('step-title').innerText = currentStepData.title;
+            document.getElementById('step-content').innerHTML = currentStepData.content;
+
+            // Action Buttons Container
+            let actionHtml = `<div class="flex gap-2 w-full">`;
+            
+            // Previous Button
+            if (state.step > 0) {
+                 actionHtml += `
+                    <button onclick="prevStep()" class="px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-lg transition-colors">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                 `;
+            }
+
+            // Next/Action Button
+            if (currentStepData.actionType === 'wait') {
+                actionHtml += `
+                    <div class="flex-1 bg-yellow-50 border border-yellow-200 text-yellow-800 font-bold py-3 px-4 rounded-lg flex items-center justify-center animate-pulse text-sm">
+                        <i class="fa-solid fa-arrow-pointer mr-2"></i>
+                        ${currentStepData.actionText}
+                    </div>
+                `;
+            } else if (currentStepData.actionType === 'download') {
+                actionHtml += `
+                    <button onclick="downloadPracticeFile()" class="flex-1 bg-[#217346] hover:bg-[#1a5c38] text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center transition-transform hover:-translate-y-1 shadow-md group">
+                        <i class="fa-solid fa-download mr-2"></i>
+                        ${currentStepData.actionText}
+                    </button>
+                `;
+            } else {
+                actionHtml += `
+                    <button onclick="handleSidebarAction()" class="flex-1 bg-[#217346] hover:bg-[#1a5c38] text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center transition-transform hover:-translate-y-1 shadow-md group">
+                        ${currentStepData.actionText}
+                        <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                `;
+            }
+            actionHtml += `</div>`;
+            
+            document.getElementById('step-action-container').innerHTML = actionHtml;
+        }
+
+        function renderModals() {
+            const solverModal = document.getElementById('modal-solver');
+            const scenarioModal = document.getElementById('modal-scenario');
+            
+            if (state.module === 'practice') {
+                solverModal.classList.add('hidden', 'opacity-0');
+                scenarioModal.classList.add('hidden', 'opacity-0');
+                return;
+            }
+
+            const currentStepData = tutorials[state.module][state.step];
+            const highlights = currentStepData.highlights || [];
+
+            // SOLVER MODAL
+            if (state.module === 'solver' && state.step === 6) {
+                 solverModal.classList.remove('hidden');
+                 setTimeout(() => solverModal.classList.remove('opacity-0'), 10);
+                 
+                 const btnSolve = document.getElementById('btn-solve');
+                 if (highlights.includes('modal-solve')) {
+                    btnSolve.classList.add('pulse-highlight', 'ring-2', 'ring-yellow-400');
+                    
+                    // Add Color Codes to Inputs
+                    document.getElementById('solver-obj-input').classList.add('highlight-objective');
+                    document.getElementById('solver-change-input').classList.add('highlight-changing');
+                    document.getElementById('solver-const-input').classList.add('highlight-constraint');
+                 } else {
+                    btnSolve.classList.remove('pulse-highlight', 'ring-2', 'ring-yellow-400');
+                 }
+            } else {
+                solverModal.classList.add('hidden', 'opacity-0');
+                // Clean up colors
+                document.getElementById('solver-obj-input').classList.remove('highlight-objective');
+                document.getElementById('solver-change-input').classList.remove('highlight-changing');
+                document.getElementById('solver-const-input').classList.remove('highlight-constraint');
+            }
+
+            // SCENARIO MODAL
+            // Show during Steps 10-15 (indexes shifted due to 3 new naming steps)
+            if (state.module === 'scenario' && state.step >= 10 && state.step <= 14) {
+                scenarioModal.classList.remove('hidden');
+                setTimeout(() => scenarioModal.classList.remove('opacity-0'), 10);
+
+                const viewMain = document.getElementById('scenario-view-main');
+                const viewAdd = document.getElementById('scenario-view-add');
+                const viewValues = document.getElementById('scenario-view-values');
+                
+                // Reset Views
+                viewMain.classList.add('hidden');
+                viewAdd.classList.add('hidden');
+                viewValues.classList.add('hidden');
+
+                // Determine which view to show
+                if (currentStepData.modalView === 'add-name') {
+                    viewAdd.classList.remove('hidden');
+                    document.getElementById('inp-scen-name').value = '';
+                    document.getElementById('inp-scen-name').focus();
+                } else if (currentStepData.modalView === 'add-values') {
+                    viewValues.classList.remove('hidden');
+                    // Set values based on current step target
+                    if (state.step === 10) { // Base
+                        document.getElementById('inp-scen-1').value = "0.05";
+                        document.getElementById('inp-scen-2').value = "0.60";
+                    } else if (state.step === 11) { // Best
+                         document.getElementById('inp-scen-1').value = "0.15";
+                        document.getElementById('inp-scen-2').value = "0.55";
+                    } else if (state.step === 12) { // Worst
+                         document.getElementById('inp-scen-1').value = "-0.05";
+                        document.getElementById('inp-scen-2').value = "0.65";
+                    }
+                } else {
+                    viewMain.classList.remove('hidden');
+                    // Render List based on added scenarios
+                    let listHtml = '';
+                    state.scenarios.forEach((sc, idx) => {
+                         const isSelected = (state.selectedScenario === sc) || (state.selectedScenario === null && idx === state.scenarios.length -1);
+                         
+                         listHtml += `
+                            <div class="px-2 py-1 text-gray-700 hover:bg-blue-50 cursor-pointer ${isSelected ? 'bg-blue-100 border border-blue-200' : ''}" onclick="selectScenario('${sc}')">
+                                ${sc}
+                            </div>
+                        `;
+                    });
+                    document.getElementById('scenario-list').innerHTML = listHtml;
+                }
+
+                // Highlighting specific buttons
+                const btnAdd = document.getElementById('btn-add-scen');
+                const btnSummary = document.getElementById('btn-summary');
+                const btnShow = document.getElementById('btn-show-scen');
+
+                // Reset
+                btnAdd.className = "px-2 py-1 bg-gray-200 border border-gray-400 rounded hover:bg-gray-300 text-gray-700";
+                btnSummary.className = "px-2 py-1.5 border rounded shadow text-gray-700 font-medium bg-gray-200 border-gray-400 transition-all mb-1";
+                btnShow.className = "px-2 py-1 bg-gray-200 border border-gray-400 rounded hover:bg-gray-300 text-gray-700 mb-1";
+
+                if (highlights.includes('btn-add-scen')) {
+                    btnAdd.className = "px-2 py-1 border rounded shadow text-white font-bold bg-[#217346] border-[#1a5c38] pulse-highlight";
+                }
+                if (highlights.includes('btn-summary')) {
+                    btnSummary.className = "px-2 py-1.5 border rounded shadow text-white font-bold bg-[#217346] border-[#1a5c38] pulse-highlight transition-all mb-1";
+                }
+                 if (highlights.includes('btn-show-scen')) {
+                    btnShow.className = "px-2 py-1 border rounded shadow text-white font-bold bg-[#217346] border-[#1a5c38] pulse-highlight mb-1";
+                }
+
+            } else {
+                scenarioModal.classList.add('hidden', 'opacity-0');
+            }
+        }
+
+        // --- ACTIONS & EVENT HANDLERS ---
+
+        function setModule(mod) {
+            state.module = mod;
+            state.step = 0;
+            state.activeTab = 'Home';
+            state.gridKey = mod === 'solver' ? 'initial' : 'base';
+            state.scenarios = [];
+            state.previousGridData = {};
+            state.selectedScenario = null;
+            renderAll();
+        }
+
+        function advanceStep() {
+            if (state.step < tutorials[state.module].length - 1) {
+                state.step++;
+                // Sync grid state for specific steps
+                if (state.module === 'solver' && state.step === 7) state.gridKey = 'solved';
+                // Summary step shifted to 15
+                if (state.module === 'scenario' && state.step === 15) state.gridKey = 'summary';
+                // Switch to named grid logic start
+                if (state.module === 'scenario' && state.step === 3) state.gridKey = 'named';
+
+                renderAll();
+            }
+        }
+
+        function prevStep() {
+            if (state.step > 0) {
+                state.step--;
+                if (state.module === 'solver') {
+                    if (state.step < 7) state.gridKey = 'initial';
+                }
+                if (state.module === 'scenario') {
+                    if (state.step < 3) state.gridKey = 'base';
+                    else if (state.step < 8) state.gridKey = 'named';
+                }
+                renderAll();
+            }
+        }
+
+        function handleSidebarAction() {
+            const currentStepData = tutorials[state.module][state.step];
+            if (currentStepData.actionType === 'advance') {
+                advanceStep();
+            } else if (currentStepData.actionType === 'switch-scenario') {
+                setModule('scenario');
+            } else if (currentStepData.actionType === 'switch-solver') {
+                setModule('solver');
+            } else if (currentStepData.actionType === 'switch-practice') {
+                setModule('practice');
+            }
+        }
+
+        function handleTabClick(tab) {
+            if (state.module === 'practice') return;
+
+            state.activeTab = tab;
+            // Solver: Data Tab Click
+            if (state.module === 'solver' && state.step === 4 && tab === 'Data') advanceStep();
+            // Scenario: Data Tab Click - Step Shifted to 9
+            if (state.module === 'scenario' && state.step === 9 && tab === 'Data') advanceStep();
+            
+            renderAll();
+        }
+
+        function handleCellClick(cellId) {
+            if (state.module === 'scenario') {
+                // Step 3: Select B4
+                if (state.step === 3 && cellId === 'B4') advanceStep();
+                // Step 5: Select B5
+                if (state.step === 5 && cellId === 'B5') advanceStep();
+                // Step 7: Select B12
+                if (state.step === 7 && cellId === 'B12') advanceStep();
+            }
+        }
+
+        function handleNameBoxClick() {
+            // Naming steps logic simulation
+            // Updated steps: 4 (Name B4), 6 (Name B5), 8 (Name B12)
+            if (state.module === 'scenario' && (state.step === 4 || state.step === 6 || state.step === 8)) {
+                 const input = document.getElementById('name-box-input');
+                 // Only trigger if not already simulating
+                 if (input.classList.contains('simulating-type')) return;
+                 
+                 input.classList.add('simulating-type', 'bg-white');
+                 input.value = '';
+                 
+                 let targetName = '';
+                 if (state.step === 4) targetName = 'Sales_Growth';
+                 if (state.step === 6) targetName = 'COGS_Pct';
+                 if (state.step === 8) targetName = 'Net_Income';
+
+                 // Simulate Typing
+                 let i = 0;
+                 const typeInterval = setInterval(() => {
+                    input.value += targetName.charAt(i);
+                    i++;
+                    if (i > targetName.length) {
+                        clearInterval(typeInterval);
+                        // Success Flash
+                        input.classList.add('text-green-600', 'font-bold');
+                        setTimeout(() => {
+                             input.classList.remove('simulating-type', 'bg-white', 'text-green-600', 'font-bold');
+                             advanceStep();
+                        }, 800);
+                    }
+                 }, 50);
+            }
+        }
+
+        function handleSolverClick() {
+            if (state.module === 'solver' && state.step === 5 && state.activeTab === 'Data') {
+                advanceStep(); 
+            }
+        }
+
+        function handleWhatIfClick() {
+            // Scenario step shifted to 9
+            if (state.module === 'scenario' && state.step === 9 && state.activeTab === 'Data') {
+                advanceStep();
+            }
+        }
+
+        function handleModalAction(action) {
+            if (action === 'solve' && state.module === 'solver' && state.step === 6) {
+                state.gridKey = 'solved';
+                advanceStep();
+            } else if (action === 'close-solver' && state.module === 'solver') {
+                prevStep();
+            } else if (state.module === 'scenario') {
+                const currentStepData = tutorials[state.module][state.step];
+                
+                if (action === 'add' && highlightsIncludes('btn-add-scen')) {
+                    // Simulate opening Add Dialog
+                    currentStepData.modalView = 'add-name';
+                    renderModals();
+                } else if (action === 'confirm-add') {
+                    // Simulate confirming name, go to values
+                    currentStepData.modalView = 'add-values';
+                    renderModals();
+                } else if (action === 'confirm-values') {
+                    // Scenario Added
+                    // Steps: 10=Base, 11=Best, 12=Worst
+                    if (state.step === 10) state.scenarios.push('Base Case');
+                    if (state.step === 11) state.scenarios.push('Best Case');
+                    if (state.step === 12) state.scenarios.push('Worst Case');
+                    
+                    state.selectedScenario = state.scenarios[state.scenarios.length - 1]; // Auto select new
+                    currentStepData.modalView = 'list'; // Reset current step view for back nav
+                    advanceStep();
+                } else if (action === 'show' && state.step === 13) {
+                      // Update grid based on current selection
+                      if (state.selectedScenario === 'Base Case') state.gridKey = 'base';
+                      else if (state.selectedScenario === 'Best Case') state.gridKey = 'best';
+                      else if (state.selectedScenario === 'Worst Case') state.gridKey = 'worst';
+                      renderGrid();
+                } else if (action === 'summary' && state.step === 14) {
+                    state.gridKey = 'summary';
+                    advanceStep();
+                }
+            }
+        }
+
+        function selectScenario(scen) {
+             state.selectedScenario = scen;
+             if (state.step === 13) {
+                 renderModals(); // Re-render to update highlight
+                 // Note: Real Excel requires clicking 'Show' to update grid.
+             }
+        }
+
+        function highlightsIncludes(id) {
+             const h = tutorials[state.module][state.step].highlights || [];
+             return h.includes(id);
+        }
+
+        // --- EXCEL GENERATION ---
+        function downloadPracticeFile() {
+             // Check if library loaded
+            if(typeof XLSX === 'undefined') { alert('Excel library not loaded'); return; }
+
+            const wb = XLSX.utils.book_new();
+
+            // --- STYLES DEFINITION ---
+            // xlsx-js-style supports 's' property
+            const styles = {
+                header: { 
+                    font: { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri" }, 
+                    fill: { fgColor: { rgb: "217346" } }, // Excel Green
+                    alignment: { horizontal: "center", vertical: "center" },
+                    border: { bottom: {style:"thin", color: {rgb:"000000"}} }
+                },
+                subHeader: {
+                    font: { bold: true, name: "Calibri" },
+                    fill: { fgColor: { rgb: "E1E1E1" } },
+                    border: { bottom: {style:"thin", color: {rgb:"BFBFBF"}} }
+                },
+                bold: { font: { bold: true, name: "Calibri" } },
+                input: { 
+                    fill: { fgColor: { rgb: "FFF2CC" } }, // Light Yellow
+                    border: { 
+                        top: {style:"thin", color:{rgb:"BFBFBF"}}, 
+                        bottom: {style:"thin", color:{rgb:"BFBFBF"}}, 
+                        left: {style:"thin", color:{rgb:"BFBFBF"}}, 
+                        right: {style:"thin", color:{rgb:"BFBFBF"}} 
+                    } 
+                },
+                calculation: { 
+                    fill: { fgColor: { rgb: "E2EFDA" } }, // Light Green fallback
+                    font: { color: { rgb: "385724" } }
+                },
+                objective: {
+                    fill: { fgColor: { rgb: "E2EFDA" } }, // Light Green
+                    font: { bold: true, color: { rgb: "385724" } },
+                    border: { top: {style:"thin", color:{rgb:"BFBFBF"}}, bottom: {style:"thin", color:{rgb:"BFBFBF"}}, left: {style:"thin", color:{rgb:"BFBFBF"}}, right: {style:"thin", color:{rgb:"BFBFBF"}} }
+                },
+                constraint: {
+                    fill: { fgColor: { rgb: "FCE4D6" } }, // Light Orange
+                    font: { bold: true, color: { rgb: "C65911" } },
+                    border: { top: {style:"thin", color:{rgb:"BFBFBF"}}, bottom: {style:"thin", color:{rgb:"BFBFBF"}}, left: {style:"thin", color:{rgb:"BFBFBF"}}, right: {style:"thin", color:{rgb:"BFBFBF"}} }
+                }
+            };
+
+            // Helper to apply style to a range of cells
+            const applyStyle = (ws, range, styleName) => {
+                const rangeObj = XLSX.utils.decode_range(range);
+                for (let R = rangeObj.s.r; R <= rangeObj.e.r; ++R) {
+                    for (let C = rangeObj.s.c; C <= rangeObj.e.c; ++C) {
+                        const cell_address = XLSX.utils.encode_cell({r:R, c:C});
+                        if (!ws[cell_address]) continue; // Skip empty
+                        if (!ws[cell_address].s) ws[cell_address].s = {};
+                        Object.assign(ws[cell_address].s, styles[styleName]);
+                    }
+                }
+            };
+            
+            // Helper to set column widths
+            const setCols = (ws, widths) => {
+                ws['!cols'] = widths.map(w => ({wch: w}));
+            };
+
+            // --- Sheet 1: Instructions ---
+            const instructionsData = [
+                ["Lab Instructions"],
+                ["1. Switch to the 'Practice Problem' sheet."],
+                ["2. Use Excel Solver to maximize Total Profit (Cell B13)."],
+                ["3. Changing Cells: Units Produced (B10:C10)."],
+                ["4. Constraints:"],
+                ["    - Labor Used (B17) <= Available (D17)"],
+                ["    - Machine Used (B18) <= Available (D18)"],
+                ["5. Switch to the 'Scenario Practice' sheet."],
+                ["6. First, define names for your cells: B4 (Unit_Price), B5 (Unit_Cost), B11 (Net_Profit)."],
+                ["7. Create scenarios for High Margin (Price 25, Cost 8) and Low Margin (Price 18, Cost 12)."],
+                ["8. Generate a Scenario Summary for Net Profit."],
+                ["9. Switch to 'Logistics Model' sheet. Minimize Total Shipping Cost (B18) by changing Units Shipped (B11:D12)."],
+                ["    NOTE: You must write the formulas for Totals and Constraints yourself in the colored cells!"],
+                ["10. Switch to 'Portfolio Model' sheet. Maximize Return (B9) by changing Amount Invested (C4:C7)."],
+                ["    First, define names: C4:C7 (Amt_Invested), B9 (Total_Return)."],
+                ["    - Base Constraints: Total Invested = 100,000; US Stocks <= 50,000; Cash >= 5,000."],
+                ["11. Run Solver for the base constraints. In the results window, click 'Save Scenario...' and name it 'Base Portfolio'."],
+                ["12. Test different portfolios by adding constraints (e.g., Bonds >= 30,000) and saving them as new scenarios!"],
+                ["    NOTE: You must write the formulas for Totals and Cash yourself in the colored cells!"]
+            ];
+            const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
+            
+            // Style Instructions
+            if(wsInstructions['A1']) wsInstructions['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "217346" } } };
+            setCols(wsInstructions, [105]);
+            
+            XLSX.utils.book_append_sheet(wb, wsInstructions, "Instructions");
+
+            // --- Sheet 2: Practice Problem (Solver) ---
+            const practiceData = [
+                ["Production Mix Optimization"],
+                [],
+                ["Parameters", "Gamma", "Delta", "Total"],
+                ["Profit per Unit", 120, 85],
+                ["Labor Hrs / Unit", 3, 2],
+                ["Machine Hrs / Unit", 2, 4],
+                [],
+                ["Decision Variables"],
+                ["Product", "Gamma", "Delta"],
+                ["Units Produced", 0, 0],
+                [],
+                ["Objective"],
+                ["Total Profit", {t:'n', f:'B4*B10 + C4*C10'}, ""],
+                [],
+                ["Constraints"],
+                ["Resource", "Used", "Op", "Available"],
+                ["Labor Hours", {t:'n', f:'B5*B10 + C5*C10'}, "<=", 80],
+                ["Machine Hours", {t:'n', f:'B6*B10 + C6*C10'}, "<=", 100]
+            ];
+            const wsPractice = XLSX.utils.aoa_to_sheet(practiceData);
+            
+            // Styling Practice
+            if(wsPractice['A1']) wsPractice['A1'].s = { font: { bold: true, sz: 14 } };
+            
+            // Headers
+            applyStyle(wsPractice, "A3:D3", "header");
+            applyStyle(wsPractice, "A8:C8", "subHeader");
+            applyStyle(wsPractice, "A12:C12", "subHeader");
+            applyStyle(wsPractice, "A15:D15", "subHeader");
+            
+            // Inputs
+            applyStyle(wsPractice, "B10:C10", "input");
+            
+            // Calculations / Goals / Constraints
+            applyStyle(wsPractice, "B13", "objective"); // Total Profit
+            applyStyle(wsPractice, "B17:B18", "constraint"); // Used Resources
+            
+            setCols(wsPractice, [20, 15, 15, 15]);
+            XLSX.utils.book_append_sheet(wb, wsPractice, "Practice Problem");
+
+            // --- Sheet 3: Scenario Practice ---
+            const scenarioData = [
+                ["Scenario Manager Practice"],
+                [],
+                ["Input Variables", "Current Value"],
+                ["Unit Price", 20],
+                ["Unit Cost", 10],
+                ["Volume", 1000],
+                [],
+                ["Outputs", ""],
+                ["Total Revenue", {t:'n', f:'B4*B6'}],
+                ["Total Cost", {t:'n', f:'B5*B6'}],
+                ["Net Profit", {t:'n', f:'B9-B10'}]
+            ];
+            const wsScenario = XLSX.utils.aoa_to_sheet(scenarioData);
+            
+            if(wsScenario['A1']) wsScenario['A1'].s = { font: { bold: true, sz: 14 } };
+            
+            // Headers
+            applyStyle(wsScenario, "A3:B3", "header");
+            applyStyle(wsScenario, "A8:B8", "subHeader");
+            
+            // Inputs
+            applyStyle(wsScenario, "B4:B6", "input");
+            
+            // Outputs
+            applyStyle(wsScenario, "B9:B11", "calculation");
+            
+            setCols(wsScenario, [25, 20]);
+            XLSX.utils.book_append_sheet(wb, wsScenario, "Scenario Practice");
+
+            // --- Sheet 4: Logistics Model ---
+            const logisticsData = [
+                ["Logistics Cost Minimization"],
+                [],
+                ["Shipping Costs", "Region A", "Region B", "Region C"],
+                ["WH North", 5, 10, 15],
+                ["WH South", 12, 8, 6],
+                [],
+                ["Demand", 100, 150, 200],
+                [],
+                ["Decision Variables: Units Shipped (Enter Qty)"],
+                ["From / To", "Region A", "Region B", "Region C", "Total Sent", "Capacity"],
+                ["WH North", 0, 0, 0, "", 300],
+                ["WH South", 0, 0, 0, "", 300],
+                ["Total Received", "", "", ""],
+                [],
+                ["Constraint Check"],
+                ["WH Totals", "<=", "Capacity"],
+                ["Region Totals", ">=", "Demand"],
+                ["Total Shipping Cost", ""]
+            ];
+            const wsLogistics = XLSX.utils.aoa_to_sheet(logisticsData);
+            
+            if(wsLogistics['A1']) wsLogistics['A1'].s = { font: { bold: true, sz: 14 } };
+            
+            // Headers
+            applyStyle(wsLogistics, "A3:D3", "header");
+            applyStyle(wsLogistics, "A10:F10", "subHeader");
+            
+            // Inputs
+            applyStyle(wsLogistics, "B11:D12", "input");
+            
+            // Constraints
+            applyStyle(wsLogistics, "E11:E12", "constraint"); // Total Sent
+            applyStyle(wsLogistics, "B13:D13", "constraint"); // Total Received
+            
+            // Results / Objective
+            applyStyle(wsLogistics, "B18", "objective");
+            
+            setCols(wsLogistics, [20, 15, 15, 15, 15, 15]);
+            XLSX.utils.book_append_sheet(wb, wsLogistics, "Logistics Model");
+
+            // --- Sheet 5: Portfolio Model ---
+            const portfolioData = [
+                ["Investment Portfolio Optimization"],
+                [],
+                ["Asset Class", "Est. Return", "Amount Invested"],
+                ["US Stocks", 0.10, 0],
+                ["Intl Stocks", 0.08, 0],
+                ["Bonds", 0.04, 0],
+                ["Cash", 0.01, 0],
+                [],
+                ["Total Return ($)", ""],
+                [],
+                ["Allocation Checks"],
+                ["Metric", "Calculated", "Op", "Limit"],
+                ["Total Invested", "", "=", 100000],
+                ["US Stocks Limit", "", "<=", 50000],
+                ["Cash Minimum", "", ">=", 5000]
+            ];
+            const wsPortfolio = XLSX.utils.aoa_to_sheet(portfolioData);
+            
+            if(wsPortfolio['A1']) wsPortfolio['A1'].s = { font: { bold: true, sz: 14 } };
+            
+            // Headers
+            applyStyle(wsPortfolio, "A3:C3", "header");
+            applyStyle(wsPortfolio, "A11:C11", "subHeader");
+            applyStyle(wsPortfolio, "A12:D12", "subHeader");
+            
+            // Inputs
+            applyStyle(wsPortfolio, "C4:C7", "input");
+
+            // Goal
+            applyStyle(wsPortfolio, "B9", "objective");
+
+            // Constraints
+            applyStyle(wsPortfolio, "B13:B15", "constraint");
+            
+            // Percent Format
+            ["B4", "B5", "B6", "B7"].forEach(ref => {
+                 if(wsPortfolio[ref]) wsPortfolio[ref].z = "0.0%";
+            });
+            
+            // Number formats
+            ["C4", "C5", "C6", "C7", "B9", "D13", "D14", "D15"].forEach(ref => {
+                if(wsPortfolio[ref]) wsPortfolio[ref].z = "$#,##0";
+            });
+            
+            setCols(wsPortfolio, [20, 15, 20, 15]);
+            XLSX.utils.book_append_sheet(wb, wsPortfolio, "Portfolio Model");
+
+            // Generate and Download
+            XLSX.writeFile(wb, "Analytics_Lab_Practice.xlsx");
+        }
+
+        // Initialize application
+        window.onload = () => {
+            makeDraggable("modal-solver", "drag-solver");
+            makeDraggable("modal-scenario", "drag-scenario");
+            state.previousGridData = {...solverGrids.initial};
+            renderAll();
+        };
+    </script>
+</body>
+</html>
