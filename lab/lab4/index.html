@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 4: Exploring Distributions</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts: Inter for readable text, Playfair Display for Antique Headings -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0;
+            padding: 0;
+            color: #2c1e16; /* Dark espresso brown text */
+            background-color: #2a1610;
+        }
+
+        .font-antique {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* --- European Antique Library Background --- */
+        .library-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            /* Rich mahogany/walnut wood gradient */
+            background: radial-gradient(circle at center, #4a271d 0%, #2a1610 100%);
+            z-index: -10;
+            overflow: hidden;
+        }
+        
+        /* Vintage Damask / Wallpaper Overlay */
+        .library-bg::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3zm0 54c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3zm27-27c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3zM3 27c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3z' fill='%23d4af37' fill-rule='evenodd'/%3E%3C/svg%3E");
+            z-index: -9;
+        }
+
+        /* Subtle vertical bookshelf lines */
+        .library-bg::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 100px,
+                rgba(0,0,0,0.2) 100px,
+                rgba(0,0,0,0.2) 105px
+            );
+            z-index: -8;
+        }
+
+        /* Floating Magic/Antique Items */
+        .floating-element {
+            position: absolute;
+            bottom: -150px;
+            color: rgba(212, 175, 55, 0.15); /* Faded Gold */
+            animation: floatUp linear infinite;
+            z-index: -7;
+            filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg) scale(0.8); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-110vh) rotate(360deg) scale(1.2); opacity: 0; }
+        }
+
+        /* --- UI Animations --- */
+        .answer-reveal { display: none; }
+        .answer-reveal.visible { display: flex; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in { animation: fadeInUp 0.7s ease-out forwards; opacity: 0; }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
+
+        /* Animated Hint Accordion */
+        .hint-wrapper {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.4s ease-out;
+        }
+        .hint-wrapper.open { grid-template-rows: 1fr; }
+        .hint-inner { overflow: hidden; }
+        
+        /* Custom styled radio inputs (Antique style) */
+        input[type="radio"]:focus + div {
+            box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.4); /* Amber-700 focus */
+        }
+
+        /* Skewness Animation Classes */
+        .skew-chart-container { overflow: hidden; }
+        .hist-bar {
+            position: absolute;
+            bottom: 0;
+            width: 8%;
+            background-color: #e6dfd1;
+            border: 1px solid #c8bca7;
+            border-bottom: none;
+            border-radius: 2px 2px 0 0;
+        }
+        .boxplot-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            transform-origin: center;
+        }
+        
+        /* Parchment Paper container */
+        .parchment-container {
+            background-color: #fdfbf7;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            box-shadow: 
+                inset 0 0 50px rgba(139, 69, 19, 0.05),
+                0 20px 25px -5px rgba(0, 0, 0, 0.5), 
+                0 10px 10px -5px rgba(0, 0, 0, 0.3);
+            border: 1px solid #e0d5c1;
+        }
+    </style>
+</head>
+<body class="pb-24 min-h-screen relative selection:bg-amber-900 selection:text-amber-50">
+
+    <!-- Magical Antique Library Background Elements -->
+    <div class="library-bg">
+        <i class="fas fa-book floating-element" style="left: 10%; animation-duration: 18s; animation-delay: 0s; font-size: 3rem;"></i>
+        <i class="fas fa-scroll floating-element" style="left: 25%; animation-duration: 22s; animation-delay: 2s; font-size: 2.5rem;"></i>
+        <i class="fas fa-book-open floating-element" style="left: 45%; animation-duration: 25s; animation-delay: 5s; font-size: 4rem;"></i>
+        <i class="fas fa-feather-alt floating-element" style="left: 65%; animation-duration: 15s; animation-delay: 1s; font-size: 2rem;"></i>
+        <i class="fas fa-chess-knight floating-element" style="left: 85%; animation-duration: 20s; animation-delay: 4s; font-size: 3.5rem;"></i>
+        <i class="fas fa-glasses floating-element" style="left: 55%; animation-duration: 28s; animation-delay: 7s; font-size: 2.5rem;"></i>
+        <i class="fas fa-hourglass-half floating-element" style="left: 15%; animation-duration: 17s; animation-delay: 9s; font-size: 1.5rem;"></i>
+        <i class="fas fa-key floating-element" style="left: 75%; animation-duration: 24s; animation-delay: 3s; font-size: 3rem;"></i>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="bg-[#2a1610]/95 backdrop-blur-md text-[#fdfbf7] p-5 shadow-2xl sticky top-0 z-50 border-b-2 border-[#8b5a2b]">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold tracking-tight font-antique text-[#d4af37]"><i class="fas fa-landmark mr-3"></i>Lab 4: Exploring Distributions</h1>
+            <span class="text-xs md:text-sm bg-[#4a271d] text-[#e8dcc4] border border-[#8b5a2b] px-4 py-1.5 rounded-sm shadow-inner font-serif italic">Accounting Analytics</span>
+        </div>
+    </nav>
+
+    <!-- Main Content Container (Parchment Paper) -->
+    <div class="max-w-5xl mx-auto p-4 md:p-10 mt-8 mb-12 parchment-container rounded-sm relative">
+
+        <!-- Corner decorative elements -->
+        <div class="absolute top-2 left-2 text-[#c8bca7] text-xl opacity-50"><i class="fas fa-certificate"></i></div>
+        <div class="absolute top-2 right-2 text-[#c8bca7] text-xl opacity-50"><i class="fas fa-certificate"></i></div>
+        <div class="absolute bottom-2 left-2 text-[#c8bca7] text-xl opacity-50"><i class="fas fa-certificate"></i></div>
+        <div class="absolute bottom-2 right-2 text-[#c8bca7] text-xl opacity-50"><i class="fas fa-certificate"></i></div>
+
+        <!-- Prominent Canvas Upload Alert -->
+        <div class="animate-fade-in mb-10 bg-[#fffdf0] border-2 border-[#b8860b] p-6 shadow-[0_4px_15px_rgba(184,134,11,0.15)] flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <!-- decorative background for alert -->
+            <div class="absolute top-0 right-0 p-2 opacity-10 text-[#b8860b] text-6xl"><i class="fas fa-file-excel"></i></div>
+            
+            <h3 class="text-[#8b4513] font-bold text-2xl font-antique mb-2 flex items-center">
+                <i class="fas fa-exclamation-circle text-[#b8860b] mr-2"></i> Canvas Upload
+            </h3>
+            <p class="text-lg text-[#5c4033]">
+                You must <strong>upload your worked-out Excel file to Canvas for full lab credit</strong>.
+            </p>
+            <p class="text-sm text-[#8b5a2b] mt-2 italic">This web form evaluates your answers, but your Excel file proves your work.</p>
+        </div>
+
+        <!-- Student Info Section -->
+        <section class="animate-fade-in delay-100 bg-white/60 p-6 mb-10 border-t-4 border-[#8b4513] shadow-sm">
+            <h2 class="text-2xl font-bold mb-2 text-[#3e2723] font-antique"><i class="fas fa-signature mr-2 text-[#8b4513]"></i>Student Information</h2>
+            <p class="mb-6 text-[#795548] text-sm border-b border-[#d7ccc8] pb-4">Please enter your details before starting the lab.</p>
+            <form id="student-info" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-[#4e342e] mb-1">Full Name</label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-3 top-3 text-[#a1887f]"></i>
+                        <input type="text" name="FullName" id="fullName" required class="w-full pl-10 p-2.5 bg-[#faf8f5] border border-[#c8bca7] focus:ring-2 focus:ring-[#8b4513] focus:bg-white transition-colors outline-none font-medium text-[#3e2723]" placeholder="John Doe">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-[#4e342e] mb-1">Zagmail Address</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope absolute left-3 top-3 text-[#a1887f]"></i>
+                        <input type="email" name="Email" id="email" required class="w-full pl-10 p-2.5 bg-[#faf8f5] border border-[#c8bca7] focus:ring-2 focus:ring-[#8b4513] focus:bg-white transition-colors outline-none font-medium text-[#3e2723]" placeholder="jdoe@zagmail.gonzaga.edu">
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Resources Section -->
+        <section class="animate-fade-in delay-200 bg-[#f5f0e6] p-6 mb-10 border border-[#d7ccc8] shadow-inner relative">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#8b5a2b] to-transparent opacity-30"></div>
+            <h3 class="font-bold text-xl text-[#3e2723] mb-4 font-antique"><i class="fas fa-archive mr-2 text-[#8b4513]"></i>Dataset & Archives</h3>
+            <p class="text-sm text-[#5d4037] mb-5">Download the materials below. Review the archive dictionary to understand the fields before starting your analysis.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- Housing Data Download -->
+                <div class="flex flex-col justify-between bg-white/80 p-5 border border-[#e0d5c1] shadow-sm hover:shadow-md transition-shadow">
+                    <div class="mb-4">
+                        <div class="w-10 h-10 bg-[#efebe1] text-[#8b4513] border border-[#d7ccc8] flex items-center justify-center mb-3">
+                            <i class="fas fa-table text-xl"></i>
+                        </div>
+                        <strong class="text-[#3e2723] block text-lg font-antique">HomePrices.xlsx</strong>
+                        <p class="text-xs text-[#795548] mt-1">Housing data used for Kaggle competition.</p>
+                    </div>
+                    <a href="data/Lab4_Housing data_blank.xlsx" download="Lab4_Housing data_blank.xlsx" class="w-full text-center bg-[#5c4033] hover:bg-[#3e2723] text-[#fdfbf7] text-sm font-semibold px-4 py-2.5 transition-colors shadow flex justify-center items-center">
+                        <i class="fas fa-download mr-2 text-[#d4af37]"></i> Download Data
+                    </a>
+                </div>
+
+                <!-- Data Dictionary Download -->
+                <div class="flex flex-col justify-between bg-white/80 p-5 border border-[#e0d5c1] shadow-sm hover:shadow-md transition-shadow">
+                    <div class="mb-4">
+                        <div class="w-10 h-10 bg-[#efebe1] text-[#8b4513] border border-[#d7ccc8] flex items-center justify-center mb-3">
+                            <i class="fas fa-book-open text-xl"></i>
+                        </div>
+                        <strong class="text-[#3e2723] block text-lg font-antique">Data Description</strong>
+                        <p class="text-xs text-[#795548] mt-1">Text dictionary describing all variables.</p>
+                    </div>
+                    <a href="data/HousePrices-DataDescription.txt" download="HousePrices-DataDescription.txt" class="w-full text-center bg-[#6d4c41] hover:bg-[#4e342e] text-[#fdfbf7] text-sm font-semibold px-4 py-2.5 transition-colors shadow flex justify-center items-center">
+                        <i class="fas fa-file-alt mr-2 text-[#d4af37]"></i> Download Dictionary
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <form id="lab-form" onsubmit="event.preventDefault();">
+            
+            <!-- Requirement 1 -->
+            <div class="animate-fade-in delay-300 bg-white/70 p-6 md:p-8 mb-8 border border-[#d7ccc8] shadow-sm">
+                <div class="border-b-2 border-[#e0d5c1] pb-4 mb-6">
+                    <span class="bg-[#efebe1] text-[#5d4037] border border-[#d7ccc8] text-xs font-bold px-3 py-1 uppercase tracking-wider font-serif">Requirement 1</span>
+                    <h3 class="text-2xl font-bold text-[#3e2723] mt-3 font-antique">Pivot Tables</h3>
+                </div>
+                
+                <div class="space-y-8">
+                    <!-- Q1 -->
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">1. Create a Pivot Table and Pivot Chart to show the number of homes for sale broken down by Building Types. Which building type has the most homes for sale?</p>
+                        
+                        <div class="mb-4">
+                            <button type="button" onclick="toggleHint('hint1')" class="text-sm font-semibold text-[#b8860b] hover:text-[#8b6508] flex items-center transition-colors bg-[#fffdf0] px-4 py-2 border border-[#eedd82] shadow-sm">
+                                <i class="fas fa-lightbulb mr-2"></i> Reveal Step-by-Step Instructions
+                                <i id="icon-hint1" class="fas fa-chevron-down ml-2 transform transition-transform duration-300"></i>
+                            </button>
+                            <div class="hint-wrapper" id="hint1">
+                                <div class="hint-inner">
+                                    <div class="mt-3 p-5 bg-[#fffdf0] border-l-4 border-[#b8860b] text-sm text-[#5c4033] shadow-inner">
+                                        <ol class="list-decimal ml-5 space-y-1">
+                                            <li>Insert a PivotTable from the dataset.</li>
+                                            <li>Drag <strong>BldgType</strong> into the Rows area.</li>
+                                            <li>Drag a field (like <strong>Id</strong>) into the Values area and ensure it is set to "Count".</li>
+                                            <li>Insert a Pivot Chart (e.g., Column chart) to visualize the result.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req1_q1" value="A" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">A. 1Fam</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req1_q1" value="B" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">B. 2fmCon</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req1_q1" value="C" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">C. Duplx</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req1_q1" value="D" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">D. Twnhs</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                        </div>
+                        <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> A. 1Fam</div>
+                        </div>
+                    </div>
+
+                    <hr class="border-[#e0d5c1] border-dashed">
+
+                    <!-- Q2 -->
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">2. Create a Pivot Table to show the average living area (GrLivArea) of homes, filtering for BldgType = 1Fam, and grouping YearBuilt from 1900 to 2010 in 10-year intervals. Which decade has the smallest average living area?</p>
+                        
+                        <div class="mb-4">
+                            <button type="button" onclick="toggleHint('hint2')" class="text-sm font-semibold text-[#b8860b] hover:text-[#8b6508] flex items-center transition-colors bg-[#fffdf0] px-4 py-2 border border-[#eedd82] shadow-sm">
+                                <i class="fas fa-lightbulb mr-2"></i> Reveal Step-by-Step Instructions
+                                <i id="icon-hint2" class="fas fa-chevron-down ml-2 transform transition-transform duration-300"></i>
+                            </button>
+                            <div class="hint-wrapper" id="hint2">
+                                <div class="hint-inner">
+                                    <div class="mt-3 p-5 bg-[#fffdf0] border-l-4 border-[#b8860b] text-sm text-[#5c4033] shadow-inner">
+                                        <ol class="list-decimal ml-5 space-y-1">
+                                            <li>Insert a PivotTable from the dataset.</li>
+                                            <li>Drag <strong>YearBuilt</strong> into the Rows area.</li>
+                                            <li>Right-click on any year in the table -> <strong>Group…</strong> (Start: 1900, End: 2010, By: 10).</li>
+                                            <li>Drag <strong>GrLivArea</strong> into the Values area. Change Settings to <strong>Average</strong>.</li>
+                                            <li>Drag <strong>BldgType</strong> into Filters -> Select <strong>1Fam</strong>.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req1_q2" value="A" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">A. >1900</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req1_q2" value="B" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">B. 1940-1949</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req1_q2" value="C" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">C. 1950-1959</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req1_q2" value="D" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">D. 2000-2010</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                        </div>
+                        <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> C. 1950-1959</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirement 2 -->
+            <div class="animate-fade-in delay-400 bg-white/70 p-6 md:p-8 mb-8 border border-[#d7ccc8] shadow-sm">
+                <div class="border-b-2 border-[#e0d5c1] pb-4 mb-6">
+                    <span class="bg-[#efebe1] text-[#5d4037] border border-[#d7ccc8] text-xs font-bold px-3 py-1 uppercase tracking-wider font-serif">Requirement 2</span>
+                    <h3 class="text-2xl font-bold text-[#3e2723] mt-3 font-antique">Histogram of Sale Price</h3>
+                </div>
+
+                <div class="mb-6">
+                    <button type="button" onclick="toggleHint('hint3')" class="text-sm font-semibold text-[#b8860b] hover:text-[#8b6508] flex items-center transition-colors bg-[#fffdf0] px-4 py-2 border border-[#eedd82] shadow-sm">
+                        <i class="fas fa-lightbulb mr-2"></i> Reveal Step-by-Step Instructions
+                        <i id="icon-hint3" class="fas fa-chevron-down ml-2 transform transition-transform duration-300"></i>
+                    </button>
+                    <div class="hint-wrapper" id="hint3">
+                        <div class="hint-inner">
+                            <div class="mt-3 p-5 bg-[#fffdf0] border-l-4 border-[#b8860b] text-sm text-[#5c4033] shadow-inner">
+                                <ol class="list-decimal ml-5 space-y-1">
+                                    <li>Enter the Bins data in a blank area. Bin should start from 100,000 up to 700,000 in 100,000 increments.</li>
+                                    <li>Go to <strong>Data > Data Analysis > Histogram</strong>.</li>
+                                    <li>Select the <strong>SalePrice</strong> column as the Input Range.</li>
+                                    <li>Select your newly typed Bins as the Bin Range.</li>
+                                    <li>Check "Chart Output" and generate the histogram.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">1. Based on the shape of your histogram, do you see the data is positively skewed or negatively skewed?</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req2_q1" value="A" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">A. Positively Skewed</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req2_q1" value="B" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">B. Negatively Skewed</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                        </div>
+                         <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> A. Positively Skewed</div>
+                        </div>
+                    </div>
+
+                    <hr class="border-[#e0d5c1] border-dashed">
+
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">2. Based on the shape of your histogram, will the mean or median have a higher value?</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req2_q2" value="A" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">A. Mean</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req2_q2" value="B" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">B. Median</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                        </div>
+                         <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> A. Mean</div>
+                        </div>
+                    </div>
+
+                    <hr class="border-[#e0d5c1] border-dashed">
+
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">3. Which value (mean or median) would be a better measure of the center of the distribution?</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req2_q3" value="A" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">A. Mean</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req2_q3" value="B" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">B. Median</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                        </div>
+                         <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> B. Median</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirement 3 -->
+            <div class="animate-fade-in delay-500 bg-white/70 p-6 md:p-8 mb-8 border border-[#d7ccc8] shadow-sm">
+                <div class="border-b-2 border-[#e0d5c1] pb-4 mb-6">
+                    <span class="bg-[#efebe1] text-[#5d4037] border border-[#d7ccc8] text-xs font-bold px-3 py-1 uppercase tracking-wider font-serif">Requirement 3</span>
+                    <h3 class="text-2xl font-bold text-[#3e2723] mt-3 font-antique">Box & Whisker Plot of Sale Price</h3>
+                </div>
+
+                <!-- Boxplot Interpretation Guide -->
+                <div class="mb-10 bg-[#fbf9f4] border border-[#d7ccc8] p-5 md:p-8 shadow-inner relative">
+                    <div class="absolute top-0 right-0 w-16 h-16 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNMjU2IDBDMTE0LjYgMCAwIDExNC42IDAgMjU2czExNC42IDI1NiAyNTYgMjU2IDI1Ni0xMTQuNiAyNTYtMjU2UzM5Ny40IDAgMjU2IDB6Ii8+PC9zdmc+')]"></div>
+                    <h3 class="text-xl font-bold text-[#4e342e] mb-2 font-antique"><i class="fas fa-glasses mr-2 text-[#8b4513]"></i>Interpretation Guide: Outliers & Skewness</h3>
+                    <p class="mb-6 text-sm text-[#5d4037]">A <strong>Box & Whisker Plot</strong> visualizes the distribution of data. In Excel, these are drawn vertically by default.</p>
+                    
+                    <div class="flex flex-col gap-8 items-start mb-2">
+                        <!-- VERTICAL BOXPLOT (EXCEL STYLE) -->
+                        <div class="bg-white p-5 border border-[#e0d5c1] shadow-sm flex flex-col md:flex-row gap-6 w-full md:w-auto items-center relative">
+                            <!-- Background antique frame line -->
+                            <div class="absolute inset-1 border border-[#e0d5c1] pointer-events-none opacity-50"></div>
+                            
+                            <div class="flex justify-center z-10">
+                                <div class="relative w-24 h-64 border-l-2 border-b-2 border-[#8d6e63] bg-[#faf8f5]">
+                                    <!-- Upper Whisker -->
+                                    <div class="absolute left-1/2 top-4 h-12 w-0.5 bg-[#3e2723] transform -translate-x-1/2"></div>
+                                    <div class="absolute left-1/4 right-1/4 top-4 h-0.5 bg-[#3e2723]"></div>
+                                    
+                                    <!-- The Box (IQR) -->
+                                    <div class="absolute left-2 right-2 top-16 h-24 bg-[#e8eaf6] border-2 border-[#388e3c] z-10 flex items-center justify-center">
+                                        <div class="text-[#3e2723] text-xl font-bold -mt-4 relative z-20" title="Mean">×</div>
+                                    </div>
+                                    
+                                    <!-- Median Line -->
+                                    <div class="absolute left-2 right-2 top-28 h-0.5 bg-[#1b5e20] z-20"></div>
+
+                                    <!-- Lower Whisker -->
+                                    <div class="absolute left-1/2 top-40 h-16 w-0.5 bg-[#3e2723] transform -translate-x-1/2"></div>
+                                    <div class="absolute left-1/4 right-1/4 bottom-8 h-0.5 bg-[#3e2723]"></div>
+
+                                    <!-- Outlier Dot -->
+                                    <div class="absolute left-1/2 top-1 w-2.5 h-2.5 bg-[#d32f2f] rounded-full border border-white shadow-sm transform -translate-x-1/2" title="Outlier"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Precise Labels -->
+                            <div class="relative h-auto md:h-64 w-full md:w-40 text-sm text-[#5d4037] font-serif grid grid-cols-2 md:block gap-2 mt-4 md:mt-0 z-10">
+                                <div class="md:absolute md:top-0 text-[#d32f2f] font-bold flex items-center gap-1">← Outlier</div>
+                                <div class="md:absolute md:top-4 flex items-center gap-1">← Max</div>
+                                <div class="md:absolute md:top-16 flex items-center gap-1">← Q3 (75%)</div>
+                                <div class="md:absolute md:top-24 text-[#3e2723] font-bold flex items-center gap-1">← Mean (×)</div>
+                                <div class="md:absolute md:top-28 text-[#1b5e20] font-bold flex items-center gap-1">← Median</div>
+                                <div class="md:absolute md:top-40 flex items-center gap-1">← Q1 (25%)</div>
+                                <div class="md:absolute md:bottom-8 flex items-center gap-1">← Min</div>
+                            </div>
+                        </div>
+
+                        <!-- SKEWNESS GUIDE (ANIMATED) -->
+                        <div class="w-full space-y-4">
+                            <div class="bg-[#efebe1] p-5 border border-[#d7ccc8] shadow-sm">
+                                <div class="flex justify-between items-center mb-4 border-b border-[#d7ccc8] pb-3">
+                                    <h4 class="font-bold text-[#4e342e] font-antique">Interpreting Skewness with Boxplots</h4>
+                                    <button type="button" onclick="playSkewAnimation()" class="px-4 py-2 bg-[#8b5a2b] hover:bg-[#6b4226] text-[#fdfbf7] text-xs font-bold transition-transform active:scale-95 shadow-md flex items-center font-serif">
+                                        <i class="fas fa-play mr-2 text-[#d4af37]"></i> Play Animation
+                                    </button>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Right Skewed Animation Container -->
+                                    <div class="skew-chart-container bg-[#faf8f5] border border-[#c8bca7] relative h-40 shadow-inner">
+                                        <div class="absolute top-2 left-3 text-xs font-bold text-[#795548] z-20 font-serif">Right Skewed (Positive)</div>
+                                        <div class="hist-bar" style="left:5%; height:20%"></div>
+                                        <div class="hist-bar" style="left:15%; height:60%"></div>
+                                        <div class="hist-bar" style="left:25%; height:80%"></div>
+                                        <div class="hist-bar" style="left:35%; height:50%"></div>
+                                        <div class="hist-bar" style="left:45%; height:30%"></div>
+                                        <div class="hist-bar" style="left:55%; height:20%"></div>
+                                        <div class="hist-bar" style="left:65%; height:15%"></div>
+                                        <div class="hist-bar" style="left:75%; height:10%"></div>
+                                        <div class="hist-bar" style="left:85%; height:5%"></div>
+                                        
+                                        <!-- Rotating Boxplot -->
+                                        <div id="bp-right" class="boxplot-layer" style="opacity: 0; transform: rotate(-90deg) scale(0.5);">
+                                            <div class="w-full h-full relative">
+                                                <div class="absolute top-12 left-[10%] right-[10%] h-0.5 bg-[#4e342e]"></div>
+                                                <div class="absolute top-8 left-[15%] w-[30%] h-8 bg-[#e8eaf6] border-2 border-[#388e3c] opacity-90"></div>
+                                                <div class="absolute top-8 left-[25%] h-8 w-0.5 bg-[#1b5e20]"></div>
+                                                <div class="absolute top-9 left-[35%] font-bold text-[#d32f2f] text-xl leading-none">×</div>
+                                            </div>
+                                        </div>
+                                        <div class="absolute bottom-2 right-3 text-xs text-[#d32f2f] font-bold z-20 bg-[#faf8f5]/90 px-2 py-0.5 shadow-sm border border-[#ef9a9a] font-serif">Mean > Median</div>
+                                    </div>
+
+                                    <!-- Left Skewed Animation Container -->
+                                    <div class="skew-chart-container bg-[#faf8f5] border border-[#c8bca7] relative h-40 shadow-inner">
+                                        <div class="absolute top-2 left-3 text-xs font-bold text-[#795548] z-20 font-serif">Left Skewed (Negative)</div>
+                                        <div class="hist-bar" style="left:5%; height:5%"></div>
+                                        <div class="hist-bar" style="left:15%; height:10%"></div>
+                                        <div class="hist-bar" style="left:25%; height:15%"></div>
+                                        <div class="hist-bar" style="left:35%; height:20%"></div>
+                                        <div class="hist-bar" style="left:45%; height:30%"></div>
+                                        <div class="hist-bar" style="left:55%; height:50%"></div>
+                                        <div class="hist-bar" style="left:65%; height:80%"></div>
+                                        <div class="hist-bar" style="left:75%; height:60%"></div>
+                                        <div class="hist-bar" style="left:85%; height:20%"></div>
+
+                                        <!-- Rotating Boxplot -->
+                                        <div id="bp-left" class="boxplot-layer" style="opacity: 0; transform: rotate(-90deg) scale(0.5);">
+                                            <div class="w-full h-full relative">
+                                                <div class="absolute top-12 left-[10%] right-[10%] h-0.5 bg-[#4e342e]"></div>
+                                                <div class="absolute top-8 left-[55%] w-[30%] h-8 bg-[#e8eaf6] border-2 border-[#388e3c] opacity-90"></div>
+                                                <div class="absolute top-8 left-[75%] h-8 w-0.5 bg-[#1b5e20]"></div>
+                                                <div class="absolute top-9 left-[65%] font-bold text-[#d32f2f] text-xl leading-none">×</div>
+                                            </div>
+                                        </div>
+                                        <div class="absolute bottom-2 left-3 text-xs text-[#d32f2f] font-bold z-20 bg-[#faf8f5]/90 px-2 py-0.5 shadow-sm border border-[#ef9a9a] font-serif">Mean < Median</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <p class="text-sm text-[#795548] italic mt-2">
+                                <i class="fas fa-magic text-[#b8860b] mr-1"></i> <strong>Tip:</strong> Click "Play Animation" to see how the vertical box plot logically maps onto the distribution curve.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hint Toggle -->
+                <div class="mb-6">
+                    <button type="button" onclick="toggleHint('hint4')" class="text-sm font-semibold text-[#b8860b] hover:text-[#8b6508] flex items-center transition-colors bg-[#fffdf0] px-4 py-2 border border-[#eedd82] shadow-sm">
+                        <i class="fas fa-lightbulb mr-2"></i> Reveal Step-by-Step Instructions
+                        <i id="icon-hint4" class="fas fa-chevron-down ml-2 transform transition-transform duration-300"></i>
+                    </button>
+                    <div class="hint-wrapper" id="hint4">
+                        <div class="hint-inner">
+                            <div class="mt-3 p-5 bg-[#fffdf0] border-l-4 border-[#b8860b] text-sm text-[#5c4033] shadow-inner">
+                                <ol class="list-decimal ml-5 space-y-1">
+                                    <li>Copy the <strong>SalePrice</strong> data into a new sheet (Name it "Req 3").</li>
+                                    <li>Select the SalePrice data range.</li>
+                                    <li>Go to <strong>Insert > Charts > Box and Whisker</strong> (or found under Statistical Charts).</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">1. Are outliers above or below the center of the distribution?</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req3_q1" value="A" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">A. Above</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req3_q1" value="B" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">B. Below</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                        </div>
+                         <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> A. Above</div>
+                        </div>
+                    </div>
+
+                    <hr class="border-[#e0d5c1] border-dashed">
+
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">2. The box in the plot spans from approximately 129,925 to 214,000. What does this range represent?</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req3_q2" value="A" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">A. The mean of SalePrice</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req3_q2" value="B" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">B. The interquartile range (IQR)</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req3_q2" value="C" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">C. The range of the dataset</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req3_q2" value="D" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">D. The standard deviation</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                        </div>
+                         <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> B. The interquartile range (IQR)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirement 4 -->
+            <div class="animate-fade-in delay-500 bg-white/70 p-6 md:p-8 mb-8 border border-[#d7ccc8] shadow-sm">
+                <div class="border-b-2 border-[#e0d5c1] pb-4 mb-6">
+                    <span class="bg-[#efebe1] text-[#5d4037] border border-[#d7ccc8] text-xs font-bold px-3 py-1 uppercase tracking-wider font-serif">Requirement 4</span>
+                    <h3 class="text-2xl font-bold text-[#3e2723] mt-3 font-antique">Box & Whisker Plots by Building Type</h3>
+                </div>
+
+                <div class="mb-6">
+                    <button type="button" onclick="toggleHint('hint5')" class="text-sm font-semibold text-[#b8860b] hover:text-[#8b6508] flex items-center transition-colors bg-[#fffdf0] px-4 py-2 border border-[#eedd82] shadow-sm">
+                        <i class="fas fa-lightbulb mr-2"></i> Reveal Step-by-Step Instructions
+                        <i id="icon-hint5" class="fas fa-chevron-down ml-2 transform transition-transform duration-300"></i>
+                    </button>
+                    <div class="hint-wrapper" id="hint5">
+                        <div class="hint-inner">
+                            <div class="mt-3 p-5 bg-[#fffdf0] border-l-4 border-[#b8860b] text-sm text-[#5c4033] shadow-inner">
+                                <ol class="list-decimal ml-5 space-y-1">
+                                    <li>Copy the <strong>HouseStyle</strong> and <strong>SalePrice</strong> fields into a new sheet (Name it "Req 4").</li>
+                                    <li>Select both columns as the data range.</li>
+                                    <li>Go to <strong>Insert > Charts > Box and Whisker</strong>.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">1. Which house type has the lowest median sale price?</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req4_q1" value="A" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">A. 2Story</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req4_q1" value="B" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">B. 1 Story</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req4_q1" value="C" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">C. 1.5 Fin</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req4_q1" value="D" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">D. 1.5 Unf</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                        </div>
+                         <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> D. 1.5 Unf</div>
+                        </div>
+                    </div>
+
+                    <hr class="border-[#e0d5c1] border-dashed">
+
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">2. Which house type does not have any outliers in sale price?</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req4_q2" value="A" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">A. 2Story</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req4_q2" value="B" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">B. 1 Story</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req4_q2" value="C" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">C. 1.5 Fin</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req4_q2" value="D" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">D. 1.5 Unf</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                        </div>
+                         <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> D. 1.5 Unf</div>
+                        </div>
+                    </div>
+
+                    <hr class="border-[#e0d5c1] border-dashed">
+
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">3. Which distribution has the largest spread?</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req4_q3" value="A" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">A. 2 Story</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req4_q3" value="B" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">B. 1 Story</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req4_q3" value="C" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">C. 1.5 Fin</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                            <label class="cursor-pointer relative">
+                                <input type="radio" name="req4_q3" value="D" class="peer sr-only">
+                                <div class="p-4 border-2 border-[#e0d5c1] bg-[#faf8f5] hover:bg-[#f5f0e6] peer-checked:bg-[#efebe1] peer-checked:border-[#8b5a2b] peer-checked:text-[#3e2723] transition-all font-medium text-[#5d4037]">D. 2.5 Fin</div>
+                                <i class="fas fa-check-circle absolute right-4 top-1/2 -translate-y-1/2 text-[#8b5a2b] opacity-0 peer-checked:opacity-100 transition-opacity text-xl shadow-sm rounded-full bg-white"></i>
+                            </label>
+                        </div>
+                         <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> A. 2 Story</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirement 5 -->
+            <div class="animate-fade-in delay-500 bg-white/70 p-6 md:p-8 mb-8 border border-[#d7ccc8] shadow-sm">
+                <div class="border-b-2 border-[#e0d5c1] pb-4 mb-6">
+                    <span class="bg-[#efebe1] text-[#5d4037] border border-[#d7ccc8] text-xs font-bold px-3 py-1 uppercase tracking-wider font-serif">Requirement 5</span>
+                    <h3 class="text-2xl font-bold text-[#3e2723] mt-3 font-antique">Scatterplot & Trend Line</h3>
+                </div>
+
+                <div class="mb-6">
+                    <button type="button" onclick="toggleHint('hint6')" class="text-sm font-semibold text-[#b8860b] hover:text-[#8b6508] flex items-center transition-colors bg-[#fffdf0] px-4 py-2 border border-[#eedd82] shadow-sm">
+                        <i class="fas fa-lightbulb mr-2"></i> Reveal Step-by-Step Instructions
+                        <i id="icon-hint6" class="fas fa-chevron-down ml-2 transform transition-transform duration-300"></i>
+                    </button>
+                    <div class="hint-wrapper" id="hint6">
+                        <div class="hint-inner">
+                            <div class="mt-3 p-5 bg-[#fffdf0] border-l-4 border-[#b8860b] text-sm text-[#5c4033] shadow-inner">
+                                <ol class="list-decimal ml-5 space-y-1">
+                                    <li>Select the <strong>GrLivArea</strong> and <strong>SalePrice</strong> columns.</li>
+                                    <li>Go to <strong>Insert > Scatter Plot</strong>. Ensure GrLivArea is the X-axis.</li>
+                                    <li>Click on a data point in the chart, right-click, and select <strong>Add Trendline</strong>.</li>
+                                    <li>In the Trendline options pane, check <strong>Display Equation on chart</strong> and <strong>Display R-squared value on chart</strong>.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">1. What is the intercept of the trend line equation?</p>
+                        <input type="number" name="req5_q1" class="w-full md:w-64 p-3 bg-[#faf8f5] border-2 border-[#e0d5c1] focus:ring-2 focus:ring-[#8b4513] focus:border-[#8b4513] outline-none transition-colors" placeholder="e.g. 10000">
+                         <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> 18569</div>
+                        </div>
+                    </div>
+
+                    <hr class="border-[#e0d5c1] border-dashed">
+
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">2. What is the R square value?</p>
+                        <input type="number" step="0.0001" name="req5_q2" class="w-full md:w-64 p-3 bg-[#faf8f5] border-2 border-[#e0d5c1] focus:ring-2 focus:ring-[#8b4513] focus:border-[#8b4513] outline-none transition-colors" placeholder="e.g. 0.50">
+                         <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> 0.5021</div>
+                        </div>
+                    </div>
+
+                    <hr class="border-[#e0d5c1] border-dashed">
+
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">3. Based on the regression line equation of your data, predict the sale price of a house with a GrLivArea of 2,000 square feet.</p>
+                        <input type="number" name="req5_q3" class="w-full md:w-64 p-3 bg-[#faf8f5] border-2 border-[#e0d5c1] focus:ring-2 focus:ring-[#8b4513] focus:border-[#8b4513] outline-none transition-colors" placeholder="e.g. 250000">
+                         <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> 232629</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirement 6 -->
+            <div class="animate-fade-in delay-500 bg-white/70 p-6 md:p-8 mb-6 border border-[#d7ccc8] shadow-sm">
+                <div class="border-b-2 border-[#e0d5c1] pb-4 mb-6">
+                    <span class="bg-[#efebe1] text-[#5d4037] border border-[#d7ccc8] text-xs font-bold px-3 py-1 uppercase tracking-wider font-serif">Requirement 6</span>
+                    <h3 class="text-2xl font-bold text-[#3e2723] mt-3 font-antique">Z-Scores & Outliers</h3>
+                    <p class="text-[#5d4037] text-sm mt-2">Calculate Z-score for SalePrice. An outlier is mathematically defined here as an <strong>absolute value of the Z-score &gt; 3 (|Z-score| &gt; 3)</strong>.</p>
+                </div>
+
+                <div class="mb-6">
+                    <button type="button" onclick="toggleHint('hint7')" class="text-sm font-semibold text-[#b8860b] hover:text-[#8b6508] flex items-center transition-colors bg-[#fffdf0] px-4 py-2 border border-[#eedd82] shadow-sm">
+                        <i class="fas fa-lightbulb mr-2"></i> Reveal Step-by-Step Instructions
+                        <i id="icon-hint7" class="fas fa-chevron-down ml-2 transform transition-transform duration-300"></i>
+                    </button>
+                    <div class="hint-wrapper" id="hint7">
+                        <div class="hint-inner">
+                            <div class="mt-3 p-5 bg-[#fffdf0] border-l-4 border-[#b8860b] text-sm text-[#5c4033] shadow-inner">
+                                <ol class="list-decimal ml-5 space-y-1">
+                                    <li>Generate Descriptive Statistics (Mean and Standard Deviation) for SalePrice.</li>
+                                    <li>Create a calculated column "Z-score". Formula: <code>=(SalePrice - Mean) / Standard Deviation</code> (Make sure to use absolute references $ for Mean and StdDev).</li>
+                                    <li>Create a conditional column flagging outliers. Example: <code>=IF(ABS([Z-score])>3, "Yes", "No")</code>.</li>
+                                    <li>Use <code>=COUNTIFS([Range], "Yes")</code> to count the total outliers (do not use COUNTIF).</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="question-block">
+                        <p class="font-semibold text-lg mb-3 text-[#2c1e16]">1. How many outliers are present? (Hint: Use COUNTIFS)</p>
+                        <input type="number" name="req6_q1" class="w-full md:w-64 p-3 bg-[#faf8f5] border-2 border-[#e0d5c1] focus:ring-2 focus:ring-[#8b4513] focus:border-[#8b4513] outline-none transition-colors" placeholder="Enter count">
+                         <div class="answer-reveal mt-4 p-4 bg-[#e8f5e9] text-[#1b5e20] border border-[#a5d6a7] shadow-sm items-start">
+                            <i class="fas fa-check-circle text-[#2e7d32] text-xl mt-0.5 mr-3"></i>
+                            <div><strong>Correct Answer:</strong> 18</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Footer -->
+            <div class="fixed bottom-0 left-0 w-full bg-[#2a1610]/95 backdrop-blur-md border-t-2 border-[#8b5a2b] p-4 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] z-40">
+                <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                    
+                    <!-- Left: Primary Submission -->
+                    <div class="flex-1 w-full md:w-auto">
+                        <button type="button" onclick="submitToGoogleSheets()" id="submitBtn" class="w-full md:w-auto bg-[#8b2500] hover:bg-[#661a00] text-[#fdfbf7] font-bold py-3 px-8 rounded-sm shadow-lg border border-[#a52a2a] transition hover:-translate-y-0.5 flex items-center justify-center text-lg font-antique">
+                            <i class="fas fa-feather-alt mr-3"></i>
+                            <span id="submitText">Submit Answers</span>
+                        </button>
+                    </div>
+
+                    <!-- Right: Post-Submit Actions (Hidden Initially) -->
+                    <div id="post-submit-actions" class="hidden flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <button type="button" onclick="revealAnswers()" class="bg-[#2e4d34] hover:bg-[#1e3322] text-[#e8dcc4] border border-[#4a7c59] text-sm font-bold py-2.5 px-4 rounded-sm shadow transition flex items-center font-serif">
+                            <i class="fas fa-eye mr-2 text-[#d4af37]"></i> Reveal Truths
+                        </button>
+                        <button type="button" onclick="saveForCanvas()" class="bg-[#e0d5c1] hover:bg-[#c8bca7] text-[#3e2723] text-sm font-bold py-2.5 px-4 rounded-sm shadow border border-[#a1887f] transition flex items-center font-serif">
+                            <i class="fas fa-download mr-2"></i> Save Ledger
+                        </button>
+                        <a href="instructor/lab4_solution.xlsx" download="lab4_solution.xlsx" class="bg-[#4a271d] hover:bg-[#2c1409] text-[#e8dcc4] text-sm font-bold py-2.5 px-4 rounded-sm border border-[#8b5a2b] shadow transition flex items-center font-serif">
+                            <i class="fas fa-file-excel mr-2 text-[#d4af37]"></i> Solution Excel
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // ---------------------------------------------------------
+        // CONFIGURATION: YOUR GOOGLE WEB APP URL
+        // ---------------------------------------------------------
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzCi-oVUByLBtkMm96N41_nuhaWlZ50o8pLgPukxkNAmYQ255Z3xEwvp0xs0pNNMQI/exec";
+        // ---------------------------------------------------------
+
+        function toggleHint(hintId) {
+            const hint = document.getElementById(hintId);
+            const icon = document.getElementById('icon-' + hintId);
+            
+            if (hint.classList.contains('open')) {
+                hint.classList.remove('open');
+                icon.style.transform = "rotate(0deg)";
+            } else {
+                hint.classList.add('open');
+                icon.style.transform = "rotate(180deg)";
+            }
+        }
+
+        // Boxplot Skew Animation
+        function playSkewAnimation() {
+            const bpRight = document.getElementById('bp-right');
+            const bpLeft = document.getElementById('bp-left');
+            
+            // Reset to default horizontal/hidden
+            [bpRight, bpLeft].forEach(bp => {
+                bp.style.transition = 'none';
+                bp.style.opacity = '0';
+                bp.style.transform = 'rotate(-90deg) scale(0.5)';
+            });
+            
+            // Trigger reflow to restart animation
+            void bpRight.offsetWidth;
+
+            // Animate to view
+            [bpRight, bpLeft].forEach(bp => {
+                bp.style.transition = 'all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                bp.style.opacity = '1';
+                bp.style.transform = 'rotate(0deg) scale(1)';
+            });
+        }
+
+        function revealAnswers() {
+            const answers = document.querySelectorAll('.answer-reveal');
+            answers.forEach((el, index) => {
+                setTimeout(() => {
+                    el.classList.add('visible');
+                }, index * 100);
+            });
+            window.scrollTo({ top: document.querySelector('.question-block').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        function saveForCanvas() {
+            const name = document.getElementById('fullName').value || 'Unknown_Scholar';
+            const email = document.getElementById('email').value;
+            
+            let content = `Lab 4 Ledger & Truths\nScholar: ${name}\nEmail: ${email}\nDate: ${new Date().toLocaleString()}\n\n-- RESULTS --\n\n`;
+
+            const questionBlocks = document.querySelectorAll('.question-block');
+            questionBlocks.forEach((block) => {
+                const questionText = block.querySelector('p.font-semibold').innerText;
+                
+                const checkedRadio = block.querySelector('input[type="radio"]:checked');
+                const numberInput = block.querySelector('input[type="number"]');
+                let userAnswer = "No mark provided";
+                if (checkedRadio) userAnswer = checkedRadio.value;
+                if (numberInput && numberInput.value) userAnswer = numberInput.value;
+
+                const revealDiv = block.querySelector('.answer-reveal');
+                let correctAnswer = "N/A";
+                if (revealDiv) {
+                    correctAnswer = revealDiv.innerText.replace('Correct Answer:', '').trim();
+                }
+
+                content += `Inquiry: ${questionText}\nYour Mark: ${userAnswer}\nTrue Answer: ${correctAnswer}\n\n`;
+            });
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const anchor = document.createElement('a');
+            anchor.href = window.URL.createObjectURL(blob);
+            anchor.download = `Lab4_Ledger_${name.replace(/\s+/g, '_')}.txt`;
+            anchor.click();
+        }
+
+        function submitToGoogleSheets() {
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('submitText');
+            const actionsPanel = document.getElementById('post-submit-actions');
+            
+            const name = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+
+            if(!name || !email) {
+                alert("Please declare your Name and Zagmail before sealing your answers.");
+                return;
+            }
+
+            btn.disabled = true;
+            btnText.innerHTML = '<i class="fas fa-hourglass-half fa-spin mr-2 text-[#d4af37]"></i> Sealing...';
+            btn.classList.add('opacity-75');
+
+            const formData = new FormData();
+            formData.append('FullName', name);
+            formData.append('Email', email);
+            formData.append('timestamp', new Date().toISOString());
+
+            document.querySelectorAll('input[type="radio"]:checked').forEach(r => formData.append(r.name, r.value));
+            document.querySelectorAll('input[type="number"]').forEach(n => formData.append(n.name, n.value));
+            
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                body: formData
+            })
+            .then(() => {
+                alert("Your answers have been sealed and sent to the grading ledger! You may now reveal the truths and download the solutions.\n\nDO NOT FORGET: Upload your Excel file to Canvas!");
+                
+                btnText.innerHTML = '<i class="fas fa-stamp mr-2 text-[#d4af37]"></i> Sealed & Submitted';
+                btn.classList.replace('bg-[#8b2500]', 'bg-[#1b5e20]');
+                btn.classList.replace('hover:bg-[#661a00]', 'hover:bg-[#144d18]');
+                btn.classList.replace('border-[#a52a2a]', 'border-[#2e7d32]');
+                
+                actionsPanel.classList.remove('hidden');
+                revealAnswers();
+            })
+            .catch(error => {
+                console.error('Error!', error.message);
+                alert("The magical connection was interrupted. Please check your internet connection and try again.");
+                btn.disabled = false;
+                btnText.innerHTML = '<i class="fas fa-feather-alt mr-3"></i> Seal & Submit Answers';
+                btn.classList.remove('opacity-75');
+            });
+        }
+    </script>
+</body>
+</html>
