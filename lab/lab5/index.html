@@ -139,9 +139,37 @@
             border-style: solid;
             border-color: #2563eb transparent transparent transparent;
         }
+
+        /* --- RACE TIMER ANIMATIONS --- */
+        @keyframes racePopIn {
+            0% { transform: scale(0.2) translateY(50px) rotate(-10deg); opacity: 0; }
+            60% { transform: scale(1.1) translateY(0) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) translateY(0) rotate(0); opacity: 1; }
+        }
+        @keyframes raceGoOut {
+            0% { transform: scale(0.5); opacity: 0; }
+            40% { transform: scale(1.2); opacity: 1; }
+            70% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(3) translateY(-50px); opacity: 0; filter: blur(5px); }
+        }
+        .timer-pop {
+            animation: racePopIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .timer-go-anim {
+            animation: raceGoOut 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .timer-stroke {
+            -webkit-text-stroke: 4px black;
+            text-shadow: 4px 4px 0 #000, 8px 8px 0 rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen bg-gray-50 font-sans overflow-hidden text-gray-800">
+
+    <!-- STARTUP TIMER OVERLAY -->
+    <div id="race-timer-overlay" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity duration-500">
+        <div id="race-timer-text" class="text-white font-black opacity-0 timer-stroke italic tracking-widest uppercase"></div>
+    </div>
 
     <!-- HEADER -->
     <header class="bg-[#217346] text-white flex items-center px-4 py-2 shadow-md z-10 shrink-0">
@@ -326,7 +354,7 @@
                             <input id="inp-scen-1" type="text" class="border border-gray-400 px-2 py-1 w-24 bg-white text-right font-mono" value="0.05">
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="w-32 text-right font-mono text-gray-600">2:   COGS_Pct</label>
+                            <label class="w-32 text-right font-mono text-gray-600">2:  COGS_Pct</label>
                             <input id="inp-scen-2" type="text" class="border border-gray-400 px-2 py-1 w-24 bg-white text-right font-mono" value="0.60">
                         </div>
                     </div>
@@ -1754,12 +1782,47 @@
             XLSX.writeFile(wb, "Analytics_Lab_Practice.xlsx");
         }
 
+        // --- STARTUP RACE TIMER ---
+        function startRaceTimer() {
+            const overlay = document.getElementById('race-timer-overlay');
+            const textElement = document.getElementById('race-timer-text');
+            
+            // 1. READY
+            textElement.innerText = "READY";
+            textElement.className = "text-red-500 text-8xl md:text-[8rem] font-black uppercase italic timer-pop timer-stroke";
+            
+            // 2. SET
+            setTimeout(() => {
+                textElement.classList.remove('timer-pop');
+                void textElement.offsetWidth; // Trigger reflow to restart animation
+                textElement.innerText = "SET";
+                textElement.className = "text-yellow-400 text-8xl md:text-[8rem] font-black uppercase italic timer-pop timer-stroke";
+            }, 1000);
+            
+            // 3. GO!
+            setTimeout(() => {
+                textElement.classList.remove('timer-pop');
+                void textElement.offsetWidth;
+                textElement.innerText = "GO!";
+                textElement.className = "text-green-400 text-9xl md:text-[12rem] font-black uppercase italic timer-go-anim timer-stroke";
+            }, 2000);
+            
+            // 4. Cleanup
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.remove();
+                }, 500); // Wait for fade out
+            }, 2800);
+        }
+
         // Initialize application
         window.onload = () => {
             makeDraggable("modal-solver", "drag-solver");
             makeDraggable("modal-scenario", "drag-scenario");
             state.previousGridData = {...solverGrids.initial};
             renderAll();
+            startRaceTimer(); // Trigger the Mario Kart style startup
         };
     </script>
 </body>
