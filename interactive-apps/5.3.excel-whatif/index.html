@@ -215,7 +215,7 @@
             </div>
             <div>
                 <h1 class="font-bold text-lg tracking-wide leading-tight">Excel Master</h1>
-                <p class="text-xs text-orange-400 font-medium">Solver Optimization & Scenario Analysis</p>
+                <p class="text-xs text-orange-400 font-medium">Solver, Scenarios & Data Tables</p>
             </div>
         </div>
         <div class="flex items-center gap-6">
@@ -343,7 +343,7 @@
                         <i class="fas fa-trophy"></i>
                     </div>
                     <h2 class="text-4xl font-extrabold text-slate-900 mb-4">Mastery Achieved!</h2>
-                    <p class="text-slate-600 mb-8 text-lg">You have successfully configured Solver models and performed Scenario Analysis.</p>
+                    <p class="text-slate-600 mb-8 text-lg">You have successfully configured Solver models, Scenario Analysis, and Data Tables.</p>
                     <div class="flex justify-center gap-4">
                         <button onclick="location.reload()" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold transition-colors">
                             Review Course
@@ -379,7 +379,69 @@
             }
         };
 
-        // 2. Solver Model: Product Mix (Manufacturing)
+        // 2a. Data Table 1-Variable Model
+        const dataTable1VarUnsolved = {
+            name: "Data_Table_1V",
+            headers: ["", "A", "B", "C", "D", "E"],
+            rows: [
+                { id: 1, cells: ["Item", "Value", "", "Qty", "Profit"] },
+                { id: 2, cells: ["Price", "$50", "", "100", ""] },
+                { id: 3, cells: ["Cost", "$30", "", "200", ""] },
+                { id: 4, cells: ["Quantity", "100", "", "250", ""] },
+                { id: 5, cells: ["Fixed Costs", "$5,000", "", "300", ""] },
+                { id: 6, cells: ["Profit", "-$3,000", "", "400", ""] }
+            ],
+            formulas: { "E1": "=B6" },
+            highlights: { "E1": "cell-formula", "D2": "cell-input", "D3": "cell-input", "D4": "cell-input", "D5": "cell-input", "D6": "cell-input" }
+        };
+
+        const dataTable1VarSolved = {
+            name: "Data_Table_1V",
+            headers: ["", "A", "B", "C", "D", "E"],
+            rows: [
+                { id: 1, cells: ["Item", "Value", "", "Qty", "Profit"] },
+                { id: 2, cells: ["Price", "$50", "", "100", "-$3,000"] },
+                { id: 3, cells: ["Cost", "$30", "", "200", "-$1,000"] },
+                { id: 4, cells: ["Quantity", "100", "", "250", "$0"] },
+                { id: 5, cells: ["Fixed Costs", "$5,000", "", "300", "$1,000"] },
+                { id: 6, cells: ["Profit", "-$3,000", "", "400", "$3,000"] }
+            ],
+            formulas: { "E1": "=B6" },
+            highlights: { "E2": "cell-objective", "E3": "cell-objective", "E4": "cell-objective", "E5": "cell-objective", "E6": "cell-objective" }
+        };
+
+        // 2b. Data Table 2-Variable Model
+        const dataTable2VarUnsolved = {
+            name: "Data_Table_2V",
+            headers: ["", "A", "B", "C", "D", "E", "F", "G"],
+            rows: [
+                { id: 1, cells: ["Item", "Value", "", "Qty \\ Price", "$40", "$50", "$60"] },
+                { id: 2, cells: ["Price", "$50", "", "100", "", "", ""] },
+                { id: 3, cells: ["Cost", "$30", "", "200", "", "", ""] },
+                { id: 4, cells: ["Quantity", "100", "", "300", "", "", ""] },
+                { id: 5, cells: ["Fixed Costs", "$5,000", "", "", "", "", ""] },
+                { id: 6, cells: ["Profit", "-$3,000", "", "", "", "", ""] }
+            ],
+            formulas: { "D1": "=B6" },
+            highlights: { "D1": "cell-formula", "E1": "cell-input", "F1": "cell-input", "G1": "cell-input", "D2": "cell-input", "D3": "cell-input", "D4": "cell-input" }
+        };
+
+        const dataTable2VarSolved = {
+            name: "Data_Table_2V",
+            headers: ["", "A", "B", "C", "D", "E", "F", "G"],
+            rows: [
+                { id: 1, cells: ["Item", "Value", "", "Qty \\ Price", "$40", "$50", "$60"] },
+                { id: 2, cells: ["Price", "$50", "", "100", "-$4,000", "-$3,000", "-$2,000"] },
+                { id: 3, cells: ["Cost", "$30", "", "200", "-$3,000", "-$1,000", "$1,000"] },
+                { id: 4, cells: ["Quantity", "100", "", "300", "-$2,000", "$1,000", "$4,000"] },
+                { id: 5, cells: ["Fixed Costs", "$5,000", "", "", "", "", ""] },
+                { id: 6, cells: ["Profit", "-$3,000", "", "", "", "", ""] }
+            ],
+            formulas: { "D1": "=B6" },
+            highlights: { "E2": "cell-objective", "F2": "cell-objective", "G2": "cell-objective", "E3": "cell-objective", "F3": "cell-objective", "G3": "cell-objective", "E4": "cell-objective", "F4": "cell-objective", "G4": "cell-objective" }
+        };
+
+        // 3. Solver Model: Product Mix (Manufacturing)
         const solverData = {
             name: "Production_Plan",
             headers: ["", "A", "B", "C", "D", "E", "F"], // Added Column F
@@ -404,7 +466,7 @@
             }
         };
 
-        // 3. Scenario Model: Budget (Forecasting)
+        // 4. Scenario Model: Budget (Forecasting)
         const scenarioData = {
             name: "Budget_2024",
             headers: ["", "A", "B", "C"],
@@ -454,7 +516,7 @@
                         </div>
                     </div>
 
-                    <p class="text-slate-600">In this course, we will master three power tools: <strong>Goal Seek</strong> (Working backwards), <strong>Solver</strong> (Optimization), and <strong>Scenario Manager</strong> (Comparing cases).</p>
+                    <p class="text-slate-600">In this course, we will master Data Tables, Goal Seek, Solver, and Scenario Manager.</p>
                 `
             },
             // 1. GOAL SEEK INTRO
@@ -509,13 +571,177 @@
                     }
                 ]
             },
-            // 3. SOLVER INTRO
+            // 3. DATA TABLES INTRO
+            {
+                type: 'lesson',
+                title: "What are Data Tables?",
+                content: `
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Sensitivity Analysis at a Glance</h3>
+                    <p class="mb-4">Goal Seek gave us one specific answer. But what if we want to see a whole range of possibilities at once? That's what Data Tables do.</p>
+                    
+                    <div class="grid grid-cols-1 gap-4 my-6">
+                        <div class="bg-white shadow-sm p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-slate-800 mb-2">1-Variable Data Table</h4>
+                            <p class="text-sm text-slate-600">Shows how changing <strong>one</strong> input (like Quantity) affects one or more outputs (like Profit). It outputs a simple list.</p>
+                        </div>
+                        <div class="bg-white shadow-sm p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-slate-800 mb-2">2-Variable Data Table</h4>
+                            <p class="text-sm text-slate-600">Shows how changing <strong>two</strong> inputs simultaneously (like Quantity AND Price) affects a <strong>single</strong> output. It outputs a matrix/grid.</p>
+                        </div>
+                    </div>
+                    
+                    <p>Let's map out our profit potential using the same data from the Goal Seek exercise.</p>
+                `
+            },
+            // 4. DATA TABLE 1-VAR WALKTHROUGH
+            {
+                type: 'datatable-walkthrough',
+                title: "Walkthrough: 1-Variable Data Table",
+                desc: "Let's create a table that shows our Profit at different production quantities.",
+                taskBadge: "Guided Tutorial",
+                data: dataTable1VarUnsolved,
+                steps: [
+                    {
+                        stepInfo: "Step 1 of 4",
+                        title: "Link the Formula",
+                        text: "First, the Data Table needs to know what formula to calculate. We put a reference to our Profit formula (<strong>B6</strong>) at the top of the output column (<strong>E1</strong>).",
+                        highlights: [{id: "E1", class: "tutorial-highlight"}],
+                        tooltips: [{ target: "E1", content: "=B6" }],
+                        showFormulas: true,
+                        dialog: `<div class="bg-blue-50 border border-blue-200 p-4 rounded text-sm text-blue-900 shadow-sm"><strong class="block mb-2 text-blue-700"><i class="fas fa-link"></i> The Link</strong><p>The empty cells below E1 will be filled with profit results for each quantity listed in Column D.</p></div>`
+                    },
+                    {
+                        stepInfo: "Step 2 of 4",
+                        title: "Select the Range",
+                        text: "To run the tool, we must highlight the entire table range: <strong>D1:E6</strong>. This includes the quantities, the formula link, and the empty space.",
+                        highlights: [
+                            {id: "D1", class: "highlight-blue"}, {id: "E1", class: "highlight-blue"},
+                            {id: "D2", class: "highlight-blue"}, {id: "E2", class: "highlight-blue"},
+                            {id: "D3", class: "highlight-blue"}, {id: "E3", class: "highlight-blue"},
+                            {id: "D4", class: "highlight-blue"}, {id: "E4", class: "highlight-blue"},
+                            {id: "D5", class: "highlight-blue"}, {id: "E5", class: "highlight-blue"},
+                            {id: "D6", class: "highlight-blue"}, {id: "E6", class: "highlight-blue"}
+                        ],
+                        showFormulas: false,
+                        dialog: `<div class="bg-slate-50 border border-slate-200 p-4 rounded text-sm text-slate-800 shadow-sm"><strong class="block mb-2 text-slate-600"><i class="fas fa-mouse-pointer"></i> Highlight</strong><p>Excel needs to know exactly where the inputs are and where to put the outputs.</p></div>`
+                    },
+                    {
+                        stepInfo: "Step 3 of 4",
+                        title: "Configure the Tool",
+                        text: "We open the Data Table dialog. Since our test quantities (100, 200, 250...) are arranged in a <strong>Column</strong>, we put our original Quantity cell (<strong>$B$4</strong>) into the 'Column input cell' box.",
+                        highlights: [{id: "B4", class: "tutorial-highlight"}],
+                        showFormulas: false,
+                        dialog: `
+                            <div class="solver-window p-0 overflow-hidden relative shadow-md">
+                                <div class="solver-header bg-white border-b border-gray-300">
+                                    <span class="font-bold text-xs">Data Table</span>
+                                    <i class="fas fa-times text-xs text-gray-400"></i>
+                                </div>
+                                <div class="p-3 text-xs space-y-3 text-slate-700 bg-gray-50">
+                                    <div class="flex items-center gap-2">
+                                        <label class="w-24 text-right font-semibold">Row input cell:</label>
+                                        <div class="bg-white border border-gray-300 px-2 py-0.5 w-24 font-mono text-gray-400"></div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label class="w-24 text-right font-semibold">Column input cell:</label>
+                                        <div class="bg-white border border-gray-300 px-2 py-0.5 w-24 font-mono font-bold text-blue-700">$B$4</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        stepInfo: "Step 4 of 4",
+                        title: "The Results",
+                        text: "Excel instantly calculates the Profit for every quantity! We can easily see that producing <strong>250 units</strong> is our exact Break-Even point ($0 Profit).",
+                        data: dataTable1VarSolved, // Inject solved data
+                        highlights: [
+                            {id: "E2", class: "highlight-green"}, 
+                            {id: "E3", class: "highlight-green"}, 
+                            {id: "E4", class: "tutorial-highlight"}, // Break even
+                            {id: "E5", class: "highlight-green"}, 
+                            {id: "E6", class: "highlight-green"}
+                        ],
+                        showFormulas: false,
+                        dialog: `<div class="bg-green-50 border border-green-200 p-4 rounded text-sm text-green-900 shadow-sm"><strong class="block mb-2 text-green-700"><i class="fas fa-magic"></i> Magic Array</strong><p>Excel creates an array formula <code>{=TABLE(,B4)}</code> in those cells.</p></div>`
+                    }
+                ]
+            },
+            // 5. DATA TABLE 2-VAR WALKTHROUGH
+            {
+                type: 'datatable-walkthrough',
+                title: "Walkthrough: 2-Variable Data Table",
+                desc: "What if we want to see how BOTH Price and Quantity affect our Profit? A 2-Variable Data Table creates a matrix.",
+                taskBadge: "Guided Tutorial",
+                data: dataTable2VarUnsolved,
+                steps: [
+                    {
+                        stepInfo: "Step 1 of 4",
+                        title: "The Corner Link",
+                        text: "For a 2-Variable table, the formula reference MUST go in the top-left corner of the matrix (<strong>D1</strong>).",
+                        highlights: [{id: "D1", class: "tutorial-highlight"}],
+                        tooltips: [{ target: "D1", content: "=B6" }],
+                        showFormulas: true,
+                        dialog: `<div class="bg-blue-50 border border-blue-200 p-4 rounded text-sm text-blue-900 shadow-sm"><strong class="block mb-2 text-blue-700"><i class="fas fa-compress-arrows-alt"></i> The Pivot Point</strong><p>Cell D1 connects the row variables ($40, $50, $60) with the column variables (100, 200, 300).</p></div>`
+                    },
+                    {
+                        stepInfo: "Step 2 of 4",
+                        title: "Select the Matrix",
+                        text: "Highlight the entire grid: <strong>D1:G4</strong>.",
+                        highlights: [
+                            {id: "D1", class: "highlight-blue"}, {id: "E1", class: "highlight-blue"}, {id: "F1", class: "highlight-blue"}, {id: "G1", class: "highlight-blue"},
+                            {id: "D2", class: "highlight-blue"}, {id: "E2", class: "highlight-blue"}, {id: "F2", class: "highlight-blue"}, {id: "G2", class: "highlight-blue"},
+                            {id: "D3", class: "highlight-blue"}, {id: "E3", class: "highlight-blue"}, {id: "F3", class: "highlight-blue"}, {id: "G3", class: "highlight-blue"},
+                            {id: "D4", class: "highlight-blue"}, {id: "E4", class: "highlight-blue"}, {id: "F4", class: "highlight-blue"}, {id: "G4", class: "highlight-blue"}
+                        ],
+                        showFormulas: false,
+                        dialog: `<div class="bg-slate-50 border border-slate-200 p-4 rounded text-sm text-slate-800 shadow-sm"><strong class="block mb-2 text-slate-600"><i class="fas fa-border-all"></i> The Grid</strong><p>The empty cells in the middle will become our profit matrix.</p></div>`
+                    },
+                    {
+                        stepInfo: "Step 3 of 4",
+                        title: "Configure Both Inputs",
+                        text: "In the dialog:<br>1. Our Prices ($40, $50, $60) are in a row, so 'Row input cell' is Price (<strong>$B$2</strong>).<br>2. Our Quantities (100, 200, 300) are in a column, so 'Column input cell' is Quantity (<strong>$B$4</strong>).",
+                        highlights: [{id: "B2", class: "tutorial-highlight"}, {id: "B4", class: "tutorial-highlight"}],
+                        showFormulas: false,
+                        dialog: `
+                            <div class="solver-window p-0 overflow-hidden relative shadow-md">
+                                <div class="solver-header bg-white border-b border-gray-300">
+                                    <span class="font-bold text-xs">Data Table</span>
+                                    <i class="fas fa-times text-xs text-gray-400"></i>
+                                </div>
+                                <div class="p-3 text-xs space-y-3 text-slate-700 bg-gray-50">
+                                    <div class="flex items-center gap-2">
+                                        <label class="w-24 text-right font-semibold">Row input cell:</label>
+                                        <div class="bg-white border border-gray-300 px-2 py-0.5 w-24 font-mono font-bold text-blue-700">$B$2</div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label class="w-24 text-right font-semibold">Column input cell:</label>
+                                        <div class="bg-white border border-gray-300 px-2 py-0.5 w-24 font-mono font-bold text-blue-700">$B$4</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        stepInfo: "Step 4 of 4",
+                        title: "The Matrix Results",
+                        text: "Excel crosses every Price with every Quantity! We can instantly see that selling 300 units at $60 yields a $4,000 profit.",
+                        data: dataTable2VarSolved, // Inject solved data
+                        highlights: [
+                            {id: "G4", class: "tutorial-highlight"}
+                        ],
+                        showFormulas: false,
+                        dialog: `<div class="bg-green-50 border border-green-200 p-4 rounded text-sm text-green-900 shadow-sm"><strong class="block mb-2 text-green-700"><i class="fas fa-chart-grid"></i> Complete View</strong><p>Data Tables are excellent for quick sensitivity analysis before building full scenarios.</p></div>`
+                    }
+                ]
+            },
+            // 6. SOLVER INTRO
             {
                 type: 'lesson',
                 title: "What is Solver?",
                 content: `
-                    <h3 class="text-xl font-bold text-slate-800 mb-2">Beyond Goal Seek</h3>
-                    <p class="mb-4">Goal Seek is great for one variable. But what if you have <strong>multiple</strong> products, limited resources, and need to maximize profit?</p>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Beyond Data Tables & Goal Seek</h3>
+                    <p class="mb-4">Goal Seek and Data Tables are great for 1 or 2 variables. But what if you have <strong>multiple</strong> products, limited resources, and need to absolutely maximize profit?</p>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
                         <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 opacity-60">
@@ -532,7 +758,7 @@
                     <p>In this module, we will act as the Production Manager. We need to decide the optimal manufacturing mix.</p>
                 `
             },
-            // 4. SOLVER WALKTHROUGH
+            // 7. SOLVER WALKTHROUGH
             {
                 type: 'solver-walkthrough',
                 title: "Walkthrough: Setting up Solver",
@@ -647,7 +873,7 @@
                     }
                 ]
             },
-            // 5. SOLVER CONFIGURATION (Objective)
+            // 8. SOLVER CONFIGURATION (Objective)
             {
                 type: 'solver-quiz',
                 title: "Solver: Set Objective",
@@ -678,7 +904,7 @@
                     }
                 ]
             },
-            // 6. SOLVER CONSTRAINTS
+            // 9. SOLVER CONSTRAINTS
             {
                 type: 'solver-quiz',
                 title: "Solver: Adding Constraints",
@@ -709,7 +935,7 @@
                     }
                 ]
             },
-            // 7. SCENARIO INTRO
+            // 10. SCENARIO INTRO
             {
                 type: 'lesson',
                 title: "Scenario Manager",
@@ -739,7 +965,7 @@
                     <p>Next, we will use an interactive dashboard to test how a Recession vs. a Boom affects our Budgeted Net Income.</p>
                 `
             },
-            // 8. MECHANICS OF SCENARIO PLANNING (Interactive Walkthrough)
+            // 11. MECHANICS OF SCENARIO PLANNING (Interactive Walkthrough)
             {
                 type: 'scenario-walkthrough',
                 title: "Walkthrough: Building the 'Best Case'",
@@ -907,7 +1133,7 @@
                     }
                 ]
             },
-            // 9. SCENARIO PLAYGROUND
+            // 12. SCENARIO PLAYGROUND
             {
                 type: 'scenario-playground',
                 title: "Interactive: Budget Scenarios",
@@ -921,7 +1147,7 @@
                       { text: "$245,000", correct: true, feedback: "Correct! In a recession, sales drop and costs rise, squeezing Net Income to $245k." }
                 ]
             },
-            // 10. CAPSTONE PROJECT
+            // 13. CAPSTONE PROJECT
             {
                 type: 'lesson',
                 title: "Capstone Project",
@@ -1066,14 +1292,14 @@
                 if(item.type === 'lesson') icon = 'fa-book-open';
                 if(item.type === 'solver-quiz') icon = 'fa-calculator';
                 if(item.type === 'scenario-playground') icon = 'fa-chart-line';
-                if(item.type === 'scenario-walkthrough' || item.type === 'solver-walkthrough') icon = 'fa-shoe-prints';
+                if(item.type === 'scenario-walkthrough' || item.type === 'solver-walkthrough' || item.type === 'datatable-walkthrough') icon = 'fa-shoe-prints';
                 if(item.title === 'Capstone Project') icon = 'fa-graduation-cap';
                 if(item.type === 'goal-seek') icon = 'fa-crosshairs';
 
                 div.innerHTML = `
                     <i class="fas ${icon} text-xs ${idx === currentIndex ? 'text-orange-500' : 'text-slate-300'}"></i>
                     <div>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${item.type.replace('-quiz','').replace('-playground','').replace('-walkthrough', ' Walkthrough').replace('-seek', '')}</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${item.type.replace('-quiz','').replace('-playground','').replace('-walkthrough', ' Walkthrough').replace('-seek', '').replace('datatable', 'Data Table')}</div>
                         <div class="text-sm font-medium text-slate-700">${item.title}</div>
                     </div>
                 `;
@@ -1107,7 +1333,7 @@
                 document.getElementById('lesson-content').innerHTML = item.content;
             } 
             else {
-                // Shared logic for solver-quiz, scenario-playground, and scenario-walkthrough
+                // Shared logic for quizzes and walkthroughs
                 document.getElementById('simulation-view').classList.remove('hidden');
                 document.getElementById('sim-title').innerText = item.title;
                 document.getElementById('sim-desc').innerText = item.desc;
@@ -1122,7 +1348,7 @@
                 renderExcelTable(item.data, false); 
 
                 // Render Interactions
-                if (item.type === 'scenario-walkthrough' || item.type === 'solver-walkthrough') {
+                if (item.type === 'scenario-walkthrough' || item.type === 'solver-walkthrough' || item.type === 'datatable-walkthrough') {
                     currentWalkthroughStep = 0; // Reset
                 }
                 renderInteractionArea(item);
@@ -1274,14 +1500,19 @@
             const container = document.getElementById('interaction-area');
             container.innerHTML = '';
 
-            if (item.type === 'scenario-walkthrough' || item.type === 'solver-walkthrough') {
+            if (item.type === 'scenario-walkthrough' || item.type === 'solver-walkthrough' || item.type === 'datatable-walkthrough') {
                 const step = item.steps[currentWalkthroughStep];
                 
-                // RE-RENDER TABLE if formula mode changed
-                renderExcelTable(item.data, step.showFormulas);
+                // RE-RENDER TABLE if formula mode changed or data changed
+                // Provide solved/unsolved data state dynamic updating for data tables
+                if(step.data) {
+                    renderExcelTable(step.data, step.showFormulas);
+                } else {
+                    renderExcelTable(item.data, step.showFormulas);
+                }
 
                 // Highlight Grid Cells for this step AND Show Tooltip
-                updateGridHighlights(step.highlights, step.tooltips); // Note: Changed to step.tooltips (plural)
+                updateGridHighlights(step.highlights, step.tooltips);
 
                 // Create Content
                 const wrapper = document.createElement('div');
@@ -1566,7 +1797,60 @@
              ["B5", "B6", "B8", "B9"].forEach(ref => { if(wsGoal[ref]) wsGoal[ref].z = "$#,##0"; });
              setCols(wsGoal, [20, 15]);
 
-             // 2. Solver Data
+             // 2. Data Table 1-Var
+             const dt1Arr = [
+                ["1-VARIABLE DATA TABLE", "", "", "", ""],
+                ["Vary Quantity to see impact on Profit", "", "", "", ""],
+                [],
+                ["Base Inputs", "", "", "Data Table", ""],
+                ["Item", "Value", "", "Qty", "Profit"],
+                ["Price", 50, "", "", {t:'n', f:"B9"}],
+                ["Cost", 30, "", 100, ""],
+                ["Quantity", 100, "", 200, ""],
+                ["Fixed Costs", 5000, "", 250, ""],
+                ["Profit", { t: 'n', f: "(B5-B6)*B7 - B8" }, "", 300, ""],
+                ["", "", "", 400, ""],
+                ["", "", "", 500, ""]
+             ];
+             const wsDT1 = XLSX.utils.aoa_to_sheet(dt1Arr);
+             if(wsDT1['A1']) wsDT1['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "BE185D" } } };
+             applyStyle(wsDT1, "A4:B4", "header");
+             applyStyle(wsDT1, "D4:E4", "header");
+             applyStyle(wsDT1, "D5:E5", "subHeader");
+             applyStyle(wsDT1, "B5:B8", "input");
+             applyStyle(wsDT1, "B9", "objective");
+             applyStyle(wsDT1, "D7:D12", "input"); // Quantities
+             applyStyle(wsDT1, "E6", "objective"); // Formula cell
+             ["B5", "B6", "B8", "B9"].forEach(ref => { if(wsDT1[ref]) wsDT1[ref].z = "$#,##0"; });
+             setCols(wsDT1, [15, 15, 5, 15, 15]);
+
+             // 3. Data Table 2-Var
+             const dt2Arr = [
+                ["2-VARIABLE DATA TABLE", "", "", "", "", "", ""],
+                ["Vary Quantity and Price to see impact on Profit", "", "", "", "", "", ""],
+                [],
+                ["Base Inputs", "", "", "Data Table (Prices ->)", "", "", ""],
+                ["Item", "Value", "", {t:'n', f:"B9"}, 40, 50, 60],
+                ["Price", 50, "", 100, "", "", ""],
+                ["Cost", 30, "", 200, "", "", ""],
+                ["Quantity", 100, "", 250, "", "", ""],
+                ["Fixed Costs", 5000, "", 300, "", "", ""],
+                ["Profit", { t: 'n', f: "(B5-B6)*B7 - B8" }, "", 400, "", "", ""],
+                ["", "", "", 500, "", "", ""]
+             ];
+             const wsDT2 = XLSX.utils.aoa_to_sheet(dt2Arr);
+             if(wsDT2['A1']) wsDT2['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "BE185D" } } };
+             applyStyle(wsDT2, "A4:B4", "header");
+             applyStyle(wsDT2, "D4:G4", "header");
+             applyStyle(wsDT2, "B5:B8", "input");
+             applyStyle(wsDT2, "B9", "objective");
+             applyStyle(wsDT2, "E5:G5", "input"); // Prices row
+             applyStyle(wsDT2, "D6:D11", "input"); // Qty col
+             applyStyle(wsDT2, "D5", "objective"); // Formula cell
+             ["B5", "B6", "B8", "B9", "E5", "F5", "G5"].forEach(ref => { if(wsDT2[ref]) wsDT2[ref].z = "$#,##0"; });
+             setCols(wsDT2, [15, 15, 5, 15, 15, 15, 15]);
+
+             // 4. Solver Data
              const solverArr = [
                 ["SOLVER: PRODUCT MIX", "", "", "", ""],
                 [],
@@ -1591,7 +1875,7 @@
             ["B4", "C4", "B5", "C5", "B6", "C6", "D13"].forEach(ref => { if(wsSolver[ref]) wsSolver[ref].z = "$#,##0.00"; });
             setCols(wsSolver, [20, 15, 15, 15, 15]);
 
-            // 3. Scenario Data
+            // 5. Scenario Data
             const scenarioArr = [
                 ["SCENARIO MANAGER: BUDGET FORECAST", "", ""],
                 [],
@@ -1616,8 +1900,39 @@
             ["B8", "C8", "B9", "C9", "B10", "C10", "B11", "C11", "B12", "C12"].forEach(ref => { if(wsScenario[ref]) wsScenario[ref].z = "$#,##0"; });
             setCols(wsScenario, [20, 15, 15]);
 
+            // Create Instructions Sheet with updated Data Table steps
+            const instructionsData = [
+                ["Lab Instructions"],
+                ["1. Switch to the 'Practice Problem' sheet."],
+                ["2. Use Excel Solver to maximize Total Profit (Cell B13)."],
+                ["3. Changing Cells: Units Produced (B10:C10)."],
+                ["4. Constraints:"],
+                ["    - Labor Used (B17) <= Available (D17)"],
+                ["    - Machine Used (B18) <= Available (D18)"],
+                ["5. Switch to the 'Scenario Practice' sheet."],
+                ["6. First, define names for your cells: B4 (Unit_Price), B5 (Unit_Cost), B11 (Net_Profit)."],
+                ["7. Create scenarios for High Margin (Price 25, Cost 8) and Low Margin (Price 18, Cost 12)."],
+                ["8. Generate a Scenario Summary for Net Profit."],
+                ["9. Switch to 'Data_Table_1V' sheet. Highlight D6:E12. Go to Data > What-If Analysis > Data Table. Set Column input cell to B7 (Quantity)."],
+                ["10. Switch to 'Data_Table_2V' sheet. Highlight D5:G11. Go to Data > What-If Analysis > Data Table. Set Row input cell to B5 (Price) and Column input cell to B7 (Quantity)."],
+                ["11. Switch to 'Logistics Model' sheet. Minimize Total Shipping Cost (B18) by changing Units Shipped (B11:D12)."],
+                ["    NOTE: You must write the formulas for Totals and Constraints yourself in the colored cells!"],
+                ["12. Switch to 'Portfolio Model' sheet. Maximize Return (B9) by changing Amount Invested (C4:C7)."],
+                ["    First, define names: C4:C7 (Amt_Invested), B9 (Total_Return)."],
+                ["    - Base Constraints: Total Invested = 100,000; US Stocks <= 50,000; Cash >= 5,000."],
+                ["13. Run Solver for the base constraints. In the results window, click 'Save Scenario...' and name it 'Base Portfolio'."],
+                ["14. Test different portfolios by adding constraints (e.g., Bonds >= 30,000) and saving them as new scenarios!"],
+                ["    NOTE: You must write the formulas for Totals and Cash yourself in the colored cells!"]
+            ];
+            const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
+            if(wsInstructions['A1']) wsInstructions['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "BE185D" } } };
+            setCols(wsInstructions, [105]);
+
             // Add sheets to workbook
+            XLSX.utils.book_append_sheet(wb, wsInstructions, "Instructions");
             XLSX.utils.book_append_sheet(wb, wsGoal, "Goal_Seek_Model");
+            XLSX.utils.book_append_sheet(wb, wsDT1, "Data_Table_1V");
+            XLSX.utils.book_append_sheet(wb, wsDT2, "Data_Table_2V");
             XLSX.utils.book_append_sheet(wb, wsSolver, "Solver_Model");
             XLSX.utils.book_append_sheet(wb, wsScenario, "Scenario_Model");
 
@@ -1627,7 +1942,10 @@
         
         // --- ENHANCED CAPSTONE DOWNLOAD FUNCTION ---
         function downloadCapstonePractice() {
-            // Style Definitions
+            // Check if library loaded
+            if(typeof XLSX === 'undefined') { alert('Excel library not loaded'); return; }
+
+            // Style Definitions (Slate/Pink/Orange Theme)
             const styles = {
                 header: {
                     fill: { fgColor: { rgb: "0F172A" } }, // Slate 900
