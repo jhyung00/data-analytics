@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Prep: Advanced Excel Analytics</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS Style Fork for generating formatted Excel files -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+        
+        /* Custom styled radio buttons */
+        input[type="radio"] {
+            accent-color: #ec4899; /* Pink-500 */
+            width: 1.2rem;
+            height: 1.2rem;
+        }
+
+        /* Vibrant Gradients */
+        .bg-fun-gradient { background: linear-gradient(135deg, #7e22ce, #db2777); } /* Purple to Pink */
+        .text-fun-gradient { 
+            background: linear-gradient(135deg, #7e22ce, #db2777); 
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-indigo-50 text-indigo-950">
+
+    <!-- Success Overlay -->
+    <div id="success-page" class="hidden fixed inset-0 bg-indigo-900/95 z-[100] flex flex-col items-center justify-center p-6 text-center overflow-y-auto backdrop-blur-sm">
+        <h2 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-yellow-400 mb-4 mt-10 drop-shadow-lg">Submission Successful!</h2>
+        <p class="text-xl text-indigo-100 mb-8 font-semibold">Great job on completing the lab. You earned a dance break!</p>
+        <img src="Cats-Dancing.gif" alt="Dancing Cats" class="rounded-3xl shadow-[0_0_40px_rgba(236,72,153,0.6)] max-w-md w-full object-cover mb-6 border-4 border-pink-400">
+        
+        <div class="flex gap-4 mb-10">
+            <button onclick="saveForCanvas()" class="bg-indigo-100 hover:bg-white text-indigo-900 font-bold py-4 px-8 rounded-full shadow-xl transition-transform hover:-translate-y-1 text-lg flex items-center">
+                <i class="fas fa-download mr-2"></i> Download Final Answers
+            </button>
+            <button onclick="location.reload()" class="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold py-4 px-8 rounded-full shadow-xl transition-transform hover:-translate-y-1 text-lg">
+                Return to Lab
+            </button>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="bg-fun-gradient text-white p-5 shadow-lg sticky top-0 z-50 border-b-4 border-yellow-400">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-extrabold tracking-wide drop-shadow-md"><i class="fas fa-bolt text-yellow-300 mr-2 animate-pulse"></i>Excel Analytics Challenge</h1>
+            <span class="text-xs font-bold bg-white text-purple-700 px-4 py-1.5 rounded-full shadow-sm uppercase tracking-wider">Exam Prep</span>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto p-6 mt-4">
+
+        <!-- Student Info Section -->
+        <section class="bg-white rounded-2xl shadow-xl border border-purple-100 p-8 mb-8 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-purple-500 to-pink-500"></div>
+            <h2 class="text-2xl font-bold mb-2 text-purple-900"><i class="fas fa-rocket mr-2 text-pink-500"></i>Student Information</h2>
+            <p class="mb-6 text-purple-600/70 text-sm font-medium">Please enter your details before diving into the data. Your answers will auto-save in your browser!</p>
+            <form id="student-info" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-bold text-purple-800 mb-2">Full Name</label>
+                    <input type="text" name="FullName" id="fullName" required class="w-full p-3 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl focus:ring-4 focus:ring-pink-200 focus:border-pink-400 focus:bg-white transition-all outline-none auto-save" placeholder="e.g. Jane Doe">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-purple-800 mb-2">University Email</label>
+                    <input type="email" name="Email" id="email" required class="w-full p-3 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl focus:ring-4 focus:ring-pink-200 focus:border-pink-400 focus:bg-white transition-all outline-none auto-save" placeholder="e.g. jdoe@university.edu">
+                </div>
+            </form>
+        </section>
+
+        <!-- Resources Section -->
+        <section class="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl border border-indigo-200 p-8 mb-10 shadow-lg">
+            <h3 class="font-extrabold text-indigo-900 mb-3 text-xl"><i class="fas fa-cloud-download-alt mr-2 text-indigo-600"></i>Mission Materials</h3>
+            <p class="text-sm text-indigo-700 mb-6 font-medium">Download the static dataset below to answer the following questions. Make sure you have the <strong>Data Analysis</strong> and <strong>Solver</strong> add-ins enabled in Excel!</p>
+            
+            <div class="bg-white p-5 rounded-xl border border-indigo-50 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-transform hover:-translate-y-1">
+                <div>
+                    <strong class="text-purple-900 block text-lg font-bold">BulldogCorp_Operations_Data.xlsx</strong>
+                    <p class="text-xs text-indigo-400 mt-1 font-semibold uppercase tracking-wide">Contains Sales Data, Logs, & Models</p>
+                </div>
+                <button type="button" onclick="downloadExcel()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors shadow-md flex items-center w-full sm:w-auto justify-center">
+                    <i class="fas fa-download mr-2 animate-bounce"></i> Download Workbook
+                </button>
+            </div>
+        </section>
+
+        <form id="lab-form" onsubmit="event.preventDefault();">
+            
+            <!-- Requirement 1: Pivot Tables -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-pink-100 text-pink-700 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 1</div>
+                <div class="border-b-2 border-pink-50 pb-4 mb-6 mt-2">
+                    <h3 class="text-2xl font-bold text-gray-800">Pivot Tables & Filtering</h3>
+                    <p class="text-gray-500 text-sm mt-2 font-medium">Navigate to the <strong>'Sales_Data'</strong> worksheet. Create Pivot Tables to analyze revenue trends for Bulldog Corp.</p>
+                </div>
+                
+                <div class="space-y-8">
+                    <!-- Q1 -->
+                    <div class="question-block">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">1. Create a Pivot Table showing 'Total Revenue' by 'Product Category'. Which category generated the highest total revenue?</p>
+                        <div class="space-y-3 ml-2">
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-pink-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-pink-200"><input type="radio" name="req1_q1" value="A" class="mr-4 auto-save"> A. Laptops</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-pink-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-pink-200"><input type="radio" name="req1_q1" value="B" class="mr-4 auto-save"> B. Smartphones</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-pink-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-pink-200"><input type="radio" name="req1_q1" value="C" class="mr-4 auto-save"> C. Tablets</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-pink-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-pink-200"><input type="radio" name="req1_q1" value="D" class="mr-4 auto-save"> D. Wearables</label>
+                        </div>
+                    </div>
+
+                    <!-- Q2 -->
+                    <div class="question-block pt-6 border-t-2 border-dashed border-gray-100">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">2. Create a new Pivot Table. Drag 'Transaction Date' to Rows and group by 'Quarters'. Drag 'Revenue' to Values and change the field setting to <em>Average</em>. Which quarter had the lowest average transaction value?</p>
+                         <div class="bg-yellow-50 p-4 rounded-xl text-sm text-yellow-800 mb-5 border border-yellow-200 flex items-start shadow-sm">
+                            <i class="fas fa-lightbulb mt-1 mr-3 text-yellow-500 text-lg"></i> 
+                            <span class="font-medium"><strong>Hint:</strong> Right-click on a date in the Pivot Table, select "Group", and ensure only "Quarters" is highlighted.</span>
+                        </div>
+                        <div class="space-y-3 ml-2">
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-pink-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-pink-200"><input type="radio" name="req1_q2" value="A" class="mr-4 auto-save"> A. Q1</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-pink-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-pink-200"><input type="radio" name="req1_q2" value="B" class="mr-4 auto-save"> B. Q2</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-pink-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-pink-200"><input type="radio" name="req1_q2" value="C" class="mr-4 auto-save"> C. Q3</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-pink-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-pink-200"><input type="radio" name="req1_q2" value="D" class="mr-4 auto-save"> D. Q4</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirement 2: Distributions & Outliers -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-blue-100 text-blue-700 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 2</div>
+                <div class="border-b-2 border-blue-50 pb-4 mb-6 mt-2">
+                    <h3 class="text-2xl font-bold text-gray-800">Distributions & Outliers</h3>
+                    <p class="text-gray-500 text-sm mt-2 font-medium">Navigate to the <strong>'Daily_Sales'</strong> tab. You will analyze the distribution of daily revenue.</p>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="question-block">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">1. Use <em>Data -> Data Analysis -> Histogram</em> to create a histogram of the Daily Revenue. <strong>Note:</strong> First, you must create a manual 'Bins' column (e.g., in column E) starting from 1,000 to 8,000 in increments of 1,000. Based on the visual output, is the data positively or negatively skewed?</p>
+                        <div class="space-y-3 ml-2">
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-blue-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-blue-200"><input type="radio" name="req2_q1" value="A" class="mr-4 auto-save"> A. Positively Skewed (Tail to the right)</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-blue-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-blue-200"><input type="radio" name="req2_q1" value="B" class="mr-4 auto-save"> B. Negatively Skewed (Tail to the left)</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-blue-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-blue-200"><input type="radio" name="req2_q1" value="C" class="mr-4 auto-save"> C. Symmetric (Bell shaped)</label>
+                        </div>
+                    </div>
+
+                    <div class="question-block pt-6 border-t-2 border-dashed border-gray-100">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">2. Calculate the Z-score for every daily revenue value in the blank 'Z-Score' column (Column C). Using the standard rule (Absolute Z-Score > 3), how many outliers are present in the dataset?</p>
+                        <div class="bg-yellow-50 p-4 rounded-xl text-sm text-yellow-800 mb-5 border border-yellow-200 flex items-start shadow-sm">
+                            <i class="fas fa-lightbulb mt-1 mr-3 text-yellow-500 text-lg"></i> 
+                            <span class="font-medium"><strong>Hint:</strong> Use <em>Data -> Data Analysis -> Descriptive Statistics</em> (check 'Summary statistics') to find the Mean and Standard Deviation. Then, calculate the Z-scores in Column C using those summary values and use <code>COUNTIFS</code> to find outliers.</span>
+                        </div>
+                        <input type="number" name="req2_q2" id="req2_q2" class="w-64 p-3 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all outline-none ml-2 text-lg font-bold text-indigo-900 auto-save" placeholder="e.g. 5">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirement 3: Solver (Production) -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-purple-100 text-purple-700 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 3</div>
+                <div class="border-b-2 border-purple-50 pb-4 mb-6 mt-2">
+                    <h3 class="text-2xl font-bold text-gray-800">Optimization I: Production Mix</h3>
+                    <p class="text-gray-500 text-sm mt-2 font-medium">Navigate to the <strong>'Solver_Model'</strong> tab. Determine the optimal production mix to maximize total profit.</p>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-5 text-sm text-purple-900 mb-6 shadow-sm">
+                        <p class="font-bold mb-2 text-purple-700 uppercase tracking-wide text-xs"><i class="fas fa-exclamation-triangle mr-1"></i> Important Note</p>
+                        <p class="mb-3 font-medium">You must construct the SUMPRODUCT formulas yourself in the blank colored cells for 'Assembly Hours Used', 'Testing Hours Used', and 'Total Profit' before running Solver.</p>
+                        <ul class="list-disc pl-5 space-y-1.5 font-medium">
+                            <li><strong>Objective (<span class="text-green-600 font-bold">Green Cell</span>):</strong> Maximize Total Profit (Cell E15).</li>
+                            <li><strong>Changing Cells (<span class="text-yellow-600 font-bold">Yellow Cells</span>):</strong> Units Produced for 'Alpha' and 'Beta' (Cells C5:D5).</li>
+                            <li><strong>Constraints (<span class="text-orange-600 font-bold">Orange Cells</span>):</strong> 
+                                <br>&bull; Assembly Hours Used (E8) &lt;= Available Limit (G8)
+                                <br>&bull; Testing Hours Used (E9) &lt;= Available Limit (G9)
+                                <br>&bull; Units Produced must be Integers.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="question-block">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">1. After running the Solver tool, what is the optimal number of 'Alpha' devices to produce?</p>
+                        <input type="number" name="req3_q1" id="req3_q1" class="w-64 p-3 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-400 focus:bg-white transition-all outline-none ml-2 text-lg font-bold text-indigo-900 auto-save" placeholder="Enter quantity">
+                    </div>
+
+                    <div class="question-block pt-6 border-t-2 border-dashed border-gray-100">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">2. What is the maximum Total Profit achieved by this optimal product mix?</p>
+                        <div class="relative w-64 ml-2">
+                            <span class="absolute left-4 top-3.5 text-gray-500 font-black">$</span>
+                            <input type="number" name="req3_q2" id="req3_q2" class="w-full p-3 pl-9 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-400 focus:bg-white transition-all outline-none text-lg font-bold text-indigo-900 auto-save" placeholder="0">
+                        </div>
+                    </div>
+                    
+                    <div class="question-block pt-6 border-t-2 border-dashed border-gray-100">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">3. Assume the Available Limit for Assembly Hours (G8) is unexpectedly increased to 2000. Re-run Solver. What is the <strong class="text-purple-600">new</strong> maximum Total Profit?</p>
+                        <div class="relative w-64 ml-2">
+                            <span class="absolute left-4 top-3.5 text-gray-500 font-black">$</span>
+                            <input type="number" name="req3_q3" id="req3_q3" class="w-full p-3 pl-9 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl focus:ring-4 focus:ring-purple-200 focus:border-purple-400 focus:bg-white transition-all outline-none text-lg font-bold text-indigo-900 auto-save" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirement 4: Scenario Manager (Financial) -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-orange-100 text-orange-700 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 4</div>
+                <div class="border-b-2 border-orange-50 pb-4 mb-6 mt-2">
+                    <h3 class="text-2xl font-bold text-gray-800">Scenario Manager I: Financial Forecast</h3>
+                    <p class="text-gray-500 text-sm mt-2 font-medium">Navigate to the <strong>'Financial_Forecast'</strong> tab. Set up scenarios changing 'Sales Growth' (B4) and 'COGS %' (B5).</p>
+                </div>
+
+                <div class="space-y-8">
+                     <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-5 text-sm text-orange-900 mb-6 shadow-sm">
+                        <p class="font-bold mb-2 text-orange-700 uppercase tracking-wide text-xs"><i class="fas fa-tools mr-1"></i> Build It First</p>
+                        <p class="mb-4 font-medium">The spreadsheet provides the Assumptions and Prior Year metrics, but the formulas for <strong>Gross Sales, COGS, and Net Income</strong> are empty. You must construct these basic accounting formulas first before using Scenario Manager.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-white p-3 rounded-lg border border-orange-100 shadow-sm"><strong class="text-orange-700 block mb-1">Base Case</strong>Growth: 5%<br>COGS: 60%</div>
+                            <div class="bg-white p-3 rounded-lg border border-orange-100 shadow-sm"><strong class="text-orange-700 block mb-1">Best Case</strong>Growth: 15%<br>COGS: 52%</div>
+                            <div class="bg-white p-3 rounded-lg border border-orange-100 shadow-sm"><strong class="text-orange-700 block mb-1">Worst Case</strong>Growth: -8%<br>COGS: 68%</div>
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">1. Create the 3 scenarios using Scenario Manager. Generate a Scenario Summary report displaying 'Net Income' (B12) as the result cell. What is the Net Income for the <strong>Best Case</strong>?</p>
+                        <div class="relative w-64 ml-2">
+                            <span class="absolute left-4 top-3.5 text-gray-500 font-black">$</span>
+                            <input type="number" name="req4_q1" id="req4_q1" class="w-full p-3 pl-9 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl focus:ring-4 focus:ring-orange-200 focus:border-orange-400 focus:bg-white transition-all outline-none text-lg font-bold text-indigo-900 auto-save" placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="question-block pt-6 border-t-2 border-dashed border-gray-100">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">2. Looking at your Summary Report, which scenario results in a Net Income below $50,000?</p>
+                        <div class="space-y-3 ml-2">
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-orange-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-orange-200"><input type="radio" name="req4_q2" value="A" class="mr-4 auto-save"> A. Base Case</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-orange-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-orange-200"><input type="radio" name="req4_q2" value="B" class="mr-4 auto-save"> B. Best Case</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-orange-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-orange-200"><input type="radio" name="req4_q2" value="C" class="mr-4 auto-save"> C. Worst Case</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-orange-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-orange-200"><input type="radio" name="req4_q2" value="D" class="mr-4 auto-save"> D. Both Base & Worst Cases</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirement 5: Solver (Ad Mix) -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-teal-100 text-teal-800 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 5</div>
+                <div class="border-b-2 border-teal-50 pb-4 mb-6 mt-2">
+                    <h3 class="text-2xl font-bold text-gray-800">Optimization II: Advertising Campaign</h3>
+                    <p class="text-gray-500 text-sm mt-2 font-medium">Navigate to the <strong>'Ad_Mix_Solver'</strong> tab. Determine the optimal number of ads to purchase across platforms to maximize total audience reach.</p>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="bg-teal-50 border-2 border-teal-200 rounded-xl p-5 text-sm text-teal-900 mb-6 shadow-sm">
+                        <p class="font-bold mb-2 text-teal-700 uppercase tracking-wide text-xs"><i class="fas fa-exclamation-triangle mr-1"></i> Formulas Required</p>
+                        <p class="mb-3 font-medium">Like before, the red-outlined calculation cells are blank! Construct the appropriate <code>SUMPRODUCT</code> formulas for 'Total Spent' and 'Total Reach' before configuring Solver.</p>
+                        <ul class="list-disc pl-5 space-y-1.5 font-medium">
+                            <li><strong>Objective (<span class="text-green-600 font-bold">Green</span>):</strong> Maximize Total Reach (Cell D16).</li>
+                            <li><strong>Changing Cells (<span class="text-yellow-600 font-bold">Yellow</span>):</strong> Ads Purchased per platform (D5:D7).</li>
+                            <li><strong>Constraints (<span class="text-orange-600 font-bold">Orange</span>):</strong> 
+                                <br>&bull; Total Spent (D10) &lt;= Max Budget (D11).
+                                <br>&bull; Social Ads Purchased (D5) &gt;= Min Social Ads (D12).
+                                <br>&bull; TV Ads Purchased (D6) &lt;= Max TV Ads (D13).
+                                <br>&bull; Ads Purchased (D5:D7) must be integers.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="question-block">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">1. Solve the media mix model. What is the <strong>maximum Total Reach</strong> achieved within the budget?</p>
+                        <div class="relative w-64 ml-2">
+                            <input type="number" name="req5_q1" id="req5_q1" class="w-full p-3 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl focus:ring-4 focus:ring-teal-200 focus:border-teal-400 focus:bg-white transition-all outline-none text-lg font-bold text-indigo-900 auto-save" placeholder="Enter reach">
+                        </div>
+                    </div>
+
+                    <div class="question-block pt-6 border-t-2 border-dashed border-gray-100">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">2. In the optimal solution, how many <strong>TV Ads</strong> are purchased?</p>
+                        <input type="number" name="req5_q2" id="req5_q2" class="w-64 p-3 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl focus:ring-4 focus:ring-teal-200 focus:border-teal-400 focus:bg-white transition-all outline-none ml-2 text-lg font-bold text-indigo-900 auto-save" placeholder="Enter quantity">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requirement 6: Scenario Manager (Project Zag) -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-red-100 text-red-700 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 6</div>
+                <div class="border-b-2 border-red-50 pb-4 mb-6 mt-2">
+                    <h3 class="text-2xl font-bold text-gray-800">Scenario Manager II: Project Zag Launch</h3>
+                    <p class="text-gray-500 text-sm mt-2 font-medium">Navigate to the <strong>'Zag_Launch_Scenarios'</strong> tab. Forecast the Net Profit of a new product line under different pricing strategies.</p>
+                </div>
+
+                <div class="space-y-8">
+                     <div class="bg-red-50 border-2 border-red-200 rounded-xl p-5 text-sm text-red-900 mb-6 shadow-sm">
+                        <p class="font-bold mb-2 text-red-700 uppercase tracking-wide text-xs"><i class="fas fa-tools mr-1"></i> Build It First</p>
+                        <p class="mb-4 font-medium">Construct the formulas for <strong>Total Revenue, Total Variable Cost, and Net Profit</strong> in the blank cells before creating the scenarios.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-white p-3 rounded-lg border border-red-100 shadow-sm"><strong class="text-red-700 block mb-1">Base Case</strong>Price: $150<br>Unit Cost: $90<br>Volume: 5,000</div>
+                            <div class="bg-white p-3 rounded-lg border border-red-100 shadow-sm"><strong class="text-red-700 block mb-1">High Price</strong>Price: $180<br>Unit Cost: $90<br>Volume: 3,500</div>
+                            <div class="bg-white p-3 rounded-lg border border-red-100 shadow-sm"><strong class="text-red-700 block mb-1">Discount Strategy</strong>Price: $120<br>Unit Cost: $85<br>Volume: 8,000</div>
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">1. Create the 3 scenarios above using the variables in cells B4:B6. Generate a Summary Report for Net Profit (B12). Which scenario yields the highest Net Profit?</p>
+                        <div class="space-y-3 ml-2">
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-red-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-red-200"><input type="radio" name="req6_q1" value="A" class="mr-4 auto-save"> A. Base Case</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-red-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-red-200"><input type="radio" name="req6_q1" value="B" class="mr-4 auto-save"> B. High Price</label>
+                            <label class="flex items-center p-3 bg-gray-50 hover:bg-red-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-red-200"><input type="radio" name="req6_q1" value="C" class="mr-4 auto-save"> C. Discount Strategy</label>
+                        </div>
+                    </div>
+
+                    <div class="question-block pt-6 border-t-2 border-dashed border-gray-100">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">2. What is the calculated Net Profit for the <strong>Discount Strategy</strong> scenario?</p>
+                        <div class="relative w-64 ml-2">
+                            <span class="absolute left-4 top-3.5 text-gray-500 font-black">$</span>
+                            <input type="number" name="req6_q2" id="req6_q2" class="w-full p-3 pl-9 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl focus:ring-4 focus:ring-red-200 focus:border-red-400 focus:bg-white transition-all outline-none text-lg font-bold text-indigo-900 auto-save" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instructor Answer Key Section -->
+            <div class="bg-gradient-to-r from-gray-900 to-indigo-900 rounded-2xl p-8 mb-6 flex flex-col sm:flex-row justify-between items-center shadow-2xl gap-6 border-t-4 border-yellow-400">
+                <div>
+                    <h3 class="font-extrabold text-white text-2xl drop-shadow-md"><i class="fas fa-key text-yellow-400 mr-2"></i>Instructor Answer Key</h3>
+                    <p class="text-sm text-indigo-200 mt-2 font-medium">Download the completed Excel workbook containing all solutions, including the built out Solver Models and all Scenarios.</p>
+                </div>
+                <a href="instructor/BulldogCorp_Operations_Solutions.xlsx" download class="bg-white hover:bg-yellow-400 text-indigo-900 hover:text-indigo-950 text-sm font-black px-8 py-4 rounded-full transition-all shadow-lg flex items-center w-full sm:w-auto justify-center hover:scale-105">
+                    <i class="fas fa-file-download mr-2"></i> Solution Key
+                </a>
+            </div>
+
+            <!-- Actions Footer Warning -->
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-800 p-4 mb-32 rounded-r shadow-md font-semibold text-center flex items-center justify-center">
+                <i class="fas fa-exclamation-circle text-red-500 mr-3 text-xl"></i>
+                WARNING: Make sure to click "Save Text for Canvas" to download your answers and the Solution Key before submitting!
+            </div>
+
+            <!-- Actions Footer -->
+            <div class="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-indigo-100 p-5 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] z-40">
+                <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-center items-center gap-6">
+                    <button type="button" onclick="saveForCanvas()" class="w-full sm:w-auto bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold py-3.5 px-8 rounded-full shadow-sm transition-colors flex items-center justify-center">
+                        <i class="fas fa-download mr-2"></i> Save Text for Canvas
+                    </button>
+                    <button type="button" onclick="submitToGoogleSheets()" id="submitBtn" class="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 text-white font-bold py-3.5 px-10 rounded-full shadow-lg transition-transform hover:-translate-y-0.5 flex items-center justify-center text-lg">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        <span id="submitText">Submit to Grading Sheet</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // ---------------------------------------------------------
+        // LOCAL STORAGE - AUTO SAVE LOGIC
+        // ---------------------------------------------------------
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputs = document.querySelectorAll('.auto-save');
+
+            // Load saved data
+            inputs.forEach(input => {
+                if (input.type === 'radio') {
+                    const savedVal = localStorage.getItem(input.name);
+                    if (savedVal && input.value === savedVal) input.checked = true;
+                } else {
+                    const savedVal = localStorage.getItem(input.id || input.name);
+                    if (savedVal) input.value = savedVal;
+                }
+                
+                // Add event listeners to save data on change
+                input.addEventListener('change', () => {
+                    if (input.type === 'radio' && input.checked) {
+                        localStorage.setItem(input.name, input.value);
+                    } else if (input.type !== 'radio') {
+                        localStorage.setItem(input.id || input.name, input.value);
+                    }
+                });
+            });
+        });
+
+        // ---------------------------------------------------------
+        // EXCEL GENERATOR LOGIC WITH STYLING
+        // ---------------------------------------------------------
+        function downloadExcel() {
+            if(typeof XLSX === 'undefined') { 
+                alert('Excel library not loaded. Please check your internet connection.'); 
+                return; 
+            }
+
+            const wb = XLSX.utils.book_new();
+
+            // --- STYLES DEFINITION ---
+            const styles = {
+                header: { 
+                    font: { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri", sz: 12 }, 
+                    fill: { fgColor: { rgb: "0D9488" } }, // Teal-600
+                    alignment: { horizontal: "center", vertical: "center" },
+                    border: { bottom: {style:"thin", color: {rgb:"000000"}} }
+                },
+                subHeader: {
+                    font: { bold: true, name: "Calibri", sz: 11 },
+                    fill: { fgColor: { rgb: "F1F5F9" } },
+                    border: { bottom: {style:"thin", color: {rgb:"CBD5E1"}} }
+                },
+                title: { font: { bold: true, sz: 14, color: { rgb: "0F766E" }, name: "Calibri" } },
+                input: { 
+                    fill: { fgColor: { rgb: "FEF08A" } }, // Yellow-200
+                    border: { 
+                        top: {style:"thin", color:{rgb:"BFBFBF"}}, 
+                        bottom: {style:"thin", color:{rgb:"BFBFBF"}}, 
+                        left: {style:"thin", color:{rgb:"BFBFBF"}}, 
+                        right: {style:"thin", color:{rgb:"BFBFBF"}} 
+                    } 
+                },
+                objective: {
+                    fill: { fgColor: { rgb: "DCFCE7" } }, // Green-100
+                    font: { bold: true, color: { rgb: "166534" } }, // Green-800
+                    border: { top: {style:"thin", color:{rgb:"BFBFBF"}}, bottom: {style:"thin", color:{rgb:"BFBFBF"}}, left: {style:"thin", color:{rgb:"BFBFBF"}}, right: {style:"thin", color:{rgb:"BFBFBF"}} }
+                },
+                constraint: {
+                    fill: { fgColor: { rgb: "FFEDD5" } }, // Orange-100
+                    font: { bold: true, color: { rgb: "9A3412" } }, // Orange-800
+                    border: { top: {style:"thin", color:{rgb:"BFBFBF"}}, bottom: {style:"thin", color:{rgb:"BFBFBF"}}, left: {style:"thin", color:{rgb:"BFBFBF"}}, right: {style:"thin", color:{rgb:"BFBFBF"}} }
+                },
+                blankCompute: {
+                    fill: { fgColor: { rgb: "F3F4F6" } }, // Light Gray to indicate it needs a formula
+                    border: { 
+                        top: {style:"thin", color:{rgb:"EF4444"}}, // Red border outline to draw attention
+                        bottom: {style:"thin", color:{rgb:"EF4444"}}, 
+                        left: {style:"thin", color:{rgb:"EF4444"}}, 
+                        right: {style:"thin", color:{rgb:"EF4444"}} 
+                    } 
+                }
+            };
+
+            const applyStyle = (ws, range, styleName) => {
+                if(!ws['!ref']) return;
+                const rangeObj = XLSX.utils.decode_range(range);
+                for (let R = rangeObj.s.r; R <= rangeObj.e.r; ++R) {
+                    for (let C = rangeObj.s.c; C <= rangeObj.e.c; ++C) {
+                        const cell_address = XLSX.utils.encode_cell({r:R, c:C});
+                        if (!ws[cell_address]) continue; 
+                        if (!ws[cell_address].s) ws[cell_address].s = {};
+                        Object.assign(ws[cell_address].s, styles[styleName]);
+                    }
+                }
+            };
+            
+            const setCols = (ws, widths) => {
+                ws['!cols'] = widths.map(w => ({wch: w}));
+            };
+
+            // 1. Sales_Data Generation (STATIC)
+            let salesData = [["Transaction ID", "Transaction Date", "Product Category", "Revenue"]];
+            const categories = ["Laptops", "Smartphones", "Tablets", "Wearables"];
+            let id = 1001;
+            
+            const baseSerialDate = 44927; 
+            const baseDateObj = new Date(2023, 0, 1);
+
+            for(let i=0; i<50; i++) {
+                let cat = categories[i % 4];
+                let rev = 50 + (i % 5) * 10; 
+                let month = (i % 3) + 1; 
+                let day = (i % 28) + 1; 
+                
+                let dDate = new Date(2023, month - 1, day);
+                let excelSerial = baseSerialDate + Math.floor((dDate - baseDateObj) / 86400000);
+                salesData.push([id++, excelSerial, cat, rev]);
+            }
+
+            for(let i=0; i<150; i++) {
+                let cat = categories[i % 4];
+                let rev = 200 + (i % 10) * 30; 
+                if (cat === "Smartphones") rev += 1000;
+                let month = (i % 9) + 4; 
+                let day = (i % 28) + 1;
+                
+                let dDate = new Date(2023, month - 1, day);
+                let excelSerial = baseSerialDate + Math.floor((dDate - baseDateObj) / 86400000);
+                salesData.push([id++, excelSerial, cat, rev]);
+            }
+            
+            const wsSales = XLSX.utils.aoa_to_sheet(salesData, {cellDates: true});
+            applyStyle(wsSales, "A1:D1", "header");
+            for(let i=2; i<=201; i++) {
+                if(wsSales['B'+i]) wsSales['B'+i].z = "m/d/yyyy";
+                if(wsSales['D'+i]) wsSales['D'+i].z = "$#,##0.00";
+            }
+            setCols(wsSales, [15, 18, 20, 15]);
+            XLSX.utils.book_append_sheet(wb, wsSales, "Sales_Data");
+
+            // 2. Daily_Sales Generation (STATIC)
+            let dailyData = [["Date", "Daily Revenue", "Z-Score"]]; // Added Z-Score header
+            for(let i=0; i<365; i++) {
+                let rev = 0;
+                if (i < 300) rev = 500 + (i % 10) * 50; 
+                else if (i < 353) rev = 1000 + (i % 10) * 100; 
+                else rev = 8000;
+
+                let excelSerial = baseSerialDate + i;
+                dailyData.push([excelSerial, rev, ""]); // Empty Z-score cell
+            }
+            const wsDaily = XLSX.utils.aoa_to_sheet(dailyData, {cellDates: true});
+            applyStyle(wsDaily, "A1:C1", "header");
+            for(let i=2; i<=366; i++) {
+                if(wsDaily['A'+i]) wsDaily['A'+i].z = "m/d/yyyy";
+                if(wsDaily['B'+i]) wsDaily['B'+i].z = "$#,##0.00";
+                if(wsDaily['C'+i]) wsDaily['C'+i].s = styles.blankCompute; // Outline blank Z-scores
+            }
+            setCols(wsDaily, [15, 18, 15]);
+            XLSX.utils.book_append_sheet(wb, wsDaily, "Daily_Sales");
+
+            // 3. Solver_Model Generation (Production)
+            let solverData1 = [
+                ["Bulldog Corp - Solver Optimization Model I"],
+                [],
+                ["Parameters", "", "Alpha", "Beta", "", "", "Available Limit"],
+                [],
+                ["Decision Variables:", "Units Produced", 0, 0],
+                ["", "Profit Per Unit", 50, 100],
+                [],
+                ["Constraints:", "Assembly Hours Used", 2, 2, "", "<=", 1820],
+                ["", "Testing Hours Used", 1, 3, "", "<=", 1830],
+                [],[],[],[],[],
+                ["Objective:", "Total Profit", "", "", ""] 
+            ];
+            const wsSolver1 = XLSX.utils.aoa_to_sheet(solverData1);
+            if(wsSolver1['A1']) wsSolver1['A1'].s = styles.title;
+            applyStyle(wsSolver1, "A3:G3", "header");
+            applyStyle(wsSolver1, "C5:D5", "input");
+            applyStyle(wsSolver1, "E8:E9", "blankCompute");
+            applyStyle(wsSolver1, "G8:G9", "subHeader");
+            applyStyle(wsSolver1, "E15", "blankCompute");
+            ["C6", "D6"].forEach(cell => { if(wsSolver1[cell]) wsSolver1[cell].z = "$#,##0"; });
+            setCols(wsSolver1, [20, 20, 12, 12, 18, 5, 15]);
+            XLSX.utils.book_append_sheet(wb, wsSolver1, "Solver_Model");
+
+            // 4. Financial_Forecast Generation
+            let forecastData = [
+                ["Bulldog Corp - Financial Forecast Model"],
+                [],
+                ["Assumptions", "Case Values"],
+                ["Sales Growth", 0.05], 
+                ["COGS %", 0.60],       
+                [],
+                ["Income Statement", "Amount"],
+                ["Prior Year Revenue", 500000],             
+                ["Gross Sales", ""],    
+                ["COGS", ""],               
+                ["Operating Expenses", 133500],             
+                ["Net Income", ""]     
+            ];
+            const wsForecast = XLSX.utils.aoa_to_sheet(forecastData);
+            if(wsForecast['A1']) wsForecast['A1'].s = styles.title;
+            applyStyle(wsForecast, "A3:B3", "header");
+            applyStyle(wsForecast, "A7:B7", "header");
+            applyStyle(wsForecast, "B4:B5", "input");
+            applyStyle(wsForecast, "B9:B10", "blankCompute");
+            applyStyle(wsForecast, "B12", "blankCompute"); // Expected Objective
+            if(wsForecast['B4']) wsForecast['B4'].z = "0.0%";
+            if(wsForecast['B5']) wsForecast['B5'].z = "0.0%";
+            ["B8", "B11"].forEach(cell => { if(wsForecast[cell]) wsForecast[cell].z = "$#,##0"; });
+            setCols(wsForecast, [25, 20]);
+            XLSX.utils.book_append_sheet(wb, wsForecast, "Financial_Forecast");
+
+            // 5. Ad_Mix_Solver Generation
+            let adMixData = [
+                ["Bulldog Corp - Advertising Campaign (Maximize Reach)"],
+                [],
+                ["Platform", "Cost per Ad", "Est. Reach per Ad", "Ads Purchased"],
+                [],
+                ["Social Media", 1500, 25000, 0],
+                ["TV", 8000, 150000, 0],
+                ["Print", 2500, 40000, 0],
+                [],
+                ["Budget & Requirements", "", "", "Current Limit/Amount"],
+                ["Total Spent", "", "<=", ""], // D10 is Blank computed
+                ["Max Budget Limit", "", "", 50000], // D11
+                ["Min Social Ads Requirement", "", "", 10], // D12
+                ["Max TV Ads Requirement", "", "", 5], // D13
+                [],
+                ["Objective:"],
+                ["Total Audience Reach", "", "", ""] // D16 is Blank computed
+            ];
+            const wsAdMix = XLSX.utils.aoa_to_sheet(adMixData);
+            if(wsAdMix['A1']) wsAdMix['A1'].s = styles.title;
+            applyStyle(wsAdMix, "A3:D3", "header");
+            applyStyle(wsAdMix, "A9:D9", "subHeader");
+            applyStyle(wsAdMix, "D5:D7", "input"); // Changing cells
+            applyStyle(wsAdMix, "D10", "blankCompute"); // Missing formula for total spend
+            applyStyle(wsAdMix, "C10", "subHeader");
+            applyStyle(wsAdMix, "D11:D13", "constraint"); // Constraint limit values
+            applyStyle(wsAdMix, "D16", "blankCompute"); // Missing formula for objective
+
+            ["B5", "B6", "B7", "D11"].forEach(cell => { if(wsAdMix[cell]) wsAdMix[cell].z = "$#,##0"; });
+            ["C5", "C6", "C7", "D16"].forEach(cell => { if(wsAdMix[cell]) wsAdMix[cell].z = "#,##0"; });
+            setCols(wsAdMix, [28, 15, 20, 22]);
+            XLSX.utils.book_append_sheet(wb, wsAdMix, "Ad_Mix_Solver");
+
+            // 6. Zag_Launch_Scenarios Generation
+            let zagData = [
+                ["Bulldog Corp - Project Zag Launch"],
+                [],
+                ["Scenario Inputs", "Current Value"],
+                ["Selling Price", 150],
+                ["Unit Cost", 90],
+                ["Expected Volume", 5000],
+                [],
+                ["Financials", "Amount"],
+                ["Total Revenue", ""],
+                ["Total Variable Cost", ""],
+                ["Fixed Costs", 100000],
+                ["Net Profit", ""]
+            ];
+            const wsZag = XLSX.utils.aoa_to_sheet(zagData);
+            if(wsZag['A1']) wsZag['A1'].s = styles.title;
+            applyStyle(wsZag, "A3:B3", "header");
+            applyStyle(wsZag, "A8:B8", "header");
+            applyStyle(wsZag, "B4:B6", "input");
+            applyStyle(wsZag, "B9:B10", "blankCompute");
+            applyStyle(wsZag, "B12", "blankCompute"); // Expected Objective
+            
+            ["B4", "B5", "B11"].forEach(cell => { if(wsZag[cell]) wsZag[cell].z = "$#,##0"; });
+            if(wsZag['B6']) wsZag['B6'].z = "#,##0";
+            
+            setCols(wsZag, [25, 20]);
+            XLSX.utils.book_append_sheet(wb, wsZag, "Zag_Launch_Scenarios");
+
+            // Trigger Download
+            XLSX.writeFile(wb, "BulldogCorp_Operations_Data.xlsx");
+        }
+
+        // ---------------------------------------------------------
+        // CONFIGURATION: YOUR GOOGLE WEB APP URL
+        // ---------------------------------------------------------
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec";
+        // ---------------------------------------------------------
+
+        // Download for Canvas (Saves inputs to a text file and adds Solution Key)
+        function saveForCanvas() {
+            const name = document.getElementById('fullName').value || 'Unknown_Student';
+            const email = document.getElementById('email').value;
+            
+            if(!name || !email) {
+                alert("Please fill in your Name and Email Address before downloading.");
+                return;
+            }
+
+            // Flag that they successfully downloaded
+            localStorage.setItem('downloaded_answers', 'true');
+
+            let content = `Exam Prep Submission\nStudent: ${name}\nEmail: ${email}\nDate: ${new Date().toLocaleString()}\n\n-- SUBMITTED ANSWERS --\n\n`;
+
+            // Collect all inputs
+            const inputs = document.querySelectorAll('input[type="radio"]:checked, input[type="number"], input[type="text"]');
+            inputs.forEach(input => {
+                if(input.id !== 'fullName' && input.id !== 'email') {
+                    let readableName = input.name.replace('_', ' ').toUpperCase();
+                    content += `${readableName}: ${input.value}\n`;
+                }
+            });
+
+            // Append Solution Key
+            let solutionKey = `
+\n\n-----------------------------------------------------
+=== INSTRUCTOR SOLUTION KEY ===
+-----------------------------------------------------
+Req 1 Q1: B (Smartphones)
+Req 1 Q2: A (Q1)
+Req 2 Q1: A (Positively Skewed)
+Req 2 Q2: 12
+Req 3 Q1: 450
+Req 3 Q2: $68,500
+Req 3 Q3: $70,750
+Req 4 Q1: $142,500
+Req 4 Q2: C (Worst Case)
+Req 5 Q1: 900,000
+Req 5 Q2: 4
+Req 6 Q1: B (High Price)
+Req 6 Q2: $180,000
+-----------------------------------------------------
+`;
+            content += solutionKey;
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const anchor = document.createElement('a');
+            anchor.href = window.URL.createObjectURL(blob);
+            anchor.download = `ExamPrep_${name.replace(/\s+/g, '_')}.txt`;
+            anchor.click();
+        }
+
+        // Submit to Google Sheets
+        function submitToGoogleSheets() {
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('submitText');
+            
+            const name = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+
+            if(!name || !email) {
+                alert("Please enter your Name and Email before submitting.");
+                return;
+            }
+
+            // Check if they downloaded the text file
+            const hasDownloaded = localStorage.getItem('downloaded_answers');
+            if(!hasDownloaded) {
+                const proceed = confirm("⚠️ WAIT! You haven't clicked 'Save Text for Canvas' yet.\n\nProceeding will submit your score, but you won't have the text file & Solution Key downloaded to your computer.\n\nClick Cancel to go back and download it, or OK to proceed anyway.");
+                if(!proceed) return;
+            }
+
+            // UI Loading State
+            btn.disabled = true;
+            btnText.innerText = "Sending...";
+            btn.classList.add('opacity-70', 'cursor-wait');
+
+            // Gather Data
+            const formData = new FormData();
+            formData.append('FullName', name);
+            formData.append('Email', email);
+            formData.append('timestamp', new Date().toISOString());
+
+            // Add all answers
+            document.querySelectorAll('input[type="radio"]:checked').forEach(r => formData.append(r.name, r.value));
+            document.querySelectorAll('input[type="number"]').forEach(n => formData.append(n.name, n.value));
+            
+            // Note: Since we are using no-cors, we cannot read the exact response object.
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                body: formData
+            })
+            .then(() => {
+                // Show Success Page Overlay
+                document.getElementById('success-page').classList.remove('hidden');
+                
+                // Reset Button styling behind the scenes
+                btnText.innerText = "Submitted";
+                btn.classList.remove('cursor-wait', 'opacity-70');
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i> Submitted';
+            })
+            .catch(error => {
+                console.error('Error!', error.message);
+                alert("There was an issue submitting data. Please use the 'Save for Canvas' button instead.");
+                btn.disabled = false;
+                btnText.innerText = "Submit to Grading Sheet";
+                btn.classList.remove('opacity-70', 'cursor-wait');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Class: Statistics & Data Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Modern UI Palette */
+            --primary: #6366f1; /* Indigo */
+            --primary-hover: #4f46e5;
+            --primary-light: #e0e7ff;
+            --secondary: #0f172a;
+            
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            
+            /* Feedback Colors */
+            --success-bg: #f0fdf4;
+            --success-text: #166534;
+            --success-border: #22c55e;
+            
+            --error-bg: #fef2f2;
+            --error-text: #991b1b;
+            --error-border: #ef4444;
+
+            --warning: #f59e0b;
+            --warning-bg: #fffbeb;
+            --warning-text: #b45309;
+
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+        }
+        
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding-bottom: 120px;
+            background-image: radial-gradient(circle at 50% 0%, #e0e7ff 0%, transparent 50%);
+            background-repeat: no-repeat;
+        }
+
+        /* HEADER */
+        header {
+            padding: 4rem 1rem 3rem;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--secondary);
+            margin: 0;
+            font-size: 2.75rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+        }
+        
+        .subtitle {
+            color: var(--text-muted);
+            margin-top: 0.75rem;
+            font-size: 1.15rem;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* INSTRUCTOR TOOLBAR & SIDEBAR */
+        #instructorToolbar {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            z-index: 2000;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .toolbar-group { display: flex; gap: 12px; align-items: center; }
+
+        .tool-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .tool-btn:hover { background: rgba(255,255,255,0.2); }
+        .tool-btn.action { background: var(--primary); border-color: var(--primary); }
+        .tool-btn.danger { background: #ef4444; border-color: #ef4444; }
+
+        #instructorSidebar {
+            display: none;
+            position: fixed;
+            top: 54px; right: 0; bottom: 0;
+            width: 280px;
+            background: white;
+            border-left: 1px solid var(--border);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.05);
+            padding: 24px;
+            overflow-y: auto;
+            z-index: 1900;
+        }
+        
+        .sidebar-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        /* VISUALIZATION TABLES */
+        .viz-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+        .viz-table th, .viz-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .viz-table th {
+            background-color: #f8fafc;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+        .viz-table tr:last-child td { border-bottom: none; }
+
+        /* SECTIONS */
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-top: 4rem;
+            margin-bottom: 2rem;
+            color: var(--secondary);
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .section-header::before {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 24px;
+            background: var(--primary);
+            margin-right: 16px;
+            border-radius: 4px;
+        }
+
+        /* QUESTION CARDS */
+        .question-card {
+            background: var(--bg-card);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg), var(--shadow-glow);
+        }
+
+        .question-card.graded-correct { border-color: var(--success-border); }
+        .question-card.graded-incorrect { border-color: var(--error-border); }
+        .question-card.graded-partial { border-color: var(--warning); }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.75rem;
+        }
+
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--text-main);
+            width: 100%;
+            line-height: 1.5;
+        }
+
+        /* OPTIONS */
+        .options { display: flex; flex-direction: column; gap: 10px; }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .option-label:hover {
+            border-color: var(--border-hover);
+            background-color: #f8fafc;
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 16px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .option-label:has(input:checked) {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+            color: var(--primary-hover);
+        }
+
+        /* FEEDBACK */
+        .feedback {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 12px;
+            display: none; 
+            font-size: 0.95rem;
+            line-height: 1.6;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        .rationale-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: block;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+        }
+
+        .feedback.correct {
+            background-color: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
+        }
+
+        .feedback.incorrect {
+            background-color: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid var(--error-border);
+        }
+
+        .feedback.partial {
+            background-color: var(--warning-bg);
+            color: var(--warning-text);
+            border: 1px solid var(--warning);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* CONTROLS */
+        .controls {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.05);
+            position: sticky;
+            bottom: 20px;
+            z-index: 100;
+            border: 1px solid var(--border);
+        }
+
+        .btn-main {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 50px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+            font-family: inherit;
+        }
+
+        .btn-main:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-secondary {
+            background-color: white;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-left: 12px;
+            display: none;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .btn-secondary:hover { 
+            background-color: #f8fafc; 
+            border-color: var(--border-hover); 
+        }
+
+        /* SCORE DISPLAY */
+        .score-box {
+            margin-bottom: 24px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            display: none;
+        }
+
+        .hash-display {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 20px;
+            word-break: break-all;
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+            border: 1px solid var(--border);
+        }
+
+        /* MODALS */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2100;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            z-index: 2200;
+            width: 90%;
+            max-width: 450px;
+            animation: fadeIn 0.3s ease;
+        }
+        .modal h3 { margin-top: 0; color: var(--secondary); font-size: 1.5rem;}
+        
+        .close-modal-btn {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: none; border: none;
+            font-size: 1.5rem; cursor: pointer; color: var(--text-muted);
+            transition: color 0.2s;
+        }
+        .close-modal-btn:hover { color: var(--text-main); }
+        
+        footer {
+            text-align: center; margin-top: 80px; font-size: 0.9em; color: var(--text-muted);
+            font-weight: 500;
+        }
+        a.admin-link { color: inherit; text-decoration: none; cursor: pointer; transition: color 0.2s; }
+        a.admin-link:hover { color: var(--primary); }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+<!-- INSTRUCTOR TOOLBAR -->
+<div id="instructorToolbar">
+    <div class="toolbar-group">
+        <strong>👨‍🏫 Instructor Mode</strong>
+        <button class="tool-btn action" onclick="instructorAutoFill()">Auto-Fill Correct</button>
+        <button class="tool-btn" onclick="toggleSidebar()">Answer Key</button>
+    </div>
+    <div class="toolbar-group">
+        <button class="tool-btn" onclick="openVerifyModal()">Verify Hash</button>
+        <button class="tool-btn danger" onclick="openResetModal()">Reset Quiz</button>
+        <button class="tool-btn" onclick="logout()">Exit</button>
+    </div>
+</div>
+
+<div id="instructorSidebar">
+    <h4 style="margin-top:0; font-size: 1.2rem; color: var(--secondary);">Answer Key</h4>
+    <div id="sidebarContent"></div>
+</div>
+
+<header>
+    <div class="container">
+        <h1>Mastering Data & Statistics</h1>
+        <p class="subtitle">Level ID: STATS-35 • 35 Questions • Regression, X/Y, Analysis & Tools</p>
+    </div>
+</header>
+
+<div class="container">
+    <form id="quizForm">
+        
+        <!-- SECTION A -->
+        <div class="section-header">A) Data Types & Measurement Scales</div>
+
+        <div class="question-card" id="card-q1">
+            <div class="question-header"><div class="question-text">1) Which of the following variables is best classified as ordinal data?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q1" value="A"> A. A unique vendor ID number</label>
+                <label class="option-label"><input type="radio" name="q1" value="B"> B. The employee department</label>
+                <label class="option-label"><input type="radio" name="q1" value="C"> C. A customer star rating</label>
+                <label class="option-label"><input type="radio" name="q1" value="D"> D. The invoice total amount</label>
+            </div>
+            <div class="feedback" id="feedback-q1"></div>
+        </div>
+
+        <div class="question-card" id="card-q2">
+            <div class="question-header"><div class="question-text">2) A dataset contains a field called “ZipCode.” Which statement accurately classifies this?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q2" value="A"> A. A quantitative measurement</label>
+                <label class="option-label"><input type="radio" name="q2" value="B"> B. A nominal categorical label</label>
+                <label class="option-label"><input type="radio" name="q2" value="C"> C. An ordinal categorical rank</label>
+                <label class="option-label"><input type="radio" name="q2" value="D"> D. A continuous measurement</label>
+            </div>
+            <div class="feedback" id="feedback-q2"></div>
+        </div>
+
+        <div class="question-card" id="card-q3">
+            <div class="question-header"><div class="question-text">3) Which of the following pairs is correctly matched regarding data types?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q3" value="A"> A. Discrete: completion time</label>
+                <label class="option-label"><input type="radio" name="q3" value="B"> B. Continuous: audit findings</label>
+                <label class="option-label"><input type="radio" name="q3" value="C"> C. Discrete: approval counts</label>
+                <label class="option-label"><input type="radio" name="q3" value="D"> D. Continuous: invoice counts</label>
+            </div>
+            <div class="feedback" id="feedback-q3"></div>
+        </div>
+
+        <!-- SECTION B -->
+        <div class="section-header">B) Center, Skew, & Box Plots</div>
+
+        <div class="question-card" id="card-q4">
+            <div class="question-header"><div class="question-text">4) Which measure of central tendency is uniquely designed to identify the most frequently occurring value in a given dataset?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q4" value="A"> A. The arithmetic sample mean</label>
+                <label class="option-label"><input type="radio" name="q4" value="B"> B. The statistical data median</label>
+                <label class="option-label"><input type="radio" name="q4" value="C"> C. The dataset's defined mode</label>
+                <label class="option-label"><input type="radio" name="q4" value="D"> D. The standard error metric</label>
+            </div>
+            <div class="feedback" id="feedback-q4"></div>
+        </div>
+
+        <div class="question-card" id="card-q5">
+            <div class="question-header"><div class="question-text">5) Which of the following statistical measures is the most resistant to a single extreme outlier?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q5" value="A"> A. The arithmetic sample mean</label>
+                <label class="option-label"><input type="radio" name="q5" value="B"> B. The statistical data median</label>
+                <label class="option-label"><input type="radio" name="q5" value="C"> C. The dataset's overall range</label>
+                <label class="option-label"><input type="radio" name="q5" value="D"> D. The standard error metric</label>
+            </div>
+            <div class="feedback" id="feedback-q5"></div>
+        </div>
+
+        <div class="question-card" id="card-q6">
+            <div class="question-header"><div class="question-text">6) In a standard box plot visualization, the horizontal line drawn inside the central box represents:</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q6" value="A"> A. The average of all data points</label>
+                <label class="option-label"><input type="radio" name="q6" value="B"> B. The exact middle data value</label>
+                <label class="option-label"><input type="radio" name="q6" value="C"> C. The most frequently seen value</label>
+                <label class="option-label"><input type="radio" name="q6" value="D"> D. The lowest possible data point</label>
+            </div>
+            <div class="feedback" id="feedback-q6"></div>
+        </div>
+
+        <div class="question-card" id="card-q7">
+            <div class="question-header"><div class="question-text">7) In a Box & Whisker chart, individual dots plotted far beyond the end of the whiskers typically indicate:</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q7" value="A"> A. Excluded missing data points</label>
+                <label class="option-label"><input type="radio" name="q7" value="B"> B. Statistically extreme outliers</label>
+                <label class="option-label"><input type="radio" name="q7" value="C"> C. The arithmetic average value</label>
+                <label class="option-label"><input type="radio" name="q7" value="D"> D. The dataset's margin of error</label>
+            </div>
+            <div class="feedback" id="feedback-q7"></div>
+        </div>
+
+        <div class="question-card" id="card-q8">
+            <div class="question-header"><div class="question-text">8) A box plot is displayed vertically. It has a very long upper whisker, and the median line sits very close to the bottom of the box. This suggests:</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q8" value="A"> A. A strong left-skewed distribution</label>
+                <label class="option-label"><input type="radio" name="q8" value="B"> B. A strong right-skewed distribution</label>
+                <label class="option-label"><input type="radio" name="q8" value="C"> C. A completely uniform distribution</label>
+                <label class="option-label"><input type="radio" name="q8" value="D"> D. A perfectly symmetrical distribution</label>
+            </div>
+            <div class="feedback" id="feedback-q8"></div>
+        </div>
+
+        <!-- SECTION C -->
+        <div class="section-header">C) Normal Distribution & Z-Scores</div>
+
+        <div class="question-card" id="card-q9">
+            <div class="question-header"><div class="question-text">9) A z-score is calculated as +2.0. This means the specific observation is located exactly:</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q9" value="A"> A. Two numeric units above the median</label>
+                <label class="option-label"><input type="radio" name="q9" value="B"> B. Two standard deviations above the mean</label>
+                <label class="option-label"><input type="radio" name="q9" value="C"> C. Two standard errors above the average</label>
+                <label class="option-label"><input type="radio" name="q9" value="D"> D. Two times larger than the overall mean</label>
+            </div>
+            <div class="feedback" id="feedback-q9"></div>
+        </div>
+
+        <div class="question-card" id="card-q10">
+            <div class="question-header"><div class="question-text">10) Based on the empirical rule for a normal distribution, approximately what proportion of observations lie between −1 and +1 standard deviations?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q10" value="A"> A. Exactly 50.0 percent of the data</label>
+                <label class="option-label"><input type="radio" name="q10" value="B"> B. Approximately 68.3 percent of the data</label>
+                <label class="option-label"><input type="radio" name="q10" value="C"> C. Approximately 95.0 percent of the data</label>
+                <label class="option-label"><input type="radio" name="q10" value="D"> D. Exactly 99.7 percent of the data</label>
+            </div>
+            <div class="feedback" id="feedback-q10"></div>
+        </div>
+
+        <div class="question-card" id="card-q11">
+            <div class="question-header"><div class="question-text">11) In a normally distributed dataset, a data point with an absolute z-score equal to or greater than 3 (|z| ≥ 3) is commonly flagged as:</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q11" value="A"> A. An obvious error in data entry</label>
+                <label class="option-label"><input type="radio" name="q11" value="B"> B. A highly unusual statistical outlier</label>
+                <label class="option-label"><input type="radio" name="q11" value="C"> C. Evidence of a zero population mean</label>
+                <label class="option-label"><input type="radio" name="q11" value="D"> D. Proof of a perfectly linear model</label>
+            </div>
+            <div class="feedback" id="feedback-q11"></div>
+        </div>
+
+        <div class="question-card" id="card-q12">
+            <div class="question-header"><div class="question-text">12) Why is utilizing z-scores to automatically label “extreme” values considered risky if a distribution is heavily skewed?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q12" value="A"> A. They require strict integer formats</label>
+                <label class="option-label"><input type="radio" name="q12" value="B"> B. They strictly fail for small samples</label>
+                <label class="option-label"><input type="radio" name="q12" value="C"> C. They misrepresent skewed tail risks</label>
+                <label class="option-label"><input type="radio" name="q12" value="D"> D. They cannot be computed in Excel</label>
+            </div>
+            <div class="feedback" id="feedback-q12"></div>
+        </div>
+
+        <!-- SECTION D -->
+        <div class="section-header">D) Standard Error & Hypothesis Testing</div>
+
+        <div class="question-card" id="card-q13">
+            <div class="question-header"><div class="question-text">13) While standard deviation measures the spread of individual observations, the standard error of the mean primarily describes:</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q13" value="A"> A. The spread of individual data points</label>
+                <label class="option-label"><input type="radio" name="q13" value="B"> B. The variability of various sample means</label>
+                <label class="option-label"><input type="radio" name="q13" value="C"> C. The probability of the null hypothesis</label>
+                <label class="option-label"><input type="radio" name="q13" value="D"> D. The linear correlation between metrics</label>
+            </div>
+            <div class="feedback" id="feedback-q13"></div>
+        </div>
+
+        <div class="question-card" id="card-q14">
+            <div class="question-header"><div class="question-text">14) A hypothesis test yields a p-value of 0.01. Which is the most accurate statistical interpretation?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q14" value="A"> A. The null hypothesis is completely false</label>
+                <label class="option-label"><input type="radio" name="q14" value="B"> B. A 1% chance to see this extreme data</label>
+                <label class="option-label"><input type="radio" name="q14" value="C"> C. The alternative hypothesis is 99% true</label>
+                <label class="option-label"><input type="radio" name="q14" value="D"> D. The statistical model is purely unbiased</label>
+            </div>
+            <div class="feedback" id="feedback-q14"></div>
+        </div>
+
+        <div class="question-card" id="card-q15">
+            <div class="question-header"><div class="question-text">15) Assuming a predefined significance level (alpha) of 0.05, which is the standard decision rule?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q15" value="A"> A. Reject the null hypothesis if p > 0.05</label>
+                <label class="option-label"><input type="radio" name="q15" value="B"> B. Reject the null hypothesis if p <= 0.05</label>
+                <label class="option-label"><input type="radio" name="q15" value="C"> C. Accept the null hypothesis if p <= 0.05</label>
+                <label class="option-label"><input type="radio" name="q15" value="D"> D. Reject the null hypothesis if N is huge</label>
+            </div>
+            <div class="feedback" id="feedback-q15"></div>
+        </div>
+
+        <div class="question-card" id="card-q16">
+            <div class="question-header"><div class="question-text">16) Holding everything else equal, what effect does significantly increasing the sample size have on the standard error?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q16" value="A"> A. It generally increases the standard error</label>
+                <label class="option-label"><input type="radio" name="q16" value="B"> B. It generally decreases the standard error</label>
+                <label class="option-label"><input type="radio" name="q16" value="C"> C. It strictly increases the overall variation</label>
+                <label class="option-label"><input type="radio" name="q16" value="D"> D. It has absolutely zero effect on the error</label>
+            </div>
+            <div class="feedback" id="feedback-q16"></div>
+        </div>
+
+        <div class="question-card" id="card-q17">
+            <div class="question-header"><div class="question-text">17) A student claims a 95% confidence interval shows where 95% of individual data points fall. Why is this incorrect?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q17" value="A"> A. It tracks the exact spread of individual points</label>
+                <label class="option-label"><input type="radio" name="q17" value="B"> B. It estimates where the true population mean lies</label>
+                <label class="option-label"><input type="radio" name="q17" value="C"> C. It strictly requires a sample size of under 30</label>
+                <label class="option-label"><input type="radio" name="q17" value="D"> D. It completely replaces the standard deviations</label>
+            </div>
+            <div class="feedback" id="feedback-q17"></div>
+        </div>
+
+        <!-- SECTION E -->
+        <div class="section-header">E) Correlation, Causation, & Variables</div>
+
+        <div class="question-card" id="card-q18">
+            <div class="question-header"><div class="question-text">18) If an analyst builds a regression model to predict a house's final Sale Price based on its Square Footage, how should the variables be classified?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q18" value="A"> A. X is Sale Price, and Y is Square Footage</label>
+                <label class="option-label"><input type="radio" name="q18" value="B"> B. X is Square Footage, and Y is Sale Price</label>
+                <label class="option-label"><input type="radio" name="q18" value="C"> C. Both variables are considered Y variables</label>
+                <label class="option-label"><input type="radio" name="q18" value="D"> D. Both variables are considered X variables</label>
+            </div>
+            <div class="feedback" id="feedback-q18"></div>
+        </div>
+
+        <div class="question-card" id="card-q19">
+            <div class="question-header"><div class="question-text">19) In predictive analytics, what does the "Y" variable fundamentally represent?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q19" value="A"> A. The independent predictor that you control</label>
+                <label class="option-label"><input type="radio" name="q19" value="B"> B. The dependent outcome that you predict</label>
+                <label class="option-label"><input type="radio" name="q19" value="C"> C. A strictly categorical baseline measurement</label>
+                <label class="option-label"><input type="radio" name="q19" value="D"> D. An unmeasured external confounding factor</label>
+            </div>
+            <div class="feedback" id="feedback-q19"></div>
+        </div>
+
+        <div class="question-card" id="card-q20">
+            <div class="question-header"><div class="question-text">20) A calculated correlation coefficient (r) of −0.85 between Variable A and Variable B implies:</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q20" value="A"> A. Variable A strictly causes Variable B to drop</label>
+                <label class="option-label"><input type="radio" name="q20" value="B"> B. The two variables tend to move in opposite ways</label>
+                <label class="option-label"><input type="radio" name="q20" value="C"> C. Variable B strictly causes Variable A to drop</label>
+                <label class="option-label"><input type="radio" name="q20" value="D"> D. There is absolutely no relationship between them</label>
+            </div>
+            <div class="feedback" id="feedback-q20"></div>
+        </div>
+
+        <div class="question-card" id="card-q21">
+            <div class="question-header"><div class="question-text">21) You test a correlation between two variables and observe a p-value of 0.001. Assuming alpha = 0.05, this means:</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q21" value="A"> A. The correlation equals exactly 0.001</label>
+                <label class="option-label"><input type="radio" name="q21" value="B"> B. The linear relationship is significant</label>
+                <label class="option-label"><input type="radio" name="q21" value="C"> C. The correlation is definitively zero</label>
+                <label class="option-label"><input type="radio" name="q21" value="D"> D. Variable X causes Y with high certainty</label>
+            </div>
+            <div class="feedback" id="feedback-q21"></div>
+        </div>
+
+        <div class="question-card" id="card-q22">
+            <div class="question-header"><div class="question-text">22) If the calculated correlation between variable X and variable Y is exactly 0, what is the best statistical conclusion?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q22" value="A"> A. No linear relationship currently exists</label>
+                <label class="option-label"><input type="radio" name="q22" value="B"> B. No non-linear pattern currently exists</label>
+                <label class="option-label"><input type="radio" name="q22" value="C"> C. The statistical variables are mislabeled</label>
+                <label class="option-label"><input type="radio" name="q22" value="D"> D. The entire dataset lacks any variability</label>
+            </div>
+            <div class="feedback" id="feedback-q22"></div>
+        </div>
+
+        <!-- SECTION F -->
+        <div class="section-header">F) Regression & P-values</div>
+
+        <div class="question-card" id="card-q23">
+            <div class="question-header"><div class="question-text">23) In the context of a linear regression model, the R-squared (R²) metric is best interpreted as:</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q23" value="A"> A. The exact probability of statistical significance</label>
+                <label class="option-label"><input type="radio" name="q23" value="B"> B. The total percent of target variance explained</label>
+                <label class="option-label"><input type="radio" name="q23" value="C"> C. The absolute correlation of the residual errors</label>
+                <label class="option-label"><input type="radio" name="q23" value="D"> D. The overall standard error of the sample mean</label>
+            </div>
+            <div class="feedback" id="feedback-q23"></div>
+        </div>
+
+        <div class="question-card" id="card-q24">
+            <div class="question-header"><div class="question-text">24) In a simple linear regression equation, the coefficient for the slope explicitly represents:</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q24" value="A"> A. The expected Y outcome when variable X is zero</label>
+                <label class="option-label"><input type="radio" name="q24" value="B"> B. The overall average value of the independent X</label>
+                <label class="option-label"><input type="radio" name="q24" value="C"> C. The predicted change in Y per single unit of X</label>
+                <label class="option-label"><input type="radio" name="q24" value="D"> D. The total explained variance of the entire model</label>
+            </div>
+            <div class="feedback" id="feedback-q24"></div>
+        </div>
+
+        <div class="question-card" id="card-q25">
+            <div class="question-header"><div class="question-text">25) Based on the multiple regression output below predicting monthly "Maintenance Cost" ($), how should the Machine Age coefficient be interpreted?</div></div>
+            <table class="viz-table">
+                <tr><th>Predictor (X)</th><th>Coefficient</th><th>P-value</th></tr>
+                <tr><td>Intercept</td><td>1,200</td><td>0.001</td></tr>
+                <tr><td>Machine Age (Yrs)</td><td>150.50</td><td>0.020</td></tr>
+                <tr><td>Run Hours</td><td>4.25</td><td>0.450</td></tr>
+            </table>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q25" value="A"> A. Cost increases 150.5 dollars per year of age</label>
+                <label class="option-label"><input type="radio" name="q25" value="B"> B. Age increases 150.5 years per dollar of cost</label>
+                <label class="option-label"><input type="radio" name="q25" value="C"> C. Age causes a 150.5% percentage drop in cost</label>
+                <label class="option-label"><input type="radio" name="q25" value="D"> D. The machine age variable is insignificant</label>
+            </div>
+            <div class="feedback" id="feedback-q25"></div>
+        </div>
+
+        <div class="question-card" id="card-q26">
+            <div class="question-header"><div class="question-text">26) Using the same regression output above, what conclusion can we draw about the "Run Hours" variable (p-value = 0.450)?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q26" value="A"> A. It significantly increases the maintenance cost</label>
+                <label class="option-label"><input type="radio" name="q26" value="B"> B. It does not significantly affect maintenance cost</label>
+                <label class="option-label"><input type="radio" name="q26" value="C"> C. It significantly decreases the maintenance cost</label>
+                <label class="option-label"><input type="radio" name="q26" value="D"> D. It perfectly predicts final maintenance costs</label>
+            </div>
+            <div class="feedback" id="feedback-q26"></div>
+        </div>
+
+        <div class="question-card" id="card-q27">
+            <div class="question-header"><div class="question-text">27) If a simple regression model has an intercept of 50 and a slope of 2, what is the expected outcome (Y) when input X is 10?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q27" value="A"> A. 52</label>
+                <label class="option-label"><input type="radio" name="q27" value="B"> B. 70</label>
+                <label class="option-label"><input type="radio" name="q27" value="C"> C. 20</label>
+                <label class="option-label"><input type="radio" name="q27" value="D"> D. 500</label>
+            </div>
+            <div class="feedback" id="feedback-q27"></div>
+        </div>
+
+        <div class="question-card" id="card-q28">
+            <div class="question-header"><div class="question-text">28) A researcher states they are running a "Multiple Regression" with exactly 3 independent variables. What does this mean?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q28" value="A"> A. It aims to predict three different Y outcomes</label>
+                <label class="option-label"><input type="radio" name="q28" value="B"> B. It utilizes three different X predictor inputs</label>
+                <label class="option-label"><input type="radio" name="q28" value="C"> C. It strictly requires a 3D scatter plot visualization</label>
+                <label class="option-label"><input type="radio" name="q28" value="D"> D. It inherently triples the overall standard error</label>
+            </div>
+            <div class="feedback" id="feedback-q28"></div>
+        </div>
+
+        <!-- SECTION G -->
+        <div class="section-header">G) Benford's Law & Fraud Analytics</div>
+
+        <div class="question-card" id="card-q29">
+            <div class="question-header"><div class="question-text">29) Which type of data is most appropriate for analysis using Benford’s Law?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q29" value="A"> A. Prices that are strictly fixed at $19.99</label>
+                <label class="option-label"><input type="radio" name="q29" value="B"> B. Check numbers that are assigned sequentially</label>
+                <label class="option-label"><input type="radio" name="q29" value="C"> C. Natural amounts spanning multiple magnitudes</label>
+                <label class="option-label"><input type="radio" name="q29" value="D"> D. Datasets strictly constrained to a tight range</label>
+            </div>
+            <div class="feedback" id="feedback-q29"></div>
+        </div>
+
+        <div class="question-card" id="card-q30">
+            <div class="question-header"><div class="question-text">30) When analyzing employee expense data, which visual pattern is a strong red flag that employees are manipulating amounts to avoid approval limits?</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q30" value="A"> A. A very high frequency of leading number 1s</label>
+                <label class="option-label"><input type="radio" name="q30" value="B"> B. An unusual spike just below approval limits</label>
+                <label class="option-label"><input type="radio" name="q30" value="C"> C. A perfectly exact match to the Benford curve</label>
+                <label class="option-label"><input type="radio" name="q30" value="D"> D. A very high frequency of leading number 9s</label>
+            </div>
+            <div class="feedback" id="feedback-q30"></div>
+        </div>
+
+        <div class="question-card" id="card-q31">
+            <div class="question-header"><div class="question-text">31) If an accounts payable dataset shows significant deviation from Benford's expected curve, auditors should interpret this as:</div></div>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q31" value="A"> A. Absolute mathematical proof of corporate fraud</label>
+                <label class="option-label"><input type="radio" name="q31" value="B"> B. Absolute statistical proof of a faked dataset</label>
+                <label class="option-label"><input type="radio" name="q31" value="C"> C. A screening signal requiring further audit review</label>
+                <label class="option-label"><input type="radio" name="q31" value="D"> D. Clear evidence of a normal data distribution</label>
+            </div>
+            <div class="feedback" id="feedback-q31"></div>
+        </div>
+
+        <!-- SECTION H -->
+        <div class="section-header">☑️ H) Multi-Select Challenges</div>
+
+        <div class="question-card" id="card-q32">
+            <div class="question-header">
+                <div class="question-text">32) Which of the following variables are strictly classified as <strong>continuous</strong>? <em>(Select all that apply)</em></div>
+            </div>
+            <div class="options">
+                <label class="option-label"><input type="checkbox" name="q32" value="A"> A. Daily outdoor temperature measured in degrees</label>
+                <label class="option-label"><input type="checkbox" name="q32" value="B"> B. Total count of active employees in a branch</label>
+                <label class="option-label"><input type="checkbox" name="q32" value="C"> C. Exact geographical distance between two cities</label>
+                <label class="option-label"><input type="checkbox" name="q32" value="D"> D. Customer satisfaction rating on a 1 to 5 scale</label>
+            </div>
+            <div class="feedback" id="feedback-q32"></div>
+        </div>
+
+        <div class="question-card" id="card-q33">
+            <div class="question-header">
+                <div class="question-text">33) Which of the following statements about <strong>outliers</strong> are generally true? <em>(Select all that apply)</em></div>
+            </div>
+            <div class="options">
+                <label class="option-label"><input type="checkbox" name="q33" value="A"> A. They heavily skew the arithmetic sample mean</label>
+                <label class="option-label"><input type="checkbox" name="q33" value="B"> B. They must always be deleted before the analysis</label>
+                <label class="option-label"><input type="checkbox" name="q33" value="C"> C. They minimally affect the statistical data median</label>
+                <label class="option-label"><input type="checkbox" name="q33" value="D"> D. They dramatically distort the correlation metric</label>
+            </div>
+            <div class="feedback" id="feedback-q33"></div>
+        </div>
+
+        <div class="question-card" id="card-q34">
+            <div class="question-header">
+                <div class="question-text">34) Which of the following are standard assumptions required for ordinary least squares (OLS) linear regression? <em>(Select all that apply)</em></div>
+            </div>
+            <div class="options">
+                <label class="option-label"><input type="checkbox" name="q34" value="A"> A. A linear relationship exists between X and Y</label>
+                <label class="option-label"><input type="checkbox" name="q34" value="B"> B. The model residuals are normally distributed</label>
+                <label class="option-label"><input type="checkbox" name="q34" value="C"> C. All model variables must be purely categorical</label>
+                <label class="option-label"><input type="checkbox" name="q34" value="D"> D. The model R-squared must be exactly 1.000</label>
+            </div>
+            <div class="feedback" id="feedback-q34"></div>
+        </div>
+
+        <div class="question-card" id="card-q35">
+            <div class="question-header">
+                <div class="question-text">35) Assuming a standard significance level of alpha (α) = 0.05, which of the following p-values are considered statistically significant? <em>(Select all that apply)</em></div>
+            </div>
+            <div class="options">
+                <label class="option-label"><input type="checkbox" name="q35" value="A"> A. p = 0.015</label>
+                <label class="option-label"><input type="checkbox" name="q35" value="B"> B. p = 0.049</label>
+                <label class="option-label"><input type="checkbox" name="q35" value="C"> C. p = 0.051</label>
+                <label class="option-label"><input type="checkbox" name="q35" value="D"> D. p = 0.120</label>
+            </div>
+            <div class="feedback" id="feedback-q35"></div>
+        </div>
+
+        <div class="controls">
+            <div id="scoreDisplay" class="score-box"></div>
+            
+            <button type="button" class="btn-main" onclick="submitQuiz()" id="submitBtn">Submit & Grade</button>
+            <button type="button" id="exportBtn" class="btn-secondary" onclick="exportResults()">Download Results (.txt)</button>
+            
+            <div id="hashDisplay" class="hash-display"></div>
+        </div>
+    </form>
+</div>
+
+<footer>
+    <a class="admin-link" onclick="openLoginModal()">Instructor Login</a>
+</footer>
+
+<!-- Modals -->
+<div class="modal-overlay" id="modalOverlay"></div>
+
+<!-- Login Modal -->
+<div class="modal" id="loginModal">
+    <button class="close-modal-btn" onclick="closeLoginModal()">×</button>
+    <h3>Instructor Mode</h3>
+    <p style="margin-bottom: 24px; color: var(--text-muted); font-size: 1.05rem;">Gain access to the auto-fill grader and answer keys.</p>
+    <button class="btn-main" onclick="checkLogin()" style="width:100%">Activate Instructor Tools</button>
+</div>
+
+<!-- Verify Modal -->
+<div class="modal" id="verifyModal">
+    <button class="close-modal-btn" onclick="closeVerifyModal()">×</button>
+    <h3>Verify Hash</h3>
+    <textarea id="hashInput" rows="3" placeholder="Paste student hash..."></textarea>
+    <button class="btn-main" onclick="decodeHash()" style="width:100%">Verify</button>
+    <div id="verifyResult" style="margin-top:15px; font-weight: 600; text-align: center;"></div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal" id="studentNameModal">
+    <button class="close-modal-btn" onclick="closeStudentNameModal()">×</button>
+    <h3>Student Details</h3>
+    <input type="text" id="studentNameInput" placeholder="Full Name">
+    <button class="btn-main" onclick="finalizeExport()" style="width:100%">Download</button>
+</div>
+
+<!-- Reset Modal -->
+<div class="modal" id="resetConfirmModal">
+    <button class="close-modal-btn" onclick="closeResetConfirmModal()">×</button>
+    <h3>Reset Quiz?</h3>
+    <p style="color: var(--text-muted); margin-bottom: 24px;">This will clear all answers and current scores. Are you sure?</p>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn-secondary" onclick="closeResetConfirmModal()" style="display: block; flex: 1; margin: 0;">Cancel</button>
+        <button class="btn-main" onclick="confirmReset()" style="background-color: #ef4444; flex: 1; margin: 0; box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);">Confirm Reset</button>
+    </div>
+</div>
+
+<script>
+    const LEVEL_ID = "STATS-35";
+    
+    // COMPLETE ANSWER KEY & RATIONALES (35 Questions)
+    const answers = {
+        q1: { correct: 'C', rationale: "Ordinal data has a meaningful rank order, but distances between values (like 3 vs 4 stars) aren't mathematically equal." },
+        q2: { correct: 'B', rationale: "Zip codes represent geographical regions. They are labels, not measurements of magnitude." },
+        q3: { correct: 'C', rationale: "Discrete variables are countable items (like approvals). Time is continuous, as it can be broken down infinitely." },
+        q4: { correct: 'C', rationale: "The mode specifically identifies the most frequent observation, making it uniquely useful for finding common clusters." },
+        q5: { correct: 'B', rationale: "The median relies solely on rank ordering, meaning one extreme outlier will not shift its central position." },
+        q6: { correct: 'B', rationale: "The horizontal line dividing the central box in a Box & Whisker plot always represents the median (50th percentile)." },
+        q7: { correct: 'B', rationale: "Data points exceeding the upper or lower statistical fences (calculated via IQR) are plotted as individual outlier dots." },
+        q8: { correct: 'B', rationale: "A stretched upper whisker with a low median indicates a long tail to the right, known as a right-skewed distribution." },
+        q9: { correct: 'B', rationale: "A z-score expresses exactly how many standard deviations a specific value is away from the mean." },
+        q10: { correct: 'B', rationale: "According to the empirical rule (68-95-99.7), roughly 68.3% of the data falls within ±1 standard deviation." },
+        q11: { correct: 'B', rationale: "In a normal distribution, values beyond 3 standard deviations occur roughly 0.3% of the time, marking them as outliers." },
+        q12: { correct: 'C', rationale: "Z-scores assume symmetric distributions. In skewed data, standard deviation does not measure tail spread evenly on both sides." },
+        q13: { correct: 'B', rationale: "The standard error explicitly measures the dispersion or variability of sample means drawn from multiple samples." },
+        q14: { correct: 'B', rationale: "The p-value is the probability of obtaining test results at least as extreme as the observed ones, assuming the null is true." },
+        q15: { correct: 'B', rationale: "The standard rule is to reject the null hypothesis when your observed p-value is less than or equal to your chosen alpha." },
+        q16: { correct: 'B', rationale: "Larger samples produce a tighter clustering of sample means around the true mean, which directly decreases the standard error." },
+        q17: { correct: 'B', rationale: "A confidence interval provides an estimated range for the population parameter (the true mean), not for individual observations." },
+        q18: { correct: 'B', rationale: "The independent variable we control/use to predict is X (Square Footage), while the dependent outcome we want to predict is Y (Sale Price)." },
+        q19: { correct: 'B', rationale: "In regression, Y is the dependent variable. It is the target outcome you are attempting to model and predict based on X." },
+        q20: { correct: 'B', rationale: "A strong negative correlation means that as one variable increases, the other tends to decrease. It does not prove causality." },
+        q21: { correct: 'B', rationale: "A p-value of 0.001 is less than 0.05, meaning we reject the null hypothesis that the true correlation is zero. The relationship is significant." },
+        q22: { correct: 'A', rationale: "A correlation of 0 means there is no linear trend. A strong curved or non-linear relationship could theoretically still exist." },
+        q23: { correct: 'B', rationale: "R² (Coefficient of Determination) tells you the percentage of variance in your Y variable that is explained by the independent variables." },
+        q24: { correct: 'C', rationale: "The slope coefficient predicts the expected change in the dependent variable (Y) when the independent variable (X) increases by 1 unit." },
+        q25: { correct: 'A', rationale: "The coefficient of 150.5 indicates that holding other variables constant, a 1-year increase in Machine Age leads to a $150.50 increase in Maintenance Cost." },
+        q26: { correct: 'B', rationale: "Because the p-value (0.450) is greater than 0.05, we fail to reject the null hypothesis. Run hours do not significantly affect the cost." },
+        q27: { correct: 'B', rationale: "Y = Intercept + (Slope × X). Therefore, Y = 50 + (2 × 10) = 50 + 20 = 70." },
+        q28: { correct: 'B', rationale: "Multiple regression implies using two or more independent predictor variables (X) to estimate a single dependent outcome (Y)." },
+        q29: { correct: 'C', rationale: "Benford's Law applies best to naturally occurring, unconstrained numbers spanning several orders of magnitude." },
+        q30: { correct: 'B', rationale: "Employees trying to circumvent an approval threshold (like $5,000) will artificially create spikes of amounts just under the limit ($4,999)." },
+        q31: { correct: 'C', rationale: "Deviations highlight anomalies for further audit review. They do not prove fraud on their own, as innocent constraints can also break the law." },
+        q32: { type: 'multi', correct: ['A', 'C'], rationale: "Temperature and distance are continuous (measured to infinite decimals). Count of employees is discrete, and ratings are ordinal." },
+        q33: { type: 'multi', correct: ['A', 'C', 'D'], rationale: "Outliers heavily skew means and correlations but barely affect medians. They should be investigated, not blindly deleted." },
+        q34: { type: 'multi', correct: ['A', 'B'], rationale: "Standard OLS regression assumes linearity and normally distributed residuals. Variables can be continuous, and R-squared is rarely 1.0." },
+        q35: { type: 'multi', correct: ['A', 'B'], rationale: "A result is significant when the p-value is less than or equal to the significance level (alpha). 0.015 and 0.049 are ≤ 0.05." }
+    };
+
+    let currentScore = 0;
+    let quizSubmitted = false;
+    let submissionTime = "";
+    let submissionHash = "";
+
+    // --- SUBMISSION LOGIC ---
+    function submitQuiz() {
+        if(quizSubmitted) return;
+        
+        let score = 0;
+        let total = Object.keys(answers).length;
+        
+        // Loop through all questions
+        for (let qId in answers) {
+            const card = document.getElementById(`card-${qId}`);
+            const feedbackDiv = document.getElementById(`feedback-${qId}`);
+            const ansData = answers[qId];
+            
+            // Show Feedback Block
+            feedbackDiv.style.display = 'block';
+            feedbackDiv.classList.remove('correct', 'incorrect', 'partial');
+            card.classList.remove('graded-correct', 'graded-incorrect', 'graded-partial');
+
+            if (ansData.type === 'multi') {
+                const selectedElements = Array.from(document.querySelectorAll(`input[name="${qId}"]:checked`));
+                const selectedVals = selectedElements.map(el => el.value);
+                const correctArr = ansData.correct;
+                const pointsPerItem = 1 / correctArr.length;
+                let qScore = 0;
+
+                selectedVals.forEach(val => {
+                    if (correctArr.includes(val)) qScore += pointsPerItem;
+                    else qScore -= pointsPerItem; // Penalty for wrong guess
+                });
+                qScore = Math.max(0, qScore); // Prevent negative points per question
+                score += qScore;
+
+                if (selectedVals.length === 0) {
+                    feedbackDiv.classList.add('incorrect');
+                    card.classList.add('graded-incorrect');
+                    feedbackDiv.innerHTML = `<span class="rationale-title">Skipped (Answers: ${correctArr.join(', ')})</span>${ansData.rationale}`;
+                } else if (qScore >= 0.99) { // Handle float precision
+                    feedbackDiv.classList.add('correct');
+                    card.classList.add('graded-correct');
+                    feedbackDiv.innerHTML = `<span class="rationale-title">Correct</span>${ansData.rationale}`;
+                } else if (qScore > 0) {
+                    feedbackDiv.classList.add('partial');
+                    card.classList.add('graded-partial');
+                    feedbackDiv.innerHTML = `<span class="rationale-title">Partial Credit (+${qScore.toFixed(2)} pts) (Answers: ${correctArr.join(', ')})</span>${ansData.rationale}`;
+                } else {
+                    feedbackDiv.classList.add('incorrect');
+                    card.classList.add('graded-incorrect');
+                    feedbackDiv.innerHTML = `<span class="rationale-title">Incorrect (Answers: ${correctArr.join(', ')})</span>${ansData.rationale}`;
+                }
+
+            } else {
+                // Standard Radio Logic
+                const selected = document.querySelector(`input[name="${qId}"]:checked`);
+                if (selected) {
+                    if (selected.value === ansData.correct) {
+                        score++;
+                        feedbackDiv.classList.add('correct');
+                        card.classList.add('graded-correct');
+                        feedbackDiv.innerHTML = `<span class="rationale-title">Correct</span>${ansData.rationale}`;
+                    } else {
+                        feedbackDiv.classList.add('incorrect');
+                        card.classList.add('graded-incorrect');
+                        feedbackDiv.innerHTML = `<span class="rationale-title">Incorrect (Answer: ${ansData.correct})</span>${ansData.rationale}`;
+                    }
+                } else {
+                    feedbackDiv.classList.add('incorrect');
+                    card.classList.add('graded-incorrect');
+                    feedbackDiv.innerHTML = `<span class="rationale-title">Skipped (Answer: ${ansData.correct})</span>${ansData.rationale}`;
+                }
+            }
+        }
+
+        currentScore = score;
+        submissionTime = new Date().toISOString();
+        quizSubmitted = true;
+
+        // Hash Generation
+        const rawString = `${LEVEL_ID}|${score.toFixed(2)}/${total}|${submissionTime}`;
+        submissionHash = btoa(rawString);
+
+        // Update UI
+        const scoreDiv = document.getElementById('scoreDisplay');
+        scoreDiv.style.display = 'block';
+        
+        if (score === total) {
+            scoreDiv.innerHTML = `🏆 Perfect Score! ${score.toFixed(2)} / ${total}`;
+            scoreDiv.style.color = 'var(--primary)';
+        } else {
+            scoreDiv.innerHTML = `Result: ${score.toFixed(2)} / ${total}`;
+            scoreDiv.style.color = score >= (total*0.7) ? 'var(--warning-text)' : 'var(--error-text)';
+        }
+
+        document.getElementById('hashDisplay').style.display = 'block';
+        document.getElementById('hashDisplay').textContent = `Security Hash: ${submissionHash}`;
+        document.getElementById('exportBtn').style.display = 'inline-block';
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').innerText = "Submitted ✓";
+        
+        // Disable inputs
+        document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(el => el.disabled = true);
+        
+        // Scroll to score
+        scoreDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // --- EXPORT LOGIC ---
+    function exportResults() {
+        if (!quizSubmitted) return;
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('studentNameModal').style.display = 'block';
+        document.getElementById('studentNameInput').focus();
+    }
+
+    function closeStudentNameModal() {
+        document.getElementById('modalOverlay').style.display = 'none';
+        document.getElementById('studentNameModal').style.display = 'none';
+    }
+
+    function finalizeExport() {
+        const studentName = document.getElementById('studentNameInput').value.trim() || "Unknown Student";
+        let content = `DATA ANALYTICS ASSESSMENT REPORT\n`;
+        content += `--------------------------------\n`;
+        content += `Student: ${studentName}\n`;
+        content += `Level: ${LEVEL_ID}\n`;
+        content += `Date: ${submissionTime}\n`;
+        content += `Score: ${currentScore.toFixed(2)}/${Object.keys(answers).length}\n`;
+        content += `Hash: ${submissionHash}\n\n`;
+        content += `DETAILED RESPONSES:\n`;
+        
+        for (let qId in answers) {
+            const selectedElements = Array.from(document.querySelectorAll(`input[name="${qId}"]:checked`));
+            const val = selectedElements.length > 0 ? selectedElements.map(el => el.value).join(', ') : "SKIPPED";
+            
+            let resultTxt = "WRONG";
+            if (answers[qId].type === 'multi') {
+                const correctArr = answers[qId].correct;
+                const pts = 1 / correctArr.length;
+                let qScore = 0;
+                selectedElements.forEach(el => {
+                    if (correctArr.includes(el.value)) qScore += pts;
+                    else qScore -= pts;
+                });
+                qScore = Math.max(0, qScore);
+                if (qScore >= 0.99) resultTxt = "CORRECT";
+                else if (qScore > 0) resultTxt = "PARTIAL";
+            } else {
+                if (selectedElements[0] && selectedElements[0].value === answers[qId].correct) {
+                    resultTxt = "CORRECT";
+                }
+            }
+            
+            content += `Q${qId.substring(1)}: ${val} [${resultTxt}]\n`;
+        }
+        
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${studentName.replace(/\s+/g, '_')}_StatsResults.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        closeStudentNameModal();
+    }
+
+    // --- INSTRUCTOR & UTILS ---
+    function openLoginModal() {
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('loginModal').style.display = 'block';
+    }
+    
+    function closeLoginModal() {
+        document.getElementById('modalOverlay').style.display = 'none';
+        document.getElementById('loginModal').style.display = 'none';
+    }
+    
+    function checkLogin() {
+        closeLoginModal();
+        document.getElementById('instructorToolbar').style.display = 'flex';
+        populateSidebar();
+    }
+
+    function logout() {
+        document.getElementById('instructorToolbar').style.display = 'none';
+        document.getElementById('instructorSidebar').style.display = 'none';
+    }
+
+    function instructorAutoFill() {
+        for (let qId in answers) {
+            const ansData = answers[qId];
+            if (ansData.type === 'multi') {
+                ansData.correct.forEach(val => {
+                    const cb = document.querySelector(`input[name="${qId}"][value="${val}"]`);
+                    if (cb) cb.checked = true;
+                });
+            } else {
+                const correctVal = ansData.correct;
+                const radio = document.querySelector(`input[name="${qId}"][value="${correctVal}"]`);
+                if (radio) radio.checked = true;
+            }
+        }
+    }
+
+    function toggleSidebar() {
+        const sb = document.getElementById('instructorSidebar');
+        sb.style.display = (sb.style.display === 'none' || sb.style.display === '') ? 'block' : 'none';
+    }
+
+    function populateSidebar() {
+        const content = document.getElementById('sidebarContent');
+        content.innerHTML = '';
+        for (let qId in answers) {
+            const ansText = answers[qId].type === 'multi' ? answers[qId].correct.join(', ') : answers[qId].correct;
+            content.innerHTML += `
+                <div class="sidebar-item">
+                    <span>Q${qId.substring(1)}</span>
+                    <strong style="color:var(--primary)">${ansText}</strong>
+                </div>`;
+        }
+    }
+
+    function openResetModal() {
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('resetConfirmModal').style.display = 'block';
+    }
+    
+    function closeResetConfirmModal() {
+        document.getElementById('modalOverlay').style.display = 'none';
+        document.getElementById('resetConfirmModal').style.display = 'none';
+    }
+
+    function confirmReset() {
+        document.getElementById('quizForm').reset();
+        document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(el => {
+            el.disabled = false;
+            el.checked = false;
+        });
+        document.querySelectorAll('.feedback').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.question-card').forEach(el => el.classList.remove('graded-correct', 'graded-incorrect', 'graded-partial'));
+        document.getElementById('scoreDisplay').style.display = 'none';
+        document.getElementById('hashDisplay').style.display = 'none';
+        document.getElementById('exportBtn').style.display = 'none';
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').innerText = "Submit & Grade";
+        quizSubmitted = false;
+        currentScore = 0;
+        closeResetConfirmModal();
+    }
+
+    // Hash Verify
+    function openVerifyModal() {
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('verifyModal').style.display = 'block';
+        document.getElementById('hashInput').value = '';
+        document.getElementById('verifyResult').innerHTML = '';
+    }
+    function closeVerifyModal() {
+        document.getElementById('modalOverlay').style.display = 'none';
+        document.getElementById('verifyModal').style.display = 'none';
+    }
+    function decodeHash() {
+        const hash = document.getElementById('hashInput').value.trim();
+        try {
+            const decoded = atob(hash);
+            const parts = decoded.split('|');
+            if (parts.length === 3 && parts[0] === LEVEL_ID) {
+                document.getElementById('verifyResult').innerHTML = `<div style="color:var(--success-text);">✔ Valid Score: ${parts[1]}</div>`;
+            } else { throw new Error(); }
+        } catch {
+            document.getElementById('verifyResult').innerHTML = `<div style="color:var(--error-text);">✘ Invalid Hash</div>`;
+        }
+    }
+
+</script>
+</body>
+</html>
