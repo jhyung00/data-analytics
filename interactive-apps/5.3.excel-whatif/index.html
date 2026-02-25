@@ -359,6 +359,44 @@
     </div>
 
     <script>
+        // --- DRAGGABLE MODAL LOGIC ---
+        function makeDraggable(elementId, handleId) {
+            const elmnt = document.getElementById(elementId);
+            const handle = document.getElementById(handleId);
+            
+            // Check if elements exist before proceeding
+            if (!elmnt || !handle) return;
+            
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            handle.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
         // --- DATA MODELS ---
 
         // 1. Goal Seek Model (Break-Even)
@@ -1804,11 +1842,11 @@
                 [],
                 ["Base Inputs", "", "", "Data Table", ""],
                 ["Item", "Value", "", "Qty", "Profit"],
-                ["Price", 50, "", "", {t:'n', f:"B9"}],
+                ["Price", 50, "", "", {t:'n', f:"B10"}],
                 ["Cost", 30, "", 100, ""],
                 ["Quantity", 100, "", 200, ""],
                 ["Fixed Costs", 5000, "", 250, ""],
-                ["Profit", { t: 'n', f: "(B5-B6)*B7 - B8" }, "", 300, ""],
+                ["Profit", { t: 'n', f: "(B6-B7)*B8 - B9" }, "", 300, ""],
                 ["", "", "", 400, ""],
                 ["", "", "", 500, ""]
              ];
@@ -1817,11 +1855,11 @@
              applyStyle(wsDT1, "A4:B4", "header");
              applyStyle(wsDT1, "D4:E4", "header");
              applyStyle(wsDT1, "D5:E5", "subHeader");
-             applyStyle(wsDT1, "B5:B8", "input");
-             applyStyle(wsDT1, "B9", "objective");
+             applyStyle(wsDT1, "B6:B9", "input");
+             applyStyle(wsDT1, "B10", "objective");
              applyStyle(wsDT1, "D7:D12", "input"); // Quantities
              applyStyle(wsDT1, "E6", "objective"); // Formula cell
-             ["B5", "B6", "B8", "B9"].forEach(ref => { if(wsDT1[ref]) wsDT1[ref].z = "$#,##0"; });
+             ["B6", "B7", "B9", "B10"].forEach(ref => { if(wsDT1[ref]) wsDT1[ref].z = "$#,##0"; });
              setCols(wsDT1, [15, 15, 5, 15, 15]);
 
              // 3. Data Table 2-Var
@@ -1830,24 +1868,24 @@
                 ["Vary Quantity and Price to see impact on Profit", "", "", "", "", "", ""],
                 [],
                 ["Base Inputs", "", "", "Data Table (Prices ->)", "", "", ""],
-                ["Item", "Value", "", {t:'n', f:"B9"}, 40, 50, 60],
+                ["Item", "Value", "", {t:'n', f:"B10"}, 40, 50, 60],
                 ["Price", 50, "", 100, "", "", ""],
                 ["Cost", 30, "", 200, "", "", ""],
                 ["Quantity", 100, "", 250, "", "", ""],
                 ["Fixed Costs", 5000, "", 300, "", "", ""],
-                ["Profit", { t: 'n', f: "(B5-B6)*B7 - B8" }, "", 400, "", "", ""],
+                ["Profit", { t: 'n', f: "(B6-B7)*B8 - B9" }, "", 400, "", "", ""],
                 ["", "", "", 500, "", "", ""]
              ];
              const wsDT2 = XLSX.utils.aoa_to_sheet(dt2Arr);
              if(wsDT2['A1']) wsDT2['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "BE185D" } } };
              applyStyle(wsDT2, "A4:B4", "header");
              applyStyle(wsDT2, "D4:G4", "header");
-             applyStyle(wsDT2, "B5:B8", "input");
-             applyStyle(wsDT2, "B9", "objective");
+             applyStyle(wsDT2, "B6:B9", "input");
+             applyStyle(wsDT2, "B10", "objective");
              applyStyle(wsDT2, "E5:G5", "input"); // Prices row
              applyStyle(wsDT2, "D6:D11", "input"); // Qty col
              applyStyle(wsDT2, "D5", "objective"); // Formula cell
-             ["B5", "B6", "B8", "B9", "E5", "F5", "G5"].forEach(ref => { if(wsDT2[ref]) wsDT2[ref].z = "$#,##0"; });
+             ["B6", "B7", "B9", "B10", "E5", "F5", "G5"].forEach(ref => { if(wsDT2[ref]) wsDT2[ref].z = "$#,##0"; });
              setCols(wsDT2, [15, 15, 5, 15, 15, 15, 15]);
 
              // 4. Solver Data
@@ -1913,8 +1951,8 @@
                 ["6. First, define names for your cells: B4 (Unit_Price), B5 (Unit_Cost), B11 (Net_Profit)."],
                 ["7. Create scenarios for High Margin (Price 25, Cost 8) and Low Margin (Price 18, Cost 12)."],
                 ["8. Generate a Scenario Summary for Net Profit."],
-                ["9. Switch to 'Data_Table_1V' sheet. Highlight D6:E12. Go to Data > What-If Analysis > Data Table. Set Column input cell to B7 (Quantity)."],
-                ["10. Switch to 'Data_Table_2V' sheet. Highlight D5:G11. Go to Data > What-If Analysis > Data Table. Set Row input cell to B5 (Price) and Column input cell to B7 (Quantity)."],
+                ["9. Switch to 'Data_Table_1V' sheet. Highlight D6:E12. Go to Data > What-If Analysis > Data Table. Set Column input cell to B8 (Quantity)."],
+                ["10. Switch to 'Data_Table_2V' sheet. Highlight D5:G11. Go to Data > What-If Analysis > Data Table. Set Row input cell to B6 (Price) and Column input cell to B8 (Quantity)."],
                 ["11. Switch to 'Logistics Model' sheet. Minimize Total Shipping Cost (B18) by changing Units Shipped (B11:D12)."],
                 ["    NOTE: You must write the formulas for Totals and Constraints yourself in the colored cells!"],
                 ["12. Switch to 'Portfolio Model' sheet. Maximize Return (B9) by changing Amount Invested (C4:C7)."],
@@ -2094,9 +2132,12 @@
             }
         }
 
-        // Start
-        init();
-
+        // Initialize application
+        window.onload = () => {
+            makeDraggable("modal-solver", "drag-solver");
+            makeDraggable("modal-scenario", "drag-scenario");
+            init();
+        };
     </script>
 </body>
 </html>
