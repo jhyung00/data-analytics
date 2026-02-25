@@ -1184,7 +1184,7 @@
 
                     // Apply styling from data model
                     if (data.highlights && data.highlights[cellAddress]) {
-                        td.className = data.highlights[cellAddress];
+                        td.className += " " + data.highlights[cellAddress];
                     }
 
                     // Bold first column labels
@@ -1497,6 +1497,55 @@
         }
 
         function downloadPracticeFile() {
+             // Check if library loaded
+             if(typeof XLSX === 'undefined') { alert('Excel library not loaded'); return; }
+
+             const wb = XLSX.utils.book_new();
+
+             // --- STYLES DEFINITION (Slate/Pink/Orange Theme) ---
+             const styles = {
+                 header: { 
+                     font: { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri" }, 
+                     fill: { fgColor: { rgb: "0F172A" } }, // Slate 900
+                     alignment: { horizontal: "center", vertical: "center" }
+                 },
+                 subHeader: {
+                     font: { bold: true, name: "Calibri" },
+                     fill: { fgColor: { rgb: "F1F5F9" } }, // Slate 100
+                     border: { bottom: {style:"thin", color: {rgb:"CBD5E1"}} }
+                 },
+                 input: { 
+                     fill: { fgColor: { rgb: "FFFBEB" } }, // Amber 50
+                     border: { top: {style:"thin", color:{rgb:"FCD34D"}}, bottom: {style:"thin", color:{rgb:"FCD34D"}}, left: {style:"thin", color:{rgb:"FCD34D"}}, right: {style:"thin", color:{rgb:"FCD34D"}} } 
+                 },
+                 objective: {
+                     fill: { fgColor: { rgb: "FDF2F8" } }, // Pink 50
+                     font: { bold: true, color: { rgb: "BE185D" } }, // Pink 700
+                     border: { top: {style:"thin", color:{rgb:"F9A8D4"}}, bottom: {style:"thin", color:{rgb:"F9A8D4"}}, left: {style:"thin", color:{rgb:"F9A8D4"}}, right: {style:"thin", color:{rgb:"F9A8D4"}} }
+                 },
+                 constraint: {
+                     fill: { fgColor: { rgb: "FFEDD5" } }, // Orange 100
+                     font: { bold: true, color: { rgb: "C2410C" } }, // Orange 700
+                     border: { top: {style:"thin", color:{rgb:"FDBA74"}}, bottom: {style:"thin", color:{rgb:"FDBA74"}}, left: {style:"thin", color:{rgb:"FDBA74"}}, right: {style:"thin", color:{rgb:"FDBA74"}} }
+                 }
+             };
+
+             const applyStyle = (ws, range, styleName) => {
+                 const rangeObj = XLSX.utils.decode_range(range);
+                 for (let R = rangeObj.s.r; R <= rangeObj.e.r; ++R) {
+                     for (let C = rangeObj.s.c; C <= rangeObj.e.c; ++C) {
+                         const cell_address = XLSX.utils.encode_cell({r:R, c:C});
+                         if (!ws[cell_address]) ws[cell_address] = { t: 's', v: '' }; 
+                         if (!ws[cell_address].s) ws[cell_address].s = {};
+                         Object.assign(ws[cell_address].s, styles[styleName]);
+                     }
+                 }
+             };
+
+             const setCols = (ws, widths) => {
+                 ws['!cols'] = widths.map(w => ({wch: w}));
+             };
+
              // 1. Goal Seek Data
              const goalSeekArr = [
                 ["GOAL SEEK: BREAK-EVEN ANALYSIS", ""],
@@ -1507,39 +1556,65 @@
                 ["Cost", 30],
                 ["Quantity", 100],
                 ["Fixed Costs", 5000],
-                ["Profit", { f: "(B5-B6)*B7 - B8" }] 
+                ["Profit", { t: 'n', f: "(B5-B6)*B7 - B8" }] 
              ];
+             const wsGoal = XLSX.utils.aoa_to_sheet(goalSeekArr);
+             if(wsGoal['A1']) wsGoal['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "BE185D" } } };
+             applyStyle(wsGoal, "A4:B4", "header");
+             applyStyle(wsGoal, "B7", "input");
+             applyStyle(wsGoal, "B9", "objective");
+             ["B5", "B6", "B8", "B9"].forEach(ref => { if(wsGoal[ref]) wsGoal[ref].z = "$#,##0"; });
+             setCols(wsGoal, [20, 15]);
 
              // 2. Solver Data
              const solverArr = [
-                ["Product", "Price", "Cost", "Margin", "Labor Hrs", "Machine Hrs"],
-                ["Standard", 45, 25, 20, 2.0, 1.5],
-                ["Deluxe", 75, 40, 35, 4.0, 1.5],
+                ["SOLVER: PRODUCT MIX", "", "", "", ""],
                 [],
-                ["CONSTRAINTS", "Total Available"],
-                ["Labor Hours", 2000],
-                ["Machine Hours", 1200]
+                ["Product", "Standard", "Deluxe", "Total", "Limit"],
+                ["Unit Price", 45, 75, "", ""],
+                ["Unit Cost", 25, 40, "", ""],
+                ["Unit Margin", {t:'n', f:"B4-B5"}, {t:'n', f:"C4-C5"}, "", ""],
+                [],
+                ["Quantity (Make)", 0, 0, "", ""],
+                [],
+                ["Labor Hrs/Unit", 2.0, 4.0, {t:'n', f:"SUMPRODUCT(B8:C8, B10:C10)"}, 2000],
+                ["Machine Hrs", 1.5, 1.5, {t:'n', f:"SUMPRODUCT(B8:C8, B11:C11)"}, 1200],
+                [],
+                ["Total Profit", "", "", {t:'n', f:"SUMPRODUCT(B8:C8, B6:C6)"}, ""]
             ];
+            const wsSolver = XLSX.utils.aoa_to_sheet(solverArr);
+            if(wsSolver['A1']) wsSolver['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "BE185D" } } };
+            applyStyle(wsSolver, "A3:E3", "header");
+            applyStyle(wsSolver, "B8:C8", "input");
+            applyStyle(wsSolver, "D10:D11", "constraint");
+            applyStyle(wsSolver, "D13", "objective");
+            ["B4", "C4", "B5", "C5", "B6", "C6", "D13"].forEach(ref => { if(wsSolver[ref]) wsSolver[ref].z = "$#,##0.00"; });
+            setCols(wsSolver, [20, 15, 15, 15, 15]);
 
             // 3. Scenario Data
             const scenarioArr = [
+                ["SCENARIO MANAGER: BUDGET FORECAST", "", ""],
+                [],
                 ["INPUTS", "Values", "Notes"],
                 ["Sales Growth", 0.05, "Base Case"],
                 ["COGS %", 0.40, "Of Sales"],
                 [],
                 ["INCOME STATEMENT", "Year 1", "Year 2 (Proj)"],
-                ["Revenue", 1000000, { f: "B6*(1+B2)" }],
-                ["COGS", -400000, { f: "-C6*B3" }],
-                ["Gross Profit", { f: "B6+B7" }, { f: "C6+C7" }],
+                ["Revenue", 1000000, {t:'n', f: "B8*(1+B4)" }],
+                ["COGS", -400000, {t:'n', f: "-C8*B5" }],
+                ["Gross Profit", {t:'n', f: "B8+B9" }, {t:'n', f: "C8+C9" }],
                 ["Fixed Ops", -250000, -250000],
-                ["Net Income", { f: "B8+B9" }, { f: "C8+C9" }]
+                ["Net Income", {t:'n', f: "B10+B11" }, {t:'n', f: "C10+C11" }]
             ];
-
-            // Create workbook and sheets
-            const wb = XLSX.utils.book_new();
-            const wsGoal = XLSX.utils.aoa_to_sheet(goalSeekArr);
-            const wsSolver = XLSX.utils.aoa_to_sheet(solverArr);
             const wsScenario = XLSX.utils.aoa_to_sheet(scenarioArr);
+            if(wsScenario['A1']) wsScenario['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "BE185D" } } };
+            applyStyle(wsScenario, "A3:C3", "header");
+            applyStyle(wsScenario, "A7:C7", "header");
+            applyStyle(wsScenario, "B4:B5", "input");
+            applyStyle(wsScenario, "C12", "objective");
+            ["B4", "B5"].forEach(ref => { if(wsScenario[ref]) wsScenario[ref].z = "0.0%"; });
+            ["B8", "C8", "B9", "C9", "B10", "C10", "B11", "C11", "B12", "C12"].forEach(ref => { if(wsScenario[ref]) wsScenario[ref].z = "$#,##0"; });
+            setCols(wsScenario, [20, 15, 15]);
 
             // Add sheets to workbook
             XLSX.utils.book_append_sheet(wb, wsGoal, "Goal_Seek_Model");
@@ -1555,19 +1630,19 @@
             // Style Definitions
             const styles = {
                 header: {
-                    fill: { fgColor: { rgb: "217346" } },
-                    font: { color: { rgb: "FFFFFF" }, bold: true },
+                    fill: { fgColor: { rgb: "0F172A" } }, // Slate 900
+                    font: { color: { rgb: "FFFFFF" }, bold: true, name: "Calibri" },
                     alignment: { horizontal: "center", vertical: "center" },
                     border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } }
                 },
                 input: {
-                    fill: { fgColor: { rgb: "FFF2CC" } },
-                    border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } }
+                    fill: { fgColor: { rgb: "FFFBEB" } }, // Amber 50
+                    border: { top: { style: "thin", color:{rgb:"FCD34D"} }, bottom: { style: "thin", color:{rgb:"FCD34D"} }, left: { style: "thin", color:{rgb:"FCD34D"} }, right: { style: "thin", color:{rgb:"FCD34D"} } }
                 },
                 result: {
-                    fill: { fgColor: { rgb: "E2EFDA" } },
-                    font: { bold: true },
-                    border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } }
+                    fill: { fgColor: { rgb: "FDF2F8" } }, // Pink 50
+                    font: { bold: true, color: { rgb: "BE185D" } }, // Pink 700
+                    border: { top: { style: "thin", color:{rgb:"F9A8D4"} }, bottom: { style: "thin", color:{rgb:"F9A8D4"} }, left: { style: "thin", color:{rgb:"F9A8D4"} }, right: { style: "thin", color:{rgb:"F9A8D4"} } }
                 },
                 normal: {
                      border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } }
@@ -1608,7 +1683,8 @@
                     for(let C = decode.s.c; C <= decode.e.c; ++C) {
                         const cell_ref = XLSX.utils.encode_cell({c:C, r:R});
                         if(!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' }; // Create cell if empty
-                        ws[cell_ref].s = style;
+                        if (!ws[cell_ref].s) ws[cell_ref].s = {};
+                        Object.assign(ws[cell_ref].s, style);
                     }
                 }
             };
@@ -1679,7 +1755,7 @@
             for(let i=0; i<100; i++) {
                 particles.push({
                     x: Math.random()*w, y: Math.random()*h - h,
-                    c: ['#f97316', '#ec4899', '#22c55e'][Math.floor(Math.random()*3)], // Orange, Pink, Green
+                    c: ['#f97316', '#ec4899', '#3b82f6'][Math.floor(Math.random()*3)], // Orange, Pink, Blue
                     s: Math.random()*5+2, d: Math.random()*2+1
                 });
             }
