@@ -289,7 +289,7 @@
                 <div class="p-4 space-y-4">
                     <div class="flex items-center">
                         <span class="w-32 text-right pr-3 font-semibold text-gray-600">Set Objective:</span>
-                        <input type="text" readonly value="$D$6" id="solver-obj-input" class="border border-gray-400 p-1 bg-white w-full shadow-inner font-mono text-center font-medium"/>
+                        <input type="text" readonly value="$B$12" id="solver-obj-input" class="border border-gray-400 p-1 bg-white w-full shadow-inner font-mono text-center font-medium"/>
                     </div>
                     <div class="flex items-center gap-4 pl-32">
                         <span class="font-medium text-gray-600">To:</span>
@@ -298,12 +298,12 @@
                     </div>
                     <div class="flex items-center">
                         <span class="w-32 text-right pr-3 leading-tight font-semibold text-gray-600">By Changing Cells:</span>
-                        <input type="text" readonly value="$B$4:$C$4" id="solver-change-input" class="border border-gray-400 p-1 bg-white w-full shadow-inner font-mono text-center font-medium"/>
+                        <input type="text" readonly value="$B$9:$C$9" id="solver-change-input" class="border border-gray-400 p-1 bg-white w-full shadow-inner font-mono text-center font-medium"/>
                     </div>
                     <div id="solver-const-input" class="border border-gray-400 bg-white h-24 p-2 overflow-y-auto shadow-inner">
                         <div class="text-xs font-semibold text-gray-500 mb-1">Subject to the Constraints:</div>
-                        <div class="text-sm font-mono">$B$9 &lt;= $D$9</div>
-                        <div class="text-sm font-mono">$B$10 &lt;= $D$10</div>
+                        <div class="text-sm font-mono">$B$15 &lt;= $D$15</div>
+                        <div class="text-sm font-mono">$B$16 &lt;= $D$16</div>
                     </div>
                     <div class="flex justify-end gap-2 pt-3 border-t border-gray-300">
                         <button onclick="handleModalAction('close-solver')" class="px-4 py-1.5 bg-gray-200 border border-gray-400 rounded hover:bg-gray-300">Close</button>
@@ -391,7 +391,7 @@
     <script>
         // *** CONFIGURATION ***
         // Instructor: Paste your Google Web App URL here after deployment
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyERf0xaLKs9aIXeyE1TQrpUdxM5jNiBHzVb1yMe5kYq-8yQ8xdAr4KHuJYllDOlyB2/exec"; 
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2WmpyzyPpmE5sj9jtYenHWqZz7oXgVmpn3KURw931h-3K4SQKkjU3GBRLUmxeXHvEnw/exec"; 
 
         // --- DATA STATE ---
         const solverGrids = {
@@ -399,25 +399,33 @@
                 'namebox': 'A1',
                 'formula': 'Product Mix Optimization',
                 'A1': 'Product Mix Optimization', 
-                'A3': 'Product', 'B3': 'Alpha', 'C3': 'Beta', 'D3': 'Total',
-                'A4': 'Units Produced', 'B4': '0', 'C4': '0', 
-                'A5': 'Profit per Unit', 'B5': '$40', 'C5': '$50', 
-                'A6': 'Total Profit', 'B6': '$0', 'C6': '$0', 'D6': '$0',
-                'A8': 'Constraints', 'B8': 'Used', 'D8': 'Available',
-                'A9': 'Labor Hours', 'B9': '0', 'C9': '<=', 'D9': '40',
-                'A10': 'Machine Hours', 'B10': '0', 'C10': '<=', 'D10': '120',
+                'A3': 'Parameters', 'B3': 'Alpha', 'C3': 'Beta', 'D3': 'Total',
+                'A4': 'Profit per Unit', 'B4': '$40', 'C4': '$50', 
+                'A5': 'Labor Hrs/Unit', 'B5': '1', 'C5': '2',
+                'A6': 'Machine Hrs/Unit', 'B6': '3', 'C6': '2',
+                'A8': 'Decision Variables',
+                'A9': 'Units Produced', 'B9': '0', 'C9': '0', 
+                'A11': 'Objective',
+                'A12': 'Total Profit', 'B12': '$0',
+                'A14': 'Constraints', 'B14': 'Used', 'D14': 'Available',
+                'A15': 'Labor Hours', 'B15': '0', 'C15': '<=', 'D15': '40',
+                'A16': 'Machine Hours', 'B16': '0', 'C16': '<=', 'D16': '120',
             },
             solved: {
-                'namebox': 'D6',
-                'formula': '=SUMPRODUCT(B4:C4, B5:C5)',
+                'namebox': 'B12',
+                'formula': '=SUMPRODUCT(B9:C9, B4:C4)',
                 'A1': 'Product Mix Optimization', 
-                'A3': 'Product', 'B3': 'Alpha', 'C3': 'Beta', 'D3': 'Total',
-                'A4': 'Units Produced', 'B4': '24', 'C4': '8', 
-                'A5': 'Profit per Unit', 'B5': '$40', 'C5': '$50', 
-                'A6': 'Total Profit', 'B6': '$960', 'C6': '$400', 'D6': '$1,360',
-                'A8': 'Constraints', 'B8': 'Used', 'D8': 'Available',
-                'A9': 'Labor Hours', 'B9': '40', 'C9': '<=', 'D9': '40',
-                'A10': 'Machine Hours', 'B10': '120', 'C10': '<=', 'D10': '120',
+                'A3': 'Parameters', 'B3': 'Alpha', 'C3': 'Beta', 'D3': 'Total',
+                'A4': 'Profit per Unit', 'B4': '$40', 'C4': '$50', 
+                'A5': 'Labor Hrs/Unit', 'B5': '1', 'C5': '2',
+                'A6': 'Machine Hrs/Unit', 'B6': '3', 'C6': '2',
+                'A8': 'Decision Variables',
+                'A9': 'Units Produced', 'B9': '24', 'C9': '8', 
+                'A11': 'Objective',
+                'A12': 'Total Profit', 'B12': '$1,360',
+                'A14': 'Constraints', 'B14': 'Used', 'D14': 'Available',
+                'A15': 'Labor Hours', 'B15': '40', 'C15': '<=', 'D15': '40',
+                'A16': 'Machine Hours', 'B16': '88', 'C16': '<=', 'D16': '120',
             }
         };
 
@@ -512,39 +520,39 @@
             solver: [
                 {
                     title: "Goal: Maximize Profit",
-                    content: "Welcome! We want to optimize our product mix.<br><br><b>Objective (Pink):</b> Maximize 'Total Profit' (D6) by changing the 'Units Produced' (B4, C4).",
+                    content: "Welcome! We want to optimize our product mix.<br><br><b>Objective (Green):</b> Maximize 'Total Profit' (B12) by changing the 'Units Produced' (B9, C9).",
                     actionText: "Check Constraints",
                     actionType: "advance",
-                    highlights: ['D6', 'B4', 'C4'],
-                    colorCode: { 'D6': 'objective', 'B4': 'changing', 'C4': 'changing' }
+                    highlights: ['B12', 'B9', 'C9'],
+                    colorCode: { 'B12': 'objective', 'B9': 'changing', 'C9': 'changing' }
                 },
                 {
                     title: "The Constraints",
-                    content: "We have limited resources (Cell D9, D10).<br><br><b>Rules (Orange):</b><br>• Alpha takes <b>1 hr</b> labor.<br>• Beta takes <b>2 hrs</b> labor.<br><br>We can't use more than 40 labor hours total.",
+                    content: "We have limited resources (Cell D15, D16).<br><br><b>Rules (Orange):</b><br>• Alpha takes <b>1 hr</b> labor.<br>• Beta takes <b>2 hrs</b> labor.<br><br>We can't use more than 40 labor hours total.",
                     actionText: "Check Formulas",
                     actionType: "advance",
-                    highlights: ['D9', 'D10'],
-                    colorCode: { 'D9': 'constraint', 'D10': 'constraint' }
+                    highlights: ['D15', 'D16'],
+                    colorCode: { 'D15': 'constraint', 'D16': 'constraint' }
                 },
                 {
                     title: "Formula: Total Profit",
-                    content: "We use <b>=SUMPRODUCT(B4:C4, B5:C5)</b>.<br><br>It multiplies Units (Green) by Profit and sums them:<br><i>(Alpha Units × $40) + (Beta Units × $50)</i>",
+                    content: "We use <b>=SUMPRODUCT(B9:C9, B4:C4)</b>.<br><br>It multiplies Units Produced (Yellow) by Profit per Unit and sums them:<br><i>(Alpha Units × $40) + (Beta Units × $50)</i>",
                     actionText: "Next Formula",
                     actionType: "advance",
-                    highlights: ['D6', 'B4', 'C4', 'B5', 'C5'],
-                    formulaOverride: '=SUMPRODUCT(B4:C4, B5:C5)',
-                    callout: { cell: 'D6', text: '=SUMPRODUCT(B4:C4, B5:C5)' },
-                    colorCode: { 'D6': 'objective', 'B4': 'changing', 'C4': 'changing' }
+                    highlights: ['B12', 'B9', 'C9', 'B4', 'C4'],
+                    formulaOverride: '=SUMPRODUCT(B9:C9, B4:C4)',
+                    callout: { cell: 'B12', text: '=SUMPRODUCT(B9:C9, B4:C4)' },
+                    colorCode: { 'B12': 'objective', 'B9': 'changing', 'C9': 'changing' }
                 },
                 {
                     title: "Formula: Labor Used",
-                    content: "Cell B9 calculates Total Labor Used.<br><br>Formula: <b>=B4*1 + C4*2</b><br><br>This ensures we track hours based on how many units we decide to make.",
+                    content: "Cell B15 calculates Total Labor Used.<br><br>Formula: <b>=SUMPRODUCT(B9:C9, B5:C5)</b><br><br>This ensures we multiply the units produced by the labor hours required for each product.",
                     actionText: "Open Data Tools",
                     actionType: "advance",
-                    highlights: ['B9', 'B4', 'C4'],
-                    formulaOverride: '=B4*1 + C4*2',
-                    callout: { cell: 'B9', text: '=B4*1 + C4*2' },
-                    colorCode: { 'B9': 'constraint', 'B4': 'changing', 'C4': 'changing' }
+                    highlights: ['B15', 'B9', 'C9', 'B5', 'C5'],
+                    formulaOverride: '=SUMPRODUCT(B9:C9, B5:C5)',
+                    callout: { cell: 'B15', text: '=SUMPRODUCT(B9:C9, B5:C5)' },
+                    colorCode: { 'B15': 'constraint', 'B9': 'changing', 'C9': 'changing' }
                 },
                 {
                     title: "Step 1: Open Data Tab",
@@ -562,18 +570,18 @@
                 },
                 {
                     title: "Step 3: Run the Engine",
-                    content: "We've set the <b>Objective (D6)</b> to Max and identified our <b>Changing Cells (B4:C4)</b>.<br><br>Notice how the parameters match the grid structure.",
+                    content: "We've set the <b>Objective (B12)</b> to Max and identified our <b>Changing Cells (B9:C9)</b>.<br><br>Notice how the parameters match the grid structure.",
                     actionText: "Click 'Solve'...",
                     actionType: "wait",
-                    highlights: ['modal-solve', 'D6', 'B4', 'C4', 'B9', 'B10', 'D9', 'D10'],
-                    colorCode: { 'D6': 'objective', 'B4': 'changing', 'C4': 'changing', 'B9': 'constraint', 'B10': 'constraint', 'D9': 'constraint', 'D10': 'constraint' }
+                    highlights: ['modal-solve', 'B12', 'B9', 'C9', 'B15', 'B16', 'D15', 'D16'],
+                    colorCode: { 'B12': 'objective', 'B9': 'changing', 'C9': 'changing', 'B15': 'constraint', 'B16': 'constraint', 'D15': 'constraint', 'D16': 'constraint' }
                 },
                 {
                     title: "Step 4: Success!",
                     content: "Solver found the perfect mix: <b>24 Alphas</b> and <b>8 Betas</b>, maximizing profit to <b>$1,360</b>.<br><br>Next, let's learn Scenario Manager.",
                     actionText: "Go to Module 2",
                     actionType: "switch-scenario",
-                    highlights: ['B4', 'C4', 'D6']
+                    highlights: ['B9', 'C9', 'B12']
                 }
             ],
             scenario: [
@@ -1137,7 +1145,7 @@
                 html += `</tr></thead><tbody>`;
 
                 // Rows
-                for (let row = 1; row <= 14; row++) {
+                for (let row = 1; row <= 17; row++) {
                     html += `<tr><td class="excel-row-header">${row}</td>`;
                     ['A', 'B', 'C', 'D'].forEach(col => {
                         const cellId = `${col}${row}`;
@@ -1181,7 +1189,7 @@
                             classes += "text-right text-blue-700 font-semibold bg-blue-50/20 ";
                         } else if (val === '<=') {
                             classes += "text-center text-gray-400 ";
-                        } else if ((row === 3 || row === 7) && val !== '') {
+                        } else if ((row === 3 || row === 7 || row === 8 || row === 11 || row === 14) && val !== '') {
                             classes += "border-b-2 border-b-gray-400 font-semibold bg-gray-50 text-gray-700 ";
                         } else {
                             classes += "text-gray-600 ";
@@ -1577,6 +1585,11 @@
                     alignment: { horizontal: "center", vertical: "bottom" },
                     border: { bottom: {style:"thin", color: {rgb:"000000"}} }
                 },
+                subHeader: {
+                    font: { bold: true, name: "Calibri", sz: 11 }, 
+                    fill: { fgColor: { rgb: "F2F2F2" } }, 
+                    border: { bottom: {style:"thin", color: {rgb:"000000"}} }
+                },
                 section: {
                     font: { bold: true, color: {rgb: "d84315"}, name: "Calibri", sz: 12 }
                 },
@@ -1644,27 +1657,36 @@
             const tutSolverData = [
                 ["Tutorial 1: Solver Practice", "", "", ""],
                 ["", "", "", ""],
-                ["Product", "Alpha", "Beta", "Total"],
-                ["Units Produced", 0, 0, ""],
+                ["Parameters", "Alpha", "Beta", "Total"],
                 ["Profit per Unit", 40, 50, ""],
-                ["Total Profit", {t:'n', f:'B4*B5'}, {t:'n', f:'C4*C5'}, {t:'n', f:'B6+C6'}],
+                ["Labor Hrs/Unit", 1, 2, ""],
+                ["Machine Hrs/Unit", 3, 2, ""],
+                ["", "", "", ""],
+                ["Decision Variables", "", "", ""],
+                ["Units Produced", 0, 0, ""],
+                ["", "", "", ""],
+                ["Objective", "", "", ""],
+                ["Total Profit", {t:'n', f:'SUMPRODUCT(B9:C9,B4:C4)'}, "", ""],
                 ["", "", "", ""],
                 ["Constraints", "Used", "", "Available"],
-                ["Labor Hours", {t:'n', f:'B4*1 + C4*2'}, "<=", 40],
-                ["Machine Hours", {t:'n', f:'B4*3 + C4*2'}, "<=", 120] 
+                ["Labor Hours", {t:'n', f:'SUMPRODUCT(B9:C9,B5:C5)'}, "<=", 40],
+                ["Machine Hours", {t:'n', f:'SUMPRODUCT(B9:C9,B6:C6)'}, "<=", 120] 
             ];
             const wsTutSolver = XLSX.utils.aoa_to_sheet(tutSolverData);
             if(!wsTutSolver['!merges']) wsTutSolver['!merges'] = [];
             wsTutSolver['!merges'].push(XLSX.utils.decode_range("A1:D1"));
             applyStyle(wsTutSolver, "A1:D1", "title");
             applyStyle(wsTutSolver, "A3:D3", "header");
-            applyStyle(wsTutSolver, "A8:D8", "header");
-            applyStyle(wsTutSolver, "B4:C4", "input");
-            applyStyle(wsTutSolver, "D6", "objective");
-            applyStyle(wsTutSolver, "D9:D10", "constraint");
-            applyStyle(wsTutSolver, "B9:B10", "formula");
-            applyStyle(wsTutSolver, "B5:C5", "currency");
-            applyStyle(wsTutSolver, "B6:D6", "currency");
+            applyStyle(wsTutSolver, "A8", "section");
+            applyStyle(wsTutSolver, "A11", "section");
+            applyStyle(wsTutSolver, "A14:D14", "header");
+            applyStyle(wsTutSolver, "B9:C9", "input");
+            applyStyle(wsTutSolver, "B12", "objective");
+            applyStyle(wsTutSolver, "D15:D16", "constraint");
+            applyStyle(wsTutSolver, "B15:B16", "formula");
+            applyStyle(wsTutSolver, "C15:C16", "centerAlign");
+            applyStyle(wsTutSolver, "B4:C4", "currency");
+            applyStyle(wsTutSolver, "B12", "currency");
             setCols(wsTutSolver, [25, 15, 15, 15]);
             XLSX.utils.book_append_sheet(wb, wsTutSolver, "Module 1 - Solver");
 
