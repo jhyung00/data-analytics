@@ -183,10 +183,25 @@
                 Module 2: Scenarios
             </button>
             <button onclick="setModule('practice')" id="btn-mod-practice" class="px-4 py-1.5 rounded text-sm font-semibold transition-colors bg-[#1e663e] hover:bg-[#195935] text-white">
-                Module 3: Practice
+                Module 3: Practice Mission
             </button>
         </div>
     </header>
+
+    <!-- GLOBAL DOWNLOAD BANNER -->
+    <div class="bg-indigo-50 border-b border-indigo-200 px-4 py-2.5 flex flex-wrap gap-3 items-center justify-between shadow-sm z-10 shrink-0">
+        <div class="flex items-center text-indigo-900 text-sm flex-1">
+            <div class="bg-white text-indigo-600 w-8 h-8 rounded-full flex items-center justify-center shadow-sm mr-3 shrink-0">
+                <i class="fa-solid fa-lightbulb text-lg"></i>
+            </div>
+            <span>
+                <strong>Want to follow along in real Excel?</strong> Download the Lab Workbook! It contains exact replicas of the <strong>Module 1 & 2</strong> interactive tutorials so you can practice locally, plus your final <strong>Module 3</strong> mission files.
+            </span>
+        </div>
+        <button onclick="downloadPracticeFile()" class="bg-[#217346] hover:bg-[#1a5c38] text-white px-5 py-2 rounded-md shadow text-sm font-bold flex items-center transition-transform hover:-translate-y-0.5 whitespace-nowrap">
+            <i class="fa-solid fa-download mr-2 text-lg"></i> Download Lab Workbook
+        </button>
+    </div>
 
     <!-- EXCEL RIBBON -->
     <div class="bg-gray-100 border-b border-gray-300 shadow-sm flex flex-col z-0 shrink-0 select-none">
@@ -216,16 +231,19 @@
     <div class="flex-1 flex overflow-hidden relative">
         
         <!-- EXCEL GRID -->
-        <div class="flex-1 bg-[#e1e1e1] p-4 overflow-auto relative">
-            <div class="bg-white shadow-xl rounded-sm border border-gray-400 inline-block min-w-full">
+        <div class="flex-1 bg-[#e1e1e1] p-4 overflow-auto relative" id="grid-container-scroll">
+            <div class="bg-white shadow-xl rounded-sm border border-gray-400 inline-block min-w-full" id="grid-wrapper">
                 <table class="border-collapse w-full table-fixed bg-white select-none text-sm" id="excel-grid">
                     <!-- Injected via JS -->
                 </table>
             </div>
+            
+            <!-- Practice Mode Container -->
+            <div id="practice-view-container" class="hidden"></div>
         </div>
 
         <!-- TUTORIAL SIDEBAR -->
-        <div class="w-96 bg-white border-l border-gray-200 shadow-2xl flex flex-col z-20 shrink-0">
+        <div class="w-96 bg-white border-l border-gray-200 shadow-2xl flex flex-col z-20 shrink-0" id="tutorial-sidebar">
             <div class="bg-[#217346]/10 p-4 border-b border-[#217346]/20 flex items-center">
                 <i class="fa-solid fa-graduation-cap text-[#217346] text-xl mr-3"></i>
                 <h2 class="text-lg font-bold text-[#217346]">Interactive Guide</h2>
@@ -687,16 +705,16 @@
                 {
                     title: "Step 13: The Report",
                     content: "Excel generated a new sheet comparing all cases side-by-side.<br><br>Because we used Named Ranges, the report is easy to read.",
-                    actionText: "Go to Practice",
+                    actionText: "Start Final Mission",
                     actionType: "switch-practice",
                     highlights: ['grid-summary']
                 }
             ],
             practice: [
                  {
-                    title: "Practice on Real Data",
-                    content: "Great job! You've learned Solver and Scenario Manager.<br><br>Download this practice workbook to try it yourself in Excel. It includes instructions and a practice dataset.",
-                    actionText: "Download Workbook",
+                    title: "Operation: Copper Peak",
+                    content: "Great job! You've learned Solver and Scenario Manager.<br><br>Now it's time to put your skills to the ultimate test. The CFO of Copper Peak Manufacturing needs you to optimize production while navigating a potential Tariff War and Union Strike. Click the button below to start your mission.",
+                    actionText: "Start Mission",
                     actionType: "download",
                     highlights: []
                 }
@@ -712,10 +730,9 @@
 
             const data = {
                 studentName: document.getElementById('inp-student-name').value,
-                ex1: document.getElementById('inp-ex1').value,
-                ex2: document.getElementById('inp-ex2').value,
-                ex3: document.getElementById('inp-ex3').value,
-                ex4: document.getElementById('inp-ex4').value,
+                ex1: document.getElementById('inp-cp1').value,
+                ex2: document.getElementById('inp-cp2').value,
+                ex3: document.getElementById('inp-cp3').value,
                 timestamp: new Date().toISOString()
             };
 
@@ -726,7 +743,7 @@
 
             const btn = document.getElementById('btn-submit-answers');
             const originalText = btn.innerText;
-            btn.innerText = "Sending...";
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Transmitting...`;
             btn.disabled = true;
 
             // Send data to Google Apps Script
@@ -739,15 +756,15 @@
                 body: JSON.stringify(data)
             })
             .then(() => {
-                alert("Success! Your answers have been submitted to the instructor.");
-                btn.innerText = "Submitted!";
-                btn.classList.remove('bg-[#217346]', 'hover:bg-[#1a5c38]');
-                btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                alert("Success! Your mission report has been transmitted to HQ.");
+                btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> Report Sent!`;
+                btn.classList.remove('bg-[#ff8f00]', 'hover:bg-[#e68100]', 'text-gray-900');
+                btn.classList.add('bg-gray-600', 'text-gray-400', 'cursor-not-allowed');
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert("There was an error submitting your answers. Please check your internet connection.");
-                btn.innerText = originalText;
+                alert("Transmission failed. Please check your network connection.");
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             });
         }
@@ -817,10 +834,24 @@
         }
 
         function renderRibbon() {
+            const sidebar = document.getElementById('tutorial-sidebar');
+            const gridWrapper = document.getElementById('grid-wrapper');
+            const containerScroll = document.getElementById('grid-container-scroll');
+
             if (state.module === 'practice') {
                 document.getElementById('ribbon-tabs').innerHTML = '';
-                document.getElementById('ribbon-content').innerHTML = '<div class="text-gray-400 italic text-sm w-full text-center flex items-center justify-center h-full">Practice Mode</div>';
+                document.getElementById('ribbon-content').innerHTML = '<div class="text-gray-400 italic text-sm w-full text-center flex items-center justify-center h-full"><i class="fa-solid fa-lock mr-2"></i> Mission Terminal Active</div>';
+                
+                // Hide tutorial elements safely when in Practice mode
+                if (sidebar) sidebar.classList.add('hidden');
+                if (gridWrapper) gridWrapper.classList.add('hidden');
+                if (containerScroll) containerScroll.classList.remove('p-4');
                 return;
+            } else {
+                // Restore elements for normal modules safely
+                if (sidebar) sidebar.classList.remove('hidden');
+                if (gridWrapper) gridWrapper.classList.remove('hidden');
+                if (containerScroll) containerScroll.classList.add('p-4');
             }
 
             const currentStepData = tutorials[state.module][state.step];
@@ -901,159 +932,162 @@
         }
 
         function renderGrid() {
+            const practiceContainer = document.getElementById('practice-view-container');
+
             if (state.module === 'practice') {
-                 // Replace grid contents with Instructions View
-                 document.getElementById('excel-grid').innerHTML = `
-                    <tbody>
-                        <tr>
-                            <td class="p-8 align-top bg-white h-full">
-                                <div class="max-w-4xl mx-auto font-sans pb-20">
-                                    <h2 class="text-2xl font-bold text-[#217346] mb-4">Practice Lab Instructions</h2>
-                                    
-                                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-                                        <p class="text-blue-700">
-                                            <i class="fa-solid fa-circle-info mr-2"></i>
-                                            Download the workbook from the sidebar to complete these exercises in Excel.
+                 // Reveal practice container, it safely houses the dynamic UI
+                 if (practiceContainer) {
+                     practiceContainer.classList.remove('hidden');
+                     practiceContainer.innerHTML = `
+                        <div class="max-w-5xl mx-auto font-sans pb-20 p-6">
+                            
+                            <!-- Epic Banner -->
+                            <div class="bg-gradient-to-r from-[#3e2723] to-[#d84315] rounded-xl p-8 text-white shadow-xl mb-8 relative overflow-hidden">
+                                <div class="absolute top-0 right-0 opacity-10 transform scale-150 -translate-y-10 translate-x-10">
+                                    <i class="fa-solid fa-industry text-9xl"></i>
+                                </div>
+                                <h2 class="text-3xl md:text-4xl font-black mb-3 relative z-10 tracking-tight">
+                                    <i class="fa-solid fa-briefcase text-[#ff8f00] mr-3"></i>Operation: Copper Peak
+                                </h2>
+                                <p class="text-lg opacity-90 relative z-10 max-w-2xl font-light">
+                                    You are the lead Management Accountant for Copper Peak Manufacturing. Your mission: Maximize Total Contribution Margin without breaking the factory's resource limits. Let's go!
+                                </p>
+                            </div>
+
+                            <!-- Checkpoint 1 -->
+                            <div class="bg-white rounded-xl shadow-md border-l-8 border-[#ff8f00] p-6 mb-8 transform transition hover:shadow-lg">
+                                <div class="flex items-start">
+                                    <div class="bg-yellow-100 text-yellow-600 p-3 rounded-full mr-4 shrink-0">
+                                        <i class="fa-solid fa-brain text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xl font-bold text-gray-800 mb-2 uppercase tracking-wide text-[#b16a00]"><span class="text-gray-400 mr-2">Part 1</span> The Intuition Trap</h4>
+                                        <p class="text-gray-700 leading-relaxed">
+                                            Look at the Unit Contribution Margin for the three products on the Optimization Model tab.<br><br>
+                                            <strong>Critical Thinking Challenge:</strong> If the Production Manager says, <em>"Custom Manifolds have the highest Contribution Margin per unit, so we should manufacture as many of those as possible before making anything else,"</em> why is she wrong? Explain the concept of "Contribution Margin per Limiting Factor" (the bottleneck). Which product actually generates the most margin <em>per machine hour</em>?
                                         </p>
                                     </div>
-
-                                    <div class="space-y-8">
-                                        <section>
-                                            <h3 class="text-xl font-semibold text-gray-800 mb-3 border-b pb-2">Exercise 1: Solver Optimization</h3>
-                                            <p class="text-gray-600 mb-2"><strong>Goal:</strong> Determine the optimal production quantity for products "Gamma" and "Delta" to maximize Total Profit.</p>
-                                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
-                                                <li><strong>Sheet:</strong> Go to <em>'Practice Problem'</em> sheet.</li>
-                                                <li><strong>Objective (<span class="text-green-600">Green</span>):</strong> Maximize <em>Total Profit</em> (B13).</li>
-                                                <li><strong>Changing Variable (<span class="text-yellow-600">Yellow</span>):</strong> <em>Units Produced</em> (B10:C10).</li>
-                                                <li><strong>Constraints (<span class="text-orange-500">Orange</span>):</strong> Total Labor Used (B17) <= Available (D17), Total Machine Hours Used (B18) <= Available (D18).</li>
-                                            </ul>
-                                        </section>
-
-                                        <section>
-                                            <h3 class="text-xl font-semibold text-gray-800 mb-3 border-b pb-2">Exercise 2: Scenario Manager</h3>
-                                            <p class="text-gray-600 mb-2"><strong>Goal:</strong> Forecast financials based on changing market conditions.</p>
-                                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
-                                                <li><strong>Sheet:</strong> Go to <em>'Scenario Practice'</em> sheet.</li>
-                                                <li><strong>Preparation:</strong> Name your cells first!
-                                                    <ul class="list-circle pl-5 mt-1 text-gray-600">
-                                                        <li>Name B4: <em>Unit_Price</em></li>
-                                                        <li>Name B5: <em>Unit_Cost</em></li>
-                                                        <li>Name B11: <em>Net_Profit</em></li>
-                                                    </ul>
-                                                </li>
-                                                <li><strong>Tasks:</strong> Create scenarios for High Margin (Price 25, Cost 8) and Low Margin (Price 18, Cost 12).</li>
-                                            </ul>
-                                        </section>
-
-                                        <section>
-                                            <h3 class="text-xl font-semibold text-gray-800 mb-3 border-b pb-2">Exercise 3: Logistics Optimization</h3>
-                                            <p class="text-gray-600 mb-2"><strong>Goal:</strong> Minimize shipping costs from warehouses to stores.</p>
-                                            <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
-                                                <li><strong>Sheet:</strong> Go to <em>'Logistics Model'</em> sheet.</li>
-                                                <li><strong>Objective (<span class="text-green-600">Green</span>):</strong> Minimize <em>Total Shipping Cost</em> (B18).</li>
-                                                <li><strong>Changing Variable (<span class="text-yellow-600">Yellow</span>):</strong> <em>Units Shipped</em> (B11:D12).</li>
-                                                <li><strong>Constraints (<span class="text-orange-500">Orange</span>):</strong>
-                                                    <ul class="list-disc pl-5 mt-1 text-gray-600">
-                                                        <li>Total Sent from WH (E11:E12) <= Capacity (F11:F12).</li>
-                                                        <li>Total Received in Region (B13:D13) >= Demand (B7:D7).</li>
-                                                    </ul>
-                                                </li>
-                                                <li><strong>Note:</strong> <span class="text-red-600 font-semibold">Formulas are missing!</span> You must construct the Sum/Sumproduct logic yourself in the empty colored cells.</li>
-                                            </ul>
-                                        </section>
-
-                                        <section>
-                                            <h3 class="text-xl font-semibold text-gray-800 mb-3 border-b pb-2">Exercise 4: Portfolio Allocation</h3>
-                                            <p class="text-gray-600 mb-2"><strong>Goal:</strong> Maximize investment return subject to strict allocation policies.</p>
-                                            <ul class="list-disc pl-5 space-y-2 text-gray-700 text-sm">
-                                                <li><strong>Sheet:</strong> Go to <em>'Portfolio Model'</em> sheet.</li>
-                                                <li><strong>Preparation:</strong> Name your cells first!
-                                                    <ul class="list-circle pl-5 mt-1 text-gray-600">
-                                                        <li>Name C4: <em>US_Stocks</em></li>
-                                                        <li>Name C5: <em>Intl_Stocks</em></li> 
-                                                        <li>Name C6: <em>Bonds</em></li>
-                                                        <li>Name C7: <em> Cash</em></li>
-                                                        <li>Name B9: <em>Total_Return</em></li>
-                                                    </ul>
-                                                </li>
-                                                <li><strong>Objective (<span class="text-green-600">Green</span>):</strong> Maximize <em>Total Return</em> (B9).</li>
-                                                <li><strong>Changing Variable (<span class="text-yellow-600">Yellow</span>):</strong> <em>Amount Invested</em> (C4:C7).</li>
-                                                <li><strong>Base Constraints (<span class="text-orange-500">Orange</span>):</strong>
-                                                    <ul class="list-disc pl-5 mt-1 text-gray-600">
-                                                        <li>Total Invested (B13) = $100,000 (D13).</li>
-                                                        <li>US Stocks Limit (B14) <= 50,000 (D14).</li>
-                                                        <li>Cash Allocation (B15) >= 5,000 (D15).</li>
-                                                    </ul>
-                                                </li>
-                                                <li><strong>Scenario 1: Base Portfolio.</strong> Run Solver for the base constraints. When Solver finishes, click <strong>Save Scenario...</strong> in the dialog box and name it "Base Portfolio". Click OK.</li>
-                                                <li><strong>Scenario 2: Conservative.</strong> Open Solver again. Add a constraint ensuring Bonds (C6) >= 30,000. Solve, click <strong>Save Scenario...</strong>, and name it "Conservative".</li>
-                                                <li><strong>Scenario 3: Domestic Only.</strong> Open Solver again. Add a constraint ensuring Intl Stocks (C5) = 0. Solve, click <strong>Save Scenario...</strong>, and name it "Domestic Only".</li>
-                                                <li>Finally, use Scenario Manager to generate a Summary Report comparing the three investment strategies!</li>
-                                            </ul>
-                                        </section>
-                                    </div>
-
-                                    <!-- SUBMISSION FORM -->
-                                    <div class="bg-white p-6 rounded-lg shadow-md mt-8 border-t-4 border-[#217346]">
-                                        <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Submit Your Results</h3>
-                                        <div class="grid grid-cols-1 gap-4 mb-4">
-                                            <div>
-                                                <label class="block text-sm font-semibold text-gray-700 mb-1">Student Name:</label>
-                                                <input type="text" id="inp-student-name" class="w-full border border-gray-300 p-2 rounded text-sm" placeholder="Enter your full name">
-                                            </div>
-                                            
-                                            <div class="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Ex 1: How many units are produced for Gamma?</label>
-                                                    <input type="number" id="inp-ex1" class="w-full border border-gray-300 p-2 rounded text-sm">
-                                                </div>
-                                                <div>
-                                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Ex 2: What is the High Margin Case Net Profit?</label>
-                                                    <div class="relative">
-                                                        <span class="absolute left-2 top-2 text-gray-500 text-sm">$</span>
-                                                        <input type="number" id="inp-ex2" class="w-full border border-gray-300 p-2 pl-6 rounded text-sm">
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Ex 3: What is the total shipping cost?</label>
-                                                    <div class="relative">
-                                                        <span class="absolute left-2 top-2 text-gray-500 text-sm">$</span>
-                                                        <input type="number" id="inp-ex3" class="w-full border border-gray-300 p-2 pl-6 rounded text-sm">
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label class="block text-xs font-semibold text-gray-600 mb-1">Ex 4: What is the Base Portfolio US Stocks Investment?</label>
-                                                    <div class="relative">
-                                                        <span class="absolute left-2 top-2 text-gray-500 text-sm">$</span>
-                                                        <input type="number" id="inp-ex4" class="w-full border border-gray-300 p-2 pl-6 rounded text-sm">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button onclick="submitAnswers()" id="btn-submit-answers" class="w-full bg-[#217346] hover:bg-[#1a5c38] text-white font-bold py-3 rounded transition-colors">
-                                            Submit to Instructor
-                                        </button>
-                                        <p class="text-xs text-gray-500 mt-2 text-center">Note: Upload your Excel File On Canvas as well for full Lab Credit. </p>
-                                    </div>
-
                                 </div>
-                            </td>
-                        </tr>
-                    </tbody>  
-                 `;
+                            </div>
+
+                            <!-- Checkpoint 2 -->
+                            <div class="bg-white rounded-xl shadow-md border-l-8 border-[#d84315] p-6 mb-8 transform transition hover:shadow-lg">
+                                <div class="flex items-start">
+                                    <div class="bg-orange-100 text-[#d84315] p-3 rounded-full mr-4 shrink-0">
+                                        <i class="fa-solid fa-cogs text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xl font-bold text-gray-800 mb-2 uppercase tracking-wide text-[#d84315]"><span class="text-gray-400 mr-2">Part 2</span> The Binding Constraint</h4>
+                                        <p class="text-gray-700 leading-relaxed">
+                                            Run the Solver engine and generate the <strong>Answer Report</strong> on a new tab.<br><br>
+                                            <strong>Critical Thinking Challenge:</strong> A "Binding Constraint" is a resource that ran completely out (Used = Available). "Slack" is leftover capacity. Based on the Answer report, which of your three resources was a binding constraint, and which had slack? If you were the factory manager, which specific resource would you ask the CFO for money to expand next month?
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Checkpoint 3 -->
+                            <div class="bg-white rounded-xl shadow-md border-l-8 border-[#3e2723] p-6 mb-10 transform transition hover:shadow-lg">
+                                <div class="flex items-start">
+                                    <div class="bg-gray-200 text-[#3e2723] p-3 rounded-full mr-4 shrink-0">
+                                        <i class="fa-solid fa-chess-knight text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xl font-bold text-gray-800 mb-2 uppercase tracking-wide text-[#3e2723]"><span class="text-gray-400 mr-2">Part 3</span> Strategic Advisory</h4>
+                                        <p class="text-gray-700 leading-relaxed">
+                                            The CFO wants to see how profits will be impacted by two potential future states. Go to the <strong>"Scenario Planning"</strong> tab in your downloaded workbook to find the scenario parameters. Create the three scenarios (Base Case, Tariff War, Union Strike) and generate a <strong>Scenario Summary</strong> report.<br><br>
+                                            <strong>Critical Thinking Challenge:</strong> Write a brief memo to the CFO. Between the Tariff War and the Union Strike, which scenario destroys the most value? Recommend one specific operational change (e.g., pricing, sourcing, or capital expenditure) the company should make <em>today</em> to mitigate that risk.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Setup Hints Card -->
+                            <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mb-8 rounded-r-xl shadow-md">
+                                <h4 class="text-xl font-bold text-blue-800 mb-3"><i class="fa-solid fa-lightbulb text-yellow-500 mr-2"></i> Agent Field Notes (Step-by-Step Setup Guide)</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-blue-900">
+                                    <div>
+                                        <h5 class="font-bold mb-2 uppercase border-b border-blue-200 pb-1">Solver Checklist</h5>
+                                        <ol class="list-decimal pl-4 space-y-2">
+                                            <li>Fill in the blue <strong>Formula</strong> cells. Remember, <code>=SUMPRODUCT()</code> is excellent for multiplying ranges together (like units produced * labor hours).</li>
+                                            <li>Go to <strong>Data &gt; Solver</strong>.</li>
+                                            <li>Set <strong>Objective</strong> to Total Contribution Margin (Max).</li>
+                                            <li>Set <strong>Changing Variable Cells</strong> to the Quantity to Produce cells.</li>
+                                            <li>Add <strong>Constraints</strong> (Resources Used &lt;= Available, Quantity to Produce &gt;= Minimums). Don't forget an <code>int</code> constraint for whole units!</li>
+                                            <li>Check "Make Unconstrained Variables Non-Negative", use Simplex LP, and click <strong>Solve</strong>.</li>
+                                        </ol>
+                                    </div>
+                                    <div>
+                                        <h5 class="font-bold mb-2 uppercase border-b border-blue-200 pb-1">Scenario Checklist</h5>
+                                        <ol class="list-decimal pl-4 space-y-2">
+                                            <li><strong>CRITICAL:</strong> Name your Changing Cells and Result Cells first! Click a cell, click the Name Box (top left of Excel), type a name (e.g., <code>Total_Margin</code>), and press Enter.</li>
+                                            <li>Go to <strong>Data &gt; What-If Analysis &gt; Scenario Manager</strong>.</li>
+                                            <li>Click <strong>Add</strong> for each of the 3 scenarios using the parameters from the Scenario Planning tab.</li>
+                                            <li>Enter the exact values for the changing variables in each scenario prompt.</li>
+                                            <li>Click <strong>Summary</strong> and ensure your named Total Contribution Margin cell is selected as the result to generate the report.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SUBMISSION FORM -->
+                            <div class="bg-gray-800 p-8 rounded-xl shadow-2xl relative overflow-hidden text-white">
+                                <div class="absolute top-0 right-0 -mr-10 -mt-10 text-gray-700 opacity-30">
+                                    <i class="fa-solid fa-satellite-dish text-[15rem]"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold mb-6 border-b border-gray-600 pb-3 relative z-10"><i class="fa-solid fa-paper-plane mr-2 text-[#ff8f00]"></i> Transmit Mission Report</h3>
+                                
+                                <div class="grid grid-cols-1 gap-6 mb-6 relative z-10">
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Agent Name:</label>
+                                        <input type="text" id="inp-student-name" class="w-full bg-gray-700 border border-gray-600 p-3 rounded text-white focus:outline-none focus:border-[#ff8f00] focus:ring-1 focus:ring-[#ff8f00]" placeholder="Enter your full name">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Part 1: The Intuition Trap Intel:</label>
+                                        <textarea id="inp-cp1" rows="3" class="w-full bg-gray-700 border border-gray-600 p-3 rounded text-white focus:outline-none focus:border-[#ff8f00] focus:ring-1 focus:ring-[#ff8f00]" placeholder="Explain the bottleneck and highest margin per machine hour..."></textarea>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Part 2: Binding Constraint Intel:</label>
+                                        <textarea id="inp-cp2" rows="3" class="w-full bg-gray-700 border border-gray-600 p-3 rounded text-white focus:outline-none focus:border-[#ff8f00] focus:ring-1 focus:ring-[#ff8f00]" placeholder="Identify binding constraints vs slack..."></textarea>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Part 3: Strategic Advisory Intel:</label>
+                                        <textarea id="inp-cp3" rows="3" class="w-full bg-gray-700 border border-gray-600 p-3 rounded text-white focus:outline-none focus:border-[#ff8f00] focus:ring-1 focus:ring-[#ff8f00]" placeholder="Which destroys more value? What is your recommendation?"></textarea>
+                                    </div>
+                                </div>
+                                
+                                <button onclick="submitAnswers()" id="btn-submit-answers" class="w-full bg-[#ff8f00] hover:bg-[#e68100] text-gray-900 font-bold py-4 rounded-lg transition-colors text-lg shadow-lg relative z-10">
+                                    <i class="fa-solid fa-bolt mr-2"></i> Submit Answers to HQ
+                                </button>
+                                <p class="text-sm text-gray-400 mt-4 text-center relative z-10"><i class="fa-solid fa-info-circle mr-1"></i> Don't forget to upload your completed Excel File (.xlsx) to your Canvas portal for full mission credit!</p>
+                            </div>
+
+                        </div>  
+                     `;
+                 }
                  
-                 document.getElementById('formula-bar-text').innerText = 'Practice Instructions';
-                 document.getElementById('name-box-input').value = '';
+                 document.getElementById('formula-bar-text').innerText = 'Operation Copper Peak: Mission Briefing';
+                 document.getElementById('name-box-input').value = 'HQ';
                  return;
+            } else {
+                 if (practiceContainer) {
+                     practiceContainer.classList.add('hidden');
+                     practiceContainer.innerHTML = '';
+                 }
             }
 
+            // Regular rendering onto excel-grid inside grid-wrapper
+            const gridEl = document.getElementById('excel-grid');
+            if (!gridEl) return;
+            
             const currentStepData = tutorials[state.module][state.step];
             const highlights = currentStepData.highlights || [];
             const colorCode = currentStepData.colorCode || {};
             const gridData = state.module === 'solver' ? solverGrids[state.gridKey] : scenarioGrids[state.gridKey];
             
-            // Setup DOM
-            const gridEl = document.getElementById('excel-grid');
             let html = '';
 
             // Handle Summary Report Special Render
@@ -1175,6 +1209,8 @@
         }
 
         function renderSidebar() {
+            if(state.module === 'practice') return; // Handled in renderGrid
+
             const totalSteps = tutorials[state.module].length;
             const currentStepData = tutorials[state.module][state.step];
 
@@ -1212,9 +1248,10 @@
                     </div>
                 `;
             } else if (currentStepData.actionType === 'download') {
+                // Now Start Mission specific
                 actionHtml += `
-                    <button onclick="downloadPracticeFile()" class="flex-1 bg-[#217346] hover:bg-[#1a5c38] text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center transition-transform hover:-translate-y-1 shadow-md group">
-                        <i class="fa-solid fa-download mr-2"></i>
+                    <button onclick="handleSidebarAction()" class="flex-1 bg-[#217346] hover:bg-[#1a5c38] text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center transition-transform hover:-translate-y-1 shadow-md group">
+                        <i class="fa-solid fa-flag-checkered mr-2"></i>
                         ${currentStepData.actionText}
                     </button>
                 `;
@@ -1269,7 +1306,7 @@
             }
 
             // SCENARIO MODAL
-            // Show during Steps 10-15 (indexes shifted due to 3 new naming steps)
+            // Show during Steps 10-14 
             if (state.module === 'scenario' && state.step >= 10 && state.step <= 14) {
                 scenarioModal.classList.remove('hidden');
                 setTimeout(() => scenarioModal.classList.remove('opacity-0'), 10);
@@ -1391,7 +1428,7 @@
                 setModule('scenario');
             } else if (currentStepData.actionType === 'switch-solver') {
                 setModule('solver');
-            } else if (currentStepData.actionType === 'switch-practice') {
+            } else if (currentStepData.actionType === 'switch-practice' || currentStepData.actionType === 'download') {
                 setModule('practice');
             }
         }
@@ -1519,7 +1556,7 @@
              return h.includes(id);
         }
 
-        // --- EXCEL GENERATION ---
+        // --- EXCEL GENERATION (Copper Peak + Practice Modules) ---
         function downloadPracticeFile() {
              // Check if library loaded
             if(typeof XLSX === 'undefined') { alert('Excel library not loaded'); return; }
@@ -1529,20 +1566,26 @@
             // --- STYLES DEFINITION ---
             // xlsx-js-style supports 's' property
             const styles = {
+                title: {
+                    font: { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri", sz: 16 }, 
+                    fill: { fgColor: { rgb: "3e2723" } }, // Dark Brown
+                    alignment: { horizontal: "center", vertical: "center" }
+                },
                 header: { 
-                    font: { bold: true, color: { rgb: "FFFFFF" }, name: "Calibri" }, 
-                    fill: { fgColor: { rgb: "217346" } }, // Excel Green
-                    alignment: { horizontal: "center", vertical: "center" },
+                    font: { bold: true, name: "Calibri", sz: 12 }, 
+                    fill: { fgColor: { rgb: "EAEAEA" } }, 
+                    alignment: { horizontal: "center", vertical: "bottom" },
                     border: { bottom: {style:"thin", color: {rgb:"000000"}} }
                 },
-                subHeader: {
-                    font: { bold: true, name: "Calibri" },
-                    fill: { fgColor: { rgb: "E1E1E1" } },
-                    border: { bottom: {style:"thin", color: {rgb:"BFBFBF"}} }
+                section: {
+                    font: { bold: true, color: {rgb: "d84315"}, name: "Calibri", sz: 12 }
                 },
                 bold: { font: { bold: true, name: "Calibri" } },
+                currency: { numFmt: "$#,##0.00" },
+                percent: { numFmt: "0.0%" },
                 input: { 
-                    fill: { fgColor: { rgb: "FFF2CC" } }, // Light Yellow
+                    fill: { fgColor: { rgb: "ffff99" } }, // Variable (Yellow)
+                    alignment: { horizontal: "center" },
                     border: { 
                         top: {style:"thin", color:{rgb:"BFBFBF"}}, 
                         bottom: {style:"thin", color:{rgb:"BFBFBF"}}, 
@@ -1550,20 +1593,33 @@
                         right: {style:"thin", color:{rgb:"BFBFBF"}} 
                     } 
                 },
-                calculation: { 
-                    fill: { fgColor: { rgb: "E2EFDA" } }, // Light Green fallback
-                    font: { color: { rgb: "385724" } }
+                formula: { 
+                    fill: { fgColor: { rgb: "b8cce4" } }, // Formula (Blue)
+                    alignment: { horizontal: "center" },
+                    border: { 
+                        top: {style:"thin", color:{rgb:"BFBFBF"}}, 
+                        bottom: {style:"thin", color:{rgb:"BFBFBF"}}, 
+                        left: {style:"thin", color:{rgb:"BFBFBF"}}, 
+                        right: {style:"thin", color:{rgb:"BFBFBF"}} 
+                    } 
                 },
                 objective: {
-                    fill: { fgColor: { rgb: "E2EFDA" } }, // Light Green
-                    font: { bold: true, color: { rgb: "385724" } },
-                    border: { top: {style:"thin", color:{rgb:"BFBFBF"}}, bottom: {style:"thin", color:{rgb:"BFBFBF"}}, left: {style:"thin", color:{rgb:"BFBFBF"}}, right: {style:"thin", color:{rgb:"BFBFBF"}} }
+                    fill: { fgColor: { rgb: "c4d79b" } }, // Objective (Green)
+                    font: { bold: true, name: "Calibri", sz: 12 },
+                    alignment: { horizontal: "center" },
+                    numFmt: "$#,##0.00",
+                    border: { 
+                        top: {style:"medium", color:{rgb:"000000"}}, 
+                        bottom: {style:"medium", color:{rgb:"000000"}}, 
+                        left: {style:"medium", color:{rgb:"000000"}}, 
+                        right: {style:"medium", color:{rgb:"000000"}} 
+                    }
                 },
                 constraint: {
-                    fill: { fgColor: { rgb: "FCE4D6" } }, // Light Orange
-                    font: { bold: true, color: { rgb: "C65911" } },
-                    border: { top: {style:"thin", color:{rgb:"BFBFBF"}}, bottom: {style:"thin", color:{rgb:"BFBFBF"}}, left: {style:"thin", color:{rgb:"BFBFBF"}}, right: {style:"thin", color:{rgb:"BFBFBF"}} }
-                }
+                    fill: { fgColor: { rgb: "fcd5b4" } }, // Constraints (Orange)
+                    alignment: { horizontal: "center" }
+                },
+                centerAlign: { alignment: { horizontal: "center" } }
             };
 
             // Helper to apply style to a range of cells
@@ -1584,202 +1640,169 @@
                 ws['!cols'] = widths.map(w => ({wch: w}));
             };
 
-            // --- Sheet 1: Instructions ---
-            const instructionsData = [
-                ["Lab Instructions"],
-                ["1. Switch to the 'Practice Problem' sheet."],
-                ["2. Use Excel Solver to maximize Total Profit (Cell B13)."],
-                ["3. Changing Cells: Units Produced (B10:C10)."],
-                ["4. Constraints:"],
-                ["    - Labor Used (B17) <= Available (D17)"],
-                ["    - Machine Used (B18) <= Available (D18)"],
-                ["5. Switch to the 'Scenario Practice' sheet."],
-                ["6. First, define names for your cells: B4 (Unit_Price), B5 (Unit_Cost), B11 (Net_Profit)."],
-                ["7. Create scenarios for High Margin (Price 25, Cost 8) and Low Margin (Price 18, Cost 12)."],
-                ["8. Generate a Scenario Summary for Net Profit."],
-                ["9. Switch to 'Logistics Model' sheet. Minimize Total Shipping Cost (B18) by changing Units Shipped (B11:D12)."],
-                ["    NOTE: You must write the formulas for Totals and Constraints yourself in the colored cells!"],
-                ["10. Switch to 'Portfolio Model' sheet. Maximize Return (B9) by changing Amount Invested (C4:C7)."],
-                ["    First, define names: C4:C7 (Amt_Invested), B9 (Total_Return)."],
-                ["    - Base Constraints: Total Invested = 100,000; US Stocks <= 50,000; Cash >= 5,000."],
-                ["11. Run Solver for the base constraints. In the results window, click 'Save Scenario...' and name it 'Base Portfolio'."],
-                ["12. Test different portfolios by adding constraints (e.g., Bonds >= 30,000) and saving them as new scenarios!"],
-                ["    NOTE: You must write the formulas for Totals and Cash yourself in the colored cells!"]
+            // --- Module 1 Practice (Tutorial Solver) ---
+            const tutSolverData = [
+                ["Tutorial 1: Solver Practice", "", "", ""],
+                ["", "", "", ""],
+                ["Product", "Alpha", "Beta", "Total"],
+                ["Units Produced", 0, 0, ""],
+                ["Profit per Unit", 40, 50, ""],
+                ["Total Profit", {t:'n', f:'B4*B5'}, {t:'n', f:'C4*C5'}, {t:'n', f:'B6+C6'}],
+                ["", "", "", ""],
+                ["Constraints", "Used", "", "Available"],
+                ["Labor Hours", {t:'n', f:'B4*1 + C4*2'}, "<=", 40],
+                ["Machine Hours", {t:'n', f:'B4*3 + C4*2'}, "<=", 120] 
             ];
-            const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
-            
-            // Style Instructions
-            if(wsInstructions['A1']) wsInstructions['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "217346" } } };
-            setCols(wsInstructions, [105]);
-            
-            XLSX.utils.book_append_sheet(wb, wsInstructions, "Instructions");
+            const wsTutSolver = XLSX.utils.aoa_to_sheet(tutSolverData);
+            if(!wsTutSolver['!merges']) wsTutSolver['!merges'] = [];
+            wsTutSolver['!merges'].push(XLSX.utils.decode_range("A1:D1"));
+            applyStyle(wsTutSolver, "A1:D1", "title");
+            applyStyle(wsTutSolver, "A3:D3", "header");
+            applyStyle(wsTutSolver, "A8:D8", "header");
+            applyStyle(wsTutSolver, "B4:C4", "input");
+            applyStyle(wsTutSolver, "D6", "objective");
+            applyStyle(wsTutSolver, "D9:D10", "constraint");
+            applyStyle(wsTutSolver, "B9:B10", "formula");
+            applyStyle(wsTutSolver, "B5:C5", "currency");
+            applyStyle(wsTutSolver, "B6:D6", "currency");
+            setCols(wsTutSolver, [25, 15, 15, 15]);
+            XLSX.utils.book_append_sheet(wb, wsTutSolver, "Module 1 - Solver");
 
-            // --- Sheet 2: Practice Problem (Solver) ---
-            const practiceData = [
-                ["Production Mix Optimization"],
-                [],
-                ["Parameters", "Gamma", "Delta", "Total"],
-                ["Profit per Unit", 120, 85],
-                ["Labor Hrs / Unit", 3, 2],
-                ["Machine Hrs / Unit", 2, 4],
-                [],
-                ["Decision Variables"],
-                ["Product", "Gamma", "Delta"],
-                ["Units Produced", 0, 0],
-                [],
-                ["Objective"],
-                ["Total Profit", {t:'n', f:'B4*B10 + C4*C10'}, ""],
-                [],
-                ["Constraints"],
-                ["Resource", "Used", "Op", "Available"],
-                ["Labor Hours", {t:'n', f:'B5*B10 + C5*C10'}, "<=", 80],
-                ["Machine Hours", {t:'n', f:'B6*B10 + C6*C10'}, "<=", 100]
+            // --- Module 2 Practice (Tutorial Scenario) ---
+            const tutScenData = [
+                ["Tutorial 2: Scenario Manager Practice", "", ""],
+                ["", "", ""],
+                ["Key Assumptions", "Base Case", ""],
+                ["Sales Growth %", 0.05, ""],
+                ["COGS (% of Sales)", 0.60, ""],
+                ["", "", ""],
+                ["Income Statement", "", ""],
+                ["Gross Sales", 105000, ""],
+                ["COGS", {t:'n', f:'B8*B5'}, ""],
+                ["Gross Profit", {t:'n', f:'B8-B9'}, ""],
+                ["Op Expenses", 20000, ""],
+                ["Net Income", {t:'n', f:'B10-B11'}, ""]
             ];
-            const wsPractice = XLSX.utils.aoa_to_sheet(practiceData);
-            
-            // Styling Practice
-            if(wsPractice['A1']) wsPractice['A1'].s = { font: { bold: true, sz: 14 } };
-            
-            // Headers
-            applyStyle(wsPractice, "A3:D3", "header");
-            applyStyle(wsPractice, "A8:C8", "subHeader");
-            applyStyle(wsPractice, "A12:C12", "subHeader");
-            applyStyle(wsPractice, "A15:D15", "subHeader");
-            
-            // Inputs
-            applyStyle(wsPractice, "B10:C10", "input");
-            
-            // Calculations / Goals / Constraints
-            applyStyle(wsPractice, "B13", "objective"); // Total Profit
-            applyStyle(wsPractice, "B17:B18", "constraint"); // Used Resources
-            
-            setCols(wsPractice, [20, 15, 15, 15]);
-            XLSX.utils.book_append_sheet(wb, wsPractice, "Practice Problem");
+            const wsTutScen = XLSX.utils.aoa_to_sheet(tutScenData);
+            if(!wsTutScen['!merges']) wsTutScen['!merges'] = [];
+            wsTutScen['!merges'].push(XLSX.utils.decode_range("A1:B1"));
+            applyStyle(wsTutScen, "A1:B1", "title");
+            applyStyle(wsTutScen, "A3:B3", "header");
+            applyStyle(wsTutScen, "A7:B7", "header");
+            applyStyle(wsTutScen, "B4:B5", "input");
+            applyStyle(wsTutScen, "B4:B5", "percent");
+            applyStyle(wsTutScen, "B8:B12", "currency");
+            applyStyle(wsTutScen, "B12", "objective");
+            setCols(wsTutScen, [25, 20, 10]);
+            XLSX.utils.book_append_sheet(wb, wsTutScen, "Module 2 - Scenarios");
 
-            // --- Sheet 3: Scenario Practice ---
-            const scenarioData = [
-                ["Scenario Manager Practice"],
-                [],
-                ["Input Variables", "Current Value"],
-                ["Unit Price", 20],
-                ["Unit Cost", 10],
-                ["Volume", 1000],
-                [],
-                ["Outputs", ""],
-                ["Total Revenue", {t:'n', f:'B4*B6'}],
-                ["Total Cost", {t:'n', f:'B5*B6'}],
-                ["Net Profit", {t:'n', f:'B9-B10'}]
+            // --- Copper Peak Model Data ---
+            const cpData = [
+                ["Copper Peak Manufacturing - Production Optimization", "", "", ""],
+                ["", "", "", ""],
+                ["Financial Parameters", "Standard Pipe", "Pressure Valve", "Custom Manifold"],
+                ["Selling Price per Unit", 45, 85, 210],
+                ["Variable Cost per Unit", 20, 45, 90],
+                ["Unit Contribution Margin", "", "", ""], // Row 6 (formulas removed)
+                ["", "", "", ""],
+                ["DECISION VARIABLES", "", "", ""],
+                ["Quantity to Produce", 0, 0, 0], // Row 9
+                ["", "", "", ""],
+                ["OBJECTIVE", "", "", ""],
+                ["Total Contribution Margin", "", "", ""], // Row 12 (formulas removed)
+                ["", "", "", ""],
+                ["RESOURCE CONSTRAINTS", "Used", "", "Available"],
+                ["Raw Copper (lbs/unit: 1.5, 2.0, 6.5)", "", "<=", 5000], // Row 15 (formulas removed)
+                ["Direct Labor (hrs/unit: 0.25, 0.75, 2.5)", "", "<=", 1200], // Row 16 (formulas removed)
+                ["Machine Hrs (hrs/unit: 0.5, 0.6, 1.0)", "", "<=", 800], // Row 17 (formulas removed)
+                ["", "", "", ""],
+                ["CONTRACT CONSTRAINTS", "", "", ""],
+                ["Minimum Quantity Required", 150, 200, 50] // Row 20
             ];
-            const wsScenario = XLSX.utils.aoa_to_sheet(scenarioData);
             
-            if(wsScenario['A1']) wsScenario['A1'].s = { font: { bold: true, sz: 14 } };
+            const wsCP = XLSX.utils.aoa_to_sheet(cpData);
             
-            // Headers
-            applyStyle(wsScenario, "A3:B3", "header");
-            applyStyle(wsScenario, "A8:B8", "subHeader");
+            // Merge Title
+            if(!wsCP['!merges']) wsCP['!merges'] = [];
+            wsCP['!merges'].push(XLSX.utils.decode_range("A1:D1"));
             
-            // Inputs
-            applyStyle(wsScenario, "B4:B6", "input");
+            // Apply Styles
+            applyStyle(wsCP, "A1:D1", "title");
+            applyStyle(wsCP, "A3:D3", "header");
             
-            // Outputs
-            applyStyle(wsScenario, "B9:B11", "calculation");
+            // Sections
+            applyStyle(wsCP, "A8", "section");
+            applyStyle(wsCP, "A11", "section");
+            applyStyle(wsCP, "A14", "section");
+            applyStyle(wsCP, "A19", "section");
             
-            setCols(wsScenario, [25, 20]);
-            XLSX.utils.book_append_sheet(wb, wsScenario, "Scenario Practice");
+            // Bold labels
+            applyStyle(wsCP, "A6", "bold");
+            applyStyle(wsCP, "A9", "bold");
+            applyStyle(wsCP, "A12", "bold");
+            applyStyle(wsCP, "C15:C17", "bold"); // the <= signs
+            applyStyle(wsCP, "C15:C17", "centerAlign");
 
-            // --- Sheet 4: Logistics Model ---
-            const logisticsData = [
-                ["Logistics Cost Minimization"],
-                [],
-                ["Shipping Costs", "Region A", "Region B", "Region C"],
-                ["WH North", 5, 10, 15],
-                ["WH South", 12, 8, 6],
-                [],
-                ["Demand", 100, 150, 200],
-                [],
-                ["Decision Variables: Units Shipped (Enter Qty)"],
-                ["From / To", "Region A", "Region B", "Region C", "Total Sent", "Capacity"],
-                ["WH North", 0, 0, 0, "", 300],
-                ["WH South", 0, 0, 0, "", 300],
-                ["Total Received", "", "", ""],
-                [],
-                ["Constraint Check"],
-                ["WH Totals", "<=", "Capacity"],
-                ["Region Totals", ">=", "Demand"],
-                ["Total Shipping Cost", ""]
+            // Currency
+            applyStyle(wsCP, "B4:D6", "currency");
+
+            // Blue Formulas
+            applyStyle(wsCP, "B6:D6", "formula");
+            applyStyle(wsCP, "B15:B17", "formula");
+
+            // Yellow Variables
+            applyStyle(wsCP, "B9:D9", "input");
+
+            // Green Objective
+            applyStyle(wsCP, "B12", "objective");
+
+            // Orange Constraints
+            applyStyle(wsCP, "D15:D17", "constraint");
+            applyStyle(wsCP, "B20:D20", "constraint");
+
+            setCols(wsCP, [35, 18, 18, 18]);
+            
+            XLSX.utils.book_append_sheet(wb, wsCP, "Optimization Model");
+
+            // --- Scenario Planning Tab Data ---
+            const scenarioTabData = [
+                ["Part 3: Strategic Advisory & Scenario Planning", "", "", "", ""],
+                ["", "", "", "", ""],
+                ["The CFO has requested a risk analysis for two potential future states.", "", "", "", ""],
+                ["Instructions:", "", "", "", ""],
+                ["1. Open Scenario Manager (Data > What-If Analysis > Scenario Manager).", "", "", "", ""],
+                ["2. Add the three scenarios defined below.", "", "", "", ""],
+                ["3. Important: Your 'Changing Cells' must include both the Variable Costs (B5:D5) AND Available Labor Hours (D16) from the 'Optimization Model' tab.", "", "", "", ""],
+                ["4. Generate a Scenario Summary report showing the impact on Total Contribution Margin.", "", "", "", ""],
+                ["", "", "", "", ""],
+                ["Scenario Definitions", "Pipe VC", "Valve VC", "Manifold VC", "Labor Hrs"],
+                ["1. Base Case (Current Optimal)", 20, 45, 90, 1200],
+                ["2. Tariff War (VC increases by $5)", 25, 50, 95, 1200],
+                ["3. Union Strike (Labor drops to 750)", 20, 45, 90, 750]
             ];
-            const wsLogistics = XLSX.utils.aoa_to_sheet(logisticsData);
             
-            if(wsLogistics['A1']) wsLogistics['A1'].s = { font: { bold: true, sz: 14 } };
+            const wsScenarioTab = XLSX.utils.aoa_to_sheet(scenarioTabData);
             
-            // Headers
-            applyStyle(wsLogistics, "A3:D3", "header");
-            applyStyle(wsLogistics, "A10:F10", "subHeader");
-            
-            // Inputs
-            applyStyle(wsLogistics, "B11:D12", "input");
-            
-            // Constraints
-            applyStyle(wsLogistics, "E11:E12", "constraint"); // Total Sent
-            applyStyle(wsLogistics, "B13:D13", "constraint"); // Total Received
-            
-            // Results / Objective
-            applyStyle(wsLogistics, "B18", "objective");
-            
-            setCols(wsLogistics, [20, 15, 15, 15, 15, 15]);
-            XLSX.utils.book_append_sheet(wb, wsLogistics, "Logistics Model");
+            if(!wsScenarioTab['!merges']) wsScenarioTab['!merges'] = [];
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A1:E1"));
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A3:E3"));
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A5:E5"));
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A6:E6"));
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A7:E7"));
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A8:E8"));
 
-            // --- Sheet 5: Portfolio Model ---
-            const portfolioData = [
-                ["Investment Portfolio Optimization"],
-                [],
-                ["Asset Class", "Est. Return", "Amount Invested"],
-                ["US Stocks", 0.10, 0],
-                ["Intl Stocks", 0.08, 0],
-                ["Bonds", 0.04, 0],
-                ["Cash", 0.01, 0],
-                [],
-                ["Total Return ($)", ""],
-                [],
-                ["Allocation Checks"],
-                ["Metric", "Calculated", "Op", "Limit"],
-                ["Total Invested", "", "=", 100000],
-                ["US Stocks Limit", "", "<=", 50000],
-                ["Cash Minimum", "", ">=", 5000]
-            ];
-            const wsPortfolio = XLSX.utils.aoa_to_sheet(portfolioData);
-            
-            if(wsPortfolio['A1']) wsPortfolio['A1'].s = { font: { bold: true, sz: 14 } };
-            
-            // Headers
-            applyStyle(wsPortfolio, "A3:C3", "header");
-            applyStyle(wsPortfolio, "A11:C11", "subHeader");
-            applyStyle(wsPortfolio, "A12:D12", "subHeader");
-            
-            // Inputs
-            applyStyle(wsPortfolio, "C4:C7", "input");
+            applyStyle(wsScenarioTab, "A1:E1", "title");
+            applyStyle(wsScenarioTab, "A10:E10", "header");
+            applyStyle(wsScenarioTab, "A4", "bold");
+            applyStyle(wsScenarioTab, "A11:A13", "bold");
+            applyStyle(wsScenarioTab, "B11:D13", "currency");
 
-            // Goal
-            applyStyle(wsPortfolio, "B9", "objective");
-
-            // Constraints
-            applyStyle(wsPortfolio, "B13:B15", "constraint");
+            setCols(wsScenarioTab, [35, 15, 15, 15, 15]);
             
-            // Percent Format
-            ["B4", "B5", "B6", "B7"].forEach(ref => {
-                 if(wsPortfolio[ref]) wsPortfolio[ref].z = "0.0%";
-            });
-            
-            // Number formats
-            ["C4", "C5", "C6", "C7", "B9", "D13", "D14", "D15"].forEach(ref => {
-                if(wsPortfolio[ref]) wsPortfolio[ref].z = "$#,##0";
-            });
-            
-            setCols(wsPortfolio, [20, 15, 20, 15]);
-            XLSX.utils.book_append_sheet(wb, wsPortfolio, "Portfolio Model");
+            XLSX.utils.book_append_sheet(wb, wsScenarioTab, "Scenario Planning");
 
             // Generate and Download
-            XLSX.writeFile(wb, "Analytics_Lab_Practice.xlsx");
+            XLSX.writeFile(wb, "Copper_Peak_Starter.xlsx");
         }
 
         // --- STARTUP RACE TIMER ---
