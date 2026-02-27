@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alteryx Designer: Class 2 Data Cleansing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --ax-blue: #0082ca;
+            --ax-dark: #1dd3c2;
+            --bg: #f6f7fb;
+            --card: #ffffff;
+            --ink: #111827;
+            --muted: #6b7280;
+            --alteryx-blue: #004d8c;
+            --alteryx-light-blue: #00a2df;
+            --tool-green: #209a80;
+            --tool-blue: #234c75;
+            --tool-purple: #6e5595;
+            --tool-red: #e23b3b;
+            --shadow: 0 6px 18px rgba(0,0,0,.08);
+            --radius: 14px;
+            --sidebar-width: 380px;
+            --bg-grey: #f4f7f6;
+            --text-main: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: #f0f4f8;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        /* --- LESSON PLAN OVERLAY --- */
+        #lesson-plan-overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-grey);
+            z-index: 200;
+            display: flex; 
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: #fff;
+            height: 100%;
+            overflow-y: auto;
+            border-right: 1px solid #ddd;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .logo-area { text-align: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px solid var(--alteryx-light-blue); }
+        .logo-area h1 { font-family: 'Montserrat', sans-serif; color: var(--alteryx-blue); font-size: 20px; margin: 0; font-weight: 700; }
+        .logo-area span { font-size: 13px; color: #666; font-weight: 500; }
+
+        .nav-links { list-style: none; padding: 0; }
+        .nav-links li { margin-bottom: 4px; }
+        .nav-links a {
+            display: block; padding: 8px 12px; color: #555; text-decoration: none;
+            border-radius: 5px; transition: all 0.2s; font-weight: 500; font-size: 13px;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            background-color: #e3f2fd; color: var(--alteryx-blue); border-left: 4px solid var(--alteryx-light-blue);
+        }
+        .nav-header {
+            font-size: 12px; font-weight: 700; color: #999; text-transform: uppercase; margin: 15px 0 5px 5px; letter-spacing: 0.5px;
+        }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 40px 60px; overflow-y: auto; scroll-behavior: smooth; position: relative; }
+
+        section {
+            background: #fff; padding: 30px; margin-bottom: 30px; border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); scroll-margin-top: 20px;
+        }
+
+        h2 {
+            font-family: 'Montserrat', sans-serif; color: var(--alteryx-blue);
+            border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; font-size: 22px; font-weight: 700;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        
+        h2 img { width: 32px; height: 32px; margin-left: 15px; }
+
+        h3 {
+            font-family: 'Montserrat', sans-serif; color: #444; margin-top: 25px;
+            display: flex; align-items: center; font-size: 16px; font-weight: 600;
+        }
+        h3 img { margin-right: 10px; width: 24px; height: 24px; }
+
+        p, li { line-height: 1.6; color: #444; margin-bottom: 10px; font-size: 14px; }
+        ul { list-style-type: disc; padding-left: 20px; }
+
+        /* Tool Cards */
+        .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .tool-card {
+            background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 15px;
+            text-align: center; transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .tool-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-color: var(--alteryx-light-blue); }
+        .tool-card img { width: 40px; height: 40px; margin: 0 auto 10px; }
+        .tool-card h4 { font-weight: 700; font-size: 14px; color: var(--alteryx-blue); margin-bottom: 5px; }
+        .tool-card p { font-size: 12px; color: #666; line-height: 1.4; margin: 0; }
+
+        .lecture-hide { color: transparent; text-shadow: 0 0 8px rgba(0,0,0,0.5); cursor: pointer; background: #eee; border-radius: 4px; padding: 0 4px; transition: all 0.3s; user-select: none; }
+        .lecture-hide.revealed { color: inherit; text-shadow: none; background: transparent; }
+
+        .info-box { background-color: #e8f5e9; border-left: 4px solid var(--tool-green); padding: 12px; margin: 15px 0; border-radius: 4px; font-size: 13px; }
+        .warning-box { background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 12px; margin: 15px 0; border-radius: 4px; font-size: 13px; }
+        .error-box { background-color: #ffebee; border-left: 4px solid #ef5350; padding: 12px; margin: 15px 0; border-radius: 4px; font-size: 13px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media(min-width: 900px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+
+        /* Tables in lesson plan */
+        .ref-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0; }
+        .ref-table th, .ref-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        .ref-table th { background-color: #f8f9fa; font-weight: 600; color: var(--alteryx-blue); }
+        .ref-table tr:nth-child(even) { background-color: #fcfcfc; }
+
+        /* Quiz */
+        .quiz-box { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin-top: 20px; }
+        .quiz-title { font-weight: 700; color: var(--alteryx-blue); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .quiz-question { font-weight: 500; color: #333; margin-bottom: 8px; font-size: 13px; }
+        .quiz-answer { display: none; background-color: #e8f5e9; color: #2e7d32; padding: 8px; border-radius: 4px; font-size: 13px; margin-top: 5px; }
+        .quiz-toggle { background: none; border: 1px solid var(--alteryx-blue); color: var(--alteryx-blue); padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; transition: all 0.2s; }
+        .quiz-toggle:hover { background: var(--alteryx-blue); color: white; }
+
+        .start-btn { display: block; width: 100%; max-width: 300px; margin: 40px auto 0; background: var(--alteryx-blue); color: white; border: none; padding: 16px 32px; font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,77,140,0.3); transition: all 0.2s; text-align: center; }
+        .start-btn:hover { background: #003d73; transform: scale(1.02); }
+        
+        /* Preview Button in Lesson */
+        .preview-btn {
+            background-color: white; border: 1px solid var(--alteryx-blue); color: var(--alteryx-blue);
+            font-size: 11px; padding: 4px 8px; border-radius: 4px; cursor: pointer;
+            margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; font-weight: 600;
+        }
+        .preview-btn:hover { background-color: #e3f2fd; }
+
+        /* Data Preview Modal (Mini) */
+        #mini-preview-modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 90%; max-width: 800px; background: white; z-index: 300;
+            border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border: 1px solid #ccc;
+        }
+        #mini-preview-backdrop {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 299;
+        }
+        .modal-header { padding: 10px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-radius: 8px 8px 0 0; }
+        .modal-body { padding: 15px; max-height: 400px; overflow: auto; }
+        
+        .preview-table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: monospace; }
+        .preview-table th, .preview-table td { border: 1px solid #ddd; padding: 6px; text-align: left; position: relative; white-space: pre; /* Visually preserve whitespace */ }
+        .preview-table th { background: #eee; position: sticky; top: 0; z-index: 10; font-weight: bold; color: #444; }
+        
+        /* Diff Styles */
+        .cell-changed { background-color: #fffde7; border: 1px solid #fbc02d; }
+        .cell-new { background-color: #e8f5e9; border: 1px solid #4caf50; }
+        
+        /* Tooltip for previous value */
+        .cell-changed:hover::after {
+            content: attr(data-prev);
+            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; padding: 4px 8px; border-radius: 4px;
+            font-size: 10px; white-space: nowrap; z-index: 20; pointer-events: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .cell-changed:hover::before {
+            content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(4px);
+            border: 4px solid transparent; border-top-color: #333; z-index: 20;
+        }
+
+        /* --- SIMULATOR CANVAS --- */
+        .canvas-bg { 
+            background-color: white; 
+            background-image: radial-gradient(#e2e8f0 1px, transparent 1px); 
+            background-size: 20px 20px; 
+            height: 400px; 
+            position: relative; 
+            overflow: auto; /* Enable scrolling */
+            flex-shrink: 0;
+        }
+        
+        /* Force minimum width to allow scrolling if content overflows */
+        #canvas-content-wrapper {
+            min-width: 1200px; /* Ensure wide enough for all tools */
+            height: 100%;
+            position: relative;
+        }
+
+        .tool-node { width: 60px; height: 60px; position: absolute; cursor: move; transition: filter 0.2s; z-index: 10; user-select: none; }
+        .tool-node:hover { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+        .tool-node.active { filter: drop-shadow(0 0 0 4px rgba(0, 130, 202, 0.4)); }
+        .tool-icon { width: 100%; height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: transparent; }
+        .tool-icon img { width: 100%; height: 100%; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); pointer-events: none; }
+        .tool-label { position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 600; color: #475569; white-space: nowrap; background: rgba(255,255,255,0.95); padding: 2px 4px; border-radius: 4px; pointer-events: none; border: 1px solid #ddd; z-index: 12;}
+
+        /* Sim Anchors */
+        .sim-anchor {
+            position: absolute; 
+            width: 0; height: 0; cursor: pointer; z-index: 20;
+            border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+            transition: transform 0.1s;
+        }
+        .sim-anchor:hover { transform: scale(1.3); }
+        .sim-anchor-in { top: 50%; left: -6px; transform: translateY(-50%); border-left: 6px solid #22c55e; }
+        .sim-anchor-out { top: 50%; right: -6px; transform: translateY(-50%); border-left: 6px solid #22c55e; }
+        
+        /* Filter Tool Specific Anchors */
+        .sim-anchor-true { top: 25%; right: -6px; transform: translateY(-50%); border-left: 6px solid #22c55e; }
+        .sim-anchor-false { top: 75%; right: -6px; transform: translateY(-50%); border-left: 6px solid #22c55e; }
+        
+        /* Anchor Text Labels for Filter */
+        .anchor-label { position: absolute; font-size: 8px; font-weight: bold; color: #666; pointer-events: none; }
+        
+        .sim-anchor.active-anchor { border-left-color: #0082ca; border-right-color: #0082ca; }
+
+        #connections-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        
+        /* Resizer & Panels */
+        .resizer { width: 6px; cursor: col-resize; background-color: #cbd5e1; display: flex; align-items: center; justify-content: center; z-index: 20; flex-shrink: 0; }
+        .resizer:hover { background-color: #94a3b8; }
+        .resizer i { font-size: 10px; color: white; }
+
+        .resizer-hz { height: 6px; cursor: row-resize; background-color: #cbd5e1; display: flex; align-items: center; justify-content: center; z-index: 20; flex-shrink: 0; }
+        .resizer-hz:hover { background-color: #94a3b8; }
+        .resizer-hz i { font-size: 10px; color: white; }
+        
+        .quality-bar { height: 4px; width: 100%; display: flex; margin-top: 4px; }
+        .q-ok { background-color: #22c55e; }
+        .q-null { background-color: #eab308; }
+        .q-error { background-color: #ef4444; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-slide { animation: slideIn 0.3s ease-out forwards; }
+        
+        /* Code blocks */
+        pre { background: #2d2d2d; color: #ccc; padding: 10px; border-radius: 4px; font-size: 12px; overflow-x: auto; margin: 10px 0; }
+        
+        /* Config UI Specifics */
+        .config-group-box { border: 1px solid #d1d5db; border-radius: 4px; padding: 8px; margin-bottom: 12px; background: #fff; }
+        .config-legend { font-size: 11px; color: #0082ca; font-weight: 600; margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+
+    <!-- DATA PREVIEW MODAL -->
+    <div id="mini-preview-backdrop" onclick="closePreview()"></div>
+    <div id="mini-preview-modal">
+        <div class="modal-header">
+            <span class="font-bold text-sm text-slate-700 flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i> Transformation Preview</span>
+            <button onclick="closePreview()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="bg-blue-50 px-4 py-2 border-b border-blue-100 flex gap-4 text-[10px] text-blue-800">
+            <div class="flex items-center gap-1"><div class="w-3 h-3 bg-[#fffde7] border border-[#fbc02d]"></div> Changed Value (Hover for previous)</div>
+            <div class="flex items-center gap-1"><div class="w-3 h-3 bg-[#e8f5e9] border border-[#4caf50]"></div> New Column</div>
+        </div>
+        <div class="modal-body" id="preview-content">
+            <!-- Table goes here -->
+        </div>
+    </div>
+
+    <!-- LESSON PLAN OVERLAY -->
+    <div id="lesson-plan-overlay">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo-area">
+                <h1>Alteryx Designer</h1>
+                <span>Class 2: Cab Data Cleansing</span>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-header">Reference</li>
+                <li><a href="#tool-ref">Tool Reference Guide</a></li>
+                <li><a href="#dt-specifiers">DateTime Specifiers</a></li>
+                
+                <li class="nav-header">Class Walkthrough</li>
+                <li><a href="#setup">0. Setup & Objectives</a></li>
+                <li><a href="#step1">1. Input Data</a></li>
+                <li><a href="#step2">2. Inspect (Browse)</a></li>
+                <li><a href="#step3">3. Fix Structure (Select)</a></li>
+                <li><a href="#step4">4. Cleanse Cab Company</a></li>
+                <li><a href="#step5">5. Cleanse Whitespace</a></li>
+                <li><a href="#step6">6. Replace Meaningful Nulls</a></li>
+                <li><a href="#step7">7. Imputation (Price)</a></li>
+                <li><a href="#step8">8. Formula (Nulls)</a></li>
+                <li><a href="#step9">9. Unique ID</a></li>
+                <li><a href="#step10">10. DateTime Conversion</a></li>
+                <li><a href="#step11">11. Feature Engineering</a></li>
+                <li><a href="#step12">12. Filter (Weekend)</a></li>
+            </ul>
+        </div>
+        
+        <!-- Sidebar Resizer -->
+        <div class="resizer" id="sidebar-resizer" onmousedown="initSidebarResize(event)"><i class="fa-solid fa-grip-lines-vertical text-slate-400"></i></div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content" id="lp-content">
+
+            <!-- TOOL REFERENCE SECTION -->
+            <section id="tool-ref">
+                <h2>Tool Reference Guide</h2>
+                <div class="tool-grid">
+                    <div class="tool-card">
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input">
+                        <h4>Input Data</h4>
+                        <p>Reads data from files (Excel, CSV) or DBs.</p>
+                    </div>
+                    <div class="tool-card">
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/BrowseV2_71x71.png" alt="Browse">
+                        <h4>Browse</h4>
+                        <p>Visualizes data quality profiles & results.</p>
+                    </div>
+                    <div class="tool-card">
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" alt="Select">
+                        <h4>Select</h4>
+                        <p>Rename, reorder, change types, remove fields.</p>
+                    </div>
+                    <div class="tool-card">
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse">
+                        <h4>Data Cleansing</h4>
+                        <p>Fixes nulls, whitespace, and case issues.</p>
+                    </div>
+                    <div class="tool-card">
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Filter_71x71.png" alt="Filter">
+                        <h4>Filter</h4>
+                        <p>Splits data: T (True) and F (False).</p>
+                    </div>
+                    <div class="tool-card">
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Imputation_71x71.png" alt="Impute">
+                        <h4>Imputation</h4>
+                        <p>Replaces numeric nulls with mean/median/mode.</p>
+                    </div>
+                    <div class="tool-card">
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Formula_71x71.png" alt="Formula">
+                        <h4>Formula</h4>
+                        <p>Creates/updates columns using logic.</p>
+                    </div>
+                    <div class="tool-card">
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/RecordID123_71x71.png" alt="RecID">
+                        <h4>Record ID</h4>
+                        <p>Assigns a unique ID (1, 2, 3...) to rows.</p>
+                    </div>
+                    <div class="tool-card">
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DT">
+                        <h4>DateTime</h4>
+                        <p>Converts String ↔ DateTime formats.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DATETIME SPECIFIERS -->
+            <section id="dt-specifiers">
+                <h2>DateTime Specifiers</h2>
+                <p>Specifiers always begin with a percent sign (%), followed by a case-sensitive letter or number.</p>
+                <div class="info-box">
+                    <a href="https://help.alteryx.com/current/en/designer/functions/datetime-functions.html#date-time-function-reference" target="_blank" class="text-blue-600 font-bold underline">
+                        <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Official Alteryx DateTime Function Reference
+                    </a>
+                </div>
+                
+                <h4 class="font-bold text-slate-700 mt-4">Year</h4>
+                <table class="ref-table">
+                    <tr><th>Specifier</th><th>Output</th><th>Input Support</th></tr>
+                    <tr><td>%y</td><td>Last two digits ("22")</td><td>Up to 4 digits (1959-2058 range)</td></tr>
+                    <tr><td>%Y</td><td>Four digits ("2022")</td><td>Two or four digits</td></tr>
+                </table>
+
+                <h4 class="font-bold text-slate-700 mt-4">Month</h4>
+                <table class="ref-table">
+                    <tr><th>Specifier</th><th>Output</th><th>Input Support</th></tr>
+                    <tr><td>%b / %h</td><td>Abbrev. Name ("Sep")</td><td>Abbrev. month name</td></tr>
+                    <tr><td>%B</td><td>Full Name ("September")</td><td>Full or Abbrev. name</td></tr>
+                    <tr><td>%m</td><td>Month Number (01-12)</td><td>1 or 2 digits</td></tr>
+                </table>
+
+                <h4 class="font-bold text-slate-700 mt-4">Day</h4>
+                <table class="ref-table">
+                    <tr><th>Specifier</th><th>Output</th><th>Input Support</th></tr>
+                    <tr><td>%d</td><td>Day of Month ("01")</td><td>1 or 2 digits</td></tr>
+                    <tr><td>%e</td><td>Day of month (leading space)</td><td>1 or 2 digits</td></tr>
+                    <tr><td>%j</td><td>Day of Year (001-366)</td><td>3-digit day of year</td></tr>
+                </table>
+
+                <h4 class="font-bold text-slate-700 mt-4">Day of Week</h4>
+                <table class="ref-table">
+                    <tr><th>Specifier</th><th>Output</th><th>Input Support</th></tr>
+                    <tr><td>%a</td><td>Abbrev. Weekday ("Mon")</td><td>Valid abbrev.</td></tr>
+                    <tr><td>%A</td><td>Full Weekday ("Monday")</td><td>Valid name</td></tr>
+                </table>
+            </section>
+
+            <!-- 0. SETUP -->
+            <section id="setup">
+                <h2>0. Setup & Objectives</h2>
+                <div class="info-box">
+                    <strong>File:</strong> Cab Company Data.xlsx<br>
+                    <strong>Context:</strong> You are an analyst cleaning cab ride data for analysis.
+                </div>
+                <strong>Learning Objectives:</strong>
+                <ul>
+                    <li>Detect data quality issues (nulls/empty/whitespace/case).</li>
+                    <li>Fix whitespace + capitalization inconsistencies.</li>
+                    <li>Decide how to handle missing values (remove vs impute vs conditional replace).</li>
+                    <li>Create a unique record identifier.</li>
+                    <li>Convert messy date-time strings into real DateTime.</li>
+                    <li>Filter to create weekend vs weekday subsets.</li>
+                    <li>Understand why Null ≠ Empty ≠ Zero.</li>
+                </ul>
+            </section>
+
+            <!-- 1. INPUT -->
+            <section id="step1">
+                <h2>1. Start workflow: Input Data <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></h2>
+                <p><strong>Action:</strong> Drag the <strong>Input Data</strong> tool to the canvas and connect "Cab Company Data.xlsx".</p>
+                <p><strong>Observe:</strong></p>
+                <ul>
+                    <li>The data quality bar has multiple colors (Green=OK, Yellow=Null, Red=Leading/Trailing Whitespace).</li>
+                    <li>Some “red flags” appear in [start_point] (whitespace issues).</li>
+                </ul>
+                <button class="preview-btn" onclick="showLessonPreview(0)"><i class="fa-solid fa-eye"></i> Preview Data</button>
+            </section>
+
+            <!-- 2. BROWSE -->
+            <section id="step2">
+                <h2>2. Add visibility: Browse <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/BrowseV2_71x71.png" alt="Browse"></h2>
+                <p><strong>Action:</strong> Connect <strong>Browse</strong> tool to Input Data. Run.</p>
+                <p><strong>Inspect:</strong></p>
+                <ul>
+                    <li>Click field [start_point]: See leading/trailing whitespace indicators (Not OK).</li>
+                    <li>[Cab Company]: "Ride4Me" vs "RIDE4ME" (capitalization issues).</li>
+                    <li>[Price]: Has null values.</li>
+                    <li>[Rain]: Mostly null.</li>
+                </ul>
+            </section>
+
+            <!-- 3. SELECT -->
+            <section id="step3">
+                <h2>3. Fix structure first: Select <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" alt="Select"></h2>
+                <p><strong>Action:</strong> Add <strong>Select</strong> tool.</p>
+                <ul>
+                    <li>Clean up field names (make formatting consistent).</li>
+                    <li>Change data types where obvious (numeric fields to numeric/Double).</li>
+                    <li>Add units to Description if desired (e.g. miles, dollars).</li>
+                </ul>
+                <div class="warning-box">
+                    <strong>Important:</strong> Do NOT convert [Time Ride Ordered] to DateTime here yet. It is currently a String that doesn't match standard formats. Converting now results in Nulls.
+                </div>
+            </section>
+
+            <!-- 4. CLEANSE CAB -->
+            <section id="step4">
+                <h2>4. Clean categorical text: Cab Company <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></h2>
+                <p><strong>Action:</strong> Add <strong>Data Cleansing</strong> tool.</p>
+                <p><strong>Configuration for [Cab Company]:</strong></p>
+                <ul>
+                    <li>Select Field: [Cab Company]</li>
+                    <li>Modify Case: <strong>Upper Case</strong> (Fixes Ride4Me capitalization).</li>
+                    <li>Remove Unwanted Characters: <strong>All Whitespace</strong>.</li>
+                </ul>
+                <button class="preview-btn" onclick="showLessonPreview(3)"><i class="fa-solid fa-eye"></i> Preview Data</button>
+            </section>
+
+            <!-- 5. CLEANSE START -->
+            <section id="step5">
+                <h2>5. Clean whitespace: Start Point <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></h2>
+                <p><strong>Action:</strong> Add another <strong>Data Cleansing</strong> tool.</p>
+                <p><strong>Configuration for [Start Point]:</strong></p>
+                <ul>
+                    <li>Uncheck Replace Nulls.</li>
+                    <li>Remove Unwanted Characters: <strong>Leading and Trailing Whitespace</strong>.</li>
+                </ul>
+                <button class="preview-btn" onclick="showLessonPreview(4)"><i class="fa-solid fa-eye"></i> Preview Data</button>
+            </section>
+
+            <!-- 6. REPLACE NULLS -->
+            <section id="step6">
+                <h2>6. Replace “meaningful nulls” <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></h2>
+                <p><strong>Logic:</strong> In this dataset, null rainfall doesn’t mean “unknown”; it means no rainfall. So replacing null with 0 is justified.</p>
+                <p><strong>Action:</strong> Use Data Cleansing on [Rain].</p>
+                <ul>
+                    <li>Replace Nulls: Replace with 0.</li>
+                </ul>
+                <button class="preview-btn" onclick="showLessonPreview(5)"><i class="fa-solid fa-eye"></i> Preview Data</button>
+            </section>
+
+            <!-- 7. IMPUTATION -->
+            <section id="step7">
+                <h2>7. Handle missing numeric values: Price <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Imputation_71x71.png" alt="Impute"></h2>
+                <p><strong>Decision:</strong> Remove or Impute? Removing rows loses data. We will Impute.</p>
+                <p><strong>Action:</strong> Add <strong>Imputation</strong> tool.</p>
+                <ul>
+                    <li>Field to impute: [Price]</li>
+                    <li>Incoming value to replace: Null()</li>
+                    <li>Method: <strong>Median</strong>.</li>
+                </ul>
+                <div class="info-box">
+                    <strong>Why Median?</strong> Median is safer than Mean for prices because it is less sensitive to outliers (extremely high or low values).
+                </div>
+                <button class="preview-btn" onclick="showLessonPreview(6)"><i class="fa-solid fa-eye"></i> Preview Data</button>
+            </section>
+
+            <!-- 8. FORMULA -->
+            <section id="step8">
+                <h2>8. Handle missing categorical values <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Formula_71x71.png" alt="Formula"></h2>
+                <p><strong>Problem:</strong> Imputation tool is for numbers. Cab Company is text.</p>
+                <p><strong>Action:</strong> Add <strong>Formula</strong> tool.</p>
+                <p><strong>Expression:</strong></p>
+<pre>
+IF IsNull([Cab Company])
+THEN "RIDE4ME"
+ELSE [Cab Company]
+ENDIF
+</pre>
+                <p><em>Rationale: RIDE4ME is the most frequent value (mode).</em></p>
+                <button class="preview-btn" onclick="showLessonPreview(7)"><i class="fa-solid fa-eye"></i> Preview Data</button>
+            </section>
+
+            <!-- 9. RECORD ID -->
+            <section id="step9">
+                <h2>9. Create a unique identifier <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/RecordID123_71x71.png" alt="RecordID"></h2>
+                <p><strong>Action:</strong> Add <strong>Record ID</strong> tool.</p>
+                <p><strong>Why?</strong> It’s possible multiple rides share the same time/company/start point, so having a single ID is cleaner.</p>
+                <button class="preview-btn" onclick="showLessonPreview(8)"><i class="fa-solid fa-eye"></i> Preview Data</button>
+            </section>
+
+            <!-- 10. DATETIME -->
+            <section id="step10">
+                <h2>10. Convert Time Ride Ordered <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DT"></h2>
+                <p><strong>Action:</strong> Add <strong>DateTime</strong> tool (Parse Palette).</p>
+                <p><strong>Configuration:</strong></p>
+                <ul>
+                    <li>Format: String to Date/Time</li>
+                    <li>Field: [Time Ride Ordered]</li>
+                    <li>New Name: Time of Order</li>
+                </ul>
+                <button class="preview-btn" onclick="showLessonPreview(9)"><i class="fa-solid fa-eye"></i> Preview Data</button>
+            </section>
+
+            <!-- 11. FEATURE ENG -->
+            <section id="step11">
+                <h2>11. Feature Engineering: Day of Week <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DT"></h2>
+                <p><strong>Action:</strong> Add another <strong>DateTime</strong> tool.</p>
+                <p><strong>Configuration:</strong></p>
+                <ul>
+                    <li>Format: Date/Time to String</li>
+                    <li>Field: Time of Order</li>
+                    <li>New Name: Day of Week</li>
+                    <li>Format: Custom -> "day"</li>
+                </ul>
+                <button class="preview-btn" onclick="showLessonPreview(10)"><i class="fa-solid fa-eye"></i> Preview Data</button>
+            </section>
+
+            <!-- 12. FILTER -->
+            <section id="step12">
+                <h2>12. Filter for Weekends <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Filter_71x71.png" alt="Filter"></h2>
+                <p><strong>Action:</strong> Add <strong>Filter</strong> tool.</p>
+                <p><strong>Logic:</strong> Saturday OR Sunday.</p>
+<pre>
+[Day of Week] = "Saturday" 
+OR 
+[Day of Week] = "Sunday"
+</pre>
+                <p><strong>Anchors:</strong></p>
+                <ul>
+                    <li><strong>T (True):</strong> Records that match the condition (Weekends).</li>
+                    <li><strong>F (False):</strong> Everything else (Weekdays).</li>
+                </ul>
+                <button class="preview-btn" onclick="showLessonPreview(11)"><i class="fa-solid fa-eye"></i> Preview Data</button>
+            </section>
+
+            <button onclick="closeLessonPlan()" class="start-btn">Launch Simulator <i class="fa-solid fa-rocket ml-2"></i></button>
+            <div style="height: 50px;"></div>
+        </div>
+    </div>
+
+
+    <!-- SIMULATOR UI -->
+    <header class="bg-slate-800 text-white p-3 flex justify-between items-center shadow-md z-50 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 w-8 h-8 rounded flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-shapes"></i></div>
+            <div>
+                <h1 class="font-bold text-lg leading-none">Designer Basics <span class="text-blue-400 text-sm font-normal">| Class 2</span></h1>
+                <p class="text-xs text-slate-400">Data Cleansing: Cab Data</p>
+            </div>
+        </div>
+        <div class="flex gap-2 items-center">
+            <button onclick="stepBack()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded shadow transition flex items-center gap-2"><i class="fa-solid fa-backward"></i> Back</button>
+            <div class="h-6 w-px bg-slate-600 mx-1"></div>
+            <button onclick="runWorkflow()" id="btn-global-run" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 py-1.5 rounded-full shadow-lg transition flex items-center gap-2 border border-blue-400">
+                <i class="fa-solid fa-play"></i> Run
+            </button>
+            <div class="h-6 w-px bg-slate-600 mx-1"></div>
+            <button onclick="showLessonPlan()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded shadow transition"><i class="fa-solid fa-book"></i> Guide</button>
+            <button onclick="downloadRawData()" class="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-2 rounded shadow transition flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Exercise File</button>
+        </div>
+    </header>
+
+    <div class="canvas-bg relative border-b border-slate-300 shadow-inner shrink-0 overflow-hidden" id="canvas-container" onmousemove="drag(event)" onmouseup="endDrag()">
+        <div id="canvas-content-wrapper">
+            <div class="absolute top-3 left-3 text-slate-400 text-xs font-bold uppercase tracking-wider select-none">Workflow Canvas</div>
+            <svg id="connections-layer"></svg>
+
+            <!-- Tool 0: Input -->
+            <div class="tool-node" id="node-0" style="left: 30px; top: 180px;" onmousedown="startDrag(event, 0)" onclick="activateStep(0)">
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 0, 'out')" title="View Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></div>
+                <div class="tool-label">Input Data</div>
+            </div>
+
+            <!-- Tool 1: Browse -->
+            <div class="tool-node" id="node-1" style="left: 30px; top: 100px;" onmousedown="startDrag(event, 1)" onclick="activateStep(1)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 1, 'in')" title="View Input"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/BrowseV2_71x71.png" alt="Browse"></div>
+                <div class="tool-label">Browse</div>
+                <div id="browse-hint" class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping hidden"></div>
+            </div>
+
+            <!-- Tool 2: Select -->
+            <div class="tool-node" id="node-2" style="left: 140px; top: 180px;" onmousedown="startDrag(event, 2)" onclick="activateStep(2)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 2, 'in')" title="View Input"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 2, 'out')" title="View Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" alt="Select"></div>
+                <div class="tool-label">Select</div>
+            </div>
+
+            <!-- Tool 3: Cleanse Cab -->
+            <div class="tool-node" id="node-3" style="left: 250px; top: 180px;" onmousedown="startDrag(event, 3)" onclick="activateStep(3)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 3, 'in')" title="View Input"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 3, 'out')" title="View Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></div>
+                <div class="tool-label">Cleanse (Cab)</div>
+            </div>
+
+            <!-- Tool 4: Cleanse Start/Rain -->
+            <div class="tool-node" id="node-4" style="left: 360px; top: 180px;" onmousedown="startDrag(event, 4)" onclick="activateStep(4)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 4, 'in')" title="View Input"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 4, 'out')" title="View Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></div>
+                <div class="tool-label">Cleanse (Start/Rain)</div>
+            </div>
+
+            <!-- Tool 5: Imputation -->
+            <div class="tool-node" id="node-5" style="left: 470px; top: 180px;" onmousedown="startDrag(event, 5)" onclick="activateStep(5)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 5, 'in')" title="View Input"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 5, 'out')" title="View Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Imputation_71x71.png" alt="Imputation"></div>
+                <div class="tool-label">Imputation</div>
+            </div>
+
+            <!-- Tool 6: Formula -->
+            <div class="tool-node" id="node-6" style="left: 580px; top: 180px;" onmousedown="startDrag(event, 6)" onclick="activateStep(6)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 6, 'in')" title="View Input"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 6, 'out')" title="View Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Formula_71x71.png" alt="Formula"></div>
+                <div class="tool-label">Formula</div>
+            </div>
+            
+            <!-- Tool 7: Record ID -->
+            <div class="tool-node" id="node-7" style="left: 690px; top: 180px;" onmousedown="startDrag(event, 7)" onclick="activateStep(7)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 7, 'in')" title="View Input"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 7, 'out')" title="View Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/RecordID123_71x71.png" alt="RecordID"></div>
+                <div class="tool-label">Record ID</div>
+            </div>
+
+            <!-- Tool 8: DateTime Parse -->
+            <div class="tool-node" id="node-8" style="left: 800px; top: 180px;" onmousedown="startDrag(event, 8)" onclick="activateStep(8)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 8, 'in')" title="View Input"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 8, 'out')" title="View Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DateTime"></div>
+                <div class="tool-label">DT (Parse)</div>
+            </div>
+
+            <!-- Tool 9: DateTime Day -->
+            <div class="tool-node" id="node-9" style="left: 910px; top: 180px;" onmousedown="startDrag(event, 9)" onclick="activateStep(9)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 9, 'in')" title="View Input"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 9, 'out')" title="View Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DateTime"></div>
+                <div class="tool-label">DT (Day)</div>
+            </div>
+
+            <!-- Tool 10: Filter -->
+            <div class="tool-node" id="node-10" style="left: 1020px; top: 180px;" onmousedown="startDrag(event, 10)" onclick="activateStep(10)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 10, 'in')" title="View Input"></div>
+                
+                <!-- True Anchor -->
+                <div class="sim-anchor sim-anchor-true" onclick="viewAnchor(event, 10, 'true')" title="True Output"></div>
+                <div class="anchor-label" style="top: 25%; right: 5px; transform: translateY(-50%); color: #444;">T</div>
+                
+                <!-- False Anchor -->
+                <div class="sim-anchor sim-anchor-false" onclick="viewAnchor(event, 10, 'false')" title="False Output"></div>
+                <div class="anchor-label" style="top: 75%; right: 5px; transform: translateY(-50%); color: #444;">F</div>
+                
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Filter_71x71.png" alt="Filter"></div>
+                <div class="tool-label">Filter</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Canvas Vertical Resizer -->
+    <div class="resizer-hz" id="canvas-resizer" onmousedown="initCanvasResize(event)"><i class="fa-solid fa-grip-lines text-slate-400"></i></div>
+
+    <!-- Workspace -->
+    <div class="flex flex-1 overflow-hidden" id="workspace-container">
+        <div class="w-1/3 min-w-[320px] bg-slate-50 border-r border-slate-200 flex flex-col" id="config-pane">
+            <div class="bg-white border-b px-4 py-2 font-bold text-slate-700 flex justify-between items-center select-none">
+                <span><i class="fa-solid fa-gear text-slate-400 mr-2"></i>Configuration</span>
+                <span id="step-badge" class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">--</span>
+            </div>
+            <div id="config-panel" class="p-4 overflow-y-auto flex-1 text-sm text-slate-600"></div>
+        </div>
+        <div class="resizer" id="resizer" onmousedown="initResize(event)"><i class="fa-solid fa-grip-lines-vertical text-slate-400"></i></div>
+        <div class="flex-1 bg-white flex flex-col min-w-0" id="results-pane">
+            <div class="border-b px-4 py-2 font-bold text-slate-700 flex justify-between items-center text-xs bg-slate-50 select-none">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-table text-blue-600"></i>
+                    <span>Results - <span id="tool-name-display">Select an anchor</span></span>
+                </div>
+                <div class="text-slate-400"><span id="record-count">0</span> records</div>
+            </div>
+            <div class="flex-1 overflow-auto relative">
+                <table class="w-full text-left border-collapse data-table text-xs font-mono" id="data-grid">
+                    <thead id="grid-head"></thead>
+                    <tbody id="grid-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBAL STATE ---
+        let hasRun = false;
+        let activeToolIndex = 0;
+        let viewingAnchor = null; // {toolId, type}
+
+        // --- INTERACTION LOGIC ---
+        function toggleAnswer(btn) {
+            const answer = btn.nextElementSibling;
+            if (answer.style.display === "block") { answer.style.display = "none"; btn.innerText = "Show Answer"; }
+            else { answer.style.display = "block"; btn.innerText = "Hide Answer"; }
+        }
+        function reveal(el) { el.classList.add('revealed'); }
+        function closeLessonPlan() { document.getElementById('lesson-plan-overlay').style.display = 'none'; activateStep(0); }
+        function showLessonPlan() { document.getElementById('lesson-plan-overlay').style.display = 'flex'; }
+        
+        function closePreview() {
+            document.getElementById('mini-preview-modal').style.display = 'none';
+            document.getElementById('mini-preview-backdrop').style.display = 'none';
+        }
+
+        // Formula Dropdown Logic
+        function toggleFormulaDropdown() {
+            const dropdown = document.getElementById('formula-dropdown-list');
+            if (dropdown) {
+                dropdown.classList.toggle('hidden');
+            }
+        }
+
+        function selectFormulaColumn(colName) {
+            const display = document.getElementById('formula-selected-display');
+            if (display) display.innerText = colName;
+            document.getElementById('formula-dropdown-list').classList.add('hidden');
+        }
+
+        // Navigation Highlighting
+        const navLinks = document.querySelectorAll('.nav-links a');
+        const sections = document.querySelectorAll('.main-content section');
+        const mainContent = document.getElementById('lp-content');
+
+        mainContent.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (mainContent.scrollTop >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                navLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // --- DATA ENGINE (Cab Data) ---
+        // Headers: Cab Company,Time Ride Ordered,start_point,destination,Distance,Price,Surge Multiplier,temp,rain,wind
+        const rawData = [
+            { "Cab Company": "  Ride4me", "Time Ride Ordered": "11/26/22 3:55:59", "start_point": "  North Station  ", "destination": "North End", "Distance": "1.08", "Price": "7", "Surge Multiplier": "1", "temp": "40.94", "rain": null, "wind": "1.43" }, // Row 0: Whitespace, Null Rain
+            { "Cab Company": "Ride4Me", "Time Ride Ordered": "11/26/22 3:56:40", "start_point": "Financial District", "destination": "Haymarket Square", "Distance": "1.25", "Price": "8.5", "Surge Multiplier": "1", "temp": "40.95", "rain": null, "wind": "1.49" }, 
+            { "Cab Company": "Ride4Me", "Time Ride Ordered": "11/28/22 3:58:22", "start_point": "Haymarket Square", "destination": "West End", "Distance": "0.71", "Price": null, "Surge Multiplier": "1", "temp": "40.98", "rain": null, "wind": "1.57" }, // Row 2: Null Price
+            { "Cab Company": "Ride4me", "Time Ride Ordered": "11/28/22 3:58:23", "start_point": "North End", "destination": "Theatre District", "Distance": "1.41", "Price": "14", "Surge Multiplier": "1", "temp": "41.02", "rain": null, "wind": "1.59" }, 
+            { "Cab Company": null, "Time Ride Ordered": "11/26/22 4:4:43", "start_point": "Back Bay", "destination": "Boston University", "Distance": "1.46", "Price": "13.5", "Surge Multiplier": "1", "temp": "40.63", "rain": null, "wind": "2.57" }, // Row 4: Null Cab
+            { "Cab Company": null, "Time Ride Ordered": "11/26/22 4:5:10", "start_point": "North Station", "destination": "North End", "Distance": "1.08", "Price": "6.5", "Surge Multiplier": "1", "temp": "40.49", "rain": null, "wind": "2.56" }, 
+            { "Cab Company": "ZippyRide", "Time Ride Ordered": "11/29/22 4:10:48", "start_point": "Theatre District", "destination": "North End", "Distance": "1.57", "Price": "7.5", "Surge Multiplier": "1", "temp": "40.23", "rain": null, "wind": "2.68" }, // Tue
+            { "Cab Company": "Zippy Ride", "Time Ride Ordered": "11/29/22 4:10:48", "start_point": "Theatre District", "destination": "North End", "Distance": "1.57", "Price": null, "Surge Multiplier": "1", "temp": "40.23", "rain": null, "wind": "2.68" }, // Tue
+            { "Cab Company": "Ride4Me", "Time Ride Ordered": "12/18/22 18:15:20", "start_point": "Theatre District", "destination": "Fenway", "Distance": "3.12", "Price": "34", "Surge Multiplier": "1", "temp": "30.81", "rain": "0.02", "wind": "13.15" }, // Sun
+            { "Cab Company": "Ride4Me", "Time Ride Ordered": "12/18/22 18:20:7", "start_point": "Northeastern University", "destination": "Financial District", "Distance": "4.3", "Price": "32.5", "Surge Multiplier": "1", "temp": "30.91", "rain": "0.01", "wind": "13.06" }, // Sun
+            { "Cab Company": "Ride4Me", "Time Ride Ordered": "12/18/22 18:20:12", "start_point": "West End", "destination": "Haymarket Square", "Distance": "0.77", "Price": "7", "Surge Multiplier": "1", "temp": "30.79", "rain": null, "wind": "13.09" }, // Sun
+            { "Cab Company": "Ride4Me", "Time Ride Ordered": "12/19/22 18:20:14", "start_point": "Beacon Hill", "destination": "South Station", "Distance": "2.48", "Price": "30.5", "Surge Multiplier": "1", "temp": "30.8", "rain": null, "wind": "13.08" } // Mon
+        ];
+
+        let currentState = { amountType: "Double" };
+
+        const steps = [
+            {
+                id: "input", title: "Input Data",
+                configHTML: `<div class="bg-slate-100 p-3 rounded border text-xs mb-3"><label class="block font-bold mb-1">Connect a File</label><div class="flex bg-white border p-1 rounded items-center"><input type="text" value="Cab Company Data.xlsx" class="w-full outline-none text-slate-600" readonly></div></div><div class="bg-yellow-50 p-3 rounded border border-yellow-200 text-xs text-yellow-800">12 rows loaded for simulation.</div><div class="mt-4"><h4 class="font-bold text-xs mb-1 text-slate-600">Instructions:</h4><p class="text-[11px] text-slate-500">1. Drag the file onto the canvas.<br>2. Check the Results window for the data quality bar (Green/Red/Yellow).<br>3. Look for 'red flags' in start_point (whitespace) and nulls in Price.</p></div>`
+            },
+            {
+                id: "browse", title: "Browse Tool",
+                configHTML: `
+                    <div class="space-y-3">
+                        <p class="text-xs"><strong>Data Quality Profiles:</strong></p>
+                        <div class="bg-white p-2 rounded border shadow-sm border-red-200"><div class="flex justify-between text-xs font-bold"><span>start_point</span></div><div class="w-full bg-slate-200 h-2 rounded mt-1 overflow-hidden"><div class="bg-red-500 w-full h-full"></div></div><div class="text-[9px] text-red-500 mt-1">Leading/Trailing Whitespace</div></div>
+                        <div class="bg-white p-2 rounded border shadow-sm border-yellow-200"><div class="flex justify-between text-xs font-bold"><span>Price</span></div><div class="w-full bg-slate-200 h-2 rounded mt-1 overflow-hidden"><div class="bg-yellow-400 w-full h-full"></div></div><div class="text-[9px] text-yellow-600 mt-1">Nulls Detected</div></div>
+                        <div class="bg-white p-2 rounded border shadow-sm"><div class="flex justify-between text-xs font-bold"><span>Cab Company</span></div><div class="text-[9px] text-slate-500 mt-1">Found: Ride4Me, RIDE4ME, Zippy Ride...</div></div>
+                    </div>
+                    <div class="mt-4"><h4 class="font-bold text-xs mb-1 text-slate-600">Instructions:</h4><p class="text-[11px] text-slate-500">1. Connect Browse to Input Data.<br>2. Run the workflow.<br>3. Inspect the 'Not OK' indicators in the profile.</p></div>`
+            },
+            {
+                id: "select", title: "Select Tool",
+                configHTML: `<div class="bg-white border rounded shadow-sm overflow-hidden"><table class="w-full text-[10px] text-left"><thead class="bg-slate-100 text-slate-500 border-b"><tr><th class="p-2 w-6"></th><th class="p-2">Field</th><th class="p-2">Type</th><th class="p-2">Rename</th></tr></thead><tbody><tr class="border-b"><td class="p-2"><input type="checkbox" checked></td><td class="p-2">Cab Company</td><td class="p-2">V_String</td><td class="p-2"></td></tr><tr class="border-b"><td class="p-2"><input type="checkbox" checked></td><td class="p-2">Time Ride...</td><td class="p-2 text-red-500">String</td><td class="p-2"></td></tr><tr class="border-b bg-blue-50"><td class="p-2"><input type="checkbox" checked></td><td class="p-2">Price</td><td class="p-2 font-bold text-blue-700">Double</td><td class="p-2 text-gray-400 italic">Dollars</td></tr><tr class="border-b"><td class="p-2"><input type="checkbox" checked></td><td class="p-2">start_point</td><td class="p-2">V_String</td><td class="p-2">Start Point</td></tr></tbody></table></div><div class="text-xs p-2 rounded bg-yellow-50 border text-yellow-600 mt-2"><strong>Tip:</strong> Don't change Time to DateTime yet!</div><div class="mt-4"><h4 class="font-bold text-xs mb-1 text-slate-600">Instructions:</h4><p class="text-[11px] text-slate-500">1. Rename fields for consistency.<br>2. Change Price to Double.<br>3. Add 'Dollars' to description.</p></div>`
+            },
+            {
+                id: "cleanse_cab", title: "Data Cleansing (Cab)",
+                configHTML: `<div class="bg-slate-50 border p-2 mb-2 rounded"><label class="block text-[10px] font-bold mb-1">Select Fields to Cleanse:</label><div class="bg-white border p-1 h-12 overflow-y-auto text-[10px]"><label><input type="checkbox" checked> Cab Company</label><br><label><input type="checkbox"> Price</label></div></div><div class="bg-slate-50 border p-2 mb-2 rounded"><label class="block text-[10px] font-bold mb-1">Replace Nulls:</label><div class="text-[10px] text-gray-400">None selected</div></div><div class="bg-slate-50 border p-2 mb-2 rounded"><label class="block text-[10px] font-bold mb-1">Remove Unwanted Characters:</label><label class="block text-[10px]"><input type="checkbox" checked> Leading/Trailing Whitespace</label><label class="block text-[10px]"><input type="checkbox" checked> All Whitespace</label></div><div class="bg-slate-50 border p-2 rounded"><label class="block text-[10px] font-bold mb-1">Modify Case:</label><div class="flex gap-2 text-[10px]"><label><input type="radio" name="case" checked> Upper Case</label><label><input type="radio" name="case"> Title Case</label></div></div><div class="mt-4"><h4 class="font-bold text-xs mb-1 text-slate-600">Instructions:</h4><p class="text-[11px] text-slate-500">1. Select [Cab Company].<br>2. Check 'Modify Case -> Upper Case' (Fixes Ride4Me).<br>3. Check 'Remove -> All Whitespace'.</p></div>`
+            },
+            {
+                id: "cleanse_start", title: "Data Cleansing (Start/Rain)",
+                configHTML: `<div class="bg-slate-50 border p-2 mb-2 rounded"><label class="block text-[10px] font-bold mb-1">Select Fields to Cleanse:</label><div class="bg-white border p-1 h-12 overflow-y-auto text-[10px]"><label><input type="checkbox" checked> Start Point</label><br><label><input type="checkbox" checked> rain</label></div></div><div class="bg-slate-50 border p-2 mb-2 rounded"><label class="block text-[10px] font-bold mb-1">Replace Nulls:</label><label class="block text-[10px]"><input type="checkbox" checked> Replace with 0 (Numeric)</label></div><div class="bg-slate-50 border p-2 mb-2 rounded"><label class="block text-[10px] font-bold mb-1">Remove Unwanted Characters:</label><label class="block text-[10px]"><input type="checkbox" checked> Leading/Trailing Whitespace</label></div><div class="mt-4"><h4 class="font-bold text-xs mb-1 text-slate-600">Instructions:</h4><p class="text-[11px] text-slate-500">1. Select [Start Point]: Remove Leading/Trailing Whitespace.<br>2. Select [Rain]: Replace Nulls with 0.<br>3. <strong>Note:</strong> Null rain implies 0 rain here.</p></div>`
+            },
+            {
+                id: "impute", title: "Imputation Tool",
+                configHTML: `<div class="bg-slate-100 p-3 rounded border text-xs mb-3"><label class="block font-bold mb-1">Field to Impute</label><select class="w-full border rounded p-1"><option>Price</option></select><label class="block font-bold mt-2 mb-1">Incoming Value to Replace</label><div class="flex gap-2 mb-2"><label><input type="radio" checked> Null()</label><label><input type="radio"> User Specified</label></div><label class="block font-bold mt-2 mb-1">Replace With Value</label><div class="flex gap-2"><label><input type="radio" checked> Median</label><label><input type="radio"> Mean</label><label><input type="radio"> Mode</label></div></div><div class="mt-4"><h4 class="font-bold text-xs mb-1 text-slate-600">Instructions:</h4><p class="text-[11px] text-slate-500">1. Select 'Price'.<br>2. Choose 'Median' to handle outliers safely.</p></div>`
+            },
+            {
+                id: "formula", title: "Formula Tool",
+                configHTML: `
+                <div class="flex border-b border-gray-300 text-[10px] mb-2">
+                    <div class="font-bold px-2 py-1 text-gray-700 bg-gray-50 border-r border-gray-200">Output Column</div>
+                    <div class="px-2 py-1 text-gray-700 w-full bg-white">Data Preview <span class="float-right text-gray-400 text-[9px] mt-0.5">RIDE4ME</span></div>
+                    <div class="w-6 bg-white border-l border-gray-200 flex items-center justify-center"><i class="fa-solid fa-trash-can text-gray-400 hover:text-red-500 cursor-pointer"></i></div>
+                </div>
+                
+                <div class="relative mb-2">
+                    <div onclick="toggleFormulaDropdown()" class="border border-gray-300 hover:border-blue-400 rounded bg-white p-1 flex items-center justify-between text-[11px] shadow-sm cursor-pointer h-7">
+                        <span id="formula-selected-display" class="font-semibold text-slate-700 pl-1">Cab Company</span>
+                        <i class="fa-solid fa-caret-down text-slate-400 pr-1"></i>
+                    </div>
+                    
+                    <div id="formula-dropdown-list" class="absolute top-full left-0 w-64 bg-white border border-gray-300 shadow-xl z-20 rounded mt-1 text-[11px] hidden max-h-60 overflow-y-auto">
+                        <div onclick="selectFormulaColumn('Select Column')" class="p-2 hover:bg-blue-50 flex items-center gap-2 cursor-pointer border-b border-gray-100 font-bold text-gray-500">Select Column</div>
+                        <div class="p-2 hover:bg-blue-50 flex items-center gap-2 cursor-pointer"><div class="bg-blue-500 text-white w-4 h-4 flex items-center justify-center rounded text-[9px]">fx</div> + Add Column</div>
+                        <div onclick="selectFormulaColumn('Cab Company')" class="p-2 bg-blue-100 text-blue-800 flex items-center gap-2 cursor-pointer border-l-4 border-blue-600">
+                            <div class="bg-blue-600 text-white w-4 h-4 flex items-center justify-center rounded text-[9px] font-serif">A</div> Cab Company
+                        </div>
+                        <div onclick="selectFormulaColumn('Time Ride Ordered')" class="p-2 hover:bg-gray-100 pl-8 cursor-pointer text-gray-700">Time Ride Ordered</div>
+                        <div onclick="selectFormulaColumn('Start Point')" class="p-2 hover:bg-gray-100 pl-8 cursor-pointer text-gray-700">Start Point</div>
+                        <div onclick="selectFormulaColumn('Destination')" class="p-2 hover:bg-gray-100 pl-8 cursor-pointer text-gray-700">Destination</div>
+                        <div onclick="selectFormulaColumn('Distance')" class="p-2 hover:bg-gray-100 flex items-center gap-2 border-t border-gray-100 cursor-pointer">
+                            <div class="bg-green-600 text-white w-4 h-4 flex items-center justify-center rounded text-[9px] font-bold">#</div> Distance
+                        </div>
+                        <div onclick="selectFormulaColumn('Price')" class="p-2 hover:bg-gray-100 flex items-center gap-2 cursor-pointer">
+                            <div class="bg-green-600 text-white w-4 h-4 flex items-center justify-center rounded text-[9px] font-bold">#</div> Price
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-300 rounded overflow-hidden mb-3">
+                    <div class="bg-gray-50 border-b border-gray-200 p-1 flex gap-2">
+                        <div class="bg-blue-500 text-white w-5 h-5 flex items-center justify-center rounded text-[10px] cursor-pointer hover:bg-blue-600">fx</div>
+                        <div class="bg-blue-500 text-white w-5 h-5 flex items-center justify-center rounded text-[10px] cursor-pointer hover:bg-blue-600 font-serif">X</div>
+                        <div class="bg-blue-500 text-white w-5 h-5 flex items-center justify-center rounded text-[10px] cursor-pointer hover:bg-blue-600"><i class="fa-solid fa-folder-open"></i></div>
+                        <div class="bg-blue-500 text-white w-5 h-5 flex items-center justify-center rounded text-[10px] cursor-pointer hover:bg-blue-600"><i class="fa-solid fa-floppy-disk"></i></div>
+                    </div>
+                    <div class="p-2 text-[11px] font-mono leading-relaxed h-24">
+                        <span class="text-blue-600 font-bold">IF</span> <span class="text-purple-600">IsNull</span>([<span class="text-orange-600">Cab Company</span>])<br>
+                        <span class="text-blue-600 font-bold">THEN</span> <span class="text-green-600">"RIDE4ME"</span><br>
+                        <span class="text-blue-600 font-bold">ELSE</span> [<span class="text-orange-600">Cab Company</span>]<br>
+                        <span class="text-blue-600 font-bold">ENDIF</span>
+                    </div>
+                </div>
+                
+                <div class="flex gap-2 mb-2 items-center">
+                    <div class="text-[10px] text-gray-600 font-bold">Data type:</div>
+                    <select class="border border-gray-300 rounded text-[10px] p-1 bg-white text-gray-700 w-24">
+                        <option>V_String</option>
+                    </select>
+                    <div class="text-[10px] text-gray-600 font-bold ml-2">Size:</div>
+                    <input type="number" value="254" class="border border-gray-300 rounded text-[10px] p-1 w-16 text-gray-700">
+                </div>
+                
+                <div class="bg-blue-500 text-white w-6 h-6 flex items-center justify-center rounded text-xs cursor-pointer hover:bg-blue-600 shadow-sm font-bold mt-2">+</div>
+
+                <div class="mt-4"><h4 class="font-bold text-xs mb-1 text-slate-600">Instructions:</h4><p class="text-[11px] text-slate-500">1. Click the dropdown to see available columns.<br>2. Use the conditional logic to replace nulls with "RIDE4ME".</p></div>`
+            },
+            {
+                id: "recordid", title: "Record ID Tool",
+                configHTML: `<div class="bg-slate-100 p-3 rounded border text-xs"><label class="block font-bold mb-1">Column Name</label><input type="text" value="Ride ID" class="w-full border rounded p-1"><label class="block font-bold mt-2 mb-1">Starting Value</label><input type="number" value="1" class="w-full border rounded p-1"></div><div class="mt-4"><h4 class="font-bold text-xs mb-1 text-slate-600">Instructions:</h4><p class="text-[11px] text-slate-500">1. Name column 'Ride ID'.<br>2. Assigns a unique identifier to every row.</p></div>`
+            },
+            {
+                id: "datetime", title: "DateTime Tool",
+                configHTML: `
+                <div class="config-group-box">
+                    <div class="config-legend">Select the format to convert</div>
+                    <div class="space-y-1">
+                        <label class="flex items-center gap-2 text-[11px] text-slate-700">
+                            <input type="radio" name="dt-format-p" class="accent-blue-600"> Date/Time format to string
+                        </label>
+                        <label class="flex items-center gap-2 text-[11px] text-slate-700">
+                            <input type="radio" name="dt-format-p" checked class="accent-blue-600"> String to Date/Time format
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Select the string field to convert</label>
+                    <input type="text" value="Time Ride Ordered" class="w-full border border-gray-300 rounded p-1 text-[11px] text-slate-700 bg-white" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Specify the new column name</label>
+                    <input type="text" value="Time of Order" class="w-full border border-gray-300 rounded p-1 text-[11px] text-slate-700">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Specify your DateTime Language</label>
+                    <select class="w-full border border-gray-300 rounded p-1 text-[11px] text-slate-700 bg-gray-100">
+                        <option>English</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Select the format that matches the incoming string field</label>
+                    <div class="border border-gray-300 rounded bg-white h-24 overflow-y-auto text-[11px]">
+                        <div class="p-1 hover:bg-blue-50 cursor-pointer">yyyy-MM-dd hh:mm:ss</div>
+                        <div class="p-1 hover:bg-blue-50 cursor-pointer">MM/dd/yyyy hh:mm:ss</div>
+                        <div class="p-1 bg-blue-600 text-white cursor-pointer">MM/dd/yy hh:mm:ss</div>
+                        <div class="p-1 hover:bg-blue-50 cursor-pointer">dd/MM/yyyy hh:mm:ss</div>
+                        <div class="p-1 hover:bg-blue-50 cursor-pointer">dd/MM/yy hh:mm:ss</div>
+                        <div class="p-1 hover:bg-blue-50 cursor-pointer">day, dd Month, yyyy</div>
+                    </div>
+                </div>
+
+                <div class="mt-4"><h4 class="font-bold text-xs mb-1 text-slate-600">Instructions:</h4><p class="text-[11px] text-slate-500">1. Select 'String to Date/Time'.<br>2. Choose 'MM/dd/yy hh:mm:ss' to match the raw data.</p></div>`
+            },
+            {
+                id: "datetime_day", title: "DateTime Tool (Feature)",
+                configHTML: `
+                <div class="config-group-box">
+                    <div class="config-legend">Select the format to convert</div>
+                    <div class="space-y-1">
+                        <label class="flex items-center gap-2 text-[11px] text-slate-700">
+                            <input type="radio" name="dt-format" checked class="accent-blue-600"> Date/Time format to string
+                        </label>
+                        <label class="flex items-center gap-2 text-[11px] text-slate-700">
+                            <input type="radio" name="dt-format" class="accent-blue-600"> String to Date/Time format
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Select the date/time field to convert</label>
+                    <select class="w-full border border-gray-300 rounded p-1 text-[11px] text-slate-700 bg-white">
+                        <option>Time of Order</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Specify the new column name</label>
+                    <input type="text" value="Day of Week" class="w-full border border-gray-300 rounded p-1 text-[11px] text-slate-700">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Specify your DateTime Language</label>
+                    <select class="w-full border border-gray-300 rounded p-1 text-[11px] text-slate-700 bg-gray-100">
+                        <option>English</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Select the format for the new column</label>
+                    <div class="border border-gray-300 rounded bg-white h-24 overflow-y-auto text-[11px]">
+                        <div class="p-1 hover:bg-blue-50 cursor-pointer">day, dd Month, yyyy</div>
+                        <div class="p-1 hover:bg-blue-50 cursor-pointer">dd-MM-yy</div>
+                        <div class="p-1 hover:bg-blue-50 cursor-pointer">dd/MM/yyyy</div>
+                        <div class="p-1 hover:bg-blue-50 cursor-pointer">Month, yyyy</div>
+                        <div class="p-1 bg-blue-600 text-white cursor-pointer">Custom</div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-[10px] font-bold text-slate-600 mb-1">Specify a custom format for the new column</label>
+                    <input type="text" value="day" class="w-full border border-gray-300 rounded p-1 text-[11px] text-slate-700">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-[10px]">
+                    <div>
+                        <span class="font-bold block text-slate-600">Example</span>
+                        <div class="bg-gray-100 border p-1 text-slate-500">2000-01-02 03:04:05</div>
+                    </div>
+                    <div>
+                        <span class="font-bold block text-slate-600">Output</span>
+                        <div class="bg-gray-100 border p-1 text-slate-500">Sunday</div>
+                    </div>
+                </div>
+
+                <div class="mt-4"><h4 class="font-bold text-xs mb-1 text-slate-600">Instructions:</h4><p class="text-[11px] text-slate-500">1. Convert DateTime back to String for Feature Engineering.<br>2. Use format 'day' to extract Day of Week.</p></div>`
+            },
+            {
+                id: "filter", title: "Filter Tool",
+                configHTML: `<div class="bg-slate-100 p-3 rounded border text-xs"><label class="block font-bold mb-1">Filter Type</label><div class="flex gap-2 mb-2"><label><input type="radio"> Basic</label><label><input type="radio" checked> Custom</label></div><label class="block font-bold mb-1">Expression</label><div class="bg-white border p-2 rounded text-[10px] font-mono text-blue-700">[Day of Week] = "Saturday"<br>OR<br>[Day of Week] = "Sunday"</div><p class="mt-2 text-slate-500 italic">T Anchor = Weekends<br>F Anchor = Weekdays</p></div><div class="mt-4"><h4 class="font-bold text-xs mb-1 text-slate-600">Instructions:</h4><p class="text-[11px] text-slate-500">1. Use Custom Filter.<br>2. Filter for Saturday OR Sunday.</p></div>`
+            }
+        ];
+
+        // --- CORE FUNCTIONS ---
+
+        function stepBack() {
+            if (currentState.stepIndex > 0) {
+                activateStep(currentState.stepIndex - 1);
+            }
+        }
+
+        function activateStep(index) {
+            // 1. UI Updates
+            document.querySelectorAll('.tool-node').forEach((el) => el.classList.remove('active'));
+            activeToolIndex = index;
+            
+            let config = "";
+            let stepBadge = "";
+            let title = "";
+
+            currentState.stepIndex = index;
+            document.querySelector(`#node-${index}`).classList.add('active');
+            title = steps[index].title; config = steps[index].configHTML; stepBadge = `Step ${index + 1}`;
+            
+            // 2. Render Config Panel
+            document.getElementById('config-panel').innerHTML = config;
+            document.getElementById('step-badge').innerText = stepBadge;
+            document.getElementById('tool-name-display').innerText = "Select an Anchor";
+            
+            // 3. Clear Results
+            document.getElementById('grid-head').innerHTML = '';
+            document.getElementById('grid-body').innerHTML = `<tr><td class="p-8 text-center text-slate-400 italic">Select an Input/Output anchor<br>to view data.</td></tr>`;
+            document.querySelectorAll('.sim-anchor').forEach(el => el.classList.remove('active-anchor'));
+        }
+
+        function viewAnchor(e, toolId, type) {
+            e.stopPropagation();
+            
+            document.querySelectorAll('.sim-anchor').forEach(el => el.classList.remove('active-anchor'));
+            e.target.classList.add('active-anchor');
+            viewingAnchor = { toolId, type };
+
+            if (!hasRun) {
+                document.getElementById('grid-body').innerHTML = `<tr><td class="p-8 text-center text-slate-400 italic text-red-400"><i class="fa-solid fa-triangle-exclamation mb-2"></i><br>Workflow not run.<br>Press <strong>Run</strong> (top right).</td></tr>`;
+                document.getElementById('tool-name-display').innerText = `${type === 'in' ? 'Input' : 'Output'} Anchor`;
+                return;
+            }
+
+            renderAnchorData(toolId, type);
+        }
+        
+        // --- DATA PREVIEW LOGIC ---
+        function getStepData(stepIndex) {
+            // 0. Raw / Step 1 & 2 & 3
+            let processed = JSON.parse(JSON.stringify(rawData));
+
+            // 1. Cleanse Cab (Step 4 / Index 3)
+            let cleansedCab = processed.map(row => {
+                let r = {...row};
+                if(r["Cab Company"]) r["Cab Company"] = r["Cab Company"].toUpperCase().replace(/\s+/g, '');
+                return r;
+            });
+
+            // 2. Cleanse Start (Step 5 / Index 4) - JUST START POINT TRIMMING
+            let cleansedStart = cleansedCab.map(row => {
+                let r = {...row};
+                if(r.start_point) r.start_point = r.start_point.trim();
+                // Rain is NOT touched here yet
+                return r;
+            });
+
+            // 3. Cleanse Rain (Step 6 / Index 5) - JUST RAIN REPLACEMENT
+            let cleansedRain = cleansedStart.map(row => {
+                let r = {...row};
+                if(r.rain === null) r.rain = 0;
+                return r;
+            });
+
+            // 4. Imputation (Step 7 / Index 6) - PRICE REPLACEMENT
+            let prices = processed.filter(r => r.Price !== null).map(r => parseFloat(r.Price)).sort((a,b) => a-b);
+            let median = prices[Math.floor(prices.length/2)];
+            let imputed = cleansedRain.map(row => {
+                let r = {...row};
+                if(r.Price === null) r.Price = median.toFixed(2); // Keep numeric format
+                return r;
+            });
+
+            // 5. Formula (Step 8 / Index 7) - CAB NULL REPLACEMENT
+            let formulated = imputed.map(row => {
+                let r = {...row};
+                if(r["Cab Company"] === null) r["Cab Company"] = "RIDE4ME";
+                return r;
+            });
+
+            // 6. Record ID (Step 9 / Index 8)
+            let wID = formulated.map((row, i) => { return { "Ride ID": i+1, ...row }; });
+
+            // 7. DateTime Parse (Step 10 / Index 9)
+            let wDateParse = wID.map(row => {
+                let r = {...row};
+                let d = new Date(r["Time Ride Ordered"]);
+                if(!isNaN(d)) {
+                    r["Time of Order"] = r["Time Ride Ordered"]; 
+                } 
+                return r;
+            });
+
+            // 8. Day of Week (Step 11 / Index 10)
+            let wDateFeature = wDateParse.map(row => {
+                let r = {...row};
+                let d = new Date(r["Time Ride Ordered"]);
+                if(!isNaN(d)) {
+                    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+                    r["Day of Week"] = days[d.getDay()];
+                    delete r["Time Ride Ordered"]; 
+                } else { r["Day of Week"] = "Error"; }
+                return r;
+            });
+            
+            // 9. Filter (Step 12 / Index 11)
+            let filteredTrue = wDateFeature.filter(r => r["Day of Week"] === "Saturday" || r["Day of Week"] === "Sunday");
+
+            // --- STRICT RETURN MAPPING ---
+            if(stepIndex <= 2) return processed; // Steps 0, 1, 2, 3 (Input, Browse, Select)
+            if(stepIndex === 3) return cleansedCab; // Step 4
+            if(stepIndex === 4) return cleansedStart; // Step 5 (Start Point only)
+            if(stepIndex === 5) return cleansedRain; // Step 6 (Rain only)
+            if(stepIndex === 6) return imputed; // Step 7 (Price Imputation)
+            if(stepIndex === 7) return formulated; // Step 8 (Formula)
+            if(stepIndex === 8) return wID; // Step 9
+            if(stepIndex === 9) return wDateParse; // Step 10
+            if(stepIndex === 10) return wDateFeature; // Step 11
+            if(stepIndex === 11) return filteredTrue; // Step 12
+            
+            return processed;
+        }
+
+        // --- NEW: TAILORED MOCK DATA FOR LESSON PREVIEWS ---
+        function getMockLessonData(stepIndex) {
+            let currentData = [];
+            let prevData = [];
+
+            // Only use specific mock logic for the split filter view, 
+            // otherwise fall back to standard data flow logic
+            switch(stepIndex) {
+                case 11: // Step 12: Filter
+                    // Return distinct datasets for display
+                    return {
+                        specialType: 'split',
+                        trueData: [
+                            { "Ride ID": 1, "Day of Week": "Saturday", "Price": "7" },
+                            { "Ride ID": 2, "Day of Week": "Saturday", "Price": "8.5" }
+                        ],
+                        falseData: [
+                            { "Ride ID": 3, "Day of Week": "Monday", "Price": "27.5" },
+                            { "Ride ID": 4, "Day of Week": "Monday", "Price": "14" }
+                        ]
+                    };
+                    break;
+                    
+                default:
+                    // Use standard logic for other steps
+                    return null; 
+            }
+            return { current: currentData, prev: prevData };
+        }
+
+        function renderTableHTML(currentData, prevData, title) {
+            if (!currentData || currentData.length === 0) return `<div class="mb-4"><h5 class="font-bold text-xs text-slate-600 mb-1">${title}</h5><p class="text-slate-500 italic p-2 text-center border rounded">No data available.</p></div>`;
+
+            const headers = Object.keys(currentData[0]);
+            const prevHeaders = prevData && prevData.length > 0 ? Object.keys(prevData[0]) : [];
+            
+            let html = `<div class="mb-4"><h5 class="font-bold text-xs text-slate-600 mb-1">${title}</h5>`;
+            html += '<table class="preview-table"><thead><tr>';
+            headers.forEach(h => html += `<th>${h}</th>`);
+            html += '</tr></thead><tbody>';
+            
+            currentData.slice(0, 5).forEach((row, rowIndex) => {
+                html += '<tr>';
+                headers.forEach(h => {
+                    let val = row[h];
+                    let displayVal = val === null ? '<span class="text-gray-400 italic">null</span>' : val;
+                    let cellClass = "";
+                    let prevValAttr = "";
+                    
+                    if (prevData) {
+                        // Check if column is new
+                        if (!prevHeaders.includes(h)) {
+                            cellClass = "cell-new";
+                        } else {
+                            // Check if value changed
+                            let oldVal = prevData[rowIndex] ? prevData[rowIndex][h] : undefined;
+                            
+                            // Loose equality check
+                            if (String(val) !== String(oldVal)) {
+                                cellClass = "cell-changed";
+                                // Wrap string values in quotes for tooltip to visualize whitespace
+                                let tooltipVal = typeof oldVal === 'string' ? `'${oldVal}'` : oldVal;
+                                if(oldVal === null) tooltipVal = 'null';
+                                prevValAttr = `data-prev="Previous: ${tooltipVal}"`;
+                            }
+                        }
+                    }
+                    
+                    html += `<td class="${cellClass}" ${prevValAttr}>${displayVal}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            return html;
+        }
+
+        function showLessonPreview(stepIndex) {
+            const previewContent = document.getElementById('preview-content');
+            const mock = getMockLessonData(stepIndex);
+            let htmlContent = "";
+
+            if (mock && mock.specialType === 'split') {
+                // Handle Split View (Filter)
+                htmlContent += renderTableHTML(mock.trueData, null, "True Anchor (Weekends)");
+                htmlContent += renderTableHTML(mock.falseData, null, "False Anchor (Weekdays)");
+                htmlContent += `<div class="text-[10px] text-slate-400 mt-2 text-right italic">* Simulated preview showing data split</div>`;
+            } else {
+                let currentData, prevData;
+                
+                if (mock) {
+                    currentData = mock.current;
+                    prevData = mock.prev;
+                } else {
+                    currentData = getStepData(stepIndex);
+                    // Crucial fix: The previous data is exactly one step index back in our strict sequence
+                    const prevIndex = stepIndex > 0 ? stepIndex - 1 : 0;
+                    prevData = getStepData(prevIndex);
+                }
+
+                htmlContent = renderTableHTML(currentData, prevData, "Data Preview");
+                
+                if(mock) {
+                     htmlContent += `<div class="text-[10px] text-slate-400 mt-2 text-right italic">* Simulated preview subset to highlight changes</div>`;
+                } else if(currentData.length > 5) {
+                    htmlContent += `<div class="text-[10px] text-slate-500 mt-2 text-right">Showing 5 of ${currentData.length} records</div>`;
+                }
+            }
+            
+            previewContent.innerHTML = htmlContent;
+            document.getElementById('mini-preview-modal').style.display = 'block';
+            document.getElementById('mini-preview-backdrop').style.display = 'block';
+        }
+
+        function renderAnchorData(toolId, type) {
+            let data = [];
+            let displayTitle = "";
+            
+            // Re-using logic to ensure consistency
+            // The mapping between toolId and data steps:
+            // Tool 0 (Input) -> Step 0 Data
+            // Tool 3 (Cleanse Cab) -> Step 3 Data (Out)
+            // Tool 4 (Cleanse Start) -> Step 5 Data (Out) (Includes step 4 output, then step 5 logic)
+            // Wait, logic check: Step 5 does Start Point. Step 6 does Rain.
+            // In the visual flow, Tool 4 is "Cleanse (Start/Rain)". This implies ONE tool doing BOTH.
+            // If the user wants separate previews for steps 5 and 6, but they share ONE tool (Tool 4),
+            // then the output of Tool 4 must be the result of BOTH steps.
+            
+            // Let's refine the tool-to-data mapping based on the Tool Nodes in UI
+            // Node 4 is "Cleanse (Start/Rain)".
+            // Therefore, Node 4 Output should show the result of BOTH Step 5 and Step 6.
+            
+            const step3_Cab = getStepData(3);
+            const step4_Start = getStepData(4);
+            const step5_Rain = getStepData(5); // Result of Node 4
+            const step6_Imp = getStepData(6);
+            const step7_Form = getStepData(7);
+            const step8_ID = getStepData(8);
+            const step9_Parse = getStepData(9);
+            const step10_Feat = getStepData(10);
+            const step11_Filt = getStepData(11);
+
+            if (toolId === 0) { // Input
+                data = rawData; displayTitle = "Input Data";
+            } else if (toolId === 1) { // Browse
+                data = rawData; displayTitle = "Browse (Input)";
+            } else if (toolId === 2) { // Select
+                data = rawData; displayTitle = "Select Output";
+            } else if (toolId === 3) { // Cleanse Cab
+                data = type === 'in' ? rawData : step3_Cab; displayTitle = "Cleanse Cab " + (type==='in'?'Input':'Output');
+            } else if (toolId === 4) { // Cleanse Start/Rain (Combines Steps 5 & 6)
+                data = type === 'in' ? step3_Cab : step5_Rain; displayTitle = "Cleanse Start/Rain " + (type==='in'?'Input':'Output');
+            } else if (toolId === 5) { // Imputation (Step 7)
+                data = type === 'in' ? step5_Rain : step6_Imp; displayTitle = "Imputation " + (type==='in'?'Input':'Output');
+            } else if (toolId === 6) { // Formula (Step 8)
+                data = type === 'in' ? step6_Imp : step7_Form; displayTitle = "Formula " + (type==='in'?'Input':'Output');
+            } else if (toolId === 7) { // Record ID (Step 9)
+                data = type === 'in' ? step7_Form : step8_ID; displayTitle = "Record ID " + (type==='in'?'Input':'Output');
+            } else if (toolId === 8) { // DateTime Parse (Step 10)
+                data = type === 'in' ? step8_ID : step9_Parse; displayTitle = "DateTime Parse " + (type==='in'?'Input':'Output');
+            } else if (toolId === 9) { // DateTime Feature (Step 11)
+                data = type === 'in' ? step9_Parse : step10_Feat; displayTitle = "DateTime Feature " + (type==='in'?'Input':'Output');
+            } else if (toolId === 10) { // Filter (Step 12)
+                if (type === 'in') {
+                    data = step10_Feat; displayTitle = "Filter Input";
+                } else if (type === 'true') { 
+                    data = step11_Filt; displayTitle = "Filter (True/Weekend)";
+                } else if (type === 'false') {
+                    // Quick filter calc for false
+                     data = step10_Feat.filter(r => r["Day of Week"] !== "Saturday" && r["Day of Week"] !== "Sunday");
+                     displayTitle = "Filter (False/Weekday)";
+                }
+            }
+
+            document.getElementById('tool-name-display').innerText = displayTitle;
+            renderGrid(data, toolId === 1); // Show quality bars only for initial browse
+        }
+
+        function renderGrid(data, showBars) {
+            const gridHead = document.getElementById('grid-head');
+            const gridBody = document.getElementById('grid-body');
+            gridHead.innerHTML = ''; gridBody.innerHTML = '';
+
+            if (data.length === 0) {
+                gridBody.innerHTML = `<tr><td class="p-8 text-center text-slate-400 italic">No data available.</td></tr>`;
+                document.getElementById('record-count').innerText = 0;
+                return;
+            }
+
+            const headers = Object.keys(data[0]);
+            let headHTML = '<tr>';
+            headers.forEach(h => {
+                let bar = '';
+                if(showBars) {
+                    let color = 'q-ok';
+                    if(h === 'start_point') color = 'q-error'; // Dirty
+                    if(h === 'Price') color = 'q-null';
+                    if(h === 'Cab Company') color = 'q-null'; 
+                    bar = `<div class="quality-bar"><div class="${color} w-full"></div></div>`;
+                }
+                headHTML += `<th class="p-2 border-b border-r border-slate-200 min-w-[100px]"><div class="flex flex-col"><span>${h}</span>${bar}</div></th>`;
+            });
+            gridHead.innerHTML = headHTML + '</tr>';
+
+            data.forEach(row => {
+                let tr = document.createElement('tr');
+                headers.forEach(h => {
+                    let td = document.createElement('td');
+                    td.className = "p-2 border-b border-r border-slate-100 text-slate-600 truncate max-w-[150px]";
+                    let val = row[h];
+                    if(val === null) {
+                        val = "[Null]";
+                        td.classList.add('text-gray-400', 'italic');
+                    }
+                    if(showBars) {
+                        if(h === 'start_point' && (typeof val === 'string' && (val.startsWith(' ') || val.endsWith(' ')))) td.classList.add('bg-red-50', 'text-red-600', 'font-mono');
+                        if(h === 'Cab Company' && (typeof val === 'string' && val.toLowerCase().includes('ride4me') && val !== 'RIDE4ME')) td.classList.add('bg-yellow-50'); 
+                    }
+                    if(typeof val === 'string' && val.includes('(Imp)')) td.classList.add('text-blue-600', 'font-bold');
+                    
+                    td.textContent = val;
+                    tr.appendChild(td);
+                });
+                gridBody.appendChild(tr);
+            });
+            document.getElementById('record-count').innerText = data.length;
+        }
+
+        function runWorkflow() {
+            hasRun = true;
+            const btn = document.getElementById('btn-global-run');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Running...';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-solid fa-play"></i> Run';
+                if (viewingAnchor) renderAnchorData(viewingAnchor.toolId, viewingAnchor.type);
+            }, 500);
+        }
+
+        function downloadRawData() {
+            const ws = XLSX.utils.json_to_sheet(rawData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Raw");
+            XLSX.writeFile(wb, "Cab_Company_Data.xlsx");
+        }
+
+        // --- DRAG LOGIC ---
+        let draggedNode = null, dragOffsetX = 0, dragOffsetY = 0;
+        function startDrag(e, nodeId) {
+            draggedNode = document.getElementById(`node-${nodeId}`);
+            const rect = draggedNode.getBoundingClientRect();
+            // Important: Account for scroll position when dragging in a scrolling container
+            const container = document.getElementById('canvas-container'); 
+            dragOffsetX = e.clientX - rect.left; 
+            dragOffsetY = e.clientY - rect.top;
+            draggedNode.classList.add('active');
+        }
+        function drag(e) {
+            if (!draggedNode) return;
+            e.preventDefault();
+            // For scrolling container, we need to calculate position relative to the container including scroll
+            const container = document.getElementById('canvas-content-wrapper');
+            const bg = document.getElementById('canvas-container'); // The scrollable window
+            
+            // Calculate x/y relative to the wrapper
+            let x = e.clientX - bg.getBoundingClientRect().left + bg.scrollLeft - dragOffsetX;
+            let y = e.clientY - bg.getBoundingClientRect().top + bg.scrollTop - dragOffsetY;
+            
+            draggedNode.style.left = `${Math.max(0, x)}px`;
+            draggedNode.style.top = `${Math.max(0, y)}px`;
+            drawConnections();
+        }
+        function endDrag() { draggedNode = null; }
+
+        function drawConnections() {
+            const svg = document.getElementById('connections-layer');
+            svg.innerHTML = ''; 
+            // Simple sequential connections for this linear flow
+            const pathSeq = [[0,1], [0,2], [2,3], [3,4], [4,5], [5,6], [6,7], [7,8], [8,9], [9,10]];
+            
+            pathSeq.forEach(([srcId, tgtId]) => {
+                const src = document.getElementById(`node-${srcId}`);
+                const tgt = document.getElementById(`node-${tgtId}`);
+                const x1 = parseInt(src.style.left) + 60, y1 = parseInt(src.style.top) + 30; 
+                const x2 = parseInt(tgt.style.left), y2 = parseInt(tgt.style.top) + 30; 
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M ${x1} ${y1} C ${(x1+x2)/2} ${y1}, ${(x1+x2)/2} ${y2}, ${x2} ${y2}`);
+                path.setAttribute('stroke', '#94a3b8'); path.setAttribute('stroke-width', '2'); path.setAttribute('fill', 'none');
+                svg.appendChild(path);
+            });
+        }
+
+        // --- PANE RESIZING (HORIZONTAL Split) ---
+        let isResizing = false;
+        function initResize(e) { 
+            isResizing = true; 
+            document.body.style.userSelect = 'none'; 
+            document.addEventListener('mousemove', doResize); 
+            document.addEventListener('mouseup', stopResize); 
+        }
+        function doResize(e) {
+            if (!isResizing) return;
+            const container = document.getElementById('workspace-container');
+            const configPane = document.getElementById('config-pane');
+            let newWidth = e.clientX - container.getBoundingClientRect().left;
+            configPane.style.width = `${Math.max(200, Math.min(newWidth, container.offsetWidth - 200))}px`;
+        }
+        function stopResize() { 
+            isResizing = false; 
+            document.body.style.userSelect = ''; 
+            document.removeEventListener('mousemove', doResize); 
+            document.removeEventListener('mouseup', stopResize); 
+        }
+
+        // --- SIDEBAR RESIZING ---
+        let isResizingSidebar = false;
+        function initSidebarResize(e) {
+            isResizingSidebar = true;
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', doSidebarResize);
+            document.addEventListener('mouseup', stopSidebarResize);
+        }
+        function doSidebarResize(e) {
+            if (!isResizingSidebar) return;
+            const sidebar = document.querySelector('.sidebar');
+            let newWidth = e.clientX;
+            // Add boundaries for resize limits
+            if (newWidth > 150 && newWidth < window.innerWidth - 200) {
+                sidebar.style.width = `${newWidth}px`;
+            }
+        }
+        function stopSidebarResize() {
+            isResizingSidebar = false;
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', doSidebarResize);
+            document.removeEventListener('mouseup', stopSidebarResize);
+        }
+
+        // --- CANVAS HORIZONTAL RESIZING (Vertical Space Split) ---
+        let isResizingCanvas = false;
+        function initCanvasResize(e) {
+            isResizingCanvas = true;
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', doCanvasResize);
+            document.addEventListener('mouseup', stopCanvasResize);
+        }
+        function doCanvasResize(e) {
+            if (!isResizingCanvas) return;
+            const canvasContainer = document.getElementById('canvas-container');
+            const headerHeight = document.querySelector('header').offsetHeight;
+            
+            let newHeight = e.clientY - headerHeight;
+            // Add boundaries for resize limits
+            if (newHeight > 100 && newHeight < window.innerHeight - 150) {
+                canvasContainer.style.height = `${newHeight}px`;
+                drawConnections(); // Safely refresh SVG connections just in case
+            }
+        }
+        function stopCanvasResize() {
+            isResizingCanvas = false;
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', doCanvasResize);
+            document.removeEventListener('mouseup', stopCanvasResize);
+        }
+
+        window.addEventListener('load', () => { drawConnections(); setTimeout(() => document.getElementById('browse-hint').classList.remove('hidden'), 1000); });
+    </script>
+</body>
+</html>
