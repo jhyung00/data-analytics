@@ -512,7 +512,9 @@
             activeTab: 'Home',
             previousGridData: {},
             scenarios: [], // Tracks added scenarios
-            selectedScenario: null // Tracks selection in Scenario Manager
+            selectedScenario: null, // Tracks selection in Scenario Manager
+            isSubmitted: false, // Tracks if student submitted answers
+            studentAnswers: { name: '', cp1: '', cp2: '', cp3: '', cp4: '' } // Stores values for display
         };
 
         // --- TUTORIAL CONTENT ---
@@ -741,6 +743,7 @@
                 ex1: document.getElementById('inp-cp1').value,
                 ex2: document.getElementById('inp-cp2').value,
                 ex3: document.getElementById('inp-cp3').value,
+                ex4: document.getElementById('inp-cp4').value,
                 timestamp: new Date().toISOString()
             };
 
@@ -750,7 +753,7 @@
             }
 
             const btn = document.getElementById('btn-submit-answers');
-            const originalText = btn.innerText;
+            const originalText = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Transmitting...`;
             btn.disabled = true;
 
@@ -764,10 +767,21 @@
                 body: JSON.stringify(data)
             })
             .then(() => {
-                alert("Success! Your mission report has been transmitted to HQ.");
-                btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> Report Sent!`;
-                btn.classList.remove('bg-[#ff8f00]', 'hover:bg-[#e68100]', 'text-gray-900');
-                btn.classList.add('bg-gray-600', 'text-gray-400', 'cursor-not-allowed');
+                // Update State to Unlocked
+                state.isSubmitted = true;
+                state.studentAnswers = {
+                    name: data.studentName,
+                    cp1: data.ex1,
+                    cp2: data.ex2,
+                    cp3: data.ex3,
+                    cp4: data.ex4
+                };
+                
+                // Re-render UI to display solutions
+                renderAll();
+                
+                // Alert slightly after re-render
+                setTimeout(() => alert("Success! Your mission report has been transmitted to HQ. Solutions are now unlocked!"), 100);
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -943,10 +957,17 @@
             const practiceContainer = document.getElementById('practice-view-container');
 
             if (state.module === 'practice') {
-                 // Reveal practice container, it safely houses the dynamic UI
+                 // Practice state management
+                 const isSub = state.isSubmitted;
+                 const ans = state.studentAnswers || {name: '', cp1: '', cp2: '', cp3: '', cp4: ''};
+                 const readonlyAttr = isSub ? 'readonly disabled' : '';
+                 const btnClass = isSub ? 'hidden' : 'w-full bg-[#ff8f00] hover:bg-[#e68100] text-gray-900 font-bold py-4 rounded-lg transition-colors text-lg shadow-lg relative z-10';
+                 const inputClass = isSub ? 'w-full bg-gray-600 border border-gray-500 p-3 rounded text-gray-300 focus:outline-none cursor-not-allowed' : 'w-full bg-gray-700 border border-gray-600 p-3 rounded text-white focus:outline-none focus:border-[#ff8f00] focus:ring-1 focus:ring-[#ff8f00]';
+
                  if (practiceContainer) {
                      practiceContainer.classList.remove('hidden');
-                     practiceContainer.innerHTML = `
+                     
+                     let template = `
                         <div class="max-w-5xl mx-auto font-sans pb-20 p-6">
                             
                             <!-- Epic Banner -->
@@ -987,7 +1008,7 @@
                                     <div>
                                         <h4 class="text-xl font-bold text-gray-800 mb-2 uppercase tracking-wide text-[#d84315]"><span class="text-gray-400 mr-2">Part 2</span> The Binding Constraint</h4>
                                         <p class="text-gray-700 leading-relaxed">
-                                            Run the Solver engine and generate the <strong>Answer Report</strong> on a new tab.<br><br>
+                                            Your objective is to find the optimal product mix (Standard Pipe, Pressure Valve, Custom Manifold) that maximizes the <strong>Total Contribution Margin</strong>. However, you must stay within the factory's resource constraints: 5,000 lbs of Raw Copper, 1,200 Direct Labor hours, and 800 Machine Hours. Run the Solver engine and generate the <strong>Answer Report</strong> on a new tab.<br><br>
                                             <strong>Critical Thinking Challenge:</strong> A "Binding Constraint" is a resource that ran completely out (Used = Available). "Slack" is leftover capacity. Based on the Answer report, which of your three resources was a binding constraint, and which had slack? If you were the factory manager, which specific resource would you ask the CFO for money to expand next month?
                                         </p>
                                     </div>
@@ -995,7 +1016,7 @@
                             </div>
 
                             <!-- Checkpoint 3 -->
-                            <div class="bg-white rounded-xl shadow-md border-l-8 border-[#3e2723] p-6 mb-10 transform transition hover:shadow-lg">
+                            <div class="bg-white rounded-xl shadow-md border-l-8 border-[#3e2723] p-6 mb-8 transform transition hover:shadow-lg">
                                 <div class="flex items-start">
                                     <div class="bg-gray-200 text-[#3e2723] p-3 rounded-full mr-4 shrink-0">
                                         <i class="fa-solid fa-chess-knight text-xl"></i>
@@ -1003,8 +1024,24 @@
                                     <div>
                                         <h4 class="text-xl font-bold text-gray-800 mb-2 uppercase tracking-wide text-[#3e2723]"><span class="text-gray-400 mr-2">Part 3</span> Strategic Advisory</h4>
                                         <p class="text-gray-700 leading-relaxed">
-                                            The CFO wants to see how profits will be impacted by two potential future states. Go to the <strong>"Scenario Planning"</strong> tab in your downloaded workbook to find the scenario parameters. Create the three scenarios (Base Case, Tariff War, Union Strike) and generate a <strong>Scenario Summary</strong> report.<br><br>
-                                            <strong>Critical Thinking Challenge:</strong> Write a brief memo to the CFO. Between the Tariff War and the Union Strike, which scenario destroys the most value? Recommend one specific operational change (e.g., pricing, sourcing, or capital expenditure) the company should make <em>today</em> to mitigate that risk.
+                                            Copper Peak is launching a new industrial drone (Project SkyHawk). Go to the <strong>"Scenario Planning"</strong> tab in your downloaded workbook to find the financial forecast model. First, build the missing formulas for Gross Revenue, Total Material Costs, and Net Profit. Then create the three scenarios (Base Case, High Demand, Supply Chain Crisis) and generate a <strong>Scenario Summary</strong> report tracking Net Profit.<br><br>
+                                            <strong>Critical Thinking Challenge:</strong> Write a brief memo to the CFO. Based on the summary report, which scenario causes the biggest risk to profitability? Recommend one specific operational change (e.g., pricing, sourcing, or marketing) the company should make <em>today</em> to mitigate that risk.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Checkpoint 4 -->
+                            <div class="bg-white rounded-xl shadow-md border-l-8 border-[#4a148c] p-6 mb-10 transform transition hover:shadow-lg">
+                                <div class="flex items-start">
+                                    <div class="bg-purple-100 text-[#4a148c] p-3 rounded-full mr-4 shrink-0">
+                                        <i class="fa-solid fa-user-astronaut text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xl font-bold text-gray-800 mb-2 uppercase tracking-wide text-[#4a148c]"><span class="text-gray-400 mr-2">Part 4</span> Real-World Scenario Planning</h4>
+                                        <p class="text-gray-700 leading-relaxed">
+                                            Now it's time to apply this to your own life! Go to the <strong>"My Scenario Plan"</strong> tab in your downloaded workbook. Build a scenario planning model from scratch based on a personal financial decision (e.g., monthly budget, buying a car, saving for a trip).<br><br>
+                                            <strong>Critical Thinking Challenge:</strong> Set up your base assumptions, build the formulas, and then use Scenario Manager to create at least three scenarios (e.g., Base Case, Best Case, Worst Case). Generate a Scenario Summary report. In the box below, briefly describe the scenario model you built, your changing variables, and your key takeaway from the summary report.
                                         </p>
                                     </div>
                                 </div>
@@ -1028,11 +1065,11 @@
                                     <div>
                                         <h5 class="font-bold mb-2 uppercase border-b border-blue-200 pb-1">Scenario Checklist</h5>
                                         <ol class="list-decimal pl-4 space-y-2">
-                                            <li><strong>CRITICAL:</strong> Name your Changing Cells and Result Cells first! Click a cell, click the Name Box (top left of Excel), type a name (e.g., <code>Total_Margin</code>), and press Enter.</li>
+                                            <li><strong>CRITICAL:</strong> Build a simple model with assumptions (inputs) and a final calculation (result). Name your Changing Cells and Result Cells first!</li>
                                             <li>Go to <strong>Data &gt; What-If Analysis &gt; Scenario Manager</strong>.</li>
-                                            <li>Click <strong>Add</strong> for each of the 3 scenarios using the parameters from the Scenario Planning tab.</li>
-                                            <li>Enter the exact values for the changing variables in each scenario prompt.</li>
-                                            <li>Click <strong>Summary</strong> and ensure your named Total Contribution Margin cell is selected as the result to generate the report.</li>
+                                            <li>Click <strong>Add</strong> to create at least 3 scenarios representing different possible futures for your life situation.</li>
+                                            <li>Enter the estimated values for the changing variables in each scenario prompt.</li>
+                                            <li>Click <strong>Summary</strong> and select your final calculation cell as the result to generate the report.</li>
                                         </ol>
                                     </div>
                                 </div>
@@ -1048,33 +1085,90 @@
                                 <div class="grid grid-cols-1 gap-6 mb-6 relative z-10">
                                     <div>
                                         <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Agent Name:</label>
-                                        <input type="text" id="inp-student-name" class="w-full bg-gray-700 border border-gray-600 p-3 rounded text-white focus:outline-none focus:border-[#ff8f00] focus:ring-1 focus:ring-[#ff8f00]" placeholder="Enter your full name">
+                                        <input type="text" id="inp-student-name" class="${inputClass}" placeholder="Enter your full name" value="${ans.name}" ${readonlyAttr}>
                                     </div>
                                     
                                     <div>
                                         <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Part 1: The Intuition Trap Intel:</label>
-                                        <textarea id="inp-cp1" rows="3" class="w-full bg-gray-700 border border-gray-600 p-3 rounded text-white focus:outline-none focus:border-[#ff8f00] focus:ring-1 focus:ring-[#ff8f00]" placeholder="Explain the bottleneck and highest margin per machine hour..."></textarea>
+                                        <textarea id="inp-cp1" rows="3" class="${inputClass}" placeholder="Explain the bottleneck and highest margin per machine hour..." ${readonlyAttr}>${ans.cp1}</textarea>
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Part 2: Binding Constraint Intel:</label>
-                                        <textarea id="inp-cp2" rows="3" class="w-full bg-gray-700 border border-gray-600 p-3 rounded text-white focus:outline-none focus:border-[#ff8f00] focus:ring-1 focus:ring-[#ff8f00]" placeholder="Identify binding constraints vs slack..."></textarea>
+                                        <textarea id="inp-cp2" rows="3" class="${inputClass}" placeholder="Identify binding constraints vs slack..." ${readonlyAttr}>${ans.cp2}</textarea>
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Part 3: Strategic Advisory Intel:</label>
-                                        <textarea id="inp-cp3" rows="3" class="w-full bg-gray-700 border border-gray-600 p-3 rounded text-white focus:outline-none focus:border-[#ff8f00] focus:ring-1 focus:ring-[#ff8f00]" placeholder="Which destroys more value? What is your recommendation?"></textarea>
+                                        <textarea id="inp-cp3" rows="3" class="${inputClass}" placeholder="Which scenario impacts profit the most? What is your recommendation?" ${readonlyAttr}>${ans.cp3}</textarea>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Part 4: Personal Scenario Plan Intel:</label>
+                                        <textarea id="inp-cp4" rows="3" class="${inputClass}" placeholder="Describe your personal scenario model, variables, and takeaways..." ${readonlyAttr}>${ans.cp4}</textarea>
                                     </div>
                                 </div>
                                 
-                                <button onclick="submitAnswers()" id="btn-submit-answers" class="w-full bg-[#ff8f00] hover:bg-[#e68100] text-gray-900 font-bold py-4 rounded-lg transition-colors text-lg shadow-lg relative z-10">
+                                <button onclick="submitAnswers()" id="btn-submit-answers" class="${btnClass}">
                                     <i class="fa-solid fa-bolt mr-2"></i> Submit Answers to HQ
                                 </button>
-                                <p class="text-sm text-gray-400 mt-4 text-center relative z-10"><i class="fa-solid fa-info-circle mr-1"></i> Don't forget to upload your completed Excel File (.xlsx) to your Canvas portal for full mission credit!</p>
+                                ${!isSub ? '<p class="text-sm text-gray-400 mt-4 text-center relative z-10"><i class="fa-solid fa-info-circle mr-1"></i> Don\'t forget to upload your completed Excel File (.xlsx) to your Canvas portal for full mission credit!</p>' : ''}
                             </div>
-
-                        </div>  
                      `;
+
+                     // Post-Submission Display
+                     if (isSub) {
+                         template += `
+                            <!-- MISSION ACCOMPLISHED: SOLUTIONS -->
+                            <div class="bg-[#1b5e20] p-8 rounded-xl shadow-2xl relative overflow-hidden text-white mt-8">
+                                <div class="absolute top-0 right-0 -mr-10 -mt-10 text-green-700 opacity-30">
+                                    <i class="fa-solid fa-unlock-keyhole text-[15rem]"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold mb-6 border-b border-green-600 pb-3 relative z-10">
+                                    <i class="fa-solid fa-check-circle mr-2 text-green-400"></i> Mission Accomplished: Solutions Unlocked
+                                </h3>
+
+                                <div class="mb-8 relative z-10">
+                                    <a href="instructor/lab5_Solution.xlsx" download class="inline-flex items-center bg-green-500 hover:bg-green-400 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg">
+                                        <i class="fa-solid fa-file-excel mr-3 text-xl"></i> Download Official Solution (.xlsx)
+                                    </a>
+                                </div>
+
+                                <div class="space-y-6 relative z-10 text-sm md:text-base">
+                                    <div class="bg-white/10 p-5 rounded-lg border border-white/20">
+                                        <h4 class="font-bold text-green-300 mb-2 uppercase tracking-wide">Part 1: The Intuition Trap (Solution)</h4>
+                                        <p class="text-gray-100 leading-relaxed">
+                                            <strong>Answer:</strong> The Production Manager is wrong because she is looking at the <em>absolute</em> Contribution Margin per unit, not the Contribution Margin <em>per limiting factor</em>. When a factory has a bottleneck, the true profitability of a product is measured by how much margin it generates per unit of the constrained resource. You must identify the binding constraint first before determining the true "most profitable" product.
+                                        </p>
+                                    </div>
+                                    <div class="bg-white/10 p-5 rounded-lg border border-white/20">
+                                        <h4 class="font-bold text-green-300 mb-2 uppercase tracking-wide">Part 2: The Binding Constraint (Solution)</h4>
+                                        <p class="text-gray-100 leading-relaxed">
+                                            <strong>Answer:</strong> Based on the Solver Answer Report, a "Binding Constraint" has a Slack of 0 (Final Value = Constraint). The resources with Slack &gt; 0 are non-binding. As a manager, you should <em>only</em> invest money to expand the binding constraints, as expanding non-binding resources will just result in more unused capacity without increasing production.
+                                        </p>
+                                    </div>
+                                    <div class="bg-white/10 p-5 rounded-lg border border-white/20">
+                                        <h4 class="font-bold text-green-300 mb-2 uppercase tracking-wide">Part 3: Strategic Advisory (Solution)</h4>
+                                        <p class="text-gray-100 leading-relaxed">
+                                            <strong>Answer:</strong> The Scenario Summary report shows that the "Supply Chain Crisis" is the highest risk. Despite raising prices slightly in the High Demand scenario, the Supply Chain Crisis demonstrates that a huge spike in Material Costs combined with lower volume drops Net Profit into negative territory (-$180,000). The recommendation should be securing long-term fixed-price supplier contracts to lock in variable costs, or finding alternative raw material suppliers before launching the drone.
+                                        </p>
+                                    </div>
+                                    <div class="bg-white/10 p-5 rounded-lg border border-white/20">
+                                        <h4 class="font-bold text-green-300 mb-2 uppercase tracking-wide">Part 4: Real-World Scenario Planning (Solution Examples)</h4>
+                                        <p class="text-gray-100 leading-relaxed">
+                                            <strong>Answers will vary.</strong> Here are a few strong examples of how you might have applied Scenario Manager to personal life:<br><br>
+                                            • <strong>Monthly Budgeting:</strong> Changing variables could be Rent, Groceries, and Entertainment expenses. Scenarios: "Stay in Dorms", "Rent Studio", "Split Apartment". Result cell: "Leftover Savings".<br>
+                                            • <strong>Buying a Car:</strong> Changing variables: Interest Rate, Down Payment, Loan Term. Scenarios: "Dealership Financing", "Bank Loan", "Cash Buy". Result cell: "Total Cost of Car" or "Monthly Payment".<br>
+                                            • <strong>Vacation Planning:</strong> Changing variables: Flight Cost, Hotel per night, Daily Food Budget. Scenarios: "Luxury Trip", "Moderate Trip", "Backpacker". Result cell: "Total Trip Cost".
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                         `;
+                     }
+                     
+                     template += `</div>`;
+                     practiceContainer.innerHTML = template;
                  }
                  
                  document.getElementById('formula-bar-text').innerText = 'Operation Copper Peak: Mission Briefing';
@@ -1722,24 +1816,27 @@
             const cpData = [
                 ["Copper Peak Manufacturing - Production Optimization", "", "", ""],
                 ["", "", "", ""],
-                ["Financial Parameters", "Standard Pipe", "Pressure Valve", "Custom Manifold"],
+                ["Parameters", "Standard Pipe", "Pressure Valve", "Custom Manifold"],
                 ["Selling Price per Unit", 45, 85, 210],
                 ["Variable Cost per Unit", 20, 45, 90],
-                ["Unit Contribution Margin", "", "", ""], // Row 6 (formulas removed)
+                ["Unit Contribution Margin", "", "", ""],
+                ["Raw Copper (lbs/unit)", 1.5, 2.0, 6.5],
+                ["Direct Labor (hrs/unit)", 0.25, 0.75, 2.5],
+                ["Machine Hrs (hrs/unit)", 0.5, 0.6, 1.0],
                 ["", "", "", ""],
                 ["DECISION VARIABLES", "", "", ""],
-                ["Quantity to Produce", 0, 0, 0], // Row 9
+                ["Quantity to Produce", 0, 0, 0], 
                 ["", "", "", ""],
                 ["OBJECTIVE", "", "", ""],
-                ["Total Contribution Margin", "", "", ""], // Row 12 (formulas removed)
+                ["Total Contribution Margin", "", "", ""], 
                 ["", "", "", ""],
                 ["RESOURCE CONSTRAINTS", "Used", "", "Available"],
-                ["Raw Copper (lbs/unit: 1.5, 2.0, 6.5)", "", "<=", 5000], // Row 15 (formulas removed)
-                ["Direct Labor (hrs/unit: 0.25, 0.75, 2.5)", "", "<=", 1200], // Row 16 (formulas removed)
-                ["Machine Hrs (hrs/unit: 0.5, 0.6, 1.0)", "", "<=", 800], // Row 17 (formulas removed)
+                ["Raw Copper", "", "<=", 5000],
+                ["Direct Labor", "", "<=", 1200],
+                ["Machine Hrs", "", "<=", 800],
                 ["", "", "", ""],
                 ["CONTRACT CONSTRAINTS", "", "", ""],
-                ["Minimum Quantity Required", 150, 200, 50] // Row 20
+                ["Minimum Quantity Required", 150, 200, 50]
             ];
             
             const wsCP = XLSX.utils.aoa_to_sheet(cpData);
@@ -1753,34 +1850,34 @@
             applyStyle(wsCP, "A3:D3", "header");
             
             // Sections
-            applyStyle(wsCP, "A8", "section");
             applyStyle(wsCP, "A11", "section");
             applyStyle(wsCP, "A14", "section");
-            applyStyle(wsCP, "A19", "section");
+            applyStyle(wsCP, "A17", "section");
+            applyStyle(wsCP, "A22", "section");
             
             // Bold labels
             applyStyle(wsCP, "A6", "bold");
-            applyStyle(wsCP, "A9", "bold");
             applyStyle(wsCP, "A12", "bold");
-            applyStyle(wsCP, "C15:C17", "bold"); // the <= signs
-            applyStyle(wsCP, "C15:C17", "centerAlign");
+            applyStyle(wsCP, "A15", "bold");
+            applyStyle(wsCP, "C18:C20", "bold"); // the <= signs
+            applyStyle(wsCP, "C18:C20", "centerAlign");
 
             // Currency
             applyStyle(wsCP, "B4:D6", "currency");
 
             // Blue Formulas
             applyStyle(wsCP, "B6:D6", "formula");
-            applyStyle(wsCP, "B15:B17", "formula");
+            applyStyle(wsCP, "B18:B20", "formula");
 
             // Yellow Variables
-            applyStyle(wsCP, "B9:D9", "input");
+            applyStyle(wsCP, "B12:D12", "input");
 
             // Green Objective
-            applyStyle(wsCP, "B12", "objective");
+            applyStyle(wsCP, "B15", "objective");
 
             // Orange Constraints
-            applyStyle(wsCP, "D15:D17", "constraint");
-            applyStyle(wsCP, "B20:D20", "constraint");
+            applyStyle(wsCP, "D18:D20", "constraint");
+            applyStyle(wsCP, "B23:D23", "constraint");
 
             setCols(wsCP, [35, 18, 18, 18]);
             
@@ -1788,40 +1885,99 @@
 
             // --- Scenario Planning Tab Data ---
             const scenarioTabData = [
-                ["Part 3: Strategic Advisory & Scenario Planning", "", "", "", ""],
-                ["", "", "", "", ""],
-                ["The CFO has requested a risk analysis for two potential future states.", "", "", "", ""],
-                ["Instructions:", "", "", "", ""],
-                ["1. Open Scenario Manager (Data > What-If Analysis > Scenario Manager).", "", "", "", ""],
-                ["2. Add the three scenarios defined below.", "", "", "", ""],
-                ["3. Important: Your 'Changing Cells' must include both the Variable Costs (B5:D5) AND Available Labor Hours (D16) from the 'Optimization Model' tab.", "", "", "", ""],
-                ["4. Generate a Scenario Summary report showing the impact on Total Contribution Margin.", "", "", "", ""],
-                ["", "", "", "", ""],
-                ["Scenario Definitions", "Pipe VC", "Valve VC", "Manifold VC", "Labor Hrs"],
-                ["1. Base Case (Current Optimal)", 20, 45, 90, 1200],
-                ["2. Tariff War (VC increases by $5)", 25, 50, 95, 1200],
-                ["3. Union Strike (Labor drops to 750)", 20, 45, 90, 750]
+                ["Part 3: Project SkyHawk Scenario Planning", "", "", ""],
+                ["", "", "", ""],
+                ["Copper Peak is evaluating the financial forecast for a new industrial drone.", "", "", ""],
+                ["Instructions:", "", "", ""],
+                ["1. Build formulas for Gross Revenue (B23), Material Costs (B24), & Net Profit (B26).", "", "", ""],
+                ["2. Open Scenario Manager (Data > What-If Analysis > Scenario Manager).", "", "", ""],
+                ["3. Add the three scenarios below. 'Changing Cells' are B18, B19, and B20.", "", "", ""],
+                ["4. Generate a Scenario Summary report tracking Net Profit (B26).", "", "", ""],
+                ["", "", "", ""],
+                ["Scenario Definitions", "Units Sold", "Unit Price", "Material Cost"],
+                ["1. Base Case", 1000, 1500, 800],
+                ["2. High Demand", 1500, 1600, 850],
+                ["3. Supply Chain Crisis", 800, 1500, 1100],
+                ["", "", "", ""],
+                ["====================== FINANCIAL MODEL ======================", "", "", ""],
+                ["", "", "", ""],
+                ["Key Assumptions", "Values", "", ""],
+                ["Units Sold", 1000, "", ""],
+                ["Unit Price", 1500, "", ""],
+                ["Unit Material Cost", 800, "", ""],
+                ["", "", "", ""],
+                ["Income Statement Forecast", "Amount", "", ""],
+                ["Gross Revenue", "", "", ""],
+                ["Total Material Costs", "", "", ""],
+                ["Fixed Operating Costs", 500000, "", ""],
+                ["Net Profit", "", "", ""]
             ];
             
             const wsScenarioTab = XLSX.utils.aoa_to_sheet(scenarioTabData);
             
             if(!wsScenarioTab['!merges']) wsScenarioTab['!merges'] = [];
-            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A1:E1"));
-            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A3:E3"));
-            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A5:E5"));
-            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A6:E6"));
-            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A7:E7"));
-            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A8:E8"));
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A1:D1"));
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A3:D3"));
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A5:D5"));
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A6:D6"));
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A7:D7"));
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A8:D8"));
+            wsScenarioTab['!merges'].push(XLSX.utils.decode_range("A15:D15"));
 
-            applyStyle(wsScenarioTab, "A1:E1", "title");
-            applyStyle(wsScenarioTab, "A10:E10", "header");
-            applyStyle(wsScenarioTab, "A4", "bold");
+            applyStyle(wsScenarioTab, "A1:D1", "title");
+            applyStyle(wsScenarioTab, "A10:D10", "header");
+            applyStyle(wsScenarioTab, "A17:B17", "header");
+            applyStyle(wsScenarioTab, "A22:B22", "header");
+            
             applyStyle(wsScenarioTab, "A11:A13", "bold");
-            applyStyle(wsScenarioTab, "B11:D13", "currency");
+            applyStyle(wsScenarioTab, "A18:A20", "bold");
+            applyStyle(wsScenarioTab, "A23:A26", "bold");
 
-            setCols(wsScenarioTab, [35, 15, 15, 15, 15]);
+            applyStyle(wsScenarioTab, "C11:D13", "currency");
+            applyStyle(wsScenarioTab, "B19:B20", "currency");
+            applyStyle(wsScenarioTab, "B25", "currency");
+
+            applyStyle(wsScenarioTab, "B18:B20", "input");
+            applyStyle(wsScenarioTab, "B23:B24", "formula");
+            applyStyle(wsScenarioTab, "B26", "objective");
+
+            setCols(wsScenarioTab, [35, 20, 15, 15]);
             
             XLSX.utils.book_append_sheet(wb, wsScenarioTab, "Scenario Planning");
+
+            // --- My Scenario Plan Tab Data ---
+            const myScenarioTabData = [
+                ["Part 4: Real-World Scenario Planning", "", "", "", ""],
+                ["", "", "", "", ""],
+                ["Now it's time to build your own model from scratch!", "", "", "", ""],
+                ["Instructions:", "", "", "", ""],
+                ["1. Pick a personal financial decision (e.g., monthly budget, buying a car, saving for a trip).", "", "", "", ""],
+                ["2. Build a simple model below with at least 2 input variables and 1 calculated result.", "", "", "", ""],
+                ["3. Name your cells, then open Scenario Manager (Data > What-If Analysis > Scenario Manager).", "", "", "", ""],
+                ["4. Add at least three scenarios (e.g., Base Case, Best Case, Worst Case).", "", "", "", ""],
+                ["5. Generate a Scenario Summary report to compare the outcomes.", "", "", "", ""],
+                ["", "", "", "", ""],
+                ["[Build your model here]", "", "", "", ""]
+            ];
+            
+            const wsMyScenarioTab = XLSX.utils.aoa_to_sheet(myScenarioTabData);
+            
+            if(!wsMyScenarioTab['!merges']) wsMyScenarioTab['!merges'] = [];
+            wsMyScenarioTab['!merges'].push(XLSX.utils.decode_range("A1:E1"));
+            wsMyScenarioTab['!merges'].push(XLSX.utils.decode_range("A3:E3"));
+            wsMyScenarioTab['!merges'].push(XLSX.utils.decode_range("A5:E5"));
+            wsMyScenarioTab['!merges'].push(XLSX.utils.decode_range("A6:E6"));
+            wsMyScenarioTab['!merges'].push(XLSX.utils.decode_range("A7:E7"));
+            wsMyScenarioTab['!merges'].push(XLSX.utils.decode_range("A8:E8"));
+            wsMyScenarioTab['!merges'].push(XLSX.utils.decode_range("A9:E9"));
+
+            applyStyle(wsMyScenarioTab, "A1:E1", "title");
+            applyStyle(wsMyScenarioTab, "A4:E4", "header");
+            applyStyle(wsMyScenarioTab, "A11", "bold");
+
+            setCols(wsMyScenarioTab, [90, 15, 15, 15, 15]);
+            
+            XLSX.utils.book_append_sheet(wb, wsMyScenarioTab, "My Scenario Plan");
 
             // Generate and Download
             XLSX.writeFile(wb, "Copper_Peak_Starter.xlsx");
