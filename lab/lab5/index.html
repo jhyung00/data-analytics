@@ -993,7 +993,7 @@
                                         <h4 class="text-xl font-bold text-gray-800 mb-2 uppercase tracking-wide text-[#b16a00]"><span class="text-gray-400 mr-2">Part 1</span> The Intuition Trap</h4>
                                         <p class="text-gray-700 leading-relaxed">
                                             Look at the Unit Contribution Margin for the three products on the Optimization Model tab.<br><br>
-                                            <strong>Critical Thinking Challenge:</strong> If the Production Manager says, <em>"Custom Manifolds have the highest Contribution Margin per unit, so we should manufacture as many of those as possible before making anything else,"</em> why is she wrong? Explain the concept of "Contribution Margin per Limiting Factor" (the bottleneck). Which product actually generates the most margin <em>per machine hour</em>?
+                                            <strong>Critical Thinking Challenge:</strong> If the Production Manager says, <em>"Custom Manifolds have the highest Contribution Margin per unit ($120), so we should manufacture as many of those as possible before making anything else,"</em> why is she wrong? Explain the concept of "Contribution Margin per Limiting Factor". What happens if you compare the margin <em>per machine hour</em> versus the margin <em>per direct labor hour</em> for these products?
                                         </p>
                                     </div>
                                 </div>
@@ -1090,7 +1090,7 @@
                                     
                                     <div>
                                         <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Part 1: The Intuition Trap Intel:</label>
-                                        <textarea id="inp-cp1" rows="3" class="${inputClass}" placeholder="Explain the bottleneck and highest margin per machine hour..." ${readonlyAttr}>${ans.cp1}</textarea>
+                                        <textarea id="inp-cp1" rows="4" class="${inputClass}" placeholder="Explain the bottleneck and highest margin per machine hour versus per labor hour..." ${readonlyAttr}>${ans.cp1}</textarea>
                                     </div>
 
                                     <div>
@@ -1138,7 +1138,9 @@
                                     <div class="bg-white/10 p-5 rounded-lg border border-white/20">
                                         <h4 class="font-bold text-green-300 mb-2 uppercase tracking-wide">Part 1: The Intuition Trap (Solution)</h4>
                                         <p class="text-gray-100 leading-relaxed">
-                                            <strong>Answer:</strong> The Production Manager is wrong because she is looking at the <em>absolute</em> Contribution Margin per unit, not the Contribution Margin <em>per limiting factor</em>. When a factory has a bottleneck, the true profitability of a product is measured by how much margin it generates per unit of the constrained resource. You must identify the binding constraint first before determining the true "most profitable" product.
+                                            <strong>Answer:</strong> The Production Manager is falling into the "Intuition Trap" by only looking at the absolute Contribution Margin per unit ($120 for Manifolds) while ignoring how heavily each product consumes limited resources.<br><br>
+                                            <strong>The Concept:</strong> "Contribution Margin per Limiting Factor" measures how efficiently a product converts a scarce factory resource into profit. You maximize profit by prioritizing the item that generates the most margin <em>per unit of the bottleneck</em>.<br><br>
+                                            <strong>The Math:</strong> The Custom Manifold does generate the most margin <em>per machine hour</em> ($120 CM / 1.0 hr = $120/hr). However, if Direct Labor is the actual bottleneck, the Custom Manifold is the worst product to make ($120 CM / 2.5 hrs = $48/hr), whereas the Standard Pipe is highly efficient ($25 CM / 0.25 hrs = $100/hr). Because the constraints clash, manual intuition fails, which is why we must use Solver to find the mathematical optimal mix.
                                         </p>
                                     </div>
                                     <div class="bg-white/10 p-5 rounded-lg border border-white/20">
