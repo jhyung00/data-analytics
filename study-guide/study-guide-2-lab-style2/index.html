@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exam Prep: Advanced Excel Analytics</title>
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SheetJS Style Fork for generating formatted Excel files -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
@@ -32,13 +29,11 @@
 </head>
 <body class="bg-indigo-50 text-indigo-950">
 
-    <!-- Success Overlay -->
     <div id="success-page" class="hidden fixed inset-0 bg-indigo-900/95 z-[100] flex flex-col items-center justify-center p-6 text-center overflow-y-auto backdrop-blur-sm">
         <h2 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-yellow-400 mb-4 mt-10 drop-shadow-lg">Submission Successful!</h2>
         <p class="text-xl text-indigo-100 mb-8 font-semibold">Great job on completing the lab. You earned a dance break!</p>
         <img src="Cats-Dancing.gif" alt="Dancing Cats" class="rounded-3xl shadow-[0_0_40px_rgba(236,72,153,0.6)] max-w-md w-full object-cover mb-8 border-4 border-pink-400">
         
-        <!-- MOVED SOLUTION KEY SECTION -->
         <div class="bg-white/10 border border-white/20 rounded-2xl p-8 mb-10 max-w-2xl w-full backdrop-blur-md shadow-2xl">
             <h3 class="text-3xl font-bold text-white mb-3"><i class="fas fa-key text-yellow-400 mr-2"></i>Instructor Answer Key</h3>
             <p class="text-indigo-200 mb-6 text-sm font-medium">Download the completed Excel workbook containing all solutions, built-out Solver Models, Scenarios, and Regression outputs to check your work.</p>
@@ -57,7 +52,6 @@
         </div>
     </div>
 
-    <!-- Navbar -->
     <nav class="bg-fun-gradient text-white p-5 shadow-lg sticky top-0 z-50 border-b-4 border-yellow-400">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-extrabold tracking-wide drop-shadow-md"><i class="fas fa-bolt text-yellow-300 mr-2 animate-pulse"></i>Excel Analytics Challenge</h1>
@@ -67,7 +61,6 @@
 
     <div class="max-w-4xl mx-auto p-6 mt-4">
 
-        <!-- Student Info Section -->
         <section class="bg-white rounded-2xl shadow-xl border border-purple-100 p-8 mb-8 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-purple-500 to-pink-500"></div>
             <h2 class="text-2xl font-bold mb-2 text-purple-900"><i class="fas fa-rocket mr-2 text-pink-500"></i>Student Information</h2>
@@ -84,7 +77,6 @@
             </form>
         </section>
 
-        <!-- Resources Section -->
         <section class="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl border border-indigo-200 p-8 mb-10 shadow-lg">
             <h3 class="font-extrabold text-indigo-900 mb-3 text-xl"><i class="fas fa-cloud-download-alt mr-2 text-indigo-600"></i>Mission Materials</h3>
             <p class="text-sm text-indigo-700 mb-6 font-medium">Download the static dataset below to answer the following questions. Make sure you have the <strong>Data Analysis</strong> and <strong>Solver</strong> add-ins enabled in Excel!</p>
@@ -102,7 +94,6 @@
 
         <form id="lab-form" onsubmit="event.preventDefault();">
             
-            <!-- Requirement 1: Pivot Tables -->
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-pink-100 text-pink-700 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 1</div>
                 <div class="border-b-2 border-pink-50 pb-4 mb-6 mt-2">
@@ -111,7 +102,6 @@
                 </div>
                 
                 <div class="space-y-8">
-                    <!-- Q1 -->
                     <div class="question-block">
                         <p class="font-bold text-gray-800 mb-4 text-lg">1. Create a Pivot Table showing 'Total Revenue' by 'Product Category'. Which category generated the highest total revenue?</p>
                         <div class="space-y-3 ml-2">
@@ -122,7 +112,6 @@
                         </div>
                     </div>
 
-                    <!-- Q2 -->
                     <div class="question-block pt-6 border-t-2 border-dashed border-gray-100">
                         <p class="font-bold text-gray-800 mb-4 text-lg">2. Create a new Pivot Table. Drag 'Transaction Date' to Rows and group by 'Quarters'. Drag 'Revenue' to Values and change the field setting to <em>Average</em>. Which quarter had the lowest average transaction value?</p>
                          <div class="bg-yellow-50 p-4 rounded-xl text-sm text-yellow-800 mb-5 border border-yellow-200 flex items-start shadow-sm">
@@ -139,7 +128,6 @@
                 </div>
             </div>
 
-            <!-- Requirement 2: Distributions & Outliers -->
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-blue-100 text-blue-700 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 2</div>
                 <div class="border-b-2 border-blue-50 pb-4 mb-6 mt-2">
@@ -168,7 +156,6 @@
                 </div>
             </div>
 
-            <!-- Requirement 3: Solver (Production) -->
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-purple-100 text-purple-700 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 3</div>
                 <div class="border-b-2 border-purple-50 pb-4 mb-6 mt-2">
@@ -214,7 +201,6 @@
                 </div>
             </div>
 
-            <!-- Requirement 4: Scenario Manager (Financial) -->
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-orange-100 text-orange-700 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 4</div>
                 <div class="border-b-2 border-orange-50 pb-4 mb-6 mt-2">
@@ -254,7 +240,6 @@
                 </div>
             </div>
 
-            <!-- Requirement 5: Solver (Ad Mix) -->
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-teal-100 text-teal-800 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 5</div>
                 <div class="border-b-2 border-teal-50 pb-4 mb-6 mt-2">
@@ -292,7 +277,6 @@
                 </div>
             </div>
 
-            <!-- Requirement 6: Scenario Manager (Project Zag) -->
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-red-100 text-red-700 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 6</div>
                 <div class="border-b-2 border-red-50 pb-4 mb-6 mt-2">
@@ -331,7 +315,6 @@
                 </div>
             </div>
 
-            <!-- Requirement 7: Regression (Study Hours) -->
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-cyan-100 text-cyan-800 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 7</div>
                 <div class="border-b-2 border-cyan-50 pb-4 mb-6 mt-2">
@@ -372,7 +355,6 @@
                 </div>
             </div>
 
-            <!-- Requirement 8: Multiple Regression (AR Days) -->
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-emerald-100 text-emerald-800 font-black px-4 py-2 rounded-bl-2xl shadow-sm text-sm">REQ 8</div>
                 <div class="border-b-2 border-emerald-50 pb-4 mb-6 mt-2">
@@ -401,7 +383,7 @@
                     </div>
 
                     <div class="question-block pt-6 border-t-2 border-dashed border-gray-100">
-                        <p class="font-bold text-gray-800 mb-4 text-lg">2. Look at the regression output for the <strong>'Allowance % of AR'</strong> variable. It has an estimated coefficient of approximately 2.53 and a p-value of 0.06. What is the best interpretation at the 5% significance level?</p>
+                        <p class="font-bold text-gray-800 mb-4 text-lg">2. Look at the regression output for the <strong>'Allowance % of AR'</strong> variable. It has an estimated coefficient of approximately 2.62 and a p-value of 0.06. What is the best interpretation at the 5% significance level?</p>
                         <div class="space-y-3 ml-2">
                             <label class="flex items-center p-3 bg-gray-50 hover:bg-emerald-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-emerald-200"><input type="radio" name="req8_q2" value="A" class="mr-4 auto-save"> A. The variable is statistically significant because the coefficient is greater than 0</label>
                             <label class="flex items-center p-3 bg-gray-50 hover:bg-emerald-50 rounded-xl cursor-pointer transition-colors border border-transparent hover:border-emerald-200"><input type="radio" name="req8_q2" value="B" class="mr-4 auto-save"> B. The variable is not statistically significant at 5%, even though the estimated coefficient is positive</label>
@@ -412,13 +394,11 @@
                 </div>
             </div>
 
-            <!-- Actions Footer Warning -->
             <div class="bg-red-50 border-l-4 border-red-500 text-red-800 p-4 mb-32 rounded-r shadow-md font-semibold text-center flex items-center justify-center">
                 <i class="fas fa-exclamation-circle text-red-500 mr-3 text-xl"></i>
                 WARNING: Make sure to click "Save Text Answers" to download your work before submitting! The Solution Key will be provided after you submit.
             </div>
 
-            <!-- Actions Footer -->
             <div class="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-indigo-100 p-5 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] z-40">
                 <div class="max-w-4xl mx-auto flex flex-col sm:flex-row justify-center items-center gap-6">
                     <button type="button" onclick="saveForCanvas()" class="w-full sm:w-auto bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold py-3.5 px-8 rounded-full shadow-sm transition-colors flex items-center justify-center">
@@ -433,7 +413,6 @@
         </form>
     </div>
 
-    <!-- JavaScript Logic -->
     <script>
         // ---------------------------------------------------------
         // LOCAL STORAGE - AUTO SAVE LOGIC
@@ -625,7 +604,7 @@
                 ["Gross Sales", ""],    
                 ["COGS", ""],               
                 ["Operating Expenses", 133500],             
-                ["Net Income", ""]     
+                ["Net Income", ""]      
             ];
             const wsForecast = XLSX.utils.aoa_to_sheet(forecastData);
             if(wsForecast['A1']) wsForecast['A1'].s = styles.title;
@@ -758,8 +737,7 @@
             });
 
             // Append Solution Key
-            let solutionKey = `
-\n\n-----------------------------------------------------
+            let solutionKey = `\n\n-----------------------------------------------------
 === INSTRUCTOR SOLUTION KEY ===
 -----------------------------------------------------
 Req 1 Q1: B (Smartphones)
@@ -776,8 +754,8 @@ Req 5 Q2: 4
 Req 6 Q1: B (High Price)
 Req 6 Q2: $180,000
 Req 7 Q1: A (Approx 98% of variation is explained)
-Req 7 Q2: 3.26 (Slope Coefficient)
-Req 7 Q3: 78.10 (Predicted Exam Score)
+Req 7 Q2: 3.09 (Slope Coefficient)
+Req 7 Q3: 78.59 (Predicted Exam Score)
 Req 8 Q1: A (Credit Sales % only)
 Req 8 Q2: B (Not statistically significant at 5%, even though coefficient is positive)
 -----------------------------------------------------
