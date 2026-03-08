@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Step-by-Step Guide: Beans Dataset Cleaning</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        mint: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#22c55e',
+                            800: '#166534',
+                        },
+                        amberContrast: {
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f0fdf4; /* Very light mint */
+            color: #334155;
+            margin: 0;
+            overflow: hidden; /* App-like layout */
+        }
+        
+        /* Resizable Sidebar */
+        .sidebar-nav {
+            resize: horizontal;
+            overflow: auto;
+            min-width: 200px;
+            max-width: 50%;
+            border-right: 2px dashed #bbf7d0;
+        }
+
+        /* Hide scrollbar for sidebar */
+        .sidebar-nav::-webkit-scrollbar { width: 6px; height: 6px; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background-color: #bbf7d0; border-radius: 4px; }
+
+        .main-content {
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .step-card {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .step-card.completed {
+            opacity: 0.7;
+            background-color: #f8fafc;
+        }
+
+        .step-card.completed .step-title {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+
+        /* Custom Checkbox Styling - Amber Theme */
+        .custom-checkbox {
+            appearance: none;
+            background-color: #fff;
+            margin: 0;
+            font: inherit;
+            color: currentColor;
+            width: 1.5em;
+            height: 1.5em;
+            border: 2px solid #f59e0b; /* Amber */
+            border-radius: 0.35em;
+            display: grid;
+            place-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .custom-checkbox::before {
+            content: "";
+            width: 0.8em;
+            height: 0.8em;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em white;
+            background-color: white;
+            transform-origin: center;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+
+        .custom-checkbox:checked {
+            background-color: #f59e0b;
+            border-color: #f59e0b;
+        }
+
+        .custom-checkbox:checked::before {
+            transform: scale(1);
+        }
+
+        /* Reveal Section Transitions */
+        .solution-content {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .solution-content.open {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        code {
+            background-color: rgba(245, 158, 11, 0.15);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.9em;
+            color: #b45309; 
+            font-weight: 600;
+        }
+
+        /* Bean Animation */
+        .bean {
+            position: absolute;
+            font-size: 24px;
+            user-select: none;
+            pointer-events: none;
+            animation: beanPop 1s ease-out forwards;
+            z-index: 50;
+        }
+
+        @keyframes beanPop {
+            0% { transform: translate(0, 0) scale(0.5) rotate(0deg); opacity: 1; }
+            50% { transform: translate(var(--dx), -50px) scale(1.2) rotate(var(--rot)); opacity: 1; }
+            100% { transform: translate(var(--dx), 80px) scale(1) rotate(calc(var(--rot) * 2)); opacity: 0; }
+        }
+        
+        /* Smooth scrolling for anchor links */
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="flex h-screen w-full font-sans">
+
+    <!-- Resizable Sidebar Navigation -->
+    <nav class="sidebar-nav bg-white/80 backdrop-blur shadow-lg h-full p-4 flex flex-col z-20">
+        <div class="mb-6 flex items-center gap-2">
+            <span class="text-3xl">🫘</span>
+            <h2 class="font-extrabold text-xl text-mint-800 tracking-tight">Bean Counter<br><span class="text-sm font-semibold text-slate-500">Navigation</span></h2>
+        </div>
+        
+        <ul class="space-y-3 text-slate-600 font-semibold flex-1">
+            <li><a href="#part1" class="hover:text-amberContrast-600 transition-colors block p-2 rounded hover:bg-amberContrast-100">Part 1: Simple ETL</a></li>
+            <li><a href="#part2" class="hover:text-amberContrast-600 transition-colors block p-2 rounded hover:bg-amberContrast-100">Part 2: Table Transform</a></li>
+            <li><a href="#part3" class="hover:text-amberContrast-600 transition-colors block p-2 rounded hover:bg-amberContrast-100">Part 3: Data Modeling</a></li>
+            <li><a href="#part4" class="hover:text-amberContrast-600 transition-colors block p-2 rounded hover:bg-amberContrast-100">Part 4: Visualization</a></li>
+        </ul>
+
+        <div class="mt-auto pt-4 border-t border-slate-200 flex justify-between items-center">
+            <p class="text-xs text-slate-400">Drag right edge to resize →</p>
+            <button onclick="openInstructorModal()" title="Instructor Login" class="text-slate-400 hover:text-amberContrast-600 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content flex-1 h-full w-full bg-mint-50/50 relative">
+        
+        <!-- Header Section -->
+        <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50">
+            <div class="max-w-5xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 flex items-center gap-2">
+                        Beans Dataset Cleaning Guide
+                    </h1>
+                    <p class="text-sm text-slate-500 font-semibold mt-1">Think like an analyst. Count those beans.</p>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <a href="data/Beans.xlsx" download class="bg-amberContrast-500 hover:bg-amberContrast-600 text-white font-bold py-2 px-5 rounded-full shadow-lg transform transition hover:-translate-y-0.5 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Get Dataset
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-8 pb-32">
+            
+            <div class="bg-amberContrast-100 border-l-4 border-amberContrast-500 p-4 rounded-r-xl shadow-sm">
+                <p class="text-amberContrast-600 font-bold mb-1">Interactive Learning Guide</p>
+                <p class="text-slate-700 text-sm">Follow along with each task in Power BI. Think about how you would solve it, then click <strong>"Reveal Answer"</strong> to see the step-by-step instructions.</p>
+            </div>
+
+            <!-- Part 1: Setup -->
+            <section id="part1" class="scroll-mt-24">
+                <h2 class="text-2xl font-extrabold text-mint-800 mb-4 border-b-2 border-mint-200 pb-2 flex items-center gap-2">
+                    <span class="bg-mint-200 text-mint-800 rounded-full w-8 h-8 flex items-center justify-center text-sm">1</span> 
+                    Simple ETL & Setup
+                </h2>
+                <div class="flex flex-col gap-4">
+                    
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">1. Open & Profile the Dataset</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> Open the <code>Beans.xlsx</code> file in Power Query. Power Query analyzes the first 1,000 rows by default. How do you make sure you are profiling the <em>entire</em> dataset to catch all errors?
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100">
+                                <ul class="list-disc pl-5 text-slate-700 space-y-1">
+                                    <li>Click on <code>Beans.xlsx</code> > Transform Data.</li>
+                                    <li>At the bottom left of Power Query Editor, click on <strong>"Column profiling based on top 1000 rows"</strong> and select <strong>"entire data set"</strong>.</li>
+                                    <li>Verify you have exactly <strong>4,632 rows</strong>.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">2. Irrelevant Data</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> Look at the <strong>E-Dem Table</strong>. Does an employee's <code>Age</code> have any analytical value for standardizing service times and budgets? What should we do with it?
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100">
+                                <p class="text-slate-700">Right-click the <code>Age</code> column in the E-Dem Table and select <strong>Remove</strong>.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">3. Ambiguous Column Names</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> Many of our tables use generic names like <code>ID</code> or <code>MS</code>. Why is this dangerous for Data Modeling, and how should we rename them?
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100">
+                                <div class="grid md:grid-cols-2 gap-3 text-sm">
+                                    <div><strong>CL Table:</strong> <code>ID</code> ➔ <code>Client ID</code></div>
+                                    <div><strong>E-Dem Table:</strong> <code>CertList</code> ➔ <code>Certification List</code></div>
+                                    <div><strong>Employee Table:</strong> <code>MS</code> ➔ <code>Marital Status</code><br><code>ID</code> ➔ <code>Employee ID</code></div>
+                                    <div><strong>Service Table:</strong> <code>ID</code> ➔ <code>Service ID</code><br><code>ID_1</code> ➔ <code>Task ID</code><br><code>Employee</code> ➔ <code>Employee ID</code><br><code>Client</code> ➔ <code>Client ID</code><br><em>*Also remove any completely empty columns here!</em></div>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">4. Split Composite Columns</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> In the Employee table, the <code>Name</code> column contains both first and last names together. How do we cleanly separate them?
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700">
+                                Select <code>Name</code> -> <strong>Split Column by Delimiter</strong> (use Custom: comma and space). Rename the resulting columns to <code>First Name</code> and <code>Last Name</code>.
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">5. Hunt Down Outliers</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> Are there any completely unrealistic numbers in the <code>Actual Time</code> column of the Service worksheet? Use sorting and math (Avg + 3*StdDev) to find them.
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2">
+                                <p>Sort <code>Actual Time</code> descending. The upper bound is roughly 7.77 hours. You will see 3 obvious outliers at the top.</p>
+                                <p><strong>Fix 1:</strong> Service ID <code>1325</code> is a typo. Replace <code>25</code> with <code>2.5</code>.</p>
+                                <p><strong>Fix 2:</strong> The other two (22.5 and 20) are errors. Sort descending again, go to Home > Remove Rows > <strong>Remove Top Rows (2)</strong>.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">6. Inconsistent & Incomplete Values</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> Look through Universities, Job titles, and Marital Status. You'll find acronyms mixed with full names, and nulls mixed with letters. Standardize them.
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700">
+                                <ul class="list-disc pl-5 space-y-1">
+                                    <li><strong>University:</strong> Replace <code>MSU</code> ➔ <code>Michigan State University</code>, and <code>UM</code> ➔ <code>University of Michigan</code>.</li>
+                                    <li><strong>Job:</strong> Replace <code>Senior</code> and <code>Sr  Manager</code> ➔ <code>Sr. Manager</code>.</li>
+                                    <li><strong>Marital Status:</strong> Replace <code>M</code> ➔ <code>Married</code>, <code>S</code> ➔ <code>Single</code>, and <code>null</code>/<code>{empty}</code> ➔ <code>Unknown</code>.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">7. Logic Checks (Conditional Columns)</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> We need to create logic tests. Create a column to flag if an entry is "Valid" (0 to 14 hours) or "Invalid". Create another to compare Actual vs Budgeted time.
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-3">
+                                <div>
+                                    <strong>Col 1: ActualhoursValid</strong><br>
+                                    If Actual Time <= 14 Then <code>Valid</code><br>
+                                    Else If Actual Time >= 0 Then <code>Valid</code><br>
+                                    Else <code>Invalid</code>
+                                </div>
+                                <div>
+                                    <strong>Col 2: Above/Below Budget</strong><br>
+                                    If Actual Time > Budgeted Time Then <code>Above Budget</code><br>
+                                    Else If Actual Time = Budgeted Time Then <code>At the Budget</code><br>
+                                    Else <code>Below Budget</code>
+                                </div>
+                                <div class="text-amberContrast-600 font-bold mt-1">Make sure data types are set to Text!</div>
+                            </div>
+                        </div>
+                    </label>
+
+                </div>
+            </section>
+
+            <!-- Part 2: Table Transform -->
+            <section id="part2" class="scroll-mt-24">
+                <h2 class="text-2xl font-extrabold text-mint-800 mb-4 border-b-2 border-mint-200 pb-2 flex items-center gap-2">
+                    <span class="bg-mint-200 text-mint-800 rounded-full w-8 h-8 flex items-center justify-center text-sm">2</span> 
+                    Table Transformation
+                </h2>
+                <div class="flex flex-col gap-4">
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">8. Clear Query Names</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> To ensure anyone viewing the model understands it, rename <code>CLdata</code> and <code>E-Dem Table</code> to proper business terms.
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700">
+                                Rename to <code>Client</code> and <code>Employee Demographic</code> respectively.
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </section>
+
+            <!-- Part 3: Data Model -->
+            <section id="part3" class="scroll-mt-24">
+                <h2 class="text-2xl font-extrabold text-mint-800 mb-4 border-b-2 border-mint-200 pb-2 flex items-center gap-2">
+                    <span class="bg-mint-200 text-mint-800 rounded-full w-8 h-8 flex items-center justify-center text-sm">3</span> 
+                    Data Modeling
+                </h2>
+                <div class="flex flex-col gap-4">
+                    
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">9. Merge Employee Data</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> Employee details are split across two tables, and the names might not be spelled exactly identical. How do we combine them smartly?
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2">
+                                <p>Combine <strong>Employee</strong> (Primary) and <strong>Employee Demographic</strong> using a Merge.</p>
+                                <p>Check <strong>"Use fuzzy matching"</strong> and set similarity threshold to <code>0.4</code>.</p>
+                                <p>Expand the matched column to keep ONLY <code>Certification List</code> and <code>University</code> (Uncheck prefix option).</p>
+                                <p>Right click the intermediate <code>Employee Demographic</code> query on the left, and <strong>Uncheck "Enable load"</strong>.</p>
+                            </div>
+                            <!-- Hidden Instructor Note -->
+                            <div class="instructor-only hidden bg-amberContrast-100 border-l-4 border-amberContrast-500 p-3 mt-3 rounded shadow-inner">
+                                <p class="text-amberContrast-600 font-bold text-sm">🎓 Instructor Note:</p>
+                                <p class="text-slate-700 text-sm mt-1">Point out to students that <strong>Sara, Paul, and Michael</strong> have inconsistencies between the two datasets which is why Fuzzy Matching at 0.4 threshold was required here.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">10. Normalize the Task Table</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> The Service table currently contains Task details directly. How do we extract this into a proper Task Dimension table without losing data?
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2">
+                                <p>1. Duplicate <code>Service</code> table, name it <code>Task</code>.</p>
+                                <p>2. Keep ONLY <code>Task ID</code>, <code>Area</code>, and <code>Task</code> columns (Remove Other Columns).</p>
+                                <p>3. Select <code>Task ID</code> -> Home -> Remove Rows -> <strong>Remove Duplicates</strong>.</p>
+                                <p>4. Go back to <code>Service</code> table and Remove the <code>Area</code> and <code>Task</code> columns.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">11. Unpivot Certifications</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> Employees have comma-separated lists of certifications. A dimensional model needs these in 1-to-many rows. How do we achieve this?
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2">
+                                <p>Duplicate <code>Employee</code> into <code>Certifications</code>. Keep only Employee ID & Certification List.</p>
+                                <p>Split Certification List by <strong>Comma</strong> (each occurrence).</p>
+                                <p>Select <code>Employee ID</code> -> Right-click -> <strong>Unpivot Other Columns</strong>.</p>
+                                <p>Delete <code>Attribute</code>, rename <code>Value</code> to <code>Certificate</code>. Use <strong>Transform > Trim</strong> to fix spaces.</p>
+                                <p>Finally, remove the Certification List column from the main Employee table.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="step-card bg-amberContrast-100 p-5 rounded-2xl shadow-sm border border-amberContrast-200 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-amberContrast-600 mb-2">12. Load & Form Relationships</h3>
+                            <div class="bg-white/60 p-3 rounded text-sm text-slate-700 mb-3 border-l-2 border-amberContrast-400">
+                                <strong>Task:</strong> It's time to build the Star Schema. How do we link our Fact table to the Calendar Dimension?
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-white p-4 rounded-xl border border-amberContrast-200 text-sm text-slate-700">
+                                <p>Click <strong>Close & Apply</strong>. Go to Model View.</p>
+                                <p>Drag <code>Date</code> from Service table to <code>Date</code> in Calendar table to form a Many-to-one relationship.</p>
+                                <p>Ensure Task ID, Employee ID, and Client ID are automatically linked.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                </div>
+            </section>
+
+            <!-- Part 4: Visualization -->
+            <section id="part4" class="scroll-mt-24">
+                <h2 class="text-2xl font-extrabold text-mint-800 mb-4 border-b-2 border-mint-200 pb-2 flex items-center gap-2">
+                    <span class="bg-mint-200 text-mint-800 rounded-full w-8 h-8 flex items-center justify-center text-sm">4</span> 
+                    Data Visualization
+                </h2>
+                <div class="flex flex-col gap-4">
+                    
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">13. Task Hierarchy Analysis</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> Create a Hierarchy for Area (Area -> Task). You want to know the Actual Hours spent that belong to each area and task within the area.
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2">
+                                <p>Create a Pie or Donut chart.</p>
+                                <p><strong>Values:</strong> Sum of Actual Time</p>
+                                <p><strong>Legend:</strong> Area Hierarchy (Area, then Task)</p>
+                            </div>
+                            <!-- Hidden Instructor Note -->
+                            <div class="instructor-only hidden bg-amberContrast-100 border-l-4 border-amberContrast-500 p-3 mt-3 rounded shadow-inner">
+                                <p class="text-amberContrast-600 font-bold text-sm">🎓 Instructor Note:</p>
+                                <p class="text-slate-700 text-sm mt-1">Ask students which Area consumes the most raw hours before diving into specific tasks.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">14. Job Title vs. Task Type</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> How is the composition of task types (ADMIN, OTHER, PREP, REVIEW) distributed across different job titles?
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2">
+                                <p>Create a 100% Stacked Column chart.</p>
+                                <p><strong>X-axis:</strong> Job Title</p>
+                                <p><strong>Y-axis:</strong> Count of Service ID</p>
+                                <p><strong>Legend:</strong> Task</p>
+                            </div>
+                            <!-- Hidden Instructor Note -->
+                            <div class="instructor-only hidden bg-amberContrast-100 border-l-4 border-amberContrast-500 p-3 mt-3 rounded shadow-inner">
+                                <p class="text-amberContrast-600 font-bold text-sm">🎓 Instructor Interpretation:</p>
+                                <p class="text-slate-700 text-sm mt-1">PREP tasks dominate across all roles. Managers and Sr. Managers handle the largest service volumes. Staff handle fewer services overall.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">15. Workload Trends Over Time</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> Create a visualization that shows how workload trends differ by role and department over time (Year, Quarter, Month).
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2">
+                                <p>Create a Line chart.</p>
+                                <p><strong>X-axis:</strong> Date Hierarchy (Year, Quarter, Month)</p>
+                                <p><strong>Y-axis:</strong> Average of Actual Time</p>
+                                <p><strong>Legend:</strong> Area (ACCOUNTING or TAX)</p>
+                                <p><strong>Small multiples:</strong> Job Title</p>
+                            </div>
+                            <!-- Hidden Instructor Note -->
+                            <div class="instructor-only hidden bg-amberContrast-100 border-l-4 border-amberContrast-500 p-3 mt-3 rounded shadow-inner">
+                                <p class="text-amberContrast-600 font-bold text-sm">🎓 Instructor Interpretation:</p>
+                                <p class="text-slate-700 text-sm mt-1">Across all roles, Accounting consistently requires more time than Tax — indicating heavier workloads or more complex tasks in the Accounting area.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+                        <div class="relative pt-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" onclick="toggleComplete(this, event)">
+                        </div>
+                        <div class="w-full">
+                            <h3 class="step-title font-bold text-lg text-slate-800 mb-2">16. Budget Tracking by Role</h3>
+                            <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300">
+                                <strong>Task:</strong> Find the number of services that were above, below, or equal to budget for each task area, and break down this data by job title.
+                            </div>
+                            <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">
+                                👁️ Reveal Answer
+                            </button>
+                            <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2">
+                                <p>Create a Clustered Column chart.</p>
+                                <p><strong>X-axis:</strong> Above/Below Budget</p>
+                                <p><strong>Y-axis:</strong> Count of Service ID</p>
+                                <p><strong>Legend:</strong> Task</p>
+                                <p><strong>Small multiples:</strong> Job Title</p>
+                            </div>
+                            <!-- Hidden Instructor Note -->
+                            <div class="instructor-only hidden bg-amberContrast-100 border-l-4 border-amberContrast-500 p-3 mt-3 rounded shadow-inner">
+                                <p class="text-amberContrast-600 font-bold text-sm">🎓 Instructor Interpretation:</p>
+                                <p class="text-slate-700 text-sm mt-1">Notice that for Staff level, the majority of their PREP work falls above budget. This is a critical coaching point for management.</p>
+                            </div>
+                        </div>
+                    </label>
+
+                </div>
+            </section>
+            
+        </div>
+    </main>
+
+    <!-- Instructor Password Modal -->
+    <div id="instructor-modal" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
+            <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 relative">
+                <h3 class="font-bold text-lg text-slate-800 mb-2 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amberContrast-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                    </svg>
+                    Instructor Access
+                </h3>
+                <p class="text-sm text-slate-600 mb-4">Enter password to reveal instructor notes and interpretations.</p>
+                <input type="password" id="instructor-pw" class="w-full border border-slate-300 rounded p-2 mb-2 focus:ring-2 focus:ring-mint-500 outline-none" placeholder="Password">
+                <p id="pw-error" class="text-red-500 text-xs hidden mb-4">Incorrect password.</p>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button onclick="closeInstructorModal()" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded transition font-semibold">Cancel</button>
+                    <button onclick="checkPassword()" class="px-4 py-2 bg-amberContrast-500 text-white rounded hover:bg-amberContrast-600 transition font-bold shadow-md">Unlock</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle Solution Content
+        function toggleReveal(btn) {
+            const solution = btn.nextElementSibling;
+            if (solution.classList.contains('open')) {
+                solution.classList.remove('open');
+                btn.innerHTML = '👁️ Reveal Answer';
+            } else {
+                solution.classList.add('open');
+                btn.innerHTML = '🙈 Hide Answer';
+            }
+        }
+
+        // Toggle Step Completion & trigger Bean Animation
+        function toggleComplete(checkbox, event) {
+            const card = checkbox.closest('.step-card');
+            if (checkbox.checked) {
+                card.classList.add('completed');
+                createBeanExplosion(event.clientX, event.clientY);
+            } else {
+                card.classList.remove('completed');
+            }
+        }
+
+        // Funny Bean Animation Effect
+        function createBeanExplosion(x, y) {
+            const numBeans = 6;
+            for (let i = 0; i < numBeans; i++) {
+                const bean = document.createElement('div');
+                bean.innerText = '🫘';
+                bean.classList.add('bean');
+                
+                // Randomize trajectory
+                const dx = (Math.random() - 0.5) * 150; // Random X spread
+                const rot = (Math.random() - 0.5) * 180; // Random rotation
+
+                bean.style.left = `${x}px`;
+                bean.style.top = `${y}px`;
+                bean.style.setProperty('--dx', `${dx}px`);
+                bean.style.setProperty('--rot', `${rot}deg`);
+
+                document.body.appendChild(bean);
+
+                // Cleanup after animation
+                setTimeout(() => {
+                    bean.remove();
+                }, 1000);
+            }
+        }
+
+        // Instructor Login Modal Logic
+        function openInstructorModal() {
+            document.getElementById('instructor-modal').classList.remove('hidden');
+            document.getElementById('pw-error').classList.add('hidden');
+            const pwInput = document.getElementById('instructor-pw');
+            pwInput.value = '';
+            
+            // Allow display block to apply before focusing
+            setTimeout(() => pwInput.focus(), 50);
+            
+            // Allow enter key to submit
+            pwInput.onkeypress = function(e) {
+                if(e.key === 'Enter') checkPassword();
+            };
+        }
+
+        function closeInstructorModal() {
+            document.getElementById('instructor-modal').classList.add('hidden');
+        }
+
+        function checkPassword() {
+            const pw = document.getElementById('instructor-pw').value;
+            if (pw === 'teacher') {
+                const elements = document.querySelectorAll('.instructor-only');
+                elements.forEach(el => el.classList.remove('hidden'));
+                closeInstructorModal();
+            } else {
+                document.getElementById('pw-error').classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
