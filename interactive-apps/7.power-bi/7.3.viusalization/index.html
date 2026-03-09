@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forensic Data Dojo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Confetti for Gamification -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body { 
+            font-family: 'Nunito', sans-serif; 
+            background: linear-gradient(135deg, #f6f8fd 0%, #f1f5f9 100%); 
+            color: #334155; 
+            overflow-x: hidden; 
+        }
+        
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #e2e8f0; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .game-card {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+            border: 2px solid #f1f5f9;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .game-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12);
+            border-color: #e2e8f0;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-tab {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .nav-tab::after {
+            content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 3px; background: #3b82f6; border-radius: 4px; transition: width 0.3s ease;
+        }
+        .nav-tab.active { color: #3b82f6; font-weight: 800; }
+        .nav-tab.active::after { width: 80%; }
+
+        .mcq-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid #e2e8f0;
+            background: #ffffff;
+        }
+        .mcq-btn:hover:not(.selected):not(.disabled) { 
+            border-color: #93c5fd; 
+            background-color: #eff6ff; 
+            transform: scale(1.01); 
+        }
+        .mcq-btn.selected { 
+            border-color: #3b82f6; 
+            background-color: #eff6ff; 
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15); 
+        }
+        .mcq-btn.correct-highlight { 
+            border-color: #10b981; 
+            background-color: #ecfdf5; 
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); 
+            animation: pop 0.4s ease-out;
+        }
+        .mcq-btn.wrong-highlight {
+            border-color: #ef4444; 
+            background-color: #fef2f2; 
+        }
+        .mcq-btn.disabled { cursor: not-allowed; opacity: 0.6; }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake-anim { animation: shake 0.4s ease-in-out; }
+
+        .reveal-section { display: none; opacity: 0; transition: opacity 0.5s ease-in; }
+        .reveal-section.visible { display: block; opacity: 1; }
+        .chart-container { position: relative; height: 280px; width: 100%; }
+        
+        /* Level Progress Bar */
+        .progress-bar { transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Heatmap CSS for Game Theme */
+        .heatmap-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+        .heat-cell { height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.2);}
+        .bg-base { background-color: #e2e8f0; color: #64748b; text-shadow: none; }
+        .bg-heat-1 { background-color: #fca5a5; }
+        .bg-heat-2 { background-color: #f87171; }
+        .bg-heat-3 { background-color: #ef4444; }
+        .bg-heat-alert { background-color: #dc2626; box-shadow: 0 0 15px rgba(220, 38, 38, 0.5); }
+        
+        /* Decomp Tree CSS */
+        .tree-node { border: 2px solid #e2e8f0; background: #fff; border-radius: 12px; padding: 12px; font-size: 0.85rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-weight: 800; }
+        .tree-connector { height: 4px; background: #cbd5e1; width: 24px; border-radius: 2px;}
+        .node-highlight { border-color: #f43f5e; background: #fff1f2; color: #e11d48; }
+        .node-root { border-color: #8b5cf6; background: #f5f3ff; color: #6d28d9; }
+
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-6 relative">
+
+    <!-- Sticky Scoreboard Header -->
+    <header class="w-full max-w-6xl sticky top-4 z-50 mb-8">
+        <div class="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl p-4 border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-100 p-3 rounded-xl text-blue-600 text-2xl">
+                    <i class="fas fa-gamepad"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tight text-slate-800">Forensic Data <span class="gradient-text">Dojo</span></h1>
+                    <div class="flex items-center space-x-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        <span>Rank:</span>
+                        <span id="player-rank" class="text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">Rookie Investigator</span>
+                    </div>
+                </div>
+            </div>
+            
+            <nav class="flex space-x-6 text-sm font-black text-slate-400">
+                <button onclick="switchTab('tab-theory')" id="nav-theory" class="nav-tab active pb-1 hover:text-slate-700 flex items-center"><i class="fas fa-brain mr-2"></i> Dojo Challenges</button>
+                <button onclick="switchTab('tab-data')" id="nav-data" class="nav-tab pb-1 hover:text-slate-700 flex items-center"><i class="fas fa-box-open mr-2"></i> Data Vault</button>
+                <button onclick="switchTab('tab-pbi')" id="nav-pbi" class="nav-tab pb-1 hover:text-slate-700 flex items-center"><i class="fas fa-hammer mr-2"></i> Build Guide</button>
+            </nav>
+
+            <div class="flex flex-col items-end min-w-[150px]">
+                <div class="text-sm font-black text-slate-700 mb-1">Score: <span id="score-display" class="text-2xl text-pink-500">0</span> <span class="text-slate-400">/ 8</span></div>
+                <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                    <div id="progress-bar" class="progress-bar bg-gradient-to-r from-blue-400 to-pink-500 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-6xl flex-grow">
+
+        <!-- TAB 1: VISUAL THEORY DOJO -->
+        <section id="tab-theory" class="space-y-8 block">
+            <div class="game-card p-6 bg-gradient-to-br from-indigo-50 to-blue-50 border-blue-100 mb-8 flex items-center">
+                <div class="w-16 h-16 rounded-full bg-blue-500 text-white flex items-center justify-center text-3xl shadow-lg shadow-blue-200 mr-6 flex-shrink-0">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black mb-1 text-slate-800">Master the Visuals</h3>
+                    <p class="text-slate-600 font-semibold">Read the scenario, select the most powerful visual to prove the anomaly, and submit your evidence. Level up your rank by getting them right on the first try!</p>
+                </div>
+            </div>
+            
+            <div id="quiz-container" class="space-y-10">
+                <!-- Questions injected via JS -->
+            </div>
+        </section>
+
+        <!-- TAB 2: DATA VAULT -->
+        <section id="tab-data" class="space-y-6 hidden">
+            <div class="game-card p-8 border-t-8 border-t-emerald-400">
+                <div class="text-center mb-10">
+                    <div class="inline-block bg-emerald-100 text-emerald-600 p-4 rounded-full text-4xl mb-4">
+                        <i class="fas fa-vault"></i>
+                    </div>
+                    <h2 class="text-4xl font-black text-slate-800 mb-4">The Data Vault</h2>
+                    <p class="text-slate-500 font-semibold max-w-2xl mx-auto">Unlock and download the raw system extracts. These CSV files contain the exact seeded anomalies discussed in the Dojo. You will need them to build your dashboards.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Loot Crate 1 -->
+                    <div class="bg-white p-6 rounded-2xl border-2 border-slate-100 shadow-sm hover:border-emerald-300 hover:shadow-xl transition-all text-center group">
+                        <div class="h-24 flex items-end justify-center pb-4 text-slate-300 group-hover:text-emerald-400 transition-colors text-6xl">
+                            <i class="fas fa-truck-loading transform group-hover:-translate-y-2 transition-transform duration-300"></i>
+                        </div>
+                        <h3 class="text-xl font-black mb-2 text-slate-800">Fixed Assets</h3>
+                        <p class="text-sm text-slate-500 font-semibold mb-6 h-10">Capitalization limits & useful life estimates.</p>
+                        <button onclick="downloadDataset('assets')" class="w-full bg-slate-800 hover:bg-emerald-500 text-white font-black py-3 px-4 rounded-xl flex justify-center items-center transition-all shadow-md active:scale-95">
+                            <i class="fas fa-download mr-2"></i> Download CSV
+                        </button>
+                    </div>
+
+                    <!-- Loot Crate 2 -->
+                    <div class="bg-white p-6 rounded-2xl border-2 border-slate-100 shadow-sm hover:border-emerald-300 hover:shadow-xl transition-all text-center group">
+                        <div class="h-24 flex items-end justify-center pb-4 text-slate-300 group-hover:text-emerald-400 transition-colors text-6xl">
+                            <i class="fas fa-boxes transform group-hover:-translate-y-2 transition-transform duration-300"></i>
+                        </div>
+                        <h3 class="text-xl font-black mb-2 text-slate-800">Inventory Register</h3>
+                        <p class="text-sm text-slate-500 font-semibold mb-6 h-10">SKU-level inventory counts and exact age.</p>
+                        <button onclick="downloadDataset('inventory')" class="w-full bg-slate-800 hover:bg-emerald-500 text-white font-black py-3 px-4 rounded-xl flex justify-center items-center transition-all shadow-md active:scale-95">
+                            <i class="fas fa-download mr-2"></i> Download CSV
+                        </button>
+                    </div>
+
+                    <!-- Loot Crate 3 -->
+                    <div class="bg-white p-6 rounded-2xl border-2 border-slate-100 shadow-sm hover:border-emerald-300 hover:shadow-xl transition-all text-center group">
+                        <div class="h-24 flex items-end justify-center pb-4 text-slate-300 group-hover:text-emerald-400 transition-colors text-6xl">
+                            <i class="fas fa-book-open transform group-hover:-translate-y-2 transition-transform duration-300"></i>
+                        </div>
+                        <h3 class="text-xl font-black mb-2 text-slate-800">General Journal</h3>
+                        <p class="text-sm text-slate-500 font-semibold mb-6 h-10">Timestamped transaction logs and user roles.</p>
+                        <button onclick="downloadDataset('journals')" class="w-full bg-slate-800 hover:bg-emerald-500 text-white font-black py-3 px-4 rounded-xl flex justify-center items-center transition-all shadow-md active:scale-95">
+                            <i class="fas fa-download mr-2"></i> Download CSV
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: POWER BI BUILD GUIDE -->
+        <section id="tab-pbi" class="space-y-6 hidden">
+            <div class="game-card p-8 border-t-8 border-t-purple-500">
+                <div class="text-center mb-10">
+                    <div class="inline-block bg-purple-100 text-purple-600 p-4 rounded-full text-4xl mb-4">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <h2 class="text-4xl font-black text-slate-800 mb-4">Power BI Build Guide</h2>
+                    <p class="text-slate-500 font-semibold max-w-2xl mx-auto">Import the data you looted from the vault. Follow these pro-level blueprints to construct irrefutable visual evidence.</p>
+                </div>
+
+                <div class="space-y-8">
+                    <!-- Guide 1 -->
+                    <div class="bg-white border-2 border-slate-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-blue-100 text-blue-600 font-black text-xs px-3 py-1 rounded-bl-xl">Blueprint 01</div>
+                        <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center"><i class="fas fa-chart-line text-blue-500 mr-3 text-2xl"></i> Useful Life Manipulation</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="text-sm text-slate-600 font-semibold space-y-3">
+                                <p><strong class="text-slate-800 bg-slate-100 px-2 py-1 rounded">Target Data:</strong> Fixed_Assets.csv</p>
+                                <ul class="list-disc pl-5 space-y-2">
+                                    <li>Add a <strong>Line and Clustered Column Chart</strong> to the canvas.</li>
+                                    <li>Drag <code>Acquisition_Date</code> to the X-axis (Set to Year hierarchy).</li>
+                                    <li>Drag <code>Asset_ID</code> to Column Y-axis (Set to Count).</li>
+                                    <li>Drag <code>Useful_Life_Months</code> to Line Y-axis (Set to Average).</li>
+                                    <li class="bg-blue-50 p-2 rounded-lg text-blue-700 border border-blue-100"><i class="fas fa-lightbulb mr-1"></i> <strong>Pro Tip:</strong> Use the On-Object Format Pane to thicken the line stroke to 4px, ensuring the "Useful Life" trend dominates the visual hierarchy.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center">
+                                <i class="fas fa-eye text-3xl text-slate-300 mb-3"></i>
+                                <p class="text-slate-500 text-sm font-bold italic">"Watch the line. The average useful life of 'Heavy Machinery' suddenly spikes to 120 months right when profits dipped. You caught them."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guide 2 -->
+                    <div class="bg-white border-2 border-slate-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-pink-100 text-pink-600 font-black text-xs px-3 py-1 rounded-bl-xl">Blueprint 02</div>
+                        <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center"><i class="fas fa-cut text-pink-500 mr-3 text-2xl"></i> Threshold Abuse</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="text-sm text-slate-600 font-semibold space-y-3">
+                                <p><strong class="text-slate-800 bg-slate-100 px-2 py-1 rounded">Target Data:</strong> Fixed_Assets.csv</p>
+                                <ul class="list-disc pl-5 space-y-2">
+                                    <li>Right-click <code>Capitalized_Amount</code> in the data pane -> select <strong>Create Group</strong>. Set Bin size to <strong>$100</strong>.</li>
+                                    <li>Add a <strong>Clustered Column Chart</strong>.</li>
+                                    <li>Place your new <code>Amount (bins)</code> on the X-axis and <code>Asset_ID</code> (Count) on the Y-axis.</li>
+                                    <li class="bg-pink-50 p-2 rounded-lg text-pink-700 border border-pink-100"><i class="fas fa-lightbulb mr-1"></i> <strong>Pro Tip:</strong> Add a vertical Reference Line at exactly $5,000 using the Analytics pane and color it bright red.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center">
+                                <i class="fas fa-eye text-3xl text-slate-300 mb-3"></i>
+                                <p class="text-slate-500 text-sm font-bold italic">"A massive, unnatural cliff forms right before the red $5,000 line. This proves deliberate invoice splitting."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guide 3 -->
+                    <div class="bg-white border-2 border-slate-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-orange-100 text-orange-600 font-black text-xs px-3 py-1 rounded-bl-xl">Blueprint 03</div>
+                        <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center"><i class="fas fa-ghost text-orange-500 mr-3 text-2xl"></i> Ghost Margins</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="text-sm text-slate-600 font-semibold space-y-3">
+                                <p><strong class="text-slate-800 bg-slate-100 px-2 py-1 rounded">Target Data:</strong> Inventory.csv</p>
+                                <ul class="list-disc pl-5 space-y-2">
+                                    <li>Create a new DAX measure:<br><code class="bg-slate-800 text-green-400 px-2 py-1 rounded block mt-1">Total_Value = SUMX('Inventory', 'Inventory'[Quantity_On_Hand] * 'Inventory'[Unit_Cost])</code></li>
+                                    <li>Add a <strong>Scatter Plot</strong>.</li>
+                                    <li>X-Axis: <code>Days_In_Inventory</code>. Y-Axis: <code>Total_Value</code>. Values: <code>SKU</code>.</li>
+                                    <li class="bg-orange-50 p-2 rounded-lg text-orange-700 border border-orange-100"><i class="fas fa-lightbulb mr-1"></i> <strong>Pro Tip:</strong> Enable Modern Visual Tooltips so hovering immediately reveals the specific SKU hiding in the top right.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center">
+                                <i class="fas fa-eye text-3xl text-slate-300 mb-3"></i>
+                                <p class="text-slate-500 text-sm font-bold italic">"The top-right quadrant isolates the ghosts: Inventory that is extremely old AND highly valued, severely overstating company assets."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guide 4 -->
+                    <div class="bg-white border-2 border-slate-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-red-100 text-red-600 font-black text-xs px-3 py-1 rounded-bl-xl">Blueprint 04</div>
+                        <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center"><i class="fas fa-clock text-red-500 mr-3 text-2xl"></i> Rogue Entries</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="text-sm text-slate-600 font-semibold space-y-3">
+                                <p><strong class="text-slate-800 bg-slate-100 px-2 py-1 rounded">Target Data:</strong> Journals.csv</p>
+                                <ul class="list-disc pl-5 space-y-2">
+                                    <li>Add a <strong>Matrix Visual</strong> to the canvas.</li>
+                                    <li>Place <code>Day_of_Week</code> on Rows and <code>Hour_of_Day</code> on Columns. Place <code>Entry_Amount</code> in Values.</li>
+                                    <li>Use the Format Pane -> Cell Elements to turn on <strong>Background Color</strong> conditional formatting.</li>
+                                    <li class="bg-red-50 p-2 rounded-lg text-red-700 border border-red-100"><i class="fas fa-lightbulb mr-1"></i> <strong>Pro Tip:</strong> Add an Input Slicer and bind it to <code>User_Role</code>. Type "CFO" to instantly filter the heatmap.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center">
+                                <i class="fas fa-eye text-3xl text-slate-300 mb-3"></i>
+                                <p class="text-slate-500 text-sm font-bold italic">"The matrix immediately lights up bright red late on a Saturday night. A textbook management override of internal controls."</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Global Chart Defaults for Bright Theme
+        Chart.defaults.color = '#64748b'; 
+        Chart.defaults.borderColor = '#f1f5f9';
+        Chart.defaults.font.family = "'Nunito', sans-serif";
+        Chart.defaults.font.weight = 'bold';
+
+        // Vibrant Palette
+        const palette = {
+            rose: '#f43f5e', lavender: '#8b5cf6', sage: '#10b981', 
+            sky: '#0ea5e9', peach: '#f59e0b', indigo: '#6366f1',
+            slateLight: '#cbd5e1', slateDark: '#475569'
+        };
+
+        const questions = [
+            {
+                id: 1,
+                title: "The Accrual Divergence",
+                icon: "fa-chart-line",
+                iconColor: "text-indigo-500",
+                scenario: "Net Income has been rising steadily by 10% each year, but Cash Flow from Operations (CFO) is declining. You need to show the Board that earnings quality is deteriorating due to aggressive accruals.",
+                badData: "Currently shown as a dense data table with 50 rows of cash flow adjustments, making it impossible to spot the macro trend.",
+                options: ["100% Stacked Bar Chart", "Line and Clustered Column Combo Chart", "Pie Chart", "Scatter Plot"],
+                correctIndex: 1,
+                reasoning: "A Combo Chart lets you side-by-side compare absolute dollar values of Net Income vs CFO (columns), while plotting the 'Accruals Ratio' as a trend line. The divergence becomes visually inescapable.",
+                chartFunc: (ctx) => {
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['2021', '2022', '2023', '2024', '2025'],
+                            datasets: [
+                                { type: 'line', label: 'Accruals Gap ($)', data: [5, 12, 25, 45, 70], borderColor: palette.rose, backgroundColor: palette.rose, borderWidth: 4, tension: 0.3, yAxisID: 'y' },
+                                { type: 'bar', label: 'Net Income', data: [100, 110, 121, 133, 146], backgroundColor: palette.indigo, borderRadius: 6, yAxisID: 'y' },
+                                { type: 'bar', label: 'Cash Flow (CFO)', data: [95, 98, 96, 88, 76], backgroundColor: palette.sky, borderRadius: 6, yAxisID: 'y' }
+                            ]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                }
+            },
+            {
+                id: 2,
+                title: "Explaining the 'Big Bath'",
+                icon: "fa-water",
+                iconColor: "text-sky-500",
+                scenario: "The company took a massive $50M loss this year to clear the balance sheet. You need to explain how a $20M Gross Profit turned into a $50M Net Loss by showing the sequential impact of massive write-offs.",
+                badData: "Currently shown as a standard pie chart of expenses, which completely fails to show how expenses dragged the positive profit down below zero.",
+                options: ["Waterfall Chart", "Donut Chart", "Multiple Line Charts", "Radar Chart"],
+                correctIndex: 0,
+                reasoning: "A Waterfall Chart is the undisputed champion for explaining the bridge between two numbers. It clearly shows the sequential, cumulative effect of positive and negative values dropping into the red.",
+                chartFunc: (ctx) => {
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Gross Profit', 'SG&A', 'Impairment', 'Severance', 'Net Loss'],
+                            datasets: [{
+                                label: 'Impact',
+                                data: [[0, 20], [10, 20], [-15, 10], [-50, -15], [0, -50]],
+                                backgroundColor: [palette.sage, palette.rose, palette.rose, palette.rose, palette.peach],
+                                borderRadius: 6
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                }
+            },
+            {
+                id: 3,
+                title: "Hunting Threshold Abuse",
+                icon: "fa-cut",
+                iconColor: "text-pink-500",
+                scenario: "Capitalization policy dictates that purchases strictly OVER $5,000 are assets. Purchases $5,000 and below are immediate expenses. You suspect managers are splitting invoices to sit just below $5k to game the budget.",
+                badData: "Currently looking at a line chart of 'Average Invoice Size over Time', which mathematically smooths out and hides individual transaction behavior.",
+                options: ["Area Chart", "Scatter Plot", "Histogram (Binned Column Chart)", "Decomposition Tree"],
+                correctIndex: 2,
+                reasoning: "By grouping invoice amounts into bins, a Histogram reveals an unnatural, massive spike in the '$4,900 - $5,000' bin. This instantly proves human behavior is overriding statistical distribution.",
+                chartFunc: (ctx) => {
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['$4.6k', '$4.7k', '$4.8k', '$4.9k', '$5.0k', '$5.1k'],
+                            datasets: [{ label: 'Invoice Count', data: [15, 12, 18, 140, 5, 8], backgroundColor: [palette.slateLight,palette.slateLight,palette.slateLight,palette.pink,palette.slateLight,palette.slateLight], barPercentage: 1, categoryPercentage: 0.95, borderRadius: 4 }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                }
+            },
+            {
+                id: 4,
+                title: "Locating Ghost Margins",
+                icon: "fa-ghost",
+                iconColor: "text-orange-500",
+                scenario: "You have 15,000 inventory SKUs. You need to identify 'Ghost Inventory'—items that are extremely old (obsolete) but are still being held at a very high financial value to inflate assets.",
+                badData: "Currently presented as a Top 10 list of 'Most Valuable SKUs', which tells you what is expensive but completely ignores how old it is.",
+                options: ["100% Stacked Bar Chart", "Scatter Plot", "Treemap", "Gauge Chart"],
+                correctIndex: 1,
+                reasoning: "A Scatter Plot plots two continuous variables (Age vs. Value) for thousands of data points. The 'Top Right' quadrant will immediately isolate the exact SKUs that are dangerously old AND highly valued.",
+                chartFunc: (ctx) => {
+                    const normal = Array.from({length: 40}, () => ({x: Math.random()*200, y: Math.random()*50000}));
+                    const ghost = Array.from({length: 5}, () => ({x: 800 + Math.random()*200, y: 150000 + Math.random()*50000}));
+                    new Chart(ctx, {
+                        type: 'scatter',
+                        data: { datasets: [{ label: 'Normal', data: normal, backgroundColor: palette.sky }, { label: 'Audit Targets', data: ghost, backgroundColor: palette.rose, pointRadius: 8, pointHoverRadius: 10 }] },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { x: { title: { display: true, text: 'Age (Days)' } }, y: { title: { display: true, text: 'Book Value ($)' } } } }
+                    });
+                }
+            },
+            {
+                id: 5,
+                title: "Structural Expense Shifts",
+                icon: "fa-layer-group",
+                iconColor: "text-lavender-500",
+                scenario: "Management claims rising expenses are normal growth, but you suspect they are quietly shifting massive funds away from R&D and into 'Consulting Fees' to hide executive payouts.",
+                badData: "Currently shown as multiple pie charts (one for each year), requiring the audience to try and memorize slice sizes across pages.",
+                options: ["100% Stacked Column Chart", "Scatter Plot", "Funnel Chart", "Waterfall Chart"],
+                correctIndex: 0,
+                reasoning: "A 100% Stacked Column normalizes total expenses to 100%. This removes the distraction of absolute dollar growth and highlights structural shifts—making it obvious if the 'Consulting' block expands vertically over time.",
+                chartFunc: (ctx) => {
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['2023', '2024', '2025'],
+                            datasets: [
+                                { label: 'Payroll', data: [60, 55, 40], backgroundColor: palette.sky, borderRadius: {topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6} },
+                                { label: 'R&D', data: [30, 20, 10], backgroundColor: palette.sage },
+                                { label: 'Consulting', data: [10, 25, 50], backgroundColor: palette.rose, borderRadius: {topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0} }
+                            ]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, max: 100 } } }
+                    });
+                }
+            },
+            {
+                id: 6,
+                title: "Rogue Entry Timing",
+                icon: "fa-clock",
+                iconColor: "text-red-500",
+                scenario: "You have 10,000 manual journal entries. You want to prove that the CFO is overriding internal controls by posting massive entries late at night on weekends.",
+                badData: "Currently shown as a line chart tracking 'Number of Entries per Day', which completely ignores the hour of the day.",
+                options: ["Donut Chart", "Matrix with Conditional Formatting (Heatmap)", "Waterfall Chart", "Key Influencers"],
+                correctIndex: 1,
+                reasoning: "A Matrix/Heatmap visualizes intersections of time perfectly. By applying conditional color formatting based on amount, the human eye is instantly drawn to dark red anomalous clusters (e.g., Saturday at 11:00 PM).",
+                customHTML: `
+                    <div class="flex h-full items-center justify-center flex-col w-full px-4 mt-2">
+                        <div class="text-xs mb-2 text-slate-400 font-bold w-full flex justify-between px-8 uppercase tracking-wider"><span>8 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div>
+                        <div class="heatmap-grid w-full">
+                            <div class="heat-cell bg-base">Fri</div><div class="heat-cell bg-heat-2">120</div><div class="heat-cell bg-heat-1">95</div><div class="heat-cell bg-heat-3">150</div><div class="heat-cell bg-heat-1">12</div><div class="heat-cell bg-base">0</div>
+                            <div class="heat-cell bg-base">Sat</div><div class="heat-cell bg-base">0</div><div class="heat-cell bg-heat-1">2</div><div class="heat-cell bg-base">0</div><div class="heat-cell bg-base">0</div><div class="heat-cell bg-heat-alert animate-pulse">45</div>
+                            <div class="heat-cell bg-base">Sun</div><div class="heat-cell bg-base">0</div><div class="heat-cell bg-base">0</div><div class="heat-cell bg-heat-1">1</div><div class="heat-cell bg-base">0</div><div class="heat-cell bg-heat-alert opacity-90">88</div>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 7,
+                title: "Benford's Law Fraud Detection",
+                icon: "fa-fingerprint",
+                iconColor: "text-purple-500",
+                scenario: "Benford's Law states naturally occurring numbers start with '1' about 30% of the time. You calculated the actual leading digits of expense reports and need to show deviations from this statistical law.",
+                badData: "Currently shown as a standard data grid, forcing the user to mentally calculate the math differences row by row.",
+                options: ["Clustered Column & Line Combo Chart", "Pie Chart", "Scatter Plot", "100% Stacked Bar"],
+                correctIndex: 0,
+                reasoning: "A Combo Chart is the industry standard here. Columns show the Actual Frequency, and a Line represents the Expected Theoretical Curve. Any column poking significantly above the line signals fabricated data.",
+                chartFunc: (ctx) => {
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                            datasets: [
+                                { type: 'line', label: 'Expected (Benford)', data: [30.1, 17.6, 12.5, 9.7, 7.9, 6.7, 5.8, 5.1, 4.6], borderColor: palette.sage, backgroundColor: palette.sage, tension: 0.4, borderWidth: 4 },
+                                { type: 'bar', label: 'Actual Submissions', data: [29, 18, 12, 10, 8, 6, 18, 5, 4], backgroundColor: [palette.sky,palette.sky,palette.sky,palette.sky,palette.sky,palette.sky,palette.rose,palette.sky,palette.sky], borderRadius: 6 }
+                            ]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                }
+            },
+            {
+                id: 8,
+                title: "Following the Fraud Trail",
+                icon: "fa-sitemap",
+                iconColor: "text-emerald-500",
+                scenario: "You noticed a $5M spike in sales on the last day of the quarter (Channel Stuffing). You need a visual that lets you click the $5M, break it down by Sales Rep, then by Customer, and finally by Payment Terms.",
+                badData: "Currently using 4 different standalone bar charts, requiring the user to cross-filter manually to follow the path.",
+                options: ["Decomposition Tree", "Scatter Plot", "Line Chart", "Matrix"],
+                correctIndex: 0,
+                reasoning: "The Decomposition Tree dynamically 'drills-down' across different dimensions ad-hoc. You can visually trace the spike directly to one specific Rep, selling to one Customer, using highly unusual 'Net 180' payment terms.",
+                customHTML: `
+                    <div class="flex h-full items-center justify-center space-x-2 w-full mt-2">
+                        <div class="tree-node node-root w-24"><strong>Total Spike</strong><br>$5.0M</div>
+                        <div class="tree-connector"></div>
+                        <div class="flex flex-col space-y-2">
+                            <div class="tree-node text-slate-400 w-24">Rep A<br>$0.2M</div>
+                            <div class="tree-node node-highlight w-24"><strong>Rep B</strong><br>$4.5M</div>
+                            <div class="tree-node text-slate-400 w-24">Rep C<br>$0.3M</div>
+                        </div>
+                        <div class="tree-connector mt-12"></div>
+                        <div class="flex flex-col space-y-2 mt-12">
+                            <div class="tree-node node-highlight w-24"><strong>Cust_99</strong><br>$4.5M</div>
+                        </div>
+                        <div class="tree-connector mt-12"></div>
+                        <div class="flex flex-col space-y-2 mt-12">
+                            <div class="tree-node node-highlight w-28"><strong>Net 180 Days</strong><br>$4.5M</div>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        // Scoring System
+        let currentScore = 0;
+        let answeredQuestions = new Set();
+        const totalQuestions = questions.length;
+        
+        function updateScoreboard() {
+            document.getElementById('score-display').innerText = currentScore;
+            const progress = (currentScore / totalQuestions) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            
+            const rankEl = document.getElementById('player-rank');
+            if (currentScore === totalQuestions) {
+                rankEl.innerText = "Master Forensic Analyst";
+                rankEl.className = "text-purple-600 bg-purple-100 px-3 py-1 rounded-full animate-pulse";
+            } else if (currentScore >= 5) {
+                rankEl.innerText = "Senior Investigator";
+                rankEl.className = "text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full";
+            }
+        }
+
+        // Fire Confetti Function
+        function triggerConfetti(x, y) {
+            confetti({
+                particleCount: 80,
+                spread: 70,
+                origin: { x: x, y: y },
+                colors: ['#3b82f6', '#ec4899', '#10b981', '#8b5cf6']
+            });
+        }
+
+        // UI Setup
+        const container = document.getElementById('quiz-container');
+        
+        function getIconForOption(optText) {
+            const text = optText.toLowerCase();
+            if (text.includes('pie') || text.includes('donut')) return 'fa-chart-pie';
+            if (text.includes('waterfall')) return 'fa-water';
+            if (text.includes('scatter')) return 'fa-braille';
+            if (text.includes('line')) return 'fa-chart-line';
+            if (text.includes('tree') || text.includes('influencers')) return 'fa-sitemap';
+            if (text.includes('matrix') || text.includes('table')) return 'fa-table';
+            if (text.includes('area')) return 'fa-chart-area';
+            return 'fa-chart-bar'; 
+        }
+
+        questions.forEach((q, index) => {
+            const block = document.createElement('div');
+            block.className = 'game-card p-6 md:p-8 relative overflow-hidden';
+            block.id = `card-${q.id}`;
+            
+            let buttonsHTML = '';
+            q.options.forEach((opt, optIdx) => {
+                const iconClass = getIconForOption(opt);
+                buttonsHTML += `<button id="btn-${q.id}-${optIdx}" onclick="selectOption(${q.id}, ${optIdx})" class="mcq-btn w-full text-left px-5 py-4 rounded-xl font-bold text-slate-600 mb-3 flex items-center justify-between group">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mr-4 text-blue-500 border border-slate-100 shadow-sm group-hover:bg-white transition-colors">
+                            <i class="fas ${iconClass} text-xl"></i>
+                        </div>
+                        <span class="text-[1.05rem]">${String.fromCharCode(65 + optIdx)}. ${opt}</span>
+                    </div>
+                    <i class="far fa-circle text-slate-300 text-2xl group-hover:text-blue-300" id="icon-${q.id}-${optIdx}"></i>
+                </button>`;
+            });
+
+            block.innerHTML = `
+                <div class="absolute top-0 right-0 bg-blue-100 text-blue-600 text-xs font-black px-4 py-2 rounded-bl-2xl uppercase tracking-widest border-b border-l border-white">Challenge ${index + 1}</div>
+                
+                <div class="flex justify-between items-center mb-6 mt-2">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center">
+                        <i class="fas ${q.icon} ${q.iconColor} mr-3 text-2xl drop-shadow-sm"></i> ${q.title}
+                    </h2>
+                </div>
+                
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner mb-6 relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 text-slate-200 text-6xl opacity-50"><i class="fas fa-search"></i></div>
+                    <p class="text-slate-600 mb-4 text-base font-semibold leading-relaxed relative z-10"><strong class="text-slate-800 font-black"><i class="fas fa-play text-blue-500 mr-2"></i>Scenario:</strong> ${q.scenario}</p>
+                    <p class="text-slate-500 text-sm font-semibold bg-red-50 p-4 rounded-xl border border-red-100 relative z-10"><strong class="text-red-500 font-black"><i class="fas fa-times-circle mr-2"></i>Bad Practice:</strong> ${q.badData}</p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-lg font-black mb-4 text-slate-700">Select your evidence structure:</h3>
+                    ${buttonsHTML}
+                </div>
+
+                <div class="flex justify-end mt-4">
+                    <button id="submitBtn-${q.id}" onclick="submitAnswer(${q.id}, event)" class="hidden px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-black transition-all items-center shadow-lg shadow-blue-200 hover:shadow-xl hover:-translate-y-1 active:scale-95">
+                        Submit Evidence <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+
+                <!-- Reveal Section -->
+                <div id="reveal-${q.id}" class="reveal-section pt-8">
+                    <div class="border-t-2 border-dashed border-slate-200 mb-8"></div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-xl font-black text-emerald-500 mb-3 flex items-center"><i class="fas fa-check-circle mr-2 text-2xl"></i> Verified Structure</h4>
+                            <p class="text-slate-800 font-black text-lg mb-4 bg-emerald-50 inline-block px-4 py-2 rounded-xl border border-emerald-200">${q.options[q.correctIndex]}</p>
+                            
+                            <div class="bg-white border-l-4 border-blue-500 p-5 rounded-r-2xl shadow-sm mt-4 border-y border-r border-slate-100">
+                                <h5 class="font-black text-blue-600 mb-2 text-sm uppercase tracking-widest flex items-center"><i class="fas fa-lightbulb mr-2 text-yellow-400"></i> Forensic Logic:</h5>
+                                <p class="text-slate-600 text-sm font-semibold leading-relaxed">${q.reasoning}</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-5 rounded-3xl border-2 border-slate-100 shadow-inner flex flex-col items-center justify-center relative">
+                            <span class="absolute top-3 left-4 text-[10px] text-slate-400 uppercase tracking-widest font-black bg-white border border-slate-200 px-3 py-1 rounded-full shadow-sm">Target Visual</span>
+                            ${q.customHTML ? q.customHTML : `<div class="chart-container"><canvas id="canvas-${q.id}"></canvas></div>`}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(block);
+        });
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            ['tab-theory', 'tab-data', 'tab-pbi'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById(id).classList.remove('block');
+                document.getElementById('nav-' + id.split('-')[1]).classList.remove('active');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+            document.getElementById('nav-' + tabId.split('-')[1]).classList.add('active');
+        }
+
+        // Quiz Logic
+        let selectedOptions = {};
+
+        function selectOption(questionId, optIdx) {
+            if(document.getElementById(`reveal-${questionId}`).classList.contains('visible')) return;
+
+            const q = questions.find(q => q.id === questionId);
+            selectedOptions[questionId] = optIdx;
+
+            q.options.forEach((_, idx) => {
+                const btn = document.getElementById(`btn-${questionId}-${idx}`);
+                const icon = document.getElementById(`icon-${questionId}-${idx}`);
+                btn.classList.remove('selected');
+                icon.classList.remove('fas', 'fa-check-circle', 'text-blue-500');
+                icon.classList.add('far', 'fa-circle', 'text-slate-300');
+            });
+
+            const btn = document.getElementById(`btn-${questionId}-${optIdx}`);
+            const icon = document.getElementById(`icon-${questionId}-${optIdx}`);
+            btn.classList.add('selected');
+            icon.classList.remove('far', 'fa-circle', 'text-slate-300');
+            icon.classList.add('fas', 'fa-check-circle', 'text-blue-500');
+
+            const submitBtn = document.getElementById(`submitBtn-${questionId}`);
+            submitBtn.classList.remove('hidden');
+            submitBtn.classList.add('inline-flex');
+        }
+
+        function submitAnswer(questionId, event) {
+            const q = questions.find(q => q.id === questionId);
+            const selectedIdx = selectedOptions[questionId];
+            const btn = document.getElementById(`btn-${questionId}-${selectedIdx}`);
+            const isCorrect = selectedIdx === q.correctIndex;
+
+            if (!answeredQuestions.has(questionId)) {
+                answeredQuestions.add(questionId);
+                
+                if (isCorrect) {
+                    currentScore++;
+                    updateScoreboard();
+                    // Get button coordinates for confetti origin
+                    const rect = event.target.getBoundingClientRect();
+                    const x = (rect.left + (rect.width / 2)) / window.innerWidth;
+                    const y = (rect.top + (rect.height / 2)) / window.innerHeight;
+                    triggerConfetti(x, y);
+                } else {
+                    // Shake animation for incorrect
+                    const card = document.getElementById(`card-${questionId}`);
+                    card.classList.add('shake-anim');
+                    setTimeout(() => card.classList.remove('shake-anim'), 400);
+                    btn.classList.add('wrong-highlight');
+                }
+            }
+
+            // Always reveal logic and correct answer
+            const revealDiv = document.getElementById(`reveal-${questionId}`);
+            const submitBtn = document.getElementById(`submitBtn-${questionId}`);
+            
+            revealDiv.classList.add('visible');
+            submitBtn.classList.add('hidden');
+
+            // Highlight Correct regardless
+            const correctBtn = document.getElementById(`btn-${questionId}-${q.correctIndex}`);
+            correctBtn.classList.remove('wrong-highlight', 'selected');
+            correctBtn.classList.add('correct-highlight');
+            const correctIcon = document.getElementById(`icon-${questionId}-${q.correctIndex}`);
+            correctIcon.className = 'fas fa-check-circle text-emerald-500 text-2xl';
+
+            // Disable all buttons
+            q.options.forEach((_, idx) => {
+                const b = document.getElementById(`btn-${questionId}-${idx}`);
+                b.classList.add('disabled');
+                b.onclick = null;
+            });
+
+            // Render Chart
+            if (q.chartFunc) {
+                const ctx = document.getElementById(`canvas-${questionId}`).getContext('2d');
+                q.chartFunc(ctx);
+            }
+        }
+
+        /* --- DATA GENERATION SCRIPTS --- */
+        function randomDate(start, end) { return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())); }
+        function formatDate(date) { return date.toISOString().split('T')[0]; }
+        
+        function downloadCSV(csvContent, fileName) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Reduced logic for brevity in data generation
+        function generateAssets() {
+            let csv = "Asset_ID,Asset_Category,Acquisition_Date,Capitalized_Amount,Useful_Life_Months\n";
+            let id = 1000;
+            const categories = ["Office Equipment", "IT Hardware", "Heavy Machinery", "Vehicles"];
+            for(let i=0; i<600; i++) {
+                let cat = categories[Math.floor(Math.random() * categories.length)];
+                let date = randomDate(new Date(2021, 0, 1), new Date(2025, 11, 31));
+                let year = date.getFullYear();
+                let amount = Math.floor(Math.random() * 40000) + 1000; 
+                let life = 36;
+                if(cat === "Office Equipment" || cat === "Vehicles") life = 60;
+                if(cat === "Heavy Machinery") life = year >= 2024 ? (Math.random() > 0.5 ? 96 : 120) : 60;
+                csv += `AST-${id++},${cat},${formatDate(date)},${amount},${life}\n`;
+            }
+            for(let i=0; i<85; i++) {
+                let date = randomDate(new Date(2024, 0, 1), new Date(2025, 11, 31));
+                let amount = Math.floor(Math.random() * 50) + 4950; // Threshold abuse
+                csv += `AST-${id++},IT Hardware,${formatDate(date)},${amount},36\n`;
+            }
+            downloadCSV(csv, "Fixed_Assets.csv");
+        }
+
+        function generateInventory() {
+            let csv = "SKU,Product_Category,Days_In_Inventory,Quantity_On_Hand,Unit_Cost\n";
+            let id = 5000;
+            const categories = ["Raw Materials", "Work In Progress", "Finished Goods - Standard", "Finished Goods - Premium"];
+            for(let i=0; i<400; i++) {
+                let cat = categories[Math.floor(Math.random() * categories.length)];
+                let days = Math.floor(Math.random() * 180) + 5; 
+                let qty = Math.floor(Math.random() * 1000) + 10;
+                let cost = (Math.random() * 150 + 10).toFixed(2);
+                csv += `SKU-${id++},${cat},${days},${qty},${cost}\n`;
+            }
+            for(let i=0; i<25; i++) {
+                let days = Math.floor(Math.random() * 300) + 800; 
+                let qty = Math.floor(Math.random() * 5000) + 2000; 
+                let cost = (Math.random() * 300 + 400).toFixed(2); 
+                csv += `SKU-${id++},Finished Goods - Premium,${days},${qty},${cost}\n`;
+            }
+            downloadCSV(csv, "Inventory.csv");
+        }
+
+        function generateJournals() {
+            let csv = "Entry_ID,Date,Day_of_Week,Hour_of_Day,User_Role,Entry_Amount\n";
+            let id = 90000;
+            const roles = ["Staff Accountant", "AP Clerk", "AR Clerk", "Senior Accountant"];
+            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            for(let i=0; i<1500; i++) {
+                let date = randomDate(new Date(2025, 0, 1), new Date(2025, 11, 31));
+                let dayNum = date.getDay();
+                if(dayNum === 0 || dayNum === 6) if(Math.random() > 0.1) date.setDate(date.getDate() + 1); 
+                let dayName = days[date.getDay()];
+                let hour = Math.floor(Math.random() * 10) + 8; 
+                let role = roles[Math.floor(Math.random() * roles.length)];
+                let amount = (Math.random() * 15000 + 100).toFixed(2);
+                csv += `JE-${id++},${formatDate(date)},${dayName},${hour},${role},${amount}\n`;
+            }
+            const endOfQuarters = [new Date(2025, 2, 30), new Date(2025, 5, 29), new Date(2025, 8, 28), new Date(2025, 11, 28)];
+            for(let i=0; i<15; i++) {
+                let date = endOfQuarters[Math.floor(Math.random() * endOfQuarters.length)];
+                let dayName = "Saturday"; 
+                let hour = 23; 
+                let role = "CFO";
+                let amount = Math.floor(Math.random() * 5 + 1) * 250000; 
+                csv += `JE-${id++},${formatDate(date)},${dayName},${hour},${role},${amount}.00\n`;
+            }
+            downloadCSV(csv, "Journals.csv");
+        }
+
+        function downloadDataset(type) {
+            if(type === 'assets') generateAssets();
+            if(type === 'inventory') generateInventory();
+            if(type === 'journals') generateJournals();
+        }
+    </script>
+</body>
+</html>
