@@ -1,1526 +1,1118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power BI DAX Mastery Lab</title>
-    <!-- Tailwind CSS -->
+    <title>ACCT311 - Data Analysis for Accountants</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#0f172a', // Slate 900
+                        accent: '#0ea5e9', // Sky 500
+                        secondary: '#64748b', // Slate 500
+                    },
+                    animation: {
+                        'fade-out': 'fadeOut 0.5s ease-out forwards',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeOut: {
+                            '0%': { opacity: '1' },
+                            '100%': { opacity: '0', visibility: 'hidden' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; }
-        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .hero-pattern {
+            background-color: #0f172a;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231e293b' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* Power BI UI Simulations */
-        .pbi-header {
-            background-color: #F2C811; /* PBI Yellow */
-            color: black;
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
         }
         
-        .da-expression-bar {
-            font-family: 'Fira Code', monospace;
-            border: 1px solid #d1d1d1;
-            background: white;
-            position: relative;
-            z-index: 40;
-        }
-
-        /* IntelliSense Styles */
-        .suggestions-box {
-            position: absolute;
-            background: white;
-            border: 1px solid #64748b;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            max-height: 350px;
+        /* Loading Overlay */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #0f172a;
+            z-index: 100;
             display: flex;
-            flex-col: column;
-            z-index: 9999; 
-            min-width: 400px;
-            max-width: 600px;
-            width: auto;
-            font-family: 'Segoe UI', sans-serif;
-            font-size: 13px;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-        
-        .suggestions-header {
-            background: #f1f5f9;
-            padding: 6px 10px;
-            cursor: move;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 11px;
-            color: #475569;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            flex-shrink: 0;
+            flex-direction: column;
+        }
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #0ea5e9;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
-        .signature-area {
-            background: #fffbeb;
-            padding: 8px 12px;
-            border-bottom: 1px solid #fcd34d;
-            font-family: 'Fira Code', monospace;
-            font-size: 12px;
-            color: #92400e;
-            display: none;
-            white-space: normal;
-            word-break: break-word;
-            flex-shrink: 0;
+        .category-btn.active {
+            border-color: #0ea5e9;
+            background-color: #f0f9ff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .category-btn.active i {
+            color: #0ea5e9;
         }
 
-        .suggestions-content {
-            overflow-y: auto;
-            max-height: 250px;
-            background-color: white;
+        /* Hover effect for study guide buttons */
+        .group-btn:hover .fa-arrow-right {
+            opacity: 1;
+            transform: translateX(2px);
         }
-
-        .suggestion-item {
-            padding: 8px 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid #f8fafc;
-            white-space: nowrap; 
+        .group-btn .fa-arrow-right {
+            transition: all 0.3s ease;
         }
-        .suggestion-item:hover, .suggestion-item.active {
-            background-color: #e0f2fe;
-        }
-        .icon-table { color: #d97706; }
-        .icon-col { color: #2563eb; }
-        .icon-func { color: #9333ea; font-weight: bold; }
-        .icon-measure { color: #059669; font-weight: bold; } /* Emerald */
-
-        /* Animations */
-        @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-            animation: fade-in 0.3s ease-out forwards;
-        }
-        
-        /* Syntax Highlighting Sim */
-        .measure-badge {
-            background-color: #e0e7ff;
-            color: #3730a3;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .column-badge {
-            background-color: #dcfce7;
-            color: #166534;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        /* Input Styling */
-        input.dax-input {
-            padding: 4px 0;
-            height: 28px; 
-        }
-
-        /* Quiz Styles */
-        .quiz-option {
-            transition: all 0.2s;
-        }
-        .quiz-option:hover {
-            background-color: #f8fafc;
-            border-color: #cbd5e1;
-        }
-        .quiz-option.selected {
-            background-color: #eff6ff;
-            border-color: #3b82f6;
-            color: #1e40af;
-        }
-        .quiz-option.correct {
-            background-color: #dcfce7;
-            border-color: #22c55e;
-            color: #14532d;
-        }
-        .quiz-option.incorrect {
-            background-color: #fee2e2;
-            border-color: #ef4444;
-            color: #7f1d1d;
-        }
-
-        /* Sequence Iterator Animation Styles */
-        @keyframes iterRow1 { 0%, 25%, 100% { background-color: transparent; } 5%, 20% { background-color: #fef08a; } }
-        @keyframes iterCalc1 { 0%, 5% { opacity: 0; } 10%, 100% { opacity: 1; } }
-
-        @keyframes iterRow2 { 0%, 25%, 50%, 100% { background-color: transparent; } 30%, 45% { background-color: #fef08a; } }
-        @keyframes iterCalc2 { 0%, 30% { opacity: 0; } 35%, 100% { opacity: 1; } }
-
-        @keyframes iterRow3 { 0%, 50%, 75%, 100% { background-color: transparent; } 55%, 70% { background-color: #fef08a; } }
-        @keyframes iterCalc3 { 0%, 55% { opacity: 0; } 60%, 100% { opacity: 1; } }
-
-        @keyframes iterShowTotal { 0%, 80% { opacity: 0; transform: scale(0.8); } 85%, 100% { opacity: 1; transform: scale(1); } }
-
-        .anim-row-1 { animation: iterRow1 8s infinite; }
-        .anim-calc-1 { animation: iterCalc1 8s infinite; }
-        
-        .anim-row-2 { animation: iterRow2 8s infinite; }
-        .anim-calc-2 { animation: iterCalc2 8s infinite; }
-        
-        .anim-row-3 { animation: iterRow3 8s infinite; }
-        .anim-calc-3 { animation: iterCalc3 8s infinite; }
-        
-        .anim-total { animation: iterShowTotal 8s infinite; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased flex flex-col min-h-screen relative">
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-slate-900 text-white flex flex-col shadow-xl flex-shrink-0 z-20">
-        <div class="p-6 border-b border-slate-700 bg-slate-800">
-            <h1 class="text-xl font-bold text-yellow-400 flex items-center gap-2">
-                <i data-lucide="function-square" class="w-6 h-6"></i>
-                DAX Master
-            </h1>
-            <p class="text-xs text-slate-400 mt-1">Foundations to Intermediate</p>
-        </div>
+    <div id="loader">
+        <div class="loader-spinner mb-4"></div>
+        <h2 class="text-white text-xl font-bold tracking-wider animate-pulse">ACCT311</h2>
+        <p class="text-slate-400 text-sm mt-2">Loading Environment...</p>
+    </div>
 
-        <nav class="flex-1 overflow-y-auto py-4">
-            <ul id="module-list" class="space-y-1">
-                <!-- Modules injected by JS -->
-            </ul>
-        </nav>
-
-        <div class="p-4 bg-slate-800 border-t border-slate-700">
-            <div class="flex justify-between text-xs mb-2 text-slate-300">
-                <span>Course Progress</span>
-                <span id="progress-text">0%</span>
-            </div>
-            <div class="w-full bg-slate-700 rounded-full h-2">
-                <div id="progress-bar" class="bg-yellow-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-full relative overflow-hidden">
-        <!-- Header -->
-        <header class="bg-white border-b border-slate-200 px-8 py-5 shadow-sm flex-shrink-0">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 id="current-module-title" class="text-2xl font-bold text-slate-800">Loading...</h2>
-                    <p id="current-module-subtitle" class="text-slate-500 text-sm mt-1">Interactive Code Lab</p>
+    <nav class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center cursor-pointer" onclick="switchTab('apps')">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-sky-900/20">
+                        <i class="fa-solid fa-chart-line text-accent text-lg"></i>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight text-primary">ACCT311</span>
                 </div>
-                <div class="flex gap-3">
-                    <button onclick="app.revealAnswers()" class="text-sm px-4 py-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-2 transition-colors font-semibold">
-                        <i data-lucide="eye" class="w-4 h-4"></i> Reveal Answers
-                    </button>
-                    <div class="w-px h-8 bg-slate-200 mx-1"></div>
-                    <button onclick="app.resetCurrentModule()" class="text-sm px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg flex items-center gap-2 transition-colors">
-                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset
-                    </button>
+
+                <div class="hidden md:flex space-x-1 items-center">
+                    <button onclick="switchTab('apps')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Lecture Materials</button>
+                    <button onclick="switchTab('demos')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Real-World Practice</button>
+                    <button onclick="switchTab('labs')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Labs</button>
+                    <button onclick="switchTab('study')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Study Guides</button>
+                    <button onclick="switchTab('bonus')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Bonus</button>
                 </div>
             </div>
-        </header>
+        </div>
+    </nav>
 
-        <!-- Scrollable Content Area -->
-        <div class="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50" id="main-content-area">
+    <header id="home" class="relative hero-pattern text-white py-20 lg:py-24 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/95 to-slate-900/80"></div>
+        
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-sky-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center">
+            <div class="md:w-2/3 mb-8 md:mb-0 z-10">
+                <div class="inline-flex items-center px-3 py-1 mb-4 text-xs font-semibold tracking-wider text-sky-300 uppercase bg-slate-800/80 backdrop-blur-sm rounded-full border border-slate-700">
+                    <span class="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
+                    Spring 2026 Semester
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 leading-tight">
+                    Data Analysis <br/>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">for Accountants</span>
+                </h1>
+                <p class="text-lg text-slate-300 max-w-2xl leading-relaxed">
+                    Explore lecture materials, real-world case studies, and hands-on labs designed to master financial data visualization.
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow -mt-10 relative z-20 pb-24">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            <!-- Top Row: Cards -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[280px]">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
                 
-                <!-- Concept Card -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full animate-fade-in" style="animation-delay: 0.1s">
-                    <div class="bg-yellow-50 px-6 py-3 border-b border-yellow-100 flex items-center gap-2">
-                        <i data-lucide="book-open" class="w-4 h-4 text-yellow-600"></i>
-                        <h3 class="font-semibold text-yellow-900">Concept & Syntax</h3>
-                    </div>
-                    <div id="concept-content" class="p-6 text-sm leading-relaxed text-slate-600 flex-1 overflow-y-auto">
-                        <!-- Content Injected Here -->
-                    </div>
-                </div>
-
-                <!-- Instructions Card -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full animate-fade-in" style="animation-delay: 0.2s">
-                    <div class="bg-slate-50 px-6 py-3 border-b border-slate-200 flex items-center gap-2">
-                        <i data-lucide="check-square" class="w-4 h-4 text-slate-600"></i>
-                        <h3 class="font-semibold text-slate-900">Lab Objectives</h3>
-                    </div>
-                    <div class="p-6 flex-1 flex flex-col overflow-y-auto">
-                        <h4 id="project-title" class="font-bold text-slate-800 mb-2"></h4>
-                        <p id="project-brief" class="text-sm text-slate-600 mb-4"></p>
-                        <div class="mt-auto bg-slate-50 rounded-lg p-4 border border-slate-100" id="instructions-box">
-                            <ul id="project-steps" class="space-y-2 text-sm text-slate-700">
-                                <!-- Steps Injected Here -->
-                            </ul>
+                <button onclick="switchTab('apps')" id="btn-apps" class="category-btn active glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-sky-500 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                            <i class="fa-solid fa-book-open text-blue-500 text-xl"></i>
                         </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-blue-500 transition-colors"></i>
                     </div>
-                </div>
+                    <h3 class="text-lg font-bold text-slate-800">Lecture Materials</h3>
+                    <p class="text-sm text-slate-500 mt-1">Interactive Concepts</p>
+                </button>
+
+                <button onclick="switchTab('demos')" id="btn-demos" class="category-btn glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-orange-500 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
+                            <i class="fa-solid fa-laptop-code text-orange-500 text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-orange-500 transition-colors"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Class Demos</h3>
+                    <p class="text-sm text-slate-500 mt-1">Real-World Practice</p>
+                </button>
+
+                <button onclick="switchTab('labs')" id="btn-labs" class="category-btn glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-emerald-500 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                            <i class="fa-solid fa-flask text-emerald-500 text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-emerald-500 transition-colors"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Laboratory</h3>
+                    <p class="text-sm text-slate-500 mt-1">Assignments</p>
+                </button>
+
+                <button onclick="switchTab('study')" id="btn-study" class="category-btn glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-rose-500 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
+                            <i class="fa-solid fa-graduation-cap text-rose-500 text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-rose-500 transition-colors"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Study Guides</h3>
+                    <p class="text-sm text-slate-500 mt-1">Exam Preparation</p>
+                </button>
+
+                <button onclick="switchTab('bonus')" id="btn-bonus" class="category-btn glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-violet-500 group">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-full bg-violet-50 flex items-center justify-center group-hover:bg-violet-100 transition-colors">
+                            <i class="fa-solid fa-star text-violet-500 text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-violet-500 transition-colors"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Bonus</h3>
+                    <p class="text-sm text-slate-500 mt-1">Advanced Topics</p>
+                </button>
+
             </div>
 
-            <!-- Bottom Row: Interactive Demo -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-fade-in flex flex-col flex-1 min-h-[400px]" style="animation-delay: 0.3s">
-                <div class="bg-slate-50 px-6 py-3 border-b border-slate-200 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <i data-lucide="terminal" class="w-4 h-4 text-slate-600"></i>
-                        <h3 class="font-semibold text-slate-800">DAX Workbench</h3>
-                    </div>
-                    <div id="demo-status" class="text-xs font-medium px-2 py-1 rounded bg-slate-200 text-slate-600">Waiting for input...</div>
-                </div>
+            <div id="content-container" class="min-h-[500px]">
                 
-                <!-- Demo Container -->
-                <div id="demo-container" class="p-6 relative flex-1 bg-slate-100 flex flex-col">
-                    <!-- Dynamic Demo Content -->
-                </div>
-            </div>
+                <div id="view-apps" class="animate-fade-in block">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900">Lecture Materials</h2>
+                            <p class="text-slate-600">Interactive modules covering core course concepts.</p>
+                        </div>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">11 Modules</span>
+                    </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-blue-100 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">0. Introduction</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Course overview & setup.</p>
+                                <a href="interactive-apps/0.introduction/index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-emerald-100 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">1. Excel Basic</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Foundational shortcuts.</p>
+                                <a href="interactive-apps/1.excel-basic/index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-amber-100 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1555421689-d68471e189f2?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">2. Excel Conditional</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Visualizing data rules.</p>
+                                <a href="interactive-apps/2.excel-conditional/index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-blue-100 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">3. Excel Lookup</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">VLOOKUP & XLOOKUP.</p>
+                                <a href="interactive-apps/3.excel-lookup/index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-purple-100 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">4. Excel Pivot Table</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Summarizing data sets.</p>
+                                <a href="interactive-apps/4.excel-pivot-table/index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-red-100 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1543286386-2e659306cd6c?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">5.1 Excel Stat</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Regression & Analysis.</p>
+                                <a href="interactive-apps/5.1.excel-stat/index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-orange-100 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">5.2 Excel Descriptive</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Descriptive statistics.</p>
+                                <a href="interactive-apps/5.2.excel-descriptive/index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-teal-100 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">5.3 Excel Whatif Analysis </h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Optimization models using Solver & Scenario Analysis</p>
+                                <a href="interactive-apps/5.3.excel-whatif/index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative">
+                            <div class="h-40 bg-yellow-100 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <div class="absolute top-2 right-2 bg-white text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded shadow">Multi-Part</div>
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">6. Power Query</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Data transformations & simulations.</p>
+                                <button onclick="openModal('power-query-modal')" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors cursor-pointer">
+                                    <i class="fa-solid fa-list-ul mr-2 text-xs"></i> View Simulations
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative">
+                            <div class="h-40 bg-yellow-400 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <div class="absolute top-2 right-2 bg-white text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded shadow">Multi-Part</div>
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">7. Power BI</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Visualization & DAX.</p>
+                                <button onclick="openModal('power-bi-modal')" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors cursor-pointer">
+                                    <i class="fa-solid fa-list-ul mr-2 text-xs"></i> View Lessons
+                                </button>
+                            </div>
+                        </div>
+
+                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative">
+                            <div class="h-40 bg-cyan-600 relative overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <div class="absolute top-2 right-2 bg-white text-cyan-700 text-[10px] font-bold px-2 py-0.5 rounded shadow">Multi-Part</div>
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">8. Alteryx</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Workflow automation series.</p>
+                                <button onclick="openModal('alteryx-modal')" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors cursor-pointer">
+                                    <i class="fa-solid fa-list-ul mr-2 text-xs"></i> View Lessons
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="view-demos" class="hidden animate-fade-in">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900">Real-World Practice</h2>
+                            <p class="text-slate-600">Interactive scenarios and class demonstrations.</p>
+                        </div>
+                        <span class="bg-orange-100 text-orange-800 text-xs font-semibold px-2.5 py-0.5 rounded">11 Demos + Coming Soon</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                            <div class="h-32 bg-orange-50 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="fa-solid fa-magnifying-glass text-4xl text-orange-200"></i>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-2 inline-block">Demo 3</span>
+                                <h3 class="font-bold text-slate-800 leading-tight mb-2">Conditional Lookup</h3>
+                                <a href="demo/3.conditional-lookup/index.html" class="text-sm font-semibold text-accent hover:text-sky-700 flex items-center">
+                                    View Demo <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                            <div class="h-32 bg-purple-50 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="fa-solid fa-dog text-4xl text-purple-200"></i>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-2 inline-block">Demo 4.1</span>
+                                <h3 class="font-bold text-slate-800 leading-tight mb-2">Pivot Bulldog</h3>
+                                <a href="demo/4.1.pivot-bulldog/index.html" class="text-sm font-semibold text-accent hover:text-sky-700 flex items-center">
+                                    View Demo <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                            <div class="h-32 bg-purple-50 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="fa-brands fa-bitcoin text-4xl text-purple-200"></i>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-2 inline-block">Demo 4.2</span>
+                                <h3 class="font-bold text-slate-800 leading-tight mb-2">Pivot Crypto</h3>
+                                <a href="demo/4.2.pivot-crypto/index.html" class="text-sm font-semibold text-accent hover:text-sky-700 flex items-center">
+                                    View Demo <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                            <div class="h-32 bg-red-50 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="fa-solid fa-gamepad text-4xl text-red-200"></i>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <span class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-2 inline-block">Demo 5.0</span>
+                                <h3 class="font-bold text-slate-800 leading-tight mb-2">Stat Game</h3>
+                                <a href="demo/5.0.stat-game/index.html" class="text-sm font-semibold text-accent hover:text-sky-700 flex items-center">
+                                    View Demo <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                            <div class="h-32 bg-red-50 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="fa-solid fa-chart-line text-4xl text-red-200"></i>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <span class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-2 inline-block">Demo 5.1</span>
+                                <h3 class="font-bold text-slate-800 leading-tight mb-2">Regression</h3>
+                                <a href="demo/5.1.regression/index.html" class="text-sm font-semibold text-accent hover:text-sky-700 flex items-center">
+                                    View Demo <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                            <div class="h-32 bg-blue-50 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="fa-solid fa-robot text-4xl text-blue-200"></i>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-2 inline-block">Demo 5.2</span>
+                                <h3 class="font-bold text-slate-800 leading-tight mb-2">Macro</h3>
+                                <a href="demo/5.2.macro/index.html" class="text-sm font-semibold text-accent hover:text-sky-700 flex items-center">
+                                    View Demo <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                            <div class="h-32 bg-yellow-50 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="fa-solid fa-bolt text-4xl text-yellow-200"></i>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <span class="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-2 inline-block">Demo 6.1</span>
+                                <h3 class="font-bold text-slate-800 leading-tight mb-2">Power Query Practice</h3>
+                                <a href="demo/6.1.power-query-practice/index.html" class="text-sm font-semibold text-accent hover:text-sky-700 flex items-center">
+                                    View Demo <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                            <div class="h-32 bg-yellow-50 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="fa-solid fa-seedling text-4xl text-yellow-200"></i>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <span class="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-2 inline-block">Demo 6.2</span>
+                                <h3 class="font-bold text-slate-800 leading-tight mb-2">Power Query, Power BI Practice with "Beans" Dataset </h3>
+                                <a href="demo/6.2.power-query-beans/index.html" class="text-sm font-semibold text-accent hover:text-sky-700 flex items-center">
+                                    View Demo <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                            <div class="h-32 bg-yellow-50 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="fa-solid fa-boxes-stacked text-4xl text-yellow-200"></i>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <span class="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-2 inline-block">Demo 7.1</span>
+                                <h3 class="font-bold text-slate-800 leading-tight mb-2">Power BI- catch channel stuffing tactic</h3>
+                                <a href="demo/7.1.channel-stuffing-powerbi/index.html" class="text-sm font-semibold text-accent hover:text-sky-700 flex items-center">
+                                    View Demo <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group">
+                            <div class="h-32 bg-cyan-50 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="fa-solid fa-shield-halved text-4xl text-cyan-200"></i>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <span class="bg-cyan-100 text-cyan-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-2 inline-block">Demo 8.1</span>
+                                <h3 class="font-bold text-slate-800 leading-tight mb-2">Cybersecurity Alteryx</h3>
+                                <a href="demo/8.1.cybersecurity-alteryx/index.html" class="text-sm font-semibold text-accent hover:text-sky-700 flex items-center">
+                                    View Demo <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Inserted Demo 8.2 Here -->
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group opacity-75 grayscale hover:grayscale-0">
+                            <div class="h-32 bg-slate-100 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="fa-solid fa-lock text-4xl text-slate-300"></i>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <span class="bg-slate-200 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-2 inline-block">Demo 8.2</span>
+                                <h3 class="font-bold text-slate-500 leading-tight mb-2">Coming Soon</h3>
+                            </div>
+                        </div>
+
+                        <!-- Inserted Demo 8.3 Here -->
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group opacity-75 grayscale hover:grayscale-0">
+                            <div class="h-32 bg-slate-100 relative overflow-hidden">
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <i class="fa-solid fa-hourglass-half text-4xl text-slate-300"></i>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <span class="bg-slate-200 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase mb-2 inline-block">Demo 8.3</span>
+                                <h3 class="font-bold text-slate-500 leading-tight mb-2">Coming Soon</h3>
+                            </div>
+                        </div>
+
+                        <div class="border border-dashed border-slate-300 rounded-xl p-5 flex flex-col justify-center items-center text-center bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                            <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+                                <i class="fa-solid fa-plus text-slate-400"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-400">More Demos</h3>
+                            <p class="text-xs text-slate-400 mt-1">Coming Soon</p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="view-labs" class="hidden animate-fade-in">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900">Laboratory Exercises</h2>
+                            <p class="text-slate-600">Hands-on practice environments.</p>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded">9 Labs</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        
+                        <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 relative overflow-hidden group hover:shadow-md transition-shadow">
+                            <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <i class="fa-solid fa-flask text-6xl text-emerald-600"></i>
+                            </div>
+                            <div class="relative">
+                                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded mb-3 inline-block">Lab 1</span>
+                                <h3 class="text-lg font-bold text-slate-800 mb-1 leading-snug">Fundamentals, Conditionals & Lookups</h3>
+                                <a href="lab/lab1/index.html" class="inline-flex items-center text-sm font-semibold text-emerald-600 hover:text-emerald-700 mt-2">
+                                    Start Lab <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                         <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 relative overflow-hidden group hover:shadow-md transition-shadow">
+                            <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <i class="fa-solid fa-table text-6xl text-emerald-600"></i>
+                            </div>
+                            <div class="relative">
+                                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded mb-3 inline-block">Lab 2</span>
+                                <h3 class="text-lg font-bold text-slate-800 mb-1">Pivot Table</h3>
+                                <p class="text-xs text-slate-500 mb-2">Excel Analysis</p>
+                                <a href="lab/lab2/index.html" class="inline-flex items-center text-sm font-semibold text-emerald-600 hover:text-emerald-700 mt-2">
+                                    Start Lab <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
+                            <div class="absolute top-0 right-0 p-3 opacity-10">
+                                <i class="fa-solid fa-chart-bar text-6xl text-slate-400"></i>
+                            </div>
+                            <div class="relative">
+                                <span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded mb-3 inline-block">Lab 3</span>
+                                <h3 class="text-lg font-bold text-slate-700 mb-1 leading-snug">Excel Master: Data Analysis Module</h3>
+                                <p class="text-xs text-slate-500 mb-2">Practice at Home</p>
+                                <div class="inline-flex items-center text-sm font-medium text-slate-400 mt-2 cursor-not-allowed">
+                                    <i class="fa-solid fa-lock mr-2"></i> Locked
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 relative overflow-hidden group hover:shadow-md transition-shadow">
+                            <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <i class="fa-solid fa-table text-6xl text-emerald-600"></i>
+                            </div>
+                            <div class="relative">
+                                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded mb-3 inline-block">Lab 4</span>
+                                <h3 class="text-lg font-bold text-slate-700 mb-1">Descriptive & Regression</h3>
+                                <p class="text-xs text-slate-500 mb-2">Using Housing Data</p>
+                                <a href="lab/lab4/index.html" class="inline-flex items-center text-sm font-semibold text-emerald-600 hover:text-emerald-700 mt-2">
+                                    Start Lab <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 relative overflow-hidden group hover:shadow-md transition-shadow">
+                            <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <i class="fa-solid fa-table text-6xl text-emerald-600"></i>
+                            </div>
+                            <div class="relative">
+                                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded mb-3 inline-block">Lab 5</span>
+                                <h3 class="text-lg font-bold text-slate-700 mb-1 leading-snug">Solver & Scenario Analysis</h3>
+                                <p class="text-xs text-slate-500 mb-2">Optimization Tools</p>
+                                <a href="lab/lab5/index.html" class="inline-flex items-center text-sm font-semibold text-emerald-600 hover:text-emerald-700 mt-2">
+                                    Start Lab <i class="fa-solid fa-arrow-right ml-1"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
+                            <div class="absolute top-0 right-0 p-3 opacity-10">
+                                <i class="fa-solid fa-gears text-6xl text-slate-400"></i>
+                            </div>
+                            <div class="relative">
+                                <span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded mb-3 inline-block">Lab 6</span>
+                                <h3 class="text-lg font-bold text-slate-700 mb-1">Data Modeling</h3>
+                                <p class="text-xs text-slate-500 mb-2">Data Relationships</p>
+                                <div class="inline-flex items-center text-sm font-medium text-slate-400 mt-2 cursor-not-allowed">
+                                    <i class="fa-solid fa-lock mr-2"></i> Locked
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
+                            <div class="absolute top-0 right-0 p-3 opacity-10">
+                                <i class="fa-solid fa-chart-simple text-6xl text-slate-400"></i>
+                            </div>
+                            <div class="relative">
+                                <span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded mb-3 inline-block">Lab 7</span>
+                                <h3 class="text-lg font-bold text-slate-700 mb-1">Power BI - DAX & Viz</h3>
+                                <p class="text-xs text-slate-500 mb-2">Visualization Tech</p>
+                                <div class="inline-flex items-center text-sm font-medium text-slate-400 mt-2 cursor-not-allowed">
+                                    <i class="fa-solid fa-lock mr-2"></i> Locked
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
+                            <div class="absolute top-0 right-0 p-3 opacity-10">
+                                <i class="fa-solid fa-layer-group text-6xl text-slate-400"></i>
+                            </div>
+                            <div class="relative">
+                                <span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded mb-3 inline-block">Lab 8</span>
+                                <h3 class="text-lg font-bold text-slate-700 mb-1">Alteryx (Movie Dataset)</h3>
+                                <p class="text-xs text-slate-500 mb-2">Workflow Automation</p>
+                                <div class="inline-flex items-center text-sm font-medium text-slate-400 mt-2 cursor-not-allowed">
+                                    <i class="fa-solid fa-lock mr-2"></i> Locked
+                                </div>
+                            </div>
+                        </div>
+                        
+                         <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
+                            <div class="absolute top-0 right-0 p-3 opacity-10">
+                                <i class="fa-solid fa-layer-group text-6xl text-slate-400"></i>
+                            </div>
+                            <div class="relative">
+                                <span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded mb-3 inline-block">Lab 9</span>
+                                <h3 class="text-lg font-bold text-slate-700 mb-1">Alteryx</h3>
+                                <p class="text-xs text-slate-500 mb-2">Advanced Workflows</p>
+                                <div class="inline-flex items-center text-sm font-medium text-slate-400 mt-2 cursor-not-allowed">
+                                    <i class="fa-solid fa-lock mr-2"></i> Locked
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="view-study" class="hidden animate-fade-in">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900">Study Guides</h2>
+                            <p class="text-slate-600">Comprehensive resources for exam preparation.</p>
+                        </div>
+                        <span class="bg-rose-100 text-rose-800 text-xs font-semibold px-2.5 py-0.5 rounded">2 Guides Available</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group border-t-4 border-t-rose-400">
+                            <div class="p-8 flex flex-col flex-grow">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center">
+                                        <i class="fa-solid fa-book-reader text-rose-500 text-xl"></i>
+                                    </div>
+                                    <span class="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded">Exam 1 Prep</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-800 mb-2">Study Guide 1</h3>
+                                <p class="text-slate-600 text-sm mb-6 flex-grow">Covers Excel basics, conditionals, lookups, and pivot tables.</p>
+                                
+                                <div class="space-y-3">
+                                    <a href="study-guide/study-guide-lab-style-1/index.html" class="flex items-center justify-between w-full px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all group-btn">
+                                        <span class="flex items-center"><i class="fa-solid fa-laptop-code mr-2 text-rose-400"></i> Lab Simulation</span>
+                                        <i class="fa-solid fa-arrow-right text-xs opacity-0 group-btn-hover:opacity-100 transition-opacity"></i>
+                                    </a>
+                                    
+                                    <a href="study-guide/study-guide-mc-1/index.html" class="flex items-center justify-between w-full px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all group-btn">
+                                        <span class="flex items-center"><i class="fa-solid fa-list-check mr-2 text-rose-400"></i> Multiple Choice</span>
+                                        <i class="fa-solid fa-arrow-right text-xs opacity-0 group-btn-hover:opacity-100 transition-opacity"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group border-t-4 border-t-rose-400">
+                            <div class="p-8 flex flex-col flex-grow">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center">
+                                        <i class="fa-solid fa-file-pen text-rose-500 text-xl"></i>
+                                    </div>
+                                    <span class="text-xs font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded">Exam 2 Prep</span>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-800 mb-2">Study Guide 2</h3>
+                                <p class="text-slate-600 text-sm mb-6 flex-grow">Covers Predictive Analytics Tools (Excel) </p>
+                                
+                                <div class="space-y-3">
+                                    <a href="study-guide/study-guide-2-lab-style2/index.html" class="flex items-center justify-between w-full px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all group-btn">
+                                        <span class="flex items-center"><i class="fa-solid fa-laptop-code mr-2 text-rose-400"></i> Lab Simulation</span>
+                                        <i class="fa-solid fa-arrow-right text-xs opacity-0 group-btn-hover:opacity-100 transition-opacity"></i>
+                                    </a>
+                                    
+                                    <a href="study-guide/study-guide2-mc-2/index.html" class="flex items-center justify-between w-full px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-lg font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all group-btn">
+                                        <span class="flex items-center"><i class="fa-solid fa-list-check mr-2 text-rose-400"></i> Multiple Choice</span>
+                                        <i class="fa-solid fa-arrow-right text-xs opacity-0 group-btn-hover:opacity-100 transition-opacity"></i>
+                                    </a>
+                                </div>
+                                
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div id="view-bonus" class="hidden animate-fade-in">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900">Bonus Topics</h2>
+                            <p class="text-slate-600">Advanced modules and other learning opportunities.</p>
+                        </div>
+                        <span class="bg-violet-100 text-violet-800 text-xs font-semibold px-2.5 py-0.5 rounded">4 Topics</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        
+                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-indigo-50 relative overflow-hidden flex items-center justify-center">
+                                <i class="fa-solid fa-brain text-6xl text-indigo-300"></i>
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">Exploratory Analysis with AI</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">AI-driven analysis.</p>
+                                <a href="bonus/exploratory-analysis-AI/index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+                        
+                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-pink-50 relative overflow-hidden flex items-center justify-center">
+                                <i class="fa-solid fa-object-group text-6xl text-pink-300"></i>
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">K-Means Concepts</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Understanding clustering logic.</p>
+                                <a href="bonus/k-means/explainer/index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-pink-50 relative overflow-hidden flex items-center justify-center">
+                                <i class="fa-solid fa-table text-6xl text-pink-300"></i>
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">K-Means Practice</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Solver-based exercise.</p>
+                                <a href="bonus/k-means/pratice/index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+
+                        
+
+                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-violet-50 relative overflow-hidden flex items-center justify-center">
+                                <i class="fa-solid fa-microchip text-6xl text-violet-300"></i>
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">Machine Learning</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Predictive models.</p>
+                                <a href="bonus/machine-learning/index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+                            <div class="h-40 bg-teal-50 relative overflow-hidden flex items-center justify-center">
+                                <i class="fa-solid fa-comment-dots text-6xl text-teal-300"></i>
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">Power Query NLP</h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Natural language processing for data queries.</p>
+                                <a href="bonus/power-query-NLP//index.html" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
+                                    <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
     </main>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-4 rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
-        <div class="bg-emerald-500 p-1 rounded-full">
-            <i data-lucide="check" class="w-4 h-4 text-white"></i>
-        </div>
-        <div>
-            <h4 class="font-bold text-sm">Correct!</h4>
-            <p class="text-xs opacity-90">Module complete.</p>
+    <div id="power-query-modal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" onclick="closeModal('power-query-modal')"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <i class="fa-solid fa-bolt text-yellow-600"></i>
+                            </div>
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                <h3 class="text-xl font-bold leading-6 text-slate-900">Introduction to Power Query</h3>
+                                <div class="mt-4 space-y-3">
+                                    <a href="interactive-apps/6.power-query/6.1.power-query-sim/index.html" class="flex items-center p-3 rounded-lg border border-slate-200 hover:border-yellow-500 hover:bg-yellow-50 transition-all group">
+                                        <div class="h-8 w-8 rounded bg-yellow-100 text-yellow-700 flex items-center justify-center font-bold text-sm mr-3">6.1</div>
+                                        <div class="flex-grow">
+                                            <h4 class="font-semibold text-slate-800 text-sm">Introduction to Power Query</h4>
+                                            <p class="text-xs text-slate-500">Intro to ETL</p>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-yellow-600"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" onclick="closeModal('power-query-modal')" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto">Close</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script>
-        // --- 1. DATA & METADATA ---
-        
-        const DAX_METADATA = {
-            tables: ['Sales', 'Products', 'Calendar', 'Customer'],
-            columns: {
-                'Sales': ['Sales[Price]', 'Sales[Quantity]', 'Sales[Date]', 'Sales[OrderNo]', 'Sales[Total Cost]'],
-                'Products': ['Products[Product Name]', 'Products[Color]', 'Products[Category]'],
-                'Calendar': ['Calendar[Date]', 'Calendar[Year]', 'Calendar[Month]'],
-                'Customer': ['Customer[FirstName]', 'Customer[LastName]', 'Customer[FullName]']
-            },
-            measures: [
-                '[Total Revenue]', '[Total Units]'
-            ],
-            functions: [
-                { name: 'SUM', sig: 'SUM(<column>)' },
-                { name: 'AVERAGE', sig: 'AVERAGE(<column>)' },
-                { name: 'COUNTROWS', sig: 'COUNTROWS(<table>)' },
-                { name: 'DISTINCTCOUNT', sig: 'DISTINCTCOUNT(<column>)' },
-                { name: 'DIVIDE', sig: 'DIVIDE(<numerator>, <denominator>, [alternate_result])' },
-                { name: 'CALCULATE', sig: 'CALCULATE(<expression>, [filter1], ...)' },
-                { name: 'FILTER', sig: 'FILTER(<table>, <filter_expression>)' },
-                { name: 'TOTALYTD', sig: 'TOTALYTD(<expression>, <dates>)' },
-                { name: 'SAMEPERIODLASTYEAR', sig: 'SAMEPERIODLASTYEAR(<dates>)' },
-                { name: 'RANKX', sig: 'RANKX(<table>, <expression>, [value], [order], [ties])' },
-                { name: 'SELECTEDVALUE', sig: 'SELECTEDVALUE(<column>, [alternate_result])' },
-                { name: 'SUMX', sig: 'SUMX(<table>, <expression>)' },
-                { name: 'AVERAGEX', sig: 'AVERAGEX(<table>, <expression>)' },
-                { name: 'MINX', sig: 'MINX(<table>, <expression>)' },
-                { name: 'MAXX', sig: 'MAXX(<table>, <expression>)' },
-                { name: 'CONCATENATEX', sig: 'CONCATENATEX(<table>, <expression>, [delimiter])' },
-                { name: 'ALL', sig: 'ALL([table_or_column])' },
-                { name: 'ALLEXCEPT', sig: 'ALLEXCEPT(<table>, <column1>, ...)' },
-                { name: 'CONCATENATE', sig: 'CONCATENATE(<text1>, <text2>)' },
-                { name: 'FORMAT', sig: 'FORMAT(<value>, <format_string>)' },
-                { name: 'RELATED', sig: 'RELATED(<column>)' }
-            ]
-        };
-
-        const QUIZ_DATA = [
-            {
-                q: "You need to create a unique ID for each order by combining 'ORD-' with the Order Number. Which function should you use?",
-                context: { header: ["OrderNo"], rows: [["1001"], ["1002"]] },
-                options: ["SUM", "DIVIDE", "CONCATENATE (or &)", "COUNTROWS"],
-                correct: 2,
-                expl: "<strong>CONCATENATE</strong> or the <strong>&</strong> operator joins text strings together."
-            },
-            {
-                q: "You want to calculate the total revenue for 'Red' products only. Assume you already have a <code>[Total Revenue]</code> measure. How do you construct the formula?",
-                context: { header: ["Color", "Price", "Qty"], rows: [["Red", "$50", "2"], ["Blue", "$100", "2"]] },
-                options: [
-                    "SUM([Total Revenue])",
-                    "CALCULATE([Total Revenue], Products[Color] = 'Red')",
-                    "CALCULATE([Total Revenue], ALL(Products[Color]))",
-                    "FILTER(Sales, Products[Color] = 'Red')"
-                ],
-                correct: 1,
-                expl: "<strong>CALCULATE</strong> modifies the context. Adding the filter <code>Products[Color] = 'Red'</code> restricts the expression evaluated in <code>[Total Revenue]</code> to only Red products."
-            },
-            {
-                q: "You have a table with Quantity and UnitPrice. You need to calculate Total Revenue. You cannot simply SUM the columns directly. Which function iterates row-by-row?",
-                context: { header: ["Quantity", "Price"], rows: [["2", "$10"], ["5", "$20"]] },
-                options: ["SUM", "AVERAGEX", "SUMX", "COUNTROWS"],
-                correct: 2,
-                expl: "<strong>SUMX</strong> is an iterator. It goes row-by-row, calculates <code>Quantity * Price</code>, and then sums the final row-level results together."
-            },
-            {
-                q: "You are in the 'Sales' table (Fact) and need to fetch the 'Product Name' from the 'Products' table (Dimension) to create a Calculated Column. Which function do you use?",
-                context: { header: ["ProdID", "RelatedName?"], rows: [["P01", "Widget A"], ["P02", "Widget B"]] },
-                options: ["LOOKUPVALUE", "RELATED", "CALCULATE", "SUM"],
-                correct: 1,
-                expl: "<strong>RELATED</strong> follows an existing Many-to-One relationship to fetch data from the 'One' side (Dimension) to the 'Many' side (Fact)."
-            },
-            {
-                q: "You need to count how many individual sales transactions had a Unit Price greater than 500. Which formula correctly returns this count?",
-                context: { header: ["Order", "Price"], rows: [["101", "$600"], ["102", "$200"]] },
-                options: [
-                    "COUNTROWS(FILTER(Sales, Sales[Price] > 500))",
-                    "SUMX(Sales, Sales[Price] > 500)",
-                    "CALCULATE(Sales[Price] > 500)",
-                    "COUNT(Sales[Price])"
-                ],
-                correct: 0,
-                expl: "<strong>COUNTROWS</strong> counts rows in a table. <strong>FILTER</strong> returns a table reduced to only the rows where Price > 500. Combining them gives the right answer."
-            }
-        ];
-
-        const MODULES = [
-            // 0
-            {
-                id: "mod_text",
-                title: "Text Manipulation",
-                concept: `
-                    <p class="mb-3">You can join text strings together. These are typically used in <strong>Calculated Columns</strong> to create new fields.</p>
-                    <div class="bg-slate-50 p-3 rounded border mb-3 text-xs">
-                        <p class="mb-1"><strong>Ampersand (&)</strong>: The simplest way to join text.</p>
-                        <code class="block text-blue-600 mb-2">[First Name] & " " & [Last Name]</code>
-                        <p class="mb-1"><strong>CONCATENATE</strong>: Joins exactly two strings.</p>
-                    </div>
-                `,
-                project: {
-                    title: "Create Labels",
-                    brief: "Create a Full Name column and a unique Order Label.",
-                    steps: [
-                        "Create <strong>Full Name</strong> column by joining FirstName, a space, and LastName.",
-                        "Create <strong>Order Label</strong> column by joining 'ORD-' and the OrderNo."
-                    ]
-                },
-                inputs: [
-                    { label: "Full Name", type: "column", result: ["John Doe", "Jane Smith", "Bob Jones", "Alice Wong"], match: /Customer\[FirstName\]\s*&\s*" "\s*&\s*Customer\[LastName\]/i, hint: "Customer[FirstName] & \" \" & Customer[LastName]" },
-                    { label: "Order Label", type: "column", result: ["ORD-1001", "ORD-1002", "ORD-1003", "ORD-1004"], match: /"ORD-"\s*&\s*Sales\[OrderNo\]/i, hint: "\"ORD-\" & Sales[OrderNo]" }
-                ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[0].inputs, onComplete, "Customer")
-            },
-            // 1
-            {
-                id: "mod_math",
-                title: "Safe Math & Errors",
-                concept: `
-                    <p class="mb-3">Handling errors (like dividing by zero) is crucial in Power BI. Let's see what happens when we do it wrong, then fix it.</p>
-                    <div class="space-y-3">
-                        <div class="bg-red-50 p-2 rounded border border-red-200">
-                            <strong class="text-red-700">Unsafe Math</strong><br>
-                            <span class="text-xs">Standard division like <code>[Total Cost] / [Quantity]</code> to find Unit Cost will throw an <b>Infinity</b> error if a row has 0 Quantity.</span>
-                        </div>
-                        <div class="bg-blue-50 p-2 rounded border border-blue-200">
-                            <strong class="text-blue-700">DIVIDE</strong><br>
-                            <span class="text-xs">Safely divides. If denominator is 0, it returns BLANK or an optional default value. <br><code>DIVIDE(Num, Denom, 0)</code></span>
-                        </div>
-                    </div>
-                `,
-                project: {
-                    title: "Calculate Unit Cost",
-                    brief: "We want to find the Unit Cost (Total Cost / Quantity). Let's see the error, then fix it safely.",
-                    steps: [
-                        "Calculate <strong>Unsafe Cost</strong> using standard division (Total Cost / Quantity). Notice the Infinity error!",
-                        "Calculate <strong>Safe Cost</strong> using the DIVIDE function, substituting 0 if dividing by zero."
-                    ]
-                },
-                inputs: [
-                    { label: "Unsafe Cost", type: "column", result: ["Infinity", "100", "NaN", "200"], match: /Sales\[Total Cost\]\s*\/\s*Sales\[Quantity\]/i, hint: "Sales[Total Cost] / Sales[Quantity]" },
-                    { label: "Safe Cost", type: "column", result: ["0", "100", "0", "200"], match: /DIVIDE\s*\(\s*Sales\[Total Cost\]\s*,\s*Sales\[Quantity\]\s*,\s*0\s*\)/i, hint: "DIVIDE(Sales[Total Cost], Sales[Quantity], 0)" }
-                ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[1].inputs, onComplete, "Sales_SafeMath")
-            },
-            // 2
-            {
-                id: "mod_context_theory",
-                title: "Context Theory",
-                concept: `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <div class="bg-slate-50 p-3 rounded border">
-                            <strong class="text-xs uppercase text-slate-500 block mb-2">Calculated Column (Row Context)</strong>
-                            <p class="text-xs">Calculated <strong>row-by-row</strong> at data refresh time. Stored in memory (RAM). Aware of the "current row" it is looking at.</p>
-                            <p class="text-[10px] mt-2 bg-blue-50 text-blue-800 p-1.5 rounded"><strong class="font-bold">Excel Equivalent:</strong> Typing a formula in a new column and dragging it down.</p>
-                        </div>
-                        <div class="bg-slate-50 p-3 rounded border">
-                            <strong class="text-xs uppercase text-slate-500 block mb-2">Measure (Filter Context)</strong>
-                            <p class="text-xs">Calculated <strong>on-the-fly</strong> when used in a visual. Uses <strong>Filter Context</strong> (responds to Slicers/Filters). It calculates based on aggregated subsets of data.</p>
-                            <p class="text-[10px] mt-2 bg-emerald-50 text-emerald-800 p-1.5 rounded"><strong class="font-bold">Excel Equivalent:</strong> Dropping a field into the 'Values' area of a Pivot Table.</p>
-                        </div>
-                    </div>
-                `,
-                project: {
-                    title: "Column vs. Measure",
-                    brief: "Define a Calculated Column (Row Context) vs a Measure (Filter Context).",
-                    steps: [
-                        "<strong>Column:</strong> Create 'LineTotal' (Quantity * Price). This executes line by line.",
-                        "<strong>Measure:</strong> Create 'Total Units' (SUM of Quantity). This evaluates based on slicer context."
-                    ]
-                },
-                inputs: [
-                    { label: "LineTotal", type: "column", result: ["1000", "100", "0", "200"], match: /Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\]/i, hint: "Sales[Quantity] * Sales[Price]" },
-                    { label: "Total Units", type: "measure", result: "4", match: /SUM\s*\(\s*Sales\[Quantity\]\s*\)/i, hint: "SUM(Sales[Quantity])" }
-                ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[2].inputs, onComplete, "Sales_Iter")
-            },
-            // 3
-            {
-                id: "mod_agg",
-                title: "Basic Aggregations",
-                concept: `
-                    <p class="mb-3">Aggregation functions collapse multiple rows into a single value. These are <strong>Measures</strong>.</p>
-                    <ul class="list-disc pl-5 space-y-2 mb-4 text-xs font-mono bg-slate-50 p-3 rounded border">
-                        <li><strong>SUM(Col)</strong>: Adds up numbers.</li>
-                        <li><strong>AVERAGE(Col)</strong>: Calculates the mean.</li>
-                        <li><strong>COUNTROWS(Table)</strong>: Counts total transactions/rows.</li>
-                        <li><strong>DISTINCTCOUNT(Col)</strong>: Counts unique values in a column.</li>
-                    </ul>
-                `,
-                project: {
-                    title: "Calculate Key Metrics",
-                    brief: "Use the Sales table to calculate core business metrics. <em>(Note: SUM(Price) is not Total Sales! We'll just sum Quantity for Total Units here.)</em>",
-                    steps: [
-                        "Create <strong>Total Units</strong> using SUM on the Quantity column.",
-                        "Create <strong>Avg Price</strong> using AVERAGE of Price.",
-                        "Create <strong>Transaction Count</strong> using COUNTROWS.",
-                        "Count <strong>Unique Dates</strong> using DISTINCTCOUNT on the Date column."
-                    ]
-                },
-                inputs: [
-                    { label: "Total Units", type: "measure", result: "4", match: /SUM\s*\(\s*Sales\[Quantity\]\s*\)/i, hint: "SUM(Sales[Quantity])" },
-                    { label: "Avg Price", type: "measure", result: "200", match: /AVERAGE\s*\(\s*Sales\[Price\]\s*\)/i, hint: "AVERAGE(Sales[Price])" },
-                    { label: "Tx Count", type: "measure", result: "3", match: /COUNTROWS\s*\(\s*Sales\s*\)/i, hint: "COUNTROWS(Sales)" },
-                    { label: "Unique Dates", type: "measure", result: "2", match: /DISTINCTCOUNT\s*\(\s*Sales\[Date\]\s*\)/i, hint: "DISTINCTCOUNT(Sales[Date])" }
-                ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[3].inputs, onComplete, "Sales_Agg")
-            },
-            // 4
-            {
-                id: "mod_related",
-                title: "Relationships: RELATED",
-                concept: `
-                    <p class="mb-3">When working in a Fact table (like Sales), you often need descriptive information from a Dimension table (like Products).</p>
-                    <div class="bg-blue-50 p-3 rounded border border-blue-200 mb-3">
-                        <strong class="text-blue-800">RELATED(&lt;Column&gt;)</strong>
-                        <p class="text-xs text-blue-900 mt-1">Fetches data from the 'One' side of a relationship into the 'Many' side. Think of it as a super-charged, automatic Excel VLOOKUP! It works because Power BI already knows the relationship.</p>
-                    </div>
-                `,
-                project: {
-                    title: "Fetch Dimension Data",
-                    brief: `We are in the Sales table, but we need to know the Category of the product sold.
-                            <br><br>
-                            <strong>Products Table Snippet:</strong>
-                            <table class='w-full text-[10px] mt-2 border text-left bg-white'>
-                                <thead class='bg-slate-100'>
-                                    <tr><th class='border p-1'>Product Name</th><th class='border p-1'>Category</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td class='border p-1'>Widget A</td><td class='border p-1'>Electronics</td></tr>
-                                    <tr><td class='border p-1'>Widget B</td><td class='border p-1'>Home</td></tr>
-                                    <tr><td class='border p-1'>Widget C</td><td class='border p-1'>Clothing</td></tr>
-                                </tbody>
-                            </table>`,
-                    steps: [
-                        "Create a <strong>Category</strong> column by pulling <code>Products[Category]</code> into the Sales table using the RELATED function."
-                    ]
-                },
-                inputs: [
-                    { label: "Category", type: "column", result: ["Electronics", "Home", "Clothing", "Electronics"], match: /RELATED\s*\(\s*Products\[Category\]\s*\)/i, hint: "RELATED(Products[Category])" }
-                ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[4].inputs, onComplete, "Sales")
-            },
-            // 5
-            {
-                id: "mod_iter",
-                title: "Iterators (Row Context)",
-                concept: `
-                    <p class="mb-2"><strong>Iterators</strong> (X-functions) are powerful. They iterate row-by-row to evaluate an expression in memory <em>before</em> showing the final aggregated result.</p>
-                    <div class="text-[10px] border border-slate-300 rounded overflow-hidden mb-3 relative bg-slate-50 shadow-sm">
-                        <div class="flex">
-                            <div class="flex-1">
-                                <div class="p-1 bg-slate-200 text-slate-500 font-bold border-b border-r text-center">Physical Table</div>
-                                <table class="w-full text-left bg-white border-r">
-                                    <thead class="border-b">
-                                        <tr><th class="p-1">Quantity</th><th class="p-1">Price</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="anim-row-1 border-b"><td class="p-1">2</td><td class="p-1">$50</td></tr>
-                                        <tr class="anim-row-2 border-b"><td class="p-1">1</td><td class="p-1">$100</td></tr>
-                                        <tr class="anim-row-3"><td class="p-1">2</td><td class="p-1">$50</td></tr>
-                                    </tbody>
-                                </table>
+    <div id="power-bi-modal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" onclick="closeModal('power-bi-modal')"></div>
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <i class="fa-solid fa-chart-pie text-yellow-600"></i>
                             </div>
-                            <div class="w-1/2 relative">
-                                <div class="p-1 bg-blue-100 text-blue-700 font-bold border-b text-center">In-Memory Engine</div>
-                                <table class="w-full text-left bg-blue-50/50">
-                                    <thead class="border-b">
-                                        <tr><th class="p-1 text-blue-600 italic font-mono font-normal opacity-70">Eval: Qty * Price</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="border-b"><td class="p-1 font-mono text-blue-600 anim-calc-1">2 * 50 = 100</td></tr>
-                                        <tr class="border-b"><td class="p-1 font-mono text-blue-600 anim-calc-2">1 * 100 = 100</td></tr>
-                                        <tr><td class="p-1 font-mono text-blue-600 anim-calc-3">2 * 50 = 100</td></tr>
-                                    </tbody>
-                                </table>
-                                <div class="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center anim-total">
-                                    <div class="bg-slate-800 text-yellow-400 p-2 rounded shadow-xl font-bold text-sm border border-yellow-500 text-center">
-                                        Final Output <br> $300
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                <h3 class="text-xl font-bold leading-6 text-slate-900">Power BI Modules</h3>
+                                <div class="mt-4 space-y-3">
+                                    <a href="interactive-apps/7.power-bi/7.1.data-modeling/index.html" class="flex items-center p-3 rounded-lg border border-slate-200 hover:border-yellow-500 hover:bg-yellow-50 transition-all group">
+                                        <div class="h-8 w-8 rounded bg-yellow-100 text-yellow-700 flex items-center justify-center font-bold text-sm mr-3">7.1</div>
+                                        <div class="flex-grow">
+                                            <h4 class="font-semibold text-slate-800 text-sm">Data Modeling</h4>
+                                            <p class="text-xs text-slate-500">Relationship Fundamentals</p>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-yellow-600"></i>
+                                    </a>
+                                    
+                                    <a href="interactive-apps/7.power-bi/7.2.dax/index.html" class="flex items-center p-3 rounded-lg border border-slate-200 hover:border-yellow-500 hover:bg-yellow-50 transition-all group">
+                                        <div class="h-8 w-8 rounded bg-yellow-100 text-yellow-700 flex items-center justify-center font-bold text-sm mr-3">7.2</div>
+                                        <div class="flex-grow">
+                                            <h4 class="font-semibold text-slate-800 text-sm">DAX Formulas</h4>
+                                            <p class="text-xs text-slate-500">Data Analysis Expressions</p>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-yellow-600"></i>
+                                    </a>
+                                    <a href="interactive-apps/7.power-bi/7.3.viusalization/index.html" class="flex items-center p-3 rounded-lg border border-slate-200 hover:border-yellow-500 hover:bg-yellow-50 transition-all group">
+                                        <div class="h-8 w-8 rounded bg-yellow-100 text-yellow-700 flex items-center justify-center font-bold text-sm mr-3">7.3</div>
+                                        <div class="flex-grow">
+                                            <h4 class="font-semibold text-slate-800 text-sm">Visualization</h4>
+                                            <p class="text-xs text-slate-500">Data Storytelling with Proper Visualization</p>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-yellow-600"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" onclick="closeModal('power-bi-modal')" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="alteryx-modal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" onclick="closeModal('alteryx-modal')"></div>
+
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-cyan-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <i class="fa-solid fa-layer-group text-cyan-600"></i>
+                            </div>
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                <h3 class="text-xl font-bold leading-6 text-slate-900" id="modal-title">Alteryx Modules</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-slate-500 mb-4">Select a specific lesson module to continue.</p>
+                                    
+                                    <div class="space-y-3">
+                                        <a href="interactive-apps/8.alteryx/8.1.alteryx1/index.html" class="flex items-center p-3 rounded-lg border border-slate-200 hover:border-cyan-500 hover:bg-cyan-50 transition-all group">
+                                            <div class="h-8 w-8 rounded bg-cyan-100 text-cyan-600 flex items-center justify-center font-bold text-sm mr-3 group-hover:bg-cyan-500 group-hover:text-white transition-colors">1</div>
+                                            <div class="flex-grow">
+                                                <h4 class="font-semibold text-slate-800 text-sm">Alteryx Core 1</h4>
+                                                <p class="text-xs text-slate-500">Data Preparation & Cleaning</p>
+                                            </div>
+                                            <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-cyan-500"></i>
+                                        </a>
+
+                                        <a href="interactive-apps/8.alteryx/8.2.alteryx2/index.html" class="flex items-center p-3 rounded-lg border border-slate-200 hover:border-cyan-500 hover:bg-cyan-50 transition-all group">
+                                            <div class="h-8 w-8 rounded bg-cyan-100 text-cyan-600 flex items-center justify-center font-bold text-sm mr-3 group-hover:bg-cyan-500 group-hover:text-white transition-colors">2</div>
+                                            <div class="flex-grow">
+                                                <h4 class="font-semibold text-slate-800 text-sm">Alteryx Core 2</h4>
+                                                <p class="text-xs text-slate-500">Summarization</p>
+                                            </div>
+                                            <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-cyan-500"></i>
+                                        </a>
+
+                                        <a href="interactive-apps/8.alteryx/8.3.alteryx3/index.html" class="flex items-center p-3 rounded-lg border border-slate-200 hover:border-cyan-500 hover:bg-cyan-50 transition-all group">
+                                            <div class="h-8 w-8 rounded bg-cyan-100 text-cyan-600 flex items-center justify-center font-bold text-sm mr-3 group-hover:bg-cyan-500 group-hover:text-white transition-colors">3</div>
+                                            <div class="flex-grow">
+                                                <h4 class="font-semibold text-slate-800 text-sm">Alteryx Core 3</h4>
+                                                <p class="text-xs text-slate-500">Blending & Joins</p>
+                                            </div>
+                                            <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-cyan-500"></i>
+                                        </a>
+                                        
+                                        <a href="interactive-apps/8.alteryx/8.4.alteryx4/index.html" class="flex items-center p-3 rounded-lg border border-slate-200 hover:border-cyan-500 hover:bg-cyan-50 transition-all group">
+                                            <div class="h-8 w-8 rounded bg-cyan-100 text-cyan-600 flex items-center justify-center font-bold text-sm mr-3 group-hover:bg-cyan-500 group-hover:text-white transition-colors">4</div>
+                                            <div class="flex-grow">
+                                                <h4 class="font-semibold text-slate-800 text-sm">Alteryx Core 4</h4>
+                                                <p class="text-xs text-slate-500">Transformation</p>
+                                            </div>
+                                            <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-cyan-500"></i>
+                                        </a>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <p class="text-xs bg-yellow-50 p-2 border rounded"><strong>Crucial Note:</strong> The calculations in the "In-Memory Engine" do not exist as real columns! They are generated entirely on the fly by the measure.</p>
-                `,
-                project: {
-                    title: "Row-by-Row Math",
-                    brief: "We have Quantity and Price. We need to multiply them per row before aggregating.",
-                    steps: [
-                        "Calculate <strong>Total Revenue</strong> by iterating over the Sales table: Quantity * Price (using SUMX).",
-                        "Calculate <strong>Avg Rev</strong> per transaction using AVERAGEX."
-                    ]
-                },
-                inputs: [
-                    { label: "Total Revenue", type: "measure", result: "300", match: /SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\)/i, hint: "SUMX(Sales, Sales[Quantity] * Sales[Price])" },
-                    { label: "Avg Rev", type: "measure", result: "100", match: /AVERAGEX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\)/i, hint: "AVERAGEX(Sales, Sales[Quantity] * Sales[Price])" }
-                ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[5].inputs, onComplete, "Sales_Iter")
-            },
-            // 6
-            {
-                id: "mod_calc",
-                title: "Context Control: CALCULATE",
-                concept: `
-                    <p class="mb-2"><strong>CALCULATE</strong> modifies the filter context of an expression.</p>
-                    <code class="block bg-slate-800 text-yellow-400 p-2 rounded text-xs mb-3 font-mono">
-                        CALCULATE( &lt;Expression&gt;, &lt;Filter1&gt;, ... )
-                    </code>
-                    <p class="text-[11px] mb-2 bg-blue-50 p-2 rounded border border-blue-200"><strong>Note:</strong> The &lt;Expression&gt; can be a formula like <code>SUMX(...)</code> or a reference to an existing Measure like <code>[Total Revenue]</code>. <strong>A measure reference is just a shortcut to its underlying formula!</strong> We will use the <code>[Total Revenue]</code> shortcut here.</p>
-                    <div class="space-y-2 text-[11px] text-slate-700 bg-slate-50 p-3 rounded border mb-2">
-                        <p><strong>When do I need to use FILTER()?</strong></p>
-                        <p><strong>1. Simple Filters:</strong> For basic text/number matching (e.g., <code>Color = "Red"</code>), just type it directly inside CALCULATE.</p>
-                        <p><strong>2. Complex Filters:</strong> If evaluating inequalities (e.g., <code>Price > 200</code>), math, or crossing tables, you MUST wrap the table in the FILTER function: <code>FILTER(Sales, Sales[Price] > 200)</code>.</p>
+                    <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" onclick="closeModal('alteryx-modal')" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto">Cancel</button>
                     </div>
-                `,
-                project: {
-                    title: "Segmented Sales",
-                    brief: "Create measures that calculate Revenue for specific subsets of data.",
-                    steps: [
-                        "Calculate <strong>Red Sales</strong>: Use CALCULATE on our <code>[Total Revenue]</code> expression where Product Color is 'Red'.",
-                        "Calculate <strong>High Value Sales</strong>: CALCULATE <code>[Total Revenue]</code> where Price > 200 (Requires FILTER)."
-                    ]
-                },
-                inputs: [
-                    { 
-                      label: "Red Sales", type: "measure", 
-                      result: "700", 
-                      match: /CALCULATE\s*\(\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*,\s*Products\[Color\]\s*=\s*"Red"\s*\)/i, 
-                      hint: "CALCULATE([Total Revenue], Products[Color]=\"Red\")",
-                      resultHtml: `<strong>Result: 700</strong><div class="mt-1 text-[10px] p-1.5 bg-blue-50 rounded border border-blue-200"><div class="font-bold text-blue-800 border-b border-blue-200 mb-1 pb-1">Engine evaluates 'Red' rows only:</div><div class="anim-calc-1">Laptop: 2 * 250 = 500</div><div class="anim-calc-2">Tablet: 1 * 200 = 200</div><div class="anim-total font-bold mt-1 text-emerald-700">∑ = 700</div></div>`
-                    },
-                    { 
-                      label: "High Val", type: "measure", 
-                      result: "500", 
-                      match: /CALCULATE\s*\(\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*,\s*FILTER\s*\(\s*Sales\s*,\s*Sales\[Price\]\s*>\s*200\s*\)\s*\)/i, 
-                      hint: "CALCULATE([Total Revenue], FILTER(Sales, Sales[Price] > 200))",
-                      resultHtml: `<strong>Result: 500</strong><div class="mt-1 text-[10px] p-1.5 bg-blue-50 rounded border border-blue-200"><div class="font-bold text-blue-800 border-b border-blue-200 mb-1 pb-1">Engine evaluates Price > 200:</div><div class="anim-calc-1">Laptop: 2 * 250 = 500</div><div class="anim-total font-bold mt-1 text-emerald-700">∑ = 500</div></div>`
-                    }
-                ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[6].inputs, onComplete, "Sales_Calc")
-            },
-            // 7
-            {
-                id: "mod_time",
-                title: "Time Intelligence",
-                concept: `
-                    <p class="mb-3">DAX simplifies date math. These are <strong>Measures</strong> requiring a properly marked, continuous Date Table (Calendar Table).</p>
-                    <ul class="list-disc pl-5 space-y-2 mb-4 text-xs bg-slate-50 p-3 rounded border">
-                        <li><strong>TOTALYTD(Expression, Dates)</strong>: Evaluates the year-to-date value of the expression.</li>
-                        <li><strong>SAMEPERIODLASTYEAR(Dates)</strong>: Shifts the current visual context back exactly 1 year. Commonly used inside CALCULATE.</li>
-                    </ul>
-                `,
-                project: {
-                    title: "Year over Year Analysis",
-                    brief: "Analyze growth by comparing current cumulative Revenue to last year.",
-                    steps: [
-                        "Calculate <strong>YTD Revenue</strong> using TOTALYTD on the <code>[Total Revenue]</code> expression and the Calendar[Date] column.",
-                        "Calculate <strong>PY Revenue</strong> (Previous Year) using CALCULATE on the <code>[Total Revenue]</code> expression."
-                    ]
-                },
-                inputs: [
-                    { 
-                      label: "YTD Revenue", type: "measure", 
-                      result: "800", 
-                      match: /TOTALYTD\s*\(\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*,\s*Calendar\[Date\]\s*\)/i, 
-                      hint: "TOTALYTD([Total Revenue], Calendar[Date])",
-                      resultHtml: `<strong>Result: 800</strong><div class="mt-1 text-[10px] p-1.5 bg-blue-50 rounded border border-blue-200"><div class="font-bold text-blue-800 border-b border-blue-200 mb-1 pb-1">Engine evaluates YTD 2026:</div><div class="anim-calc-1">1/1/2026: 2 * 250 = 500</div><div class="anim-calc-2">3/1/2026: 1 * 300 = 300</div><div class="anim-total font-bold mt-1 text-emerald-700">∑ = 800</div></div>`
-                    },
-                    { 
-                      label: "PY Revenue", type: "measure", 
-                      result: "650", 
-                      match: /CALCULATE\s*\(\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*,\s*SAMEPERIODLASTYEAR\s*\(\s*Calendar\[Date\]\s*\)\s*\)/i, 
-                      hint: "CALCULATE([Total Revenue], SAMEPERIODLASTYEAR(Calendar[Date]))",
-                      resultHtml: `<strong>Result: 650</strong><div class="mt-1 text-[10px] p-1.5 bg-blue-50 rounded border border-blue-200"><div class="font-bold text-blue-800 border-b border-blue-200 mb-1 pb-1">Engine shifts to 2025:</div><div class="anim-calc-1">1/1/2025: 2 * 200 = 400</div><div class="anim-calc-2">6/1/2025: 1 * 250 = 250</div><div class="anim-total font-bold mt-1 text-emerald-700">∑ = 650</div></div>`
-                    }
-                ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[7].inputs, onComplete, "Sales_Time")
-            },
-            // 8
-            {
-                id: "mod_modifiers",
-                title: "Modifiers: ALL & ALLEXCEPT",
-                advanced: true,
-                concept: `
-                    <p class="mb-3">Modifiers remove filters to calculate grand totals or fixed percentages.</p>
-                    <ul class="list-disc pl-5 space-y-2 mb-4 text-xs">
-                        <li><strong>ALL(Table)</strong>: Removes ALL filters from the specified table. Useful for getting the grand total regardless of what the user clicks.</li>
-                        <li><strong>ALLEXCEPT(Table, Col)</strong>: Removes filters from the table <em>except</em> the specified column(s). Great for keeping Category filters but ignoring Product filters.</li>
-                    </ul>
-                `,
-                project: {
-                    title: "Percent of Total & Scoping",
-                    brief: "Calculate base values to divide against for percentages.",
-                    steps: [
-                        "Calculate <strong>All Revenue</strong>: Use CALCULATE on your <code>[Total Revenue]</code> expression with ALL(Sales) to ignore all slicers.",
-                        "Calculate <strong>Cat Revenue</strong>: Use CALCULATE on your <code>[Total Revenue]</code> expression with ALLEXCEPT to keep only the Category filter."
-                    ]
-                },
-                inputs: [
-                    { 
-                      label: "All Revenue", type: "measure", 
-                      result: "800", 
-                      match: /CALCULATE\s*\(\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*,\s*ALL\s*\(\s*Sales\s*\)\s*\)/i, 
-                      hint: "CALCULATE([Total Revenue], ALL(Sales))",
-                      resultHtml: `<strong>Result: 800</strong><div class="mt-1 text-[10px] p-1.5 bg-blue-50 rounded border border-blue-200"><div class="font-bold text-blue-800 border-b border-blue-200 mb-1 pb-1">Engine ignores "Laptop" filter:</div><div class="anim-calc-1">Laptop: 500</div><div class="anim-calc-2">Phone: 200</div><div class="anim-calc-3">Desk: 100</div><div class="anim-total font-bold mt-1 text-emerald-700">∑ = 800</div></div>`
-                    },
-                    { 
-                      label: "Cat Revenue", type: "measure", 
-                      result: "700", 
-                      match: /CALCULATE\s*\(\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*,\s*ALLEXCEPT\s*\(\s*Products\s*,\s*Products\[Category\]\s*\)\s*\)/i, 
-                      hint: "CALCULATE([Total Revenue], ALLEXCEPT(Products, Products[Category]))",
-                      resultHtml: `<strong>Result: 700</strong><div class="mt-1 text-[10px] p-1.5 bg-blue-50 rounded border border-blue-200"><div class="font-bold text-blue-800 border-b border-blue-200 mb-1 pb-1">Engine keeps "Electronics" category:</div><div class="anim-calc-1">Laptop: 500</div><div class="anim-calc-2">Phone: 200</div><div class="anim-total font-bold mt-1 text-emerald-700">∑ = 700</div></div>`
-                    }
-                ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[8].inputs, onComplete, "Sales_Mods")
-            },
-            // 9
-            {
-                id: "mod_adv",
-                title: "Ranking & Selection",
-                advanced: true,
-                concept: `
-                    <p class="mb-3">Advanced dynamic logic for highly interactive reports.</p>
-                    <div class="space-y-3">
-                        <div class="bg-indigo-50 p-2 rounded border border-indigo-100">
-                            <strong class="text-indigo-700">RANKX</strong><br>
-                            <span class="text-xs">Ranks items based on an expression.<br><code>RANKX(ALL(Products), [Total Revenue])</code></span>
-                        </div>
-                        <div class="bg-emerald-50 p-2 rounded border border-emerald-100">
-                            <strong class="text-emerald-700">SELECTEDVALUE</strong><br>
-                            <span class="text-xs">Returns the value when EXACTLY ONE item is selected in a filter. Great for dynamic titles!<br><code>SELECTEDVALUE(Col, "Alternate Text")</code></span>
-                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <i class="fa-solid fa-chart-line text-sky-500 text-xl mr-3"></i>
+                        <h4 class="text-white text-lg font-bold">ACCT311</h4>
                     </div>
-                `,
-                project: {
-                    title: "Dynamic Reporting",
-                    brief: "Rank products and create smart, dynamic titles that respond to slicers.",
-                    steps: [
-                        "Create <strong>Prod Rank</strong> by ranking <code>[Total Revenue]</code> across all Products (Use ALL(Products)). <br><em>(Note: We are evaluating the <b>Laptop</b> row.)</em>",
-                        "Create <strong>Dyn Title</strong> that returns the selected Category or 'All Categories' if none/multiple are chosen."
-                    ]
-                },
-                inputs: [
-                    { label: "Prod Rank", type: "measure", result: "1", match: /RANKX\s*\(\s*ALL\s*\(\s*Products\s*\)\s*,\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*\)/i, hint: "RANKX(ALL(Products), [Total Revenue])" },
-                    { label: "Dyn Title", type: "measure", result: "Electronics", match: /SELECTEDVALUE\s*\(\s*Products\[Category\]\s*,\s*"All Categories"\s*\)/i, hint: "SELECTEDVALUE(Products[Category], \"All Categories\")" }
-                ],
-                renderDemo: (container, onComplete) => renderSlicerDemo(container, MODULES[9].inputs, onComplete)
-            },
-            // 10
-            {
-                id: "mod_quiz",
-                title: "Knowledge Check",
-                concept: `
-                    <p class="mb-3">Test your understanding of DAX concepts.</p>
-                    <p class="text-sm text-slate-600">Select the best DAX formula or function for each scenario.</p>
-                `,
-                project: {
-                    title: "Mini-Quiz",
-                    brief: "Complete all 5 questions to proceed to the final challenge.",
-                    steps: [
-                        "Analyze the scenario and data preview.",
-                        "Select the correct DAX approach.",
-                        "Review the explanation."
-                    ]
-                },
-                inputs: [],
-                renderDemo: (container, onComplete) => renderQuizDemo(container, onComplete)
-            },
-            // 11
-            {
-                id: "mod_final",
-                title: "Capstone: Star Schema Challenge",
-                concept: `
-                    <p class="mb-3">You've mastered the basics. Now apply it to a real-world scenario.</p>
-                    <p class="text-sm">This comprehensive lab requires you to build a model from scratch in Power BI Desktop.</p>
-                `,
-                project: {
-                    title: "Comprehensive Lab",
-                    brief: "Download the dataset and build the report locally.",
-                    steps: [
-                        "Download the <strong>Star Schema Data</strong> file and Instructions.",
-                        "Import tables: Fact_Transactions, Dim_Account, Dim_Department, Dim_Entity.",
-                        "Create Relationships (Star Schema).",
-                        "Create Measures: Total Revenue (Credit - Debit), Net Income.",
-                        "Create YTD and PY comparisons."
-                    ]
-                },
-                inputs: [],
-                renderDemo: (container) => {
-                    container.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-full text-center p-8 bg-slate-50">
-                            <div class="bg-white p-6 rounded-xl shadow-lg border max-w-lg w-full">
-                                <h3 class="text-lg font-bold text-slate-800 mb-2">Final Challenge: Star Schema</h3>
-                                <div class="text-left text-xs bg-slate-100 p-4 rounded mb-6 space-y-2 font-mono">
-                                    <p><strong>Fact Table:</strong> Fact_Transactions (90 rows)</p>
-                                    <ul class="list-disc pl-4 text-slate-500">
-                                        <li>Cols: TransID, Date, AcctNo, DeptCode, Debit, Credit, Net</li>
-                                    </ul>
-                                    <p><strong>Dimensions:</strong> Dim_Account, Dim_Department, Dim_Entity</p>
-                                    <p><strong>Task:</strong> Build Model & YTD Measures</p>
-                                </div>
-                                <div class="space-y-3">
-                                    <a href="data/PowerBI_DAX_Accounting_Student.xlsx" download class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded flex items-center justify-center gap-2 transition-transform active:scale-95 no-underline">
-                                        <i data-lucide="file-spreadsheet" class="w-5 h-5"></i> Download Student Data (Excel)
-                                    </a>
-                                    <a href="data/PowerBI_DAX_Accounting_Lab_Instruction.pdf" download class="block w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded flex items-center justify-center gap-2 transition-transform active:scale-95 no-underline">
-                                        <i data-lucide="file-text" class="w-5 h-5"></i> Download Instructions (PDF)
-                                    </a>
-                                </div>
-                                <p class="text-xs text-slate-400 mt-4">Open these files in Power BI Desktop to begin.</p>
-                            </div>
-                        </div>
-                    `;
-                    setTimeout(() => lucide.createIcons(), 50);
-                }
-            }
-        ];
+                    <p class="text-sm leading-relaxed mb-4">
+                        A modern approach to accounting data analysis. Built for the Spring 2026 semester.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-white text-lg font-bold mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><button onclick="switchTab('apps')" class="hover:text-sky-400 transition-colors text-left">Lecture Materials</button></li>
+                        <li><button onclick="switchTab('demos')" class="hover:text-sky-400 transition-colors text-left">Class Demos</button></li>
+                        <li><button onclick="switchTab('labs')" class="hover:text-sky-400 transition-colors text-left">Laboratory</button></li>
+                        <li><button onclick="switchTab('study')" class="hover:text-sky-400 transition-colors text-left">Study Guides</button></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white text-lg font-bold mb-4">Instructor</h4>
+                    <div class="bg-slate-800 rounded-lg p-4 border border-slate-700">
+                        <p class="text-sm font-semibold text-white">Joo Ha</p>
+                        <p class="text-xs text-slate-400 mt-1">Data Analysis Faculty</p>
+                        <a href="mailto:haj@gonzaga.edu" class="text-xs text-sky-400 hover:text-sky-300 mt-2 block">Contact Instructor</a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-slate-800 pt-8 text-sm text-center flex flex-col md:flex-row justify-between items-center">
+                <p>&copy; 2026 ACCT311. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 
-        // --- 2. APP LOGIC ---
-        const app = {
-            activeModuleIndex: 0,
-            
-            init() {
-                this.renderSidebar();
-                this.loadModule(0);
-                lucide.createIcons();
-            },
-
-            renderSidebar() {
-                const list = document.getElementById('module-list');
-                list.innerHTML = '';
-                MODULES.forEach((mod, index) => {
-                    const isActive = index === this.activeModuleIndex;
-                    const li = document.createElement('li');
-                    li.className = `px-4 py-3 cursor-pointer flex items-center justify-between border-l-4 transition-colors ${
-                        isActive ? 'bg-slate-800 border-yellow-500 text-white' : 'border-transparent text-slate-400 hover:bg-slate-800 hover:text-white'
-                    }`;
-                    li.onclick = () => this.loadModule(index);
-                    
-                    const advancedBadge = mod.advanced ? '<span class="text-[9px] bg-orange-500 text-white px-1.5 py-0.5 rounded ml-2 uppercase tracking-wide">Advanced</span>' : '';
-
-                    li.innerHTML = `
-                        <div class="flex items-center gap-2 w-full">
-                            <span class="text-xs font-mono opacity-50 flex-shrink-0">${(index + 1).toString().padStart(2, '0')}</span>
-                            <span class="text-sm font-medium truncate">${mod.title}</span>
-                            ${advancedBadge}
-                        </div>
-                    `;
-                    list.appendChild(li);
-                });
-                lucide.createIcons();
-                this.updateProgress();
-            },
-
-            loadModule(index) {
-                this.activeModuleIndex = index;
-                window.currentSolver = null;
-                const mod = MODULES[index];
-                
-                // UI Updates
-                this.renderSidebar();
-                document.getElementById('current-module-title').innerText = `${index + 1}. ${mod.title}`;
-                document.getElementById('concept-content').innerHTML = mod.concept;
-                document.getElementById('project-title').innerText = mod.project.title;
-                document.getElementById('project-brief').innerHTML = mod.project.brief;
-                
-                const stepsList = document.getElementById('project-steps');
-                
-                if (mod.id === 'mod_quiz') {
-                    document.getElementById('instructions-box').classList.add('hidden');
-                } else {
-                    document.getElementById('instructions-box').classList.remove('hidden');
-                    stepsList.innerHTML = mod.project.steps ? mod.project.steps.map(s => `
-                        <li class="flex items-start gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 mt-1.5 flex-shrink-0"></span>
-                            <span>${s}</span>
-                        </li>
-                    `).join('') : '';
-                }
-
-                // Status Reset
-                const statusEl = document.getElementById('demo-status');
-                statusEl.innerText = "Waiting for input...";
-                statusEl.className = "text-xs font-medium px-2 py-1 rounded bg-slate-200 text-slate-600";
-
-                // Render Demo
-                const container = document.getElementById('demo-container');
-                container.innerHTML = '';
-                mod.renderDemo(container, () => this.completeModule());
-                
-                setTimeout(() => lucide.createIcons(), 50);
-            },
-
-            completeModule() {
-                const statusEl = document.getElementById('demo-status');
-                statusEl.innerText = "Completed";
-                statusEl.className = "text-xs font-medium px-2 py-1 rounded bg-emerald-100 text-emerald-700";
-
-                const toast = document.getElementById('toast');
-                toast.classList.remove('translate-y-20', 'opacity-0');
-                
+    <script>
+        // Loading Logic
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            setTimeout(() => {
+                loader.classList.add('animate-fade-out');
                 setTimeout(() => {
-                    toast.classList.add('translate-y-20', 'opacity-0');
-                }, 3000);
-                
-                this.updateProgress();
-            },
+                    loader.style.display = 'none';
+                }, 500);
+            }, 800);
+        });
 
-            updateProgress() {
-                const percent = Math.round(((this.activeModuleIndex) / MODULES.length) * 100);
-                document.getElementById('progress-bar').style.width = `${percent}%`;
-                document.getElementById('progress-text').innerText = `${percent}%`;
-            },
-
-            resetCurrentModule() {
-                this.loadModule(this.activeModuleIndex);
-            },
-
-            revealAnswers() {
-                if (window.currentSolver) {
-                    window.currentSolver();
-                }
-            }
-        };
-
-        // --- 3. INTELLISENSE HELPER ---
-        function enableIntellisense(inp, container) {
-            let dropdown = null;
-
-            inp.addEventListener('keyup', (e) => {
-                const val = inp.value;
-                const cursorPos = inp.selectionStart;
-                
-                const textBeforeCursor = val.substring(0, cursorPos);
-                const match = textBeforeCursor.match(/([a-zA-Z0-9_\[\]]+)$/);
-                
-                const lastOpenParen = val.lastIndexOf('(', cursorPos - 1);
-                const lastCloseParen = val.lastIndexOf(')', cursorPos - 1);
-                let currentSig = "";
-
-                if (lastOpenParen > lastCloseParen) {
-                    const beforeParen = val.substring(0, lastOpenParen).trim();
-                    const words = beforeParen.split(/[\s,]+/);
-                    const funcName = words[words.length - 1].toUpperCase();
-                    const meta = DAX_METADATA.functions.find(f => f.name === funcName);
-                    if (meta) currentSig = meta.sig;
-                }
-
-                if (match || currentSig) {
-                    const word = match ? match[1].trim().toLowerCase() : "";
-                    
-                    let filtered = [];
-                    if(word.length > 0) {
-                        let suggestions = [];
-                        suggestions.push(...DAX_METADATA.functions.map(f => ({ type: 'func', text: f.name })));
-                        suggestions.push(...DAX_METADATA.tables.map(t => ({ type: 'table', text: t })));
-                        suggestions.push(...DAX_METADATA.measures.map(m => ({ type: 'measure', text: m })));
-                        Object.values(DAX_METADATA.columns).flat().forEach(c => {
-                            suggestions.push({ type: 'col', text: c });
-                        });
-                        filtered = suggestions.filter(s => s.text.toLowerCase().includes(word));
-                    }
-
-                    if (filtered.length > 0 || currentSig) {
-                        if (!dropdown) {
-                            dropdown = document.createElement('div');
-                            dropdown.className = 'suggestions-box';
-                            document.body.appendChild(dropdown);
-                            
-                            dropdown.innerHTML = `
-                                <div class="suggestions-header" id="drag-${inp.id}">
-                                    <span>Suggestions</span>
-                                    <i data-lucide="grip-horizontal" class="w-3 h-3"></i>
-                                </div>
-                                <div class="signature-area" id="sig-${inp.id}"></div>
-                                <div class="suggestions-content" id="list-${inp.id}"></div>
-                            `;
-                            makeDraggable(dropdown, document.getElementById(`drag-${inp.id}`));
-                        }
-                        
-                        const rect = inp.getBoundingClientRect();
-                        if (!dropdown.hasMoved) {
-                            dropdown.style.top = (rect.top + window.scrollY - 300) + 'px'; 
-                            dropdown.style.left = (rect.left + window.scrollX) + 'px';
-                        }
-
-                        const sigArea = document.getElementById(`sig-${inp.id}`);
-                        if(currentSig) {
-                            sigArea.style.display = 'block';
-                            sigArea.innerText = currentSig;
-                        } else {
-                            sigArea.style.display = 'none';
-                        }
-
-                        const listContainer = document.getElementById(`list-${inp.id}`);
-                        listContainer.innerHTML = filtered.map(s => {
-                            let icon = '';
-                            if(s.type === 'func') icon = '<span class="icon-func">fx</span>';
-                            if(s.type === 'table') icon = '<span class="icon-table">▦</span>';
-                            if(s.type === 'col') icon = '<span class="icon-col">◫</span>';
-                            if(s.type === 'measure') icon = '<span class="icon-measure">∑</span>';
-                            return `<div class="suggestion-item" onclick="insertSuggestion('${s.text}', '${inp.id}')">${icon} ${s.text}</div>`;
-                        }).join('');
-                        
-                        if(filtered.length === 0 && !currentSig) closeDropdown();
-                        lucide.createIcons(); 
-                    } else {
-                        closeDropdown();
-                    }
-                } else {
-                    closeDropdown();
-                }
-            });
-
-            function makeDraggable(element, handle) {
-                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-                handle.onmousedown = dragMouseDown;
-
-                function dragMouseDown(e) {
-                    e = e || window.event;
-                    e.preventDefault();
-                    pos3 = e.clientX;
-                    pos4 = e.clientY;
-                    document.onmouseup = closeDragElement;
-                    document.onmousemove = elementDrag;
-                    element.hasMoved = true; 
-                }
-
-                function elementDrag(e) {
-                    e = e || window.event;
-                    e.preventDefault();
-                    pos1 = pos3 - e.clientX;
-                    pos2 = pos4 - e.clientY;
-                    pos3 = e.clientX;
-                    pos4 = e.clientY;
-                    element.style.top = (element.offsetTop - pos2) + "px";
-                    element.style.left = (element.offsetLeft - pos1) + "px";
-                }
-
-                function closeDragElement() {
-                    document.onmouseup = null;
-                    document.onmousemove = null;
-                }
-            }
-
-            function closeDropdown() {
-                if(dropdown) { dropdown.remove(); dropdown = null; }
-            }
-            
-            inp.addEventListener('blur', (e) => {
-                setTimeout(() => { closeDropdown(); }, 200);
-            });
-
-            window.insertSuggestion = (text, inpId) => {
-                const input = document.getElementById(inpId);
-                const pos = input.selectionStart;
-                const val = input.value;
-                const before = val.substring(0, pos);
-                const lastWordRegex = /([a-zA-Z0-9_\[\]]+)$/;
-                const match = before.match(lastWordRegex);
-                const lastWordLen = match ? match[1].length : 0;
-                
-                const newText = val.substring(0, pos - lastWordLen) + text + val.substring(pos);
-                input.value = newText;
-                input.focus();
-                
-                const event = new Event('keyup');
-                input.dispatchEvent(event);
-            };
-        }
-
-        // --- 4. RENDERERS ---
-
-        function renderGridDemo(container, inputs, onComplete, tableName = "Sales") {
-            let inputsHTML = inputs.map((inp, idx) => {
-                let badgeClass = inp.type === 'measure' ? 'measure-badge' : 'column-badge';
-                return `
-                <div class="da-expression-bar p-2 mb-3 rounded shadow-sm flex flex-col gap-1 relative">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="${badgeClass}">${inp.type}</span>
-                            <span class="text-xs font-bold text-slate-500">${inp.label} =</span>
-                        </div>
-                        <div id="status-${idx}" class="text-xs"></div>
-                    </div>
-                    <div class="flex gap-2">
-                        <input id="dax-inp-${idx}" class="dax-input w-full text-sm font-mono outline-none text-slate-700" placeholder="Type DAX..." autocomplete="off">
-                        <button onclick="validateInput(${idx})" class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs px-3 py-1 rounded font-bold transition-colors">✓</button>
-                    </div>
-                    <div id="res-${idx}" class="hidden text-xs text-slate-500 bg-slate-50 p-2 border-t mt-1 font-mono break-all"></div>
-                </div>
-            `}).join('');
-
-            let rowsHTML = "";
-            let headerHTML = "";
-            let bannerHTML = "";
-            let displayTableName = tableName;
-            
-            if (tableName === "Customer") {
-                headerHTML = `<tr><th class="border p-1">ID</th><th class="border p-1">FirstName</th><th class="border p-1">LastName</th></tr>`;
-                rowsHTML = `
-                    <tr><td class="border p-1">101</td><td class="border p-1">John</td><td class="border p-1">Doe</td></tr>
-                    <tr><td class="border p-1">102</td><td class="border p-1">Jane</td><td class="border p-1">Smith</td></tr>
-                    <tr><td class="border p-1">103</td><td class="border p-1">Bob</td><td class="border p-1">Jones</td></tr>
-                    <tr><td class="border p-1">104</td><td class="border p-1">Alice</td><td class="border p-1">Wong</td></tr>
-                `;
-            } else if (tableName === "Sales_SafeMath") {
-                 displayTableName = "Sales";
-                 headerHTML = `<tr><th class="border p-1">Product</th><th class="border p-1">Total Cost</th><th class="border p-1">Quantity</th></tr>`;
-                 rowsHTML = `
-                    <tr><td class="border p-1">Widget A</td><td class="border p-1">1000</td><td class="border p-1">10</td></tr>
-                    <tr><td class="border p-1">Widget B</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
-                    <tr><td class="border p-1">Widget C</td><td class="border p-1">50</td><td class="border p-1 text-red-500 font-bold">0</td></tr>
-                    <tr><td class="border p-1">Widget A</td><td class="border p-1">200</td><td class="border p-1">1</td></tr>
-                `;
-            } else if (tableName === "Sales_Agg") {
-                 displayTableName = "Sales";
-                 headerHTML = `<tr><th class="border p-1">Date</th><th class="border p-1">Product</th><th class="border p-1">Price</th><th class="border p-1">Quantity</th></tr>`;
-                 rowsHTML = `
-                    <tr><td class="border p-1">1/1/24</td><td class="border p-1">Widget A</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
-                    <tr><td class="border p-1">1/2/24</td><td class="border p-1">Widget B</td><td class="border p-1">200</td><td class="border p-1">2</td></tr>
-                    <tr><td class="border p-1">1/2/24</td><td class="border p-1">Widget C</td><td class="border p-1">300</td><td class="border p-1">1</td></tr>
-                `;
-            } else if (tableName === "Sales_Iter") {
-                 displayTableName = "Sales";
-                 headerHTML = `<tr><th class="border p-1">Product</th><th class="border p-1">Price</th><th class="border p-1">Quantity</th></tr>`;
-                 rowsHTML = `
-                    <tr><td class="border p-1">Widget A</td><td class="border p-1">50</td><td class="border p-1">2</td></tr>
-                    <tr><td class="border p-1">Widget B</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
-                    <tr><td class="border p-1">Widget C</td><td class="border p-1">50</td><td class="border p-1">2</td></tr>
-                `;
-            } else if (tableName === "Sales_Calc") {
-                 displayTableName = "Sales (Joined w/ Products)";
-                 headerHTML = `<tr><th class="border p-1">Product</th><th class="border p-1">Color</th><th class="border p-1">Price</th><th class="border p-1">Quantity</th></tr>`;
-                 rowsHTML = `
-                    <tr><td class="border p-1">Laptop</td><td class="border p-1">Red</td><td class="border p-1">250</td><td class="border p-1">2</td></tr>
-                    <tr><td class="border p-1">Phone</td><td class="border p-1">Blue</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
-                    <tr><td class="border p-1">Tablet</td><td class="border p-1">Red</td><td class="border p-1">200</td><td class="border p-1">1</td></tr>
-                `;
-            } else if (tableName === "Sales_Time") {
-                 displayTableName = "Sales (Linked to Calendar)";
-                 bannerHTML = `<div class="bg-blue-100 text-blue-800 text-[10px] p-1 text-center font-bold">Current Visual Context: Year = 2026</div>`;
-                 headerHTML = `<tr><th class="border p-1">Date</th><th class="border p-1">Price</th><th class="border p-1">Quantity</th></tr>`;
-                 rowsHTML = `
-                    <tr><td class="border p-1">1/1/2025</td><td class="border p-1">200</td><td class="border p-1">2</td></tr>
-                    <tr><td class="border p-1">6/1/2025</td><td class="border p-1">250</td><td class="border p-1">1</td></tr>
-                    <tr class="bg-blue-50"><td class="border p-1 font-bold">1/1/2026</td><td class="border p-1">250</td><td class="border p-1">2</td></tr>
-                    <tr class="bg-blue-50"><td class="border p-1 font-bold">3/1/2026</td><td class="border p-1">300</td><td class="border p-1">1</td></tr>
-                `;
-            } else if (tableName === "Sales_Mods") {
-                 displayTableName = "Sales (Joined w/ Products)";
-                 bannerHTML = `<div class="bg-blue-100 text-blue-800 text-[10px] p-1 text-center font-bold">Current Visual Context: Product = 'Laptop'</div>`;
-                 headerHTML = `<tr><th class="border p-1">Category</th><th class="border p-1">Product</th><th class="border p-1">Price</th><th class="border p-1">Quantity</th></tr>`;
-                 rowsHTML = `
-                    <tr class="bg-blue-50"><td class="border p-1 font-bold">Electronics</td><td class="border p-1 font-bold text-blue-800">Laptop</td><td class="border p-1">250</td><td class="border p-1">2</td></tr>
-                    <tr><td class="border p-1">Electronics</td><td class="border p-1">Phone</td><td class="border p-1">200</td><td class="border p-1">1</td></tr>
-                    <tr><td class="border p-1">Home</td><td class="border p-1">Desk</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
-                `;
-            } else {
-                 displayTableName = "Sales";
-                 headerHTML = `<tr><th class="border p-1">Date</th><th class="border p-1">Product</th><th class="border p-1">Price</th><th class="border p-1">Quantity</th></tr>`;
-                 rowsHTML = `
-                    <tr><td class="border p-1">1/1/26</td><td class="border p-1">Widget A</td><td class="border p-1">500</td><td class="border p-1">2</td></tr>
-                    <tr><td class="border p-1">1/2/26</td><td class="border p-1">Widget B</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
-                    <tr><td class="border p-1">1/3/26</td><td class="border p-1">Widget C</td><td class="border p-1">0</td><td class="border p-1">0</td></tr>
-                    <tr><td class="border p-1">1/4/26</td><td class="border p-1">Widget A</td><td class="border p-1">200</td><td class="border p-1">1</td></tr>
-                `;
-            }
-
-            container.innerHTML = `
-                <div class="flex h-full gap-4">
-                    <div class="flex-1 flex flex-col">
-                        <div class="flex-1 bg-white border rounded shadow-sm p-4 overflow-y-auto">
-                           ${inputsHTML}
-                        </div>
-                    </div>
-                    <div class="w-1/3 bg-white border rounded shadow-sm p-0 flex flex-col">
-                        <div class="bg-slate-100 p-2 text-xs font-bold border-b text-center">Data Preview (${displayTableName})</div>
-                        ${bannerHTML}
-                        <div class="flex-1 overflow-auto p-2">
-                            <table class="w-full text-[10px] text-left border-collapse" id="preview-table">
-                                <thead class="bg-slate-50 sticky top-0">${headerHTML}</thead>
-                                <tbody>${rowsHTML}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            inputs.forEach((_, idx) => {
-                const el = document.getElementById(`dax-inp-${idx}`);
-                enableIntellisense(el, el.parentElement.parentElement);
-            });
-
-            let completedCount = 0;
-            window.validateInput = (idx) => {
-                const inputEl = document.getElementById(`dax-inp-${idx}`);
-                const statusEl = document.getElementById(`status-${idx}`);
-                const resEl = document.getElementById(`res-${idx}`);
-                const def = inputs[idx];
-                const val = inputEl.value.replace(/\s+/g, ' ').trim(); 
-
-                if (def.match.test(val)) {
-                    if(!statusEl.classList.contains('text-green-600')) {
-                        statusEl.innerHTML = `<i data-lucide="check-circle" class="w-3 h-3 inline text-green-600"></i>`;
-                        inputEl.classList.add('text-green-700', 'font-bold');
-                        inputEl.disabled = true;
-                        
-                        // Show Result
-                        if (def.type === 'measure') {
-                            resEl.innerHTML = def.resultHtml ? def.resultHtml : `<strong>Result:</strong> ${def.result}`;
-                            resEl.classList.remove('hidden');
-                        } else if (def.type === 'column' && Array.isArray(def.result)) {
-                            const tbl = document.getElementById('preview-table');
-                            const headRow = tbl.querySelector('thead tr');
-                            headRow.innerHTML += `<th class="border p-1 bg-green-50 text-green-700 whitespace-nowrap">${def.label}</th>`;
-                            const rows = tbl.querySelectorAll('tbody tr');
-                            rows.forEach((r, i) => {
-                                let val = def.result[i] || "";
-                                let errClass = (val === 'Infinity' || val === 'NaN') ? 'text-red-500 italic' : '';
-                                r.innerHTML += `<td class="border p-1 bg-green-50 font-bold ${errClass}">${val}</td>`;
-                            });
-                        }
-
-                        lucide.createIcons();
-                        completedCount++;
-                        if(completedCount === inputs.length) onComplete();
-                    }
-                } else {
-                    inputEl.classList.add('bg-red-50');
-                    setTimeout(() => inputEl.classList.remove('bg-red-50'), 500);
-                }
-            };
-
-            window.currentSolver = async () => {
-                for(let i=0; i<inputs.length; i++) {
-                     const def = inputs[i];
-                     const el = document.getElementById(`dax-inp-${i}`);
-                     el.value = def.hint;
-                     validateInput(i);
-                     await new Promise(r => setTimeout(r, 600)); 
-                }
-            };
-        }
-
-        function renderSlicerDemo(container, inputs, onComplete) {
-            let inputsHTML = inputs.map((inp, idx) => `
-                <div class="da-expression-bar p-2 mb-3 rounded shadow-sm flex flex-col gap-1 relative">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="measure-badge">Measure</span>
-                            <span class="text-xs font-bold text-slate-500">${inp.label} =</span>
-                        </div>
-                        <div id="status-${idx}" class="text-xs"></div>
-                    </div>
-                    <div class="flex gap-2">
-                        <input id="dax-inp-${idx}" class="dax-input w-full text-sm font-mono outline-none text-slate-700" placeholder="Type DAX..." autocomplete="off">
-                        <button onclick="validateInput(${idx})" class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs px-3 py-1 rounded font-bold transition-colors">✓</button>
-                    </div>
-                    <div id="res-${idx}" class="hidden text-xs text-slate-500 bg-slate-50 p-2 border-t mt-1 font-mono break-all"></div>
-                </div>
-            `).join('');
-
-            container.innerHTML = `
-                <div class="flex h-full gap-4">
-                    <div class="flex-1 flex flex-col gap-4">
-                        <div class="bg-white border rounded shadow-sm p-4">
-                           ${inputsHTML}
-                        </div>
-                        <div class="flex-1 bg-white border rounded shadow-sm p-2 flex flex-col overflow-hidden">
-                            <div class="text-[10px] font-bold border-b pb-1 mb-1">Data Context (Products & Sales)</div>
-                            <div class="overflow-auto">
-                                <table class="w-full text-[9px] text-left border-collapse">
-                                    <thead class="bg-slate-50 sticky top-0"><tr><th class="border p-1">Category</th><th class="border p-1">Product</th><th class="border p-1">Price</th><th class="border p-1">Qty</th></tr></thead>
-                                    <tbody id="slicer-data-table">
-                                        <!-- Injected by JS -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="w-1/3 flex flex-col gap-2">
-                        <div class="bg-white border rounded shadow-sm p-2">
-                            <div class="text-[10px] uppercase font-bold text-slate-400 mb-1">Slicer: Category</div>
-                            <div class="space-y-1" id="slicer-container">
-                                <div class="slicer-item text-xs p-1 cursor-pointer border rounded flex items-center justify-between bg-blue-50 border-blue-200" onclick="toggleSlicer(this, 'Electronics')">
-                                    <span>Electronics</span>
-                                    <i data-lucide="check" class="w-3 h-3 text-blue-500"></i>
-                                </div>
-                                <div class="slicer-item text-xs p-1 cursor-pointer border rounded hover:bg-slate-50" onclick="toggleSlicer(this, 'Clothing')">Clothing</div>
-                                <div class="slicer-item text-xs p-1 cursor-pointer border rounded hover:bg-slate-50" onclick="toggleSlicer(this, 'Home')">Home</div>
-                            </div>
-                        </div>
-                        <div class="flex-1 bg-white border rounded shadow-sm p-2 flex flex-col relative min-h-[150px]">
-                             <div class="text-[10px] uppercase font-bold text-slate-400 mb-1">Visual</div>
-                             <div class="absolute inset-0 top-6 flex items-center justify-center bg-slate-50 opacity-90 z-10" id="vis-overlay">
-                                <span class="text-xs text-slate-500">Enter DAX to render</span>
-                             </div>
-                             <div class="flex-1 flex flex-col gap-2">
-                                <h4 class="font-bold text-sm text-center border-b pb-1" id="chart-title">Revenue by Rank</h4>
-                                <div class="flex-1 flex items-end justify-around gap-1 px-2 pb-2" id="bar-chart-container">
-                                    <!-- Dynamic Bars -->
-                                </div>
-                             </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            const salesData = [
-                {cat: "Electronics", prod: "Laptop", price: 600, qty: 2, rev: 1200},
-                {cat: "Electronics", prod: "Smartphone", price: 800, qty: 1, rev: 800},
-                {cat: "Electronics", prod: "Tablet", price: 300, qty: 2, rev: 600},
-                {cat: "Electronics", prod: "Monitor", price: 300, qty: 1, rev: 300},
-                {cat: "Clothing", prod: "Jacket", price: 75, qty: 2, rev: 150},
-                {cat: "Clothing", prod: "Jeans", price: 50, qty: 2, rev: 100},
-                {cat: "Clothing", prod: "Shirt", price: 25, qty: 2, rev: 50},
-                {cat: "Clothing", prod: "Hat", price: 20, qty: 1, rev: 20},
-                {cat: "Home", prod: "Sofa", price: 500, qty: 1, rev: 500},
-                {cat: "Home", prod: "Table", price: 100, qty: 2, rev: 200},
-                {cat: "Home", prod: "Chair", price: 50, qty: 2, rev: 100},
-                {cat: "Home", prod: "Lamp", price: 40, qty: 1, rev: 40}
-            ];
-
-            const tbody = document.getElementById('slicer-data-table');
-            salesData.forEach(r => {
-                tbody.innerHTML += `<tr><td class="border p-1">${r.cat}</td><td class="border p-1">${r.prod}</td><td class="border p-1">${r.price}</td><td class="border p-1">${r.qty}</td></tr>`;
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            // Update Buttons
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                // Reset border colors for inactive state
+                if(btn.id === 'btn-apps') btn.classList.remove('border-l-sky-500');
+                if(btn.id === 'btn-demos') btn.classList.remove('border-l-orange-500');
+                if(btn.id === 'btn-labs') btn.classList.remove('border-l-emerald-500');
+                if(btn.id === 'btn-study') btn.classList.remove('border-l-rose-500');
+                if(btn.id === 'btn-bonus') btn.classList.remove('border-l-violet-500');
             });
             
-            const renderChart = (category) => {
-                const filtered = salesData.filter(d => d.cat === category).sort((a,b) => b.rev - a.rev).slice(0,3);
-                const max = filtered[0].rev;
-                const container = document.getElementById('bar-chart-container');
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            if(activeBtn) {
+                activeBtn.classList.add('active');
+            }
+
+            // Update Content Views
+            document.getElementById('view-apps').classList.add('hidden');
+            document.getElementById('view-demos').classList.add('hidden');
+            document.getElementById('view-labs').classList.add('hidden');
+            document.getElementById('view-study').classList.add('hidden');
+            document.getElementById('view-bonus').classList.add('hidden');
+
+            const view = document.getElementById(`view-${tabId}`);
+            if (view) {
+                view.classList.remove('hidden');
                 
-                container.innerHTML = filtered.map((d, i) => {
-                    const height = (d.rev / max) * 100;
-                    const colors = ["bg-blue-600", "bg-blue-400", "bg-blue-200"];
-                    return `
-                        <div class="w-8 ${colors[i]} rounded-t relative group flex flex-col justify-end items-center transition-all duration-500" style="height: ${height}%">
-                            <div class="text-[9px] font-bold text-white mb-1">${i+1}</div>
-                            <div class="absolute bottom-[-15px] text-[8px] text-slate-500 truncate w-12 text-center">${d.prod}</div>
-                        </div>
-                    `;
-                }).join('');
-                document.getElementById('chart-title').innerText = `${category} Revenue Top 3`;
-            };
-
-            renderChart('Electronics');
-
-            window.toggleSlicer = (el, cat) => {
-                const items = document.querySelectorAll('.slicer-item');
-                items.forEach(i => {
-                    i.className = 'slicer-item text-xs p-1 cursor-pointer border rounded hover:bg-slate-50';
-                    i.innerHTML = i.innerText.trim(); 
-                });
-                el.className = 'slicer-item text-xs p-1 cursor-pointer border rounded flex items-center justify-between bg-blue-50 border-blue-200';
-                el.innerHTML = `<span>${cat}</span><i data-lucide="check" class="w-3 h-3 text-blue-500"></i>`;
-                lucide.createIcons();
-                
-                renderChart(cat);
-            };
-
-            inputs.forEach((_, idx) => {
-                const el = document.getElementById(`dax-inp-${idx}`);
-                enableIntellisense(el, el.parentElement.parentElement);
-            });
-
-            let completedCount = 0;
-            window.validateInput = (idx) => {
-                const inputEl = document.getElementById(`dax-inp-${idx}`);
-                const statusEl = document.getElementById(`status-${idx}`);
-                const resEl = document.getElementById(`res-${idx}`);
-                const def = inputs[idx];
-                const val = inputEl.value.replace(/\s+/g, ' ').trim(); 
-
-                if (def.match.test(val)) {
-                    if(!statusEl.classList.contains('text-green-600')) {
-                        statusEl.innerHTML = `<i data-lucide="check-circle" class="w-3 h-3 inline text-green-600"></i>`;
-                        inputEl.classList.add('text-green-700', 'font-bold');
-                        inputEl.disabled = true;
-                        
-                        if (def.result) {
-                            resEl.innerHTML = def.resultHtml ? def.resultHtml : `<strong>Result:</strong> ${def.result}`;
-                            resEl.classList.remove('hidden');
-                        }
-
-                        lucide.createIcons();
-                        completedCount++;
-                        
-                        if(completedCount === inputs.length) {
-                             document.getElementById('vis-overlay').classList.add('hidden');
-                             onComplete();
-                        }
-                    }
-                } else {
-                    inputEl.classList.add('bg-red-50');
-                    setTimeout(() => inputEl.classList.remove('bg-red-50'), 500);
-                }
-            };
-
-            window.currentSolver = async () => {
-                for(let i=0; i<inputs.length; i++) {
-                    const def = inputs[i];
-                    const el = document.getElementById(`dax-inp-${i}`);
-                    el.value = def.hint;
-                    validateInput(i);
-                    await new Promise(r => setTimeout(r, 600));
-                }
-            };
+                // Re-trigger animation
+                view.classList.remove('animate-fade-in');
+                void view.offsetWidth; // trigger reflow
+                view.classList.add('animate-fade-in');
+            }
         }
 
-        function renderQuizDemo(container, onComplete) {
-            container.innerHTML = `
-                <div class="flex flex-col h-full bg-white border rounded shadow-sm overflow-hidden">
-                    <div class="bg-slate-100 p-3 border-b flex justify-between items-center">
-                        <span class="font-bold text-sm text-slate-700">Question <span id="q-num">1</span> of 5</span>
-                        <div class="flex gap-1" id="q-dots">
-                            <div class="w-2 h-2 rounded-full bg-slate-300"></div>
-                            <div class="w-2 h-2 rounded-full bg-slate-300"></div>
-                            <div class="w-2 h-2 rounded-full bg-slate-300"></div>
-                            <div class="w-2 h-2 rounded-full bg-slate-300"></div>
-                            <div class="w-2 h-2 rounded-full bg-slate-300"></div>
-                        </div>
-                    </div>
-                    <div class="flex-1 p-6 flex flex-col overflow-y-auto">
-                        <div id="quiz-content" class="flex-1">
-                            <!-- Question injected here -->
-                        </div>
-                        <div class="mt-4 flex justify-end">
-                            <button id="btn-next-q" class="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-4 py-2 rounded text-sm font-bold disabled:opacity-50" disabled>Next Question</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            let currentQ = 0;
-            
-            const renderQ = () => {
-                const q = QUIZ_DATA[currentQ];
-                document.getElementById('q-num').innerText = currentQ + 1;
-                
-                const dots = document.getElementById('q-dots').children;
-                for(let i=0; i<5; i++) {
-                    dots[i].className = `w-2 h-2 rounded-full ${i === currentQ ? 'bg-blue-500' : (i < currentQ ? 'bg-green-500' : 'bg-slate-300')}`;
-                }
-
-                let tableHTML = `<table class="w-full text-xs text-left border mb-4"><thead class="bg-slate-50"><tr>`;
-                q.context.header.forEach(h => tableHTML += `<th class="border p-2">${h}</th>`);
-                tableHTML += `</tr></thead><tbody>`;
-                q.context.rows.forEach(r => {
-                    tableHTML += `<tr>`;
-                    r.forEach(c => tableHTML += `<td class="border p-2">${c}</td>`);
-                    tableHTML += `</tr>`;
-                });
-                tableHTML += `</tbody></table>`;
-
-                const content = document.getElementById('quiz-content');
-                content.innerHTML = `
-                    <div class="text-sm font-medium mb-4">${q.q}</div>
-                    <div class="bg-slate-50 p-2 rounded border mb-4 w-64">${tableHTML}</div>
-                    <div class="space-y-2">
-                        ${q.options.map((opt, i) => `
-                            <div class="quiz-option border rounded p-3 text-sm cursor-pointer" onclick="checkAnswer(${i}, this)">${opt}</div>
-                        `).join('')}
-                    </div>
-                    <div id="explanation" class="hidden mt-4 p-3 bg-blue-50 border border-blue-100 rounded text-sm text-blue-900 leading-relaxed"></div>
-                `;
-                
-                document.getElementById('btn-next-q').disabled = true;
-            };
-
-            window.checkAnswer = (idx, el) => {
-                if(document.querySelector('.quiz-option.correct') || document.querySelector('.quiz-option.incorrect')) return;
-
-                const q = QUIZ_DATA[currentQ];
-                if (idx === q.correct) {
-                    el.classList.add('correct');
-                    el.innerHTML += `<i data-lucide="check" class="w-4 h-4 inline ml-2 text-green-700"></i>`;
-                } else {
-                    el.classList.add('incorrect');
-                    const opts = document.querySelectorAll('.quiz-option');
-                    opts[q.correct].classList.add('correct');
-                }
-                
-                const exp = document.getElementById('explanation');
-                exp.innerHTML = `<strong>Explanation:</strong> ${q.expl}`;
-                exp.classList.remove('hidden');
-                
-                lucide.createIcons();
-                document.getElementById('btn-next-q').disabled = false;
-            };
-
-            document.getElementById('btn-next-q').onclick = () => {
-                if (currentQ < 4) {
-                    currentQ++;
-                    renderQ();
-                } else {
-                    onComplete();
-                }
-            };
-
-            renderQ();
-
-            window.currentSolver = async () => {
-                const q = QUIZ_DATA[currentQ];
-                const opts = document.querySelectorAll('.quiz-option');
-                window.checkAnswer(q.correct, opts[q.correct]);
-                await new Promise(r => setTimeout(r, 600));
-                document.getElementById('btn-next-q').click();
-                
-                // If there are more questions, recursively solve the next one
-                if(currentQ <= 4 && document.getElementById('btn-next-q')) {
-                    setTimeout(() => window.currentSolver(), 200);
-                }
-            };
+        // Modal Logic
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            // Small animation delay for content
+            const content = modal.querySelector('div[class*="transform"]');
+            content.classList.remove('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
         }
 
-        window.onload = () => app.init();
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden');
+        }
     </script>
 </body>
 </html>
