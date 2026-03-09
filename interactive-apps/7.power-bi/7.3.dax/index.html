@@ -45,7 +45,7 @@
             display: flex;
             flex-col: column;
             z-index: 9999; 
-            min-width: 400px; /* Wider base */
+            min-width: 400px;
             max-width: 600px;
             width: auto;
             font-family: 'Segoe UI', sans-serif;
@@ -69,14 +69,14 @@
         }
 
         .signature-area {
-            background: #fffbeb; /* Yellow-50 */
+            background: #fffbeb;
             padding: 8px 12px;
             border-bottom: 1px solid #fcd34d;
             font-family: 'Fira Code', monospace;
             font-size: 12px;
             color: #92400e;
-            display: none; /* Hidden by default */
-            white-space: normal; /* Allow wrapping if very long */
+            display: none;
+            white-space: normal;
             word-break: break-word;
             flex-shrink: 0;
         }
@@ -97,11 +97,12 @@
             white-space: nowrap; 
         }
         .suggestion-item:hover, .suggestion-item.active {
-            background-color: #e0f2fe; /* Light Blue hover */
+            background-color: #e0f2fe;
         }
-        .icon-table { color: #d97706; } /* Amber */
-        .icon-col { color: #2563eb; } /* Blue */
-        .icon-func { color: #9333ea; font-weight: bold; } /* Purple */
+        .icon-table { color: #d97706; }
+        .icon-col { color: #2563eb; }
+        .icon-func { color: #9333ea; font-weight: bold; }
+        .icon-measure { color: #059669; font-weight: bold; } /* Emerald */
 
         /* Animations */
         @keyframes fade-in {
@@ -161,6 +162,29 @@
             border-color: #ef4444;
             color: #7f1d1d;
         }
+
+        /* Sequence Iterator Animation Styles */
+        @keyframes iterRow1 { 0%, 25%, 100% { background-color: transparent; } 5%, 20% { background-color: #fef08a; } }
+        @keyframes iterCalc1 { 0%, 5% { opacity: 0; } 10%, 100% { opacity: 1; } }
+
+        @keyframes iterRow2 { 0%, 25%, 50%, 100% { background-color: transparent; } 30%, 45% { background-color: #fef08a; } }
+        @keyframes iterCalc2 { 0%, 30% { opacity: 0; } 35%, 100% { opacity: 1; } }
+
+        @keyframes iterRow3 { 0%, 50%, 75%, 100% { background-color: transparent; } 55%, 70% { background-color: #fef08a; } }
+        @keyframes iterCalc3 { 0%, 55% { opacity: 0; } 60%, 100% { opacity: 1; } }
+
+        @keyframes iterShowTotal { 0%, 80% { opacity: 0; transform: scale(0.8); } 85%, 100% { opacity: 1; transform: scale(1); } }
+
+        .anim-row-1 { animation: iterRow1 8s infinite; }
+        .anim-calc-1 { animation: iterCalc1 8s infinite; }
+        
+        .anim-row-2 { animation: iterRow2 8s infinite; }
+        .anim-calc-2 { animation: iterCalc2 8s infinite; }
+        
+        .anim-row-3 { animation: iterRow3 8s infinite; }
+        .anim-calc-3 { animation: iterCalc3 8s infinite; }
+        
+        .anim-total { animation: iterShowTotal 8s infinite; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden">
@@ -202,8 +226,8 @@
                     <p id="current-module-subtitle" class="text-slate-500 text-sm mt-1">Interactive Code Lab</p>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="app.openInstructorModal()" class="text-xs px-3 py-2 text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg flex items-center gap-2 transition-colors">
-                        <i data-lucide="key" class="w-3 h-3"></i> Instructor
+                    <button onclick="app.revealAnswers()" class="text-sm px-4 py-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center gap-2 transition-colors font-semibold">
+                        <i data-lucide="eye" class="w-4 h-4"></i> Reveal Answers
                     </button>
                     <div class="w-px h-8 bg-slate-200 mx-1"></div>
                     <button onclick="app.resetCurrentModule()" class="text-sm px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg flex items-center gap-2 transition-colors">
@@ -278,44 +302,26 @@
         </div>
     </div>
 
-    <!-- Password Modal -->
-    <div id="password-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm transform transition-all scale-95 opacity-0 duration-200">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-2 bg-amber-100 rounded-lg">
-                    <i data-lucide="lock-keyhole" class="w-5 h-5 text-amber-600"></i>
-                </div>
-                <h3 class="font-bold text-slate-800">Instructor Access</h3>
-            </div>
-            <p class="text-sm text-slate-500 mb-4">Enter password to solve current module.</p>
-            <input type="password" id="instructor-password-input" 
-                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm mb-4 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none" 
-                   placeholder="Password (teacher)">
-            <div class="flex justify-end gap-2">
-                <button onclick="app.closeInstructorModal()" class="px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
-                <button onclick="app.submitInstructorPassword()" class="px-4 py-2 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium">Unlock</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         // --- 1. DATA & METADATA ---
         
         const DAX_METADATA = {
             tables: ['Sales', 'Products', 'Calendar', 'Customer'],
             columns: {
-                'Sales': ['Sales[Amount]', 'Sales[Quantity]', 'Sales[Net Price]', 'Sales[Date]', 'Sales[OrderNo]'],
+                'Sales': ['Sales[Price]', 'Sales[Quantity]', 'Sales[Date]', 'Sales[OrderNo]', 'Sales[Total Cost]'],
                 'Products': ['Products[Product Name]', 'Products[Color]', 'Products[Category]'],
                 'Calendar': ['Calendar[Date]', 'Calendar[Year]', 'Calendar[Month]'],
                 'Customer': ['Customer[FirstName]', 'Customer[LastName]', 'Customer[FullName]']
             },
+            measures: [
+                '[Total Revenue]', '[Total Units]'
+            ],
             functions: [
                 { name: 'SUM', sig: 'SUM(<column>)' },
                 { name: 'AVERAGE', sig: 'AVERAGE(<column>)' },
                 { name: 'COUNTROWS', sig: 'COUNTROWS(<table>)' },
                 { name: 'DISTINCTCOUNT', sig: 'DISTINCTCOUNT(<column>)' },
                 { name: 'DIVIDE', sig: 'DIVIDE(<numerator>, <denominator>, [alternate_result])' },
-                { name: 'COALESCE', sig: 'COALESCE(<expression>, <value_if_blank>)' },
                 { name: 'CALCULATE', sig: 'CALCULATE(<expression>, [filter1], ...)' },
                 { name: 'FILTER', sig: 'FILTER(<table>, <filter_expression>)' },
                 { name: 'TOTALYTD', sig: 'TOTALYTD(<expression>, <dates>)' },
@@ -344,23 +350,23 @@
                 expl: "<strong>CONCATENATE</strong> or the <strong>&</strong> operator joins text strings together."
             },
             {
-                q: "You want to calculate the total sales for 'Red' products only, regardless of what the user selects in a slicer. How do you construct the formula?",
-                context: { header: ["Color", "Sales"], rows: [["Red", "100"], ["Blue", "200"]] },
+                q: "You want to calculate the total revenue for 'Red' products only. Assume you already have a <code>[Total Revenue]</code> measure. How do you construct the formula?",
+                context: { header: ["Color", "Price", "Qty"], rows: [["Red", "$50", "2"], ["Blue", "$100", "2"]] },
                 options: [
-                    "SUM(Sales[Amount])",
-                    "CALCULATE(SUM(Sales[Amount]), Products[Color] = 'Red')",
-                    "CALCULATE(SUM(Sales[Amount]), ALL(Products[Color]))",
+                    "SUM([Total Revenue])",
+                    "CALCULATE([Total Revenue], Products[Color] = 'Red')",
+                    "CALCULATE([Total Revenue], ALL(Products[Color]))",
                     "FILTER(Sales, Products[Color] = 'Red')"
                 ],
                 correct: 1,
-                expl: "<strong>CALCULATE</strong> modifies the context. Adding the filter <code>Products[Color] = 'Red'</code> restricts the calculation to Red products."
+                expl: "<strong>CALCULATE</strong> modifies the context. Adding the filter <code>Products[Color] = 'Red'</code> restricts the expression evaluated in <code>[Total Revenue]</code> to only Red products."
             },
             {
-                q: "You have a table with Quantity and UnitPrice. You need the Total Sales Amount. You cannot simply SUM the columns directly. Which function iterates row-by-row?",
-                context: { header: ["Qty", "Price"], rows: [["2", "10"], ["5", "20"]] },
+                q: "You have a table with Quantity and UnitPrice. You need to calculate Total Revenue. You cannot simply SUM the columns directly. Which function iterates row-by-row?",
+                context: { header: ["Quantity", "Price"], rows: [["2", "$10"], ["5", "$20"]] },
                 options: ["SUM", "AVERAGEX", "SUMX", "COUNTROWS"],
                 correct: 2,
-                expl: "<strong>SUMX</strong> is an iterator. It goes row-by-row, calculates <code>Qty * Price</code>, and then sums the results."
+                expl: "<strong>SUMX</strong> is an iterator. It goes row-by-row, calculates <code>Quantity * Price</code>, and then sums the final row-level results together."
             },
             {
                 q: "You are in the 'Sales' table (Fact) and need to fetch the 'Product Name' from the 'Products' table (Dimension) to create a Calculated Column. Which function do you use?",
@@ -370,20 +376,21 @@
                 expl: "<strong>RELATED</strong> follows an existing Many-to-One relationship to fetch data from the 'One' side (Dimension) to the 'Many' side (Fact)."
             },
             {
-                q: "You need to count how many orders had a Sales Amount greater than 500. Which formula correctly returns this count?",
-                context: { header: ["Order", "Amount"], rows: [["101", "600"], ["102", "200"]] },
+                q: "You need to count how many individual sales transactions had a Unit Price greater than 500. Which formula correctly returns this count?",
+                context: { header: ["Order", "Price"], rows: [["101", "$600"], ["102", "$200"]] },
                 options: [
-                    "COUNTROWS(FILTER(Sales, Sales[Amount] > 500))",
-                    "SUMX(Sales, Sales[Amount] > 500)",
-                    "CALCULATE(Sales[Amount] > 500)",
-                    "COUNT(Sales[Amount])"
+                    "COUNTROWS(FILTER(Sales, Sales[Price] > 500))",
+                    "SUMX(Sales, Sales[Price] > 500)",
+                    "CALCULATE(Sales[Price] > 500)",
+                    "COUNT(Sales[Price])"
                 ],
                 correct: 0,
-                expl: "<strong>COUNTROWS</strong> counts rows in a table. <strong>FILTER</strong> returns a table reduced to only rows where Amount > 500."
+                expl: "<strong>COUNTROWS</strong> counts rows in a table. <strong>FILTER</strong> returns a table reduced to only the rows where Price > 500. Combining them gives the right answer."
             }
         ];
 
         const MODULES = [
+            // 0
             {
                 id: "mod_text",
                 title: "Text Manipulation",
@@ -404,53 +411,57 @@
                     ]
                 },
                 inputs: [
-                    { label: "Full Name", type: "column", result: ["John Doe", "Jane Smith", "Bob Jones"], match: /Customer\[FirstName\]\s*&\s*" "\s*&\s*Customer\[LastName\]/i, hint: "Customer[FirstName] & \" \" & Customer[LastName]" },
+                    { label: "Full Name", type: "column", result: ["John Doe", "Jane Smith", "Bob Jones", "Alice Wong"], match: /Customer\[FirstName\]\s*&\s*" "\s*&\s*Customer\[LastName\]/i, hint: "Customer[FirstName] & \" \" & Customer[LastName]" },
                     { label: "Order Label", type: "column", result: ["ORD-1001", "ORD-1002", "ORD-1003", "ORD-1004"], match: /"ORD-"\s*&\s*Sales\[OrderNo\]/i, hint: "\"ORD-\" & Sales[OrderNo]" }
                 ],
                 renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[0].inputs, onComplete, "Customer")
             },
+            // 1
             {
                 id: "mod_math",
-                title: "Safe Math & Defaults",
+                title: "Safe Math & Errors",
                 concept: `
-                    <p class="mb-3">Handling errors is crucial. We will create a <strong>Calculated Column</strong> for line-item safety.</p>
+                    <p class="mb-3">Handling errors (like dividing by zero) is crucial in Power BI. Let's see what happens when we do it wrong, then fix it.</p>
                     <div class="space-y-3">
-                        <div class="bg-blue-50 p-2 rounded border border-blue-100">
-                            <strong class="text-blue-700">DIVIDE</strong><br>
-                            <span class="text-xs">Safely divides. If denominator is 0, returns 0 (optional). <br><code>DIVIDE(Num, Denom, 0)</code></span>
+                        <div class="bg-red-50 p-2 rounded border border-red-200">
+                            <strong class="text-red-700">Unsafe Math</strong><br>
+                            <span class="text-xs">Standard division like <code>[Total Cost] / [Quantity]</code> to find Unit Cost will throw an <b>Infinity</b> error if a row has 0 Quantity.</span>
                         </div>
-                        <div class="bg-purple-50 p-2 rounded border border-purple-100">
-                            <strong class="text-purple-700">COALESCE</strong><br>
-                            <span class="text-xs">Returns first non-blank. <br><code>COALESCE([Column], 0)</code></span>
+                        <div class="bg-blue-50 p-2 rounded border border-blue-200">
+                            <strong class="text-blue-700">DIVIDE</strong><br>
+                            <span class="text-xs">Safely divides. If denominator is 0, it returns BLANK or an optional default value. <br><code>DIVIDE(Num, Denom, 0)</code></span>
                         </div>
                     </div>
                 `,
                 project: {
-                    title: "Handle Zeroes & Blanks",
-                    brief: "Create a safe 'Price Per Unit' column. Some rows have 0 Quantity.",
+                    title: "Calculate Unit Cost",
+                    brief: "We want to find the Unit Cost (Total Cost / Quantity). Let's see the error, then fix it safely.",
                     steps: [
-                        "Calculate <strong>Safe Price</strong> column using DIVIDE (Amount / Quantity, 0).",
-                        "Calculate <strong>No Blanks</strong> column using COALESCE on Safe Price."
+                        "Calculate <strong>Unsafe Cost</strong> using standard division (Total Cost / Quantity). Notice the Infinity error!",
+                        "Calculate <strong>Safe Cost</strong> using the DIVIDE function, substituting 0 if dividing by zero."
                     ]
                 },
                 inputs: [
-                    { label: "Safe Price", type: "column", result: ["250", "100", "0", "200"], match: /DIVIDE\s*\(\s*Sales\[Amount\]\s*,\s*Sales\[Quantity\]\s*,\s*0\s*\)/i, hint: "DIVIDE(Sales[Amount], Sales[Quantity], 0)" },
-                    { label: "No Blanks", type: "column", result: ["250", "100", "0", "200"], match: /COALESCE\s*\(\s*Sales\[Safe Price\]\s*,\s*0\s*\)/i, hint: "COALESCE(Sales[Safe Price], 0)" }
+                    { label: "Unsafe Cost", type: "column", result: ["Infinity", "100", "NaN", "200"], match: /Sales\[Total Cost\]\s*\/\s*Sales\[Quantity\]/i, hint: "Sales[Total Cost] / Sales[Quantity]" },
+                    { label: "Safe Cost", type: "column", result: ["0", "100", "0", "200"], match: /DIVIDE\s*\(\s*Sales\[Total Cost\]\s*,\s*Sales\[Quantity\]\s*,\s*0\s*\)/i, hint: "DIVIDE(Sales[Total Cost], Sales[Quantity], 0)" }
                 ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[1].inputs, onComplete)
+                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[1].inputs, onComplete, "Sales_SafeMath")
             },
+            // 2
             {
                 id: "mod_context_theory",
                 title: "Context Theory",
                 concept: `
-                    <div class="grid grid-cols-2 gap-2 mb-3">
-                        <div class="bg-slate-50 p-2 rounded border">
-                            <strong class="text-xs uppercase text-slate-500">Calculated Column</strong>
-                            <p class="text-xs mt-1">Calculated <strong>row-by-row</strong> at data refresh time. Stored in memory (RAM). Aware of the "current row".</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <div class="bg-slate-50 p-3 rounded border">
+                            <strong class="text-xs uppercase text-slate-500 block mb-2">Calculated Column (Row Context)</strong>
+                            <p class="text-xs">Calculated <strong>row-by-row</strong> at data refresh time. Stored in memory (RAM). Aware of the "current row" it is looking at.</p>
+                            <p class="text-[10px] mt-2 bg-blue-50 text-blue-800 p-1.5 rounded"><strong class="font-bold">Excel Equivalent:</strong> Typing a formula in a new column and dragging it down.</p>
                         </div>
-                        <div class="bg-slate-50 p-2 rounded border">
-                            <strong class="text-xs uppercase text-slate-500">Measure</strong>
-                            <p class="text-xs mt-1">Calculated <strong>on-the-fly</strong> when used in a visual. Uses <strong>Filter Context</strong> (responds to Slicers/Filters). Does not know "which row" unless you use an Iterator.</p>
+                        <div class="bg-slate-50 p-3 rounded border">
+                            <strong class="text-xs uppercase text-slate-500 block mb-2">Measure (Filter Context)</strong>
+                            <p class="text-xs">Calculated <strong>on-the-fly</strong> when used in a visual. Uses <strong>Filter Context</strong> (responds to Slicers/Filters). It calculates based on aggregated subsets of data.</p>
+                            <p class="text-[10px] mt-2 bg-emerald-50 text-emerald-800 p-1.5 rounded"><strong class="font-bold">Excel Equivalent:</strong> Dropping a field into the 'Values' area of a Pivot Table.</p>
                         </div>
                     </div>
                 `,
@@ -458,16 +469,17 @@
                     title: "Column vs. Measure",
                     brief: "Define a Calculated Column (Row Context) vs a Measure (Filter Context).",
                     steps: [
-                        "<strong>Column:</strong> Create 'LineTotal' (Qty * Amount) - Static per row.",
-                        "<strong>Measure:</strong> Create 'Total Sales' (SUM of LineTotal) - Dynamic."
+                        "<strong>Column:</strong> Create 'LineTotal' (Quantity * Price). This executes line by line.",
+                        "<strong>Measure:</strong> Create 'Total Units' (SUM of Quantity). This evaluates based on slicer context."
                     ]
                 },
                 inputs: [
-                    { label: "LineTotal", type: "column", result: ["1000", "100", "0", "200"], match: /Sales\[Quantity\]\s*\*\s*Sales\[Amount\]/i, hint: "Sales[Quantity] * Sales[Amount]" },
-                    { label: "Total Sales", type: "measure", result: "1,300", match: /SUM\s*\(\s*Sales\[LineTotal\]\s*\)/i, hint: "SUM(Sales[LineTotal])" }
+                    { label: "LineTotal", type: "column", result: ["1000", "100", "0", "200"], match: /Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\]/i, hint: "Sales[Quantity] * Sales[Price]" },
+                    { label: "Total Units", type: "measure", result: "4", match: /SUM\s*\(\s*Sales\[Quantity\]\s*\)/i, hint: "SUM(Sales[Quantity])" }
                 ],
                 renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[2].inputs, onComplete, "Sales_Iter")
             },
+            // 3
             {
                 id: "mod_agg",
                 title: "Basic Aggregations",
@@ -476,175 +488,276 @@
                     <ul class="list-disc pl-5 space-y-2 mb-4 text-xs font-mono bg-slate-50 p-3 rounded border">
                         <li><strong>SUM(Col)</strong>: Adds up numbers.</li>
                         <li><strong>AVERAGE(Col)</strong>: Calculates the mean.</li>
-                        <li><strong>COUNTROWS(Table)</strong>: Counts total transactions.</li>
-                        <li><strong>DISTINCTCOUNT(Col)</strong>: Counts unique values.</li>
+                        <li><strong>COUNTROWS(Table)</strong>: Counts total transactions/rows.</li>
+                        <li><strong>DISTINCTCOUNT(Col)</strong>: Counts unique values in a column.</li>
                     </ul>
                 `,
                 project: {
                     title: "Calculate Key Metrics",
-                    brief: "Use the Sales table to calculate the core business metrics.",
+                    brief: "Use the Sales table to calculate core business metrics. <em>(Note: SUM(Price) is not Total Sales! We'll just sum Quantity for Total Units here.)</em>",
                     steps: [
-                        "Create <strong>Total Sales</strong> using SUM.",
-                        "Create <strong>Avg Price</strong> using AVERAGE of Net Price.",
+                        "Create <strong>Total Units</strong> using SUM on the Quantity column.",
+                        "Create <strong>Avg Price</strong> using AVERAGE of Price.",
                         "Create <strong>Transaction Count</strong> using COUNTROWS.",
-                        "Count <strong>Unique Orders</strong> using DISTINCTCOUNT."
+                        "Count <strong>Unique Dates</strong> using DISTINCTCOUNT on the Date column."
                     ]
                 },
                 inputs: [
-                    { label: "Total Sales", type: "measure", result: "800", match: /SUM\s*\(\s*Sales\[Amount\]\s*\)/i, hint: "SUM(Sales[Amount])" },
-                    { label: "Avg Price", type: "measure", result: "200", match: /AVERAGE\s*\(\s*Sales\[Net Price\]\s*\)/i, hint: "AVERAGE(Sales[Net Price])" },
-                    { label: "Tx Count", type: "measure", result: "4", match: /COUNTROWS\s*\(\s*Sales\s*\)/i, hint: "COUNTROWS(Sales)" },
-                    { label: "Unique Orders", type: "measure", result: "4", match: /DISTINCTCOUNT\s*\(\s*Sales\[OrderNo\]\s*\)/i, hint: "DISTINCTCOUNT(Sales[OrderNo])" }
+                    { label: "Total Units", type: "measure", result: "4", match: /SUM\s*\(\s*Sales\[Quantity\]\s*\)/i, hint: "SUM(Sales[Quantity])" },
+                    { label: "Avg Price", type: "measure", result: "200", match: /AVERAGE\s*\(\s*Sales\[Price\]\s*\)/i, hint: "AVERAGE(Sales[Price])" },
+                    { label: "Tx Count", type: "measure", result: "3", match: /COUNTROWS\s*\(\s*Sales\s*\)/i, hint: "COUNTROWS(Sales)" },
+                    { label: "Unique Dates", type: "measure", result: "2", match: /DISTINCTCOUNT\s*\(\s*Sales\[Date\]\s*\)/i, hint: "DISTINCTCOUNT(Sales[Date])" }
                 ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[3].inputs, onComplete)
+                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[3].inputs, onComplete, "Sales_Agg")
             },
+            // 4
+            {
+                id: "mod_related",
+                title: "Relationships: RELATED",
+                concept: `
+                    <p class="mb-3">When working in a Fact table (like Sales), you often need descriptive information from a Dimension table (like Products).</p>
+                    <div class="bg-blue-50 p-3 rounded border border-blue-200 mb-3">
+                        <strong class="text-blue-800">RELATED(&lt;Column&gt;)</strong>
+                        <p class="text-xs text-blue-900 mt-1">Fetches data from the 'One' side of a relationship into the 'Many' side. Think of it as a super-charged, automatic Excel VLOOKUP! It works because Power BI already knows the relationship.</p>
+                    </div>
+                `,
+                project: {
+                    title: "Fetch Dimension Data",
+                    brief: `We are in the Sales table, but we need to know the Category of the product sold.
+                            <br><br>
+                            <strong>Products Table Snippet:</strong>
+                            <table class='w-full text-[10px] mt-2 border text-left bg-white'>
+                                <thead class='bg-slate-100'>
+                                    <tr><th class='border p-1'>Product Name</th><th class='border p-1'>Category</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class='border p-1'>Widget A</td><td class='border p-1'>Electronics</td></tr>
+                                    <tr><td class='border p-1'>Widget B</td><td class='border p-1'>Home</td></tr>
+                                    <tr><td class='border p-1'>Widget C</td><td class='border p-1'>Clothing</td></tr>
+                                </tbody>
+                            </table>`,
+                    steps: [
+                        "Create a <strong>Category</strong> column by pulling <code>Products[Category]</code> into the Sales table using the RELATED function."
+                    ]
+                },
+                inputs: [
+                    { label: "Category", type: "column", result: ["Electronics", "Home", "Clothing", "Electronics"], match: /RELATED\s*\(\s*Products\[Category\]\s*\)/i, hint: "RELATED(Products[Category])" }
+                ],
+                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[4].inputs, onComplete, "Sales")
+            },
+            // 5
             {
                 id: "mod_iter",
                 title: "Iterators (Row Context)",
                 concept: `
-                    <p class="mb-3"><strong>Iterators</strong> (X-functions) create a row context. They iterate row-by-row to evaluate an expression.</p>
-                    <div class="space-y-2 mb-3">
-                        <div class="bg-slate-100 p-2 rounded border font-mono text-xs">
-                            <div class="mb-1 text-slate-500">// General Syntax</div>
-                            <div>SUMX( &lt;Table&gt;, &lt;Expression&gt; )</div>
-                            <div>AVERAGEX( &lt;Table&gt;, &lt;Expression&gt; )</div>
-                            <div>MINX( &lt;Table&gt;, &lt;Expression&gt; )</div>
+                    <p class="mb-2"><strong>Iterators</strong> (X-functions) are powerful. They iterate row-by-row to evaluate an expression in memory <em>before</em> showing the final aggregated result.</p>
+                    <div class="text-[10px] border border-slate-300 rounded overflow-hidden mb-3 relative bg-slate-50 shadow-sm">
+                        <div class="flex">
+                            <div class="flex-1">
+                                <div class="p-1 bg-slate-200 text-slate-500 font-bold border-b border-r text-center">Physical Table</div>
+                                <table class="w-full text-left bg-white border-r">
+                                    <thead class="border-b">
+                                        <tr><th class="p-1">Quantity</th><th class="p-1">Price</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="anim-row-1 border-b"><td class="p-1">2</td><td class="p-1">$50</td></tr>
+                                        <tr class="anim-row-2 border-b"><td class="p-1">1</td><td class="p-1">$100</td></tr>
+                                        <tr class="anim-row-3"><td class="p-1">2</td><td class="p-1">$50</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="w-1/2 relative">
+                                <div class="p-1 bg-blue-100 text-blue-700 font-bold border-b text-center">In-Memory Engine</div>
+                                <table class="w-full text-left bg-blue-50/50">
+                                    <thead class="border-b">
+                                        <tr><th class="p-1 text-blue-600 italic font-mono font-normal opacity-70">Eval: Qty * Price</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b"><td class="p-1 font-mono text-blue-600 anim-calc-1">2 * 50 = 100</td></tr>
+                                        <tr class="border-b"><td class="p-1 font-mono text-blue-600 anim-calc-2">1 * 100 = 100</td></tr>
+                                        <tr><td class="p-1 font-mono text-blue-600 anim-calc-3">2 * 50 = 100</td></tr>
+                                    </tbody>
+                                </table>
+                                <div class="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center anim-total">
+                                    <div class="bg-slate-800 text-yellow-400 p-2 rounded shadow-xl font-bold text-sm border border-yellow-500 text-center">
+                                        Final Output <br> $300
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <ul class="list-disc pl-5 space-y-1 mb-4 text-xs text-slate-600">
-                        <li>Evaluates expression for every row.</li>
-                        <li>Then aggregates (Sum, Average, etc.).</li>
-                    </ul>
+                    <p class="text-xs bg-yellow-50 p-2 border rounded"><strong>Crucial Note:</strong> The calculations in the "In-Memory Engine" do not exist as real columns! They are generated entirely on the fly by the measure.</p>
                 `,
                 project: {
                     title: "Row-by-Row Math",
-                    brief: "We have Quantity and Amount (Unit Price). We need Total Revenue.",
+                    brief: "We have Quantity and Price. We need to multiply them per row before aggregating.",
                     steps: [
-                        "Calculate <strong>Total Revenue</strong> by iterating: Quantity * Amount (using SUMX).",
-                        "Calculate <strong>Avg Revenue</strong> per transaction using AVERAGEX."
+                        "Calculate <strong>Total Revenue</strong> by iterating over the Sales table: Quantity * Price (using SUMX).",
+                        "Calculate <strong>Avg Rev</strong> per transaction using AVERAGEX."
                     ]
                 },
                 inputs: [
-                    { label: "Revenue", type: "measure", result: "1,300", match: /SUMX\s*\(\s*Sales\s*,\s*Sales\[Quantity\]\s*\*\s*Sales\[Amount\]\s*\)/i, hint: "SUMX(Sales, Sales[Quantity] * Sales[Amount])" },
-                    { label: "Avg Rev", type: "measure", result: "325", match: /AVERAGEX\s*\(\s*Sales\s*,\s*Sales\[Quantity\]\s*\*\s*Sales\[Amount\]\s*\)/i, hint: "AVERAGEX(Sales, Sales[Quantity] * Sales[Amount])" }
+                    { label: "Total Revenue", type: "measure", result: "300", match: /SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\)/i, hint: "SUMX(Sales, Sales[Quantity] * Sales[Price])" },
+                    { label: "Avg Rev", type: "measure", result: "100", match: /AVERAGEX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\)/i, hint: "AVERAGEX(Sales, Sales[Quantity] * Sales[Price])" }
                 ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[4].inputs, onComplete, "Sales_Iter")
+                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[5].inputs, onComplete, "Sales_Iter")
             },
+            // 6
             {
                 id: "mod_calc",
                 title: "Context Control: CALCULATE",
                 concept: `
-                    <p class="mb-3"><strong>CALCULATE</strong> is a <strong>Measure</strong>'s best friend. It modifies filter context.</p>
+                    <p class="mb-2"><strong>CALCULATE</strong> modifies the filter context of an expression.</p>
                     <code class="block bg-slate-800 text-yellow-400 p-2 rounded text-xs mb-3 font-mono">
-                        CALCULATE( &lt;Measure&gt;, &lt;Filter1&gt;, ... )
+                        CALCULATE( &lt;Expression&gt;, &lt;Filter1&gt;, ... )
                     </code>
-                    <p class="text-sm mb-2"><strong>FILTER</strong> is often used inside CALCULATE for complex logic.</p>
+                    <p class="text-[11px] mb-2 bg-blue-50 p-2 rounded border border-blue-200"><strong>Note:</strong> The &lt;Expression&gt; can be a formula like <code>SUMX(...)</code> or a reference to an existing Measure like <code>[Total Revenue]</code>. <strong>A measure reference is just a shortcut to its underlying formula!</strong> We will use the <code>[Total Revenue]</code> shortcut here.</p>
+                    <div class="space-y-2 text-[11px] text-slate-700 bg-slate-50 p-3 rounded border mb-2">
+                        <p><strong>When do I need to use FILTER()?</strong></p>
+                        <p><strong>1. Simple Filters:</strong> For basic text/number matching (e.g., <code>Color = "Red"</code>), just type it directly inside CALCULATE.</p>
+                        <p><strong>2. Complex Filters:</strong> If evaluating inequalities (e.g., <code>Price > 200</code>), math, or crossing tables, you MUST wrap the table in the FILTER function: <code>FILTER(Sales, Sales[Price] > 200)</code>.</p>
+                    </div>
                 `,
                 project: {
                     title: "Segmented Sales",
-                    brief: "Create measures that only look at specific subsets of data.",
+                    brief: "Create measures that calculate Revenue for specific subsets of data.",
                     steps: [
-                        "Calculate <strong>Red Sales</strong>: Sum of Amount where Product Color is 'Red'.",
-                        "Calculate <strong>High Value Sales</strong>: Sum of Amount where Amount > 200 (Use FILTER)."
+                        "Calculate <strong>Red Sales</strong>: Use CALCULATE on our <code>[Total Revenue]</code> expression where Product Color is 'Red'.",
+                        "Calculate <strong>High Value Sales</strong>: CALCULATE <code>[Total Revenue]</code> where Price > 200 (Requires FILTER)."
                     ]
                 },
                 inputs: [
-                    { label: "Red Sales", type: "measure", result: "700", match: /CALCULATE\s*\(\s*SUM\s*\(\s*Sales\[Amount\]\s*\)\s*,\s*Products\[Color\]\s*=\s*"Red"\s*\)/i, hint: "CALCULATE(SUM(Sales[Amount]), Products[Color]=\"Red\")" },
-                    { label: "High Val", type: "measure", result: "500", match: /CALCULATE\s*\(\s*SUM\s*\(\s*Sales\[Amount\]\s*\)\s*,\s*FILTER\s*\(\s*Sales\s*,\s*Sales\[Amount\]\s*>\s*200\s*\)\s*\)/i, hint: "CALCULATE(SUM(Sales[Amount]), FILTER(Sales, Sales[Amount] > 200))" }
+                    { 
+                      label: "Red Sales", type: "measure", 
+                      result: "700", 
+                      match: /CALCULATE\s*\(\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*,\s*Products\[Color\]\s*=\s*"Red"\s*\)/i, 
+                      hint: "CALCULATE([Total Revenue], Products[Color]=\"Red\")",
+                      resultHtml: `<strong>Result: 700</strong><div class="mt-1 text-[10px] p-1.5 bg-blue-50 rounded border border-blue-200"><div class="font-bold text-blue-800 border-b border-blue-200 mb-1 pb-1">Engine evaluates 'Red' rows only:</div><div class="anim-calc-1">Laptop: 2 * 250 = 500</div><div class="anim-calc-2">Tablet: 1 * 200 = 200</div><div class="anim-total font-bold mt-1 text-emerald-700">∑ = 700</div></div>`
+                    },
+                    { 
+                      label: "High Val", type: "measure", 
+                      result: "500", 
+                      match: /CALCULATE\s*\(\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*,\s*FILTER\s*\(\s*Sales\s*,\s*Sales\[Price\]\s*>\s*200\s*\)\s*\)/i, 
+                      hint: "CALCULATE([Total Revenue], FILTER(Sales, Sales[Price] > 200))",
+                      resultHtml: `<strong>Result: 500</strong><div class="mt-1 text-[10px] p-1.5 bg-blue-50 rounded border border-blue-200"><div class="font-bold text-blue-800 border-b border-blue-200 mb-1 pb-1">Engine evaluates Price > 200:</div><div class="anim-calc-1">Laptop: 2 * 250 = 500</div><div class="anim-total font-bold mt-1 text-emerald-700">∑ = 500</div></div>`
+                    }
                 ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[5].inputs, onComplete)
+                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[6].inputs, onComplete, "Sales_Calc")
             },
-            {
-                id: "mod_modifiers",
-                title: "Modifiers: ALL & ALLEXCEPT",
-                concept: `
-                    <p class="mb-3">Modifiers remove filters to calculate totals. Example:</p>
-                    <table class="w-full text-xs text-left mb-3 border">
-                        <thead class="bg-slate-100"><tr><th>Color</th><th>Sales</th><th>ALL(Sales)</th></tr></thead>
-                        <tbody>
-                            <tr><td>Red</td><td>10</td><td class="text-slate-400">30</td></tr>
-                            <tr><td>Blue</td><td>20</td><td class="text-slate-400">30</td></tr>
-                        </tbody>
-                    </table>
-                    <ul class="list-disc pl-5 space-y-2 mb-4 text-xs">
-                        <li><strong>ALL(Table)</strong>: Returns all rows, ignoring selection (30 in example).</li>
-                        <li><strong>ALLEXCEPT</strong>: Keeps specific column filters, removes others.</li>
-                    </ul>
-                `,
-                project: {
-                    title: "Percent of Total",
-                    brief: "Calculate the ratio of a single product's sales against All Sales.",
-                    steps: [
-                        "Calculate <strong>All Sales</strong>: Ignore any slicers on the Sales table.",
-                        "Calculate <strong>% of Total</strong>: Divide Total Sales by All Sales."
-                    ]
-                },
-                inputs: [
-                    { label: "All Sales", type: "measure", result: "800", match: /CALCULATE\s*\(\s*SUM\s*\(\s*Sales\[Amount\]\s*\)\s*,\s*ALL\s*\(\s*Sales\s*\)\s*\)/i, hint: "CALCULATE(SUM(Sales[Amount]), ALL(Sales))" },
-                    { label: "% Total", type: "measure", result: "100%", match: /DIVIDE\s*\(\s*\[Total Sales\]\s*,\s*\[All Sales\]\s*\)/i, hint: "DIVIDE([Total Sales], [All Sales])" }
-                ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[6].inputs, onComplete)
-            },
+            // 7
             {
                 id: "mod_time",
                 title: "Time Intelligence",
                 concept: `
-                    <p class="mb-3">DAX simplifies date math. These are <strong>Measures</strong> requiring a Date Table.</p>
-                    <ul class="list-disc pl-5 space-y-2 mb-4 text-xs">
-                        <li><strong>TOTALYTD(Expr, Dates)</strong>: Running total from Jan 1st.</li>
-                        <li><strong>SAMEPERIODLASTYEAR(Dates)</strong>: Shifts context back 1 year.</li>
+                    <p class="mb-3">DAX simplifies date math. These are <strong>Measures</strong> requiring a properly marked, continuous Date Table (Calendar Table).</p>
+                    <ul class="list-disc pl-5 space-y-2 mb-4 text-xs bg-slate-50 p-3 rounded border">
+                        <li><strong>TOTALYTD(Expression, Dates)</strong>: Evaluates the year-to-date value of the expression.</li>
+                        <li><strong>SAMEPERIODLASTYEAR(Dates)</strong>: Shifts the current visual context back exactly 1 year. Commonly used inside CALCULATE.</li>
                     </ul>
                 `,
                 project: {
                     title: "Year over Year Analysis",
-                    brief: "Analyze growth by comparing current cumulative sales to last year.",
+                    brief: "Analyze growth by comparing current cumulative Revenue to last year.",
                     steps: [
-                        "Calculate <strong>YTD Sales</strong> using TOTALYTD.",
-                        "Calculate <strong>PY Sales</strong> (Previous Year) using CALCULATE."
+                        "Calculate <strong>YTD Revenue</strong> using TOTALYTD on the <code>[Total Revenue]</code> expression and the Calendar[Date] column.",
+                        "Calculate <strong>PY Revenue</strong> (Previous Year) using CALCULATE on the <code>[Total Revenue]</code> expression."
                     ]
                 },
                 inputs: [
-                    { label: "YTD Sales", type: "measure", result: "800", match: /TOTALYTD\s*\(\s*SUM\s*\(\s*Sales\[Amount\]\s*\)\s*,\s*Calendar\[Date\]\s*\)/i, hint: "TOTALYTD(SUM(Sales[Amount]), Calendar[Date])" },
-                    { label: "PY Sales", type: "measure", result: "650", match: /CALCULATE\s*\(\s*SUM\s*\(\s*Sales\[Amount\]\s*\)\s*,\s*SAMEPERIODLASTYEAR\s*\(\s*Calendar\[Date\]\s*\)\s*\)/i, hint: "CALCULATE(SUM(Sales[Amount]), SAMEPERIODLASTYEAR(Calendar[Date]))" }
+                    { 
+                      label: "YTD Revenue", type: "measure", 
+                      result: "800", 
+                      match: /TOTALYTD\s*\(\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*,\s*Calendar\[Date\]\s*\)/i, 
+                      hint: "TOTALYTD([Total Revenue], Calendar[Date])",
+                      resultHtml: `<strong>Result: 800</strong><div class="mt-1 text-[10px] p-1.5 bg-blue-50 rounded border border-blue-200"><div class="font-bold text-blue-800 border-b border-blue-200 mb-1 pb-1">Engine evaluates YTD 2026:</div><div class="anim-calc-1">1/1/2026: 2 * 250 = 500</div><div class="anim-calc-2">3/1/2026: 1 * 300 = 300</div><div class="anim-total font-bold mt-1 text-emerald-700">∑ = 800</div></div>`
+                    },
+                    { 
+                      label: "PY Revenue", type: "measure", 
+                      result: "650", 
+                      match: /CALCULATE\s*\(\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*,\s*SAMEPERIODLASTYEAR\s*\(\s*Calendar\[Date\]\s*\)\s*\)/i, 
+                      hint: "CALCULATE([Total Revenue], SAMEPERIODLASTYEAR(Calendar[Date]))",
+                      resultHtml: `<strong>Result: 650</strong><div class="mt-1 text-[10px] p-1.5 bg-blue-50 rounded border border-blue-200"><div class="font-bold text-blue-800 border-b border-blue-200 mb-1 pb-1">Engine shifts to 2025:</div><div class="anim-calc-1">1/1/2025: 2 * 200 = 400</div><div class="anim-calc-2">6/1/2025: 1 * 250 = 250</div><div class="anim-total font-bold mt-1 text-emerald-700">∑ = 650</div></div>`
+                    }
                 ],
-                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[7].inputs, onComplete)
+                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[7].inputs, onComplete, "Sales_Time")
             },
+            // 8
+            {
+                id: "mod_modifiers",
+                title: "Modifiers: ALL & ALLEXCEPT",
+                advanced: true,
+                concept: `
+                    <p class="mb-3">Modifiers remove filters to calculate grand totals or fixed percentages.</p>
+                    <ul class="list-disc pl-5 space-y-2 mb-4 text-xs">
+                        <li><strong>ALL(Table)</strong>: Removes ALL filters from the specified table. Useful for getting the grand total regardless of what the user clicks.</li>
+                        <li><strong>ALLEXCEPT(Table, Col)</strong>: Removes filters from the table <em>except</em> the specified column(s). Great for keeping Category filters but ignoring Product filters.</li>
+                    </ul>
+                `,
+                project: {
+                    title: "Percent of Total & Scoping",
+                    brief: "Calculate base values to divide against for percentages.",
+                    steps: [
+                        "Calculate <strong>All Revenue</strong>: Use CALCULATE on your <code>[Total Revenue]</code> expression with ALL(Sales) to ignore all slicers.",
+                        "Calculate <strong>Cat Revenue</strong>: Use CALCULATE on your <code>[Total Revenue]</code> expression with ALLEXCEPT to keep only the Category filter."
+                    ]
+                },
+                inputs: [
+                    { 
+                      label: "All Revenue", type: "measure", 
+                      result: "800", 
+                      match: /CALCULATE\s*\(\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*,\s*ALL\s*\(\s*Sales\s*\)\s*\)/i, 
+                      hint: "CALCULATE([Total Revenue], ALL(Sales))",
+                      resultHtml: `<strong>Result: 800</strong><div class="mt-1 text-[10px] p-1.5 bg-blue-50 rounded border border-blue-200"><div class="font-bold text-blue-800 border-b border-blue-200 mb-1 pb-1">Engine ignores "Laptop" filter:</div><div class="anim-calc-1">Laptop: 500</div><div class="anim-calc-2">Phone: 200</div><div class="anim-calc-3">Desk: 100</div><div class="anim-total font-bold mt-1 text-emerald-700">∑ = 800</div></div>`
+                    },
+                    { 
+                      label: "Cat Revenue", type: "measure", 
+                      result: "700", 
+                      match: /CALCULATE\s*\(\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*,\s*ALLEXCEPT\s*\(\s*Products\s*,\s*Products\[Category\]\s*\)\s*\)/i, 
+                      hint: "CALCULATE([Total Revenue], ALLEXCEPT(Products, Products[Category]))",
+                      resultHtml: `<strong>Result: 700</strong><div class="mt-1 text-[10px] p-1.5 bg-blue-50 rounded border border-blue-200"><div class="font-bold text-blue-800 border-b border-blue-200 mb-1 pb-1">Engine keeps "Electronics" category:</div><div class="anim-calc-1">Laptop: 500</div><div class="anim-calc-2">Phone: 200</div><div class="anim-total font-bold mt-1 text-emerald-700">∑ = 700</div></div>`
+                    }
+                ],
+                renderDemo: (container, onComplete) => renderGridDemo(container, MODULES[8].inputs, onComplete, "Sales_Mods")
+            },
+            // 9
             {
                 id: "mod_adv",
                 title: "Ranking & Selection",
+                advanced: true,
                 concept: `
-                    <p class="mb-3">Advanced dynamic logic for interactive reports (Measures).</p>
+                    <p class="mb-3">Advanced dynamic logic for highly interactive reports.</p>
                     <div class="space-y-3">
                         <div class="bg-indigo-50 p-2 rounded border border-indigo-100">
                             <strong class="text-indigo-700">RANKX</strong><br>
-                            <span class="text-xs">Ranks items based on a value.<br><code>RANKX(ALL(Products), [Total Sales])</code></span>
+                            <span class="text-xs">Ranks items based on an expression.<br><code>RANKX(ALL(Products), [Total Revenue])</code></span>
                         </div>
                         <div class="bg-emerald-50 p-2 rounded border border-emerald-100">
                             <strong class="text-emerald-700">SELECTEDVALUE</strong><br>
-                            <span class="text-xs">Returns the value when ONE item is selected.<br><code>SELECTEDVALUE(Col, "All")</code></span>
+                            <span class="text-xs">Returns the value when EXACTLY ONE item is selected in a filter. Great for dynamic titles!<br><code>SELECTEDVALUE(Col, "Alternate Text")</code></span>
                         </div>
                     </div>
                 `,
                 project: {
                     title: "Dynamic Reporting",
-                    brief: "Rank products and handle slicer selections dynamically.",
+                    brief: "Rank products and create smart, dynamic titles that respond to slicers.",
                     steps: [
-                        "Create <strong>Product Rank</strong> by Sales Amount (Use ALL(Products) to rank against all).",
-                        "Create a dynamic title that shows the selected Category or 'All Categories'."
+                        "Create <strong>Prod Rank</strong> by ranking <code>[Total Revenue]</code> across all Products (Use ALL(Products)). <br><em>(Note: We are evaluating the <b>Laptop</b> row.)</em>",
+                        "Create <strong>Dyn Title</strong> that returns the selected Category or 'All Categories' if none/multiple are chosen."
                     ]
                 },
                 inputs: [
-                    { label: "Prod Rank", type: "measure", result: "1", match: /RANKX\s*\(\s*ALL\s*\(\s*Products\s*\)\s*,\s*SUM\s*\(\s*Sales\[Amount\]\s*\)\s*\)/i, hint: "RANKX(ALL(Products), SUM(Sales[Amount]))" },
+                    { label: "Prod Rank", type: "measure", result: "1", match: /RANKX\s*\(\s*ALL\s*\(\s*Products\s*\)\s*,\s*(\[Total Revenue\]|SUMX\s*\(\s*Sales\s*,\s*(Sales\[Quantity\]\s*\*\s*Sales\[Price\]|Sales\[Price\]\s*\*\s*Sales\[Quantity\])\s*\))\s*\)/i, hint: "RANKX(ALL(Products), [Total Revenue])" },
                     { label: "Dyn Title", type: "measure", result: "Electronics", match: /SELECTEDVALUE\s*\(\s*Products\[Category\]\s*,\s*"All Categories"\s*\)/i, hint: "SELECTEDVALUE(Products[Category], \"All Categories\")" }
                 ],
-                renderDemo: (container, onComplete) => renderSlicerDemo(container, MODULES[8].inputs, onComplete)
+                renderDemo: (container, onComplete) => renderSlicerDemo(container, MODULES[9].inputs, onComplete)
             },
+            // 10
             {
                 id: "mod_quiz",
                 title: "Knowledge Check",
                 concept: `
                     <p class="mb-3">Test your understanding of DAX concepts.</p>
-                    <p class="text-sm">Select the best DAX formula or function for each scenario.</p>
+                    <p class="text-sm text-slate-600">Select the best DAX formula or function for each scenario.</p>
                 `,
                 project: {
                     title: "Mini-Quiz",
@@ -658,18 +771,19 @@
                 inputs: [],
                 renderDemo: (container, onComplete) => renderQuizDemo(container, onComplete)
             },
+            // 11
             {
                 id: "mod_final",
                 title: "Capstone: Star Schema Challenge",
                 concept: `
                     <p class="mb-3">You've mastered the basics. Now apply it to a real-world scenario.</p>
-                    <p class="text-sm">This comprehensive lab requires you to build a model from scratch.</p>
+                    <p class="text-sm">This comprehensive lab requires you to build a model from scratch in Power BI Desktop.</p>
                 `,
                 project: {
                     title: "Comprehensive Lab",
                     brief: "Download the dataset and build the report locally.",
                     steps: [
-                        "Download the <strong>Star Schema Data</strong> file.",
+                        "Download the <strong>Star Schema Data</strong> file and Instructions.",
                         "Import tables: Fact_Transactions, Dim_Account, Dim_Department, Dim_Entity.",
                         "Create Relationships (Star Schema).",
                         "Create Measures: Total Revenue (Credit - Debit), Net Income.",
@@ -691,17 +805,18 @@
                                     <p><strong>Task:</strong> Build Model & YTD Measures</p>
                                 </div>
                                 <div class="space-y-3">
-                                    <button onclick="app.triggerDownload('PowerBI_DAX_Accounting_Student.xlsx')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded flex items-center justify-center gap-2 transition-transform active:scale-95">
+                                    <a href="data/PowerBI_DAX_Accounting_Student.xlsx" download class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded flex items-center justify-center gap-2 transition-transform active:scale-95 no-underline">
                                         <i data-lucide="file-spreadsheet" class="w-5 h-5"></i> Download Student Data (Excel)
-                                    </button>
-                                    <button onclick="app.triggerDownload('PowerBI_DAX_Accounting_Lab_Instruction.pdf')" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded flex items-center justify-center gap-2 transition-transform active:scale-95">
+                                    </a>
+                                    <a href="data/PowerBI_DAX_Accounting_Lab_Instruction.pdf" download class="block w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded flex items-center justify-center gap-2 transition-transform active:scale-95 no-underline">
                                         <i data-lucide="file-text" class="w-5 h-5"></i> Download Instructions (PDF)
-                                    </button>
+                                    </a>
                                 </div>
                                 <p class="text-xs text-slate-400 mt-4">Open these files in Power BI Desktop to begin.</p>
                             </div>
                         </div>
                     `;
+                    setTimeout(() => lucide.createIcons(), 50);
                 }
             }
         ];
@@ -714,10 +829,6 @@
                 this.renderSidebar();
                 this.loadModule(0);
                 lucide.createIcons();
-                
-                document.getElementById('instructor-password-input').addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.submitInstructorPassword();
-                });
             },
 
             renderSidebar() {
@@ -730,10 +841,14 @@
                         isActive ? 'bg-slate-800 border-yellow-500 text-white' : 'border-transparent text-slate-400 hover:bg-slate-800 hover:text-white'
                     }`;
                     li.onclick = () => this.loadModule(index);
+                    
+                    const advancedBadge = mod.advanced ? '<span class="text-[9px] bg-orange-500 text-white px-1.5 py-0.5 rounded ml-2 uppercase tracking-wide">Advanced</span>' : '';
+
                     li.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <span class="text-xs font-mono opacity-50">${(index + 1).toString().padStart(2, '0')}</span>
-                            <span class="text-sm font-medium truncate w-32">${mod.title}</span>
+                        <div class="flex items-center gap-2 w-full">
+                            <span class="text-xs font-mono opacity-50 flex-shrink-0">${(index + 1).toString().padStart(2, '0')}</span>
+                            <span class="text-sm font-medium truncate">${mod.title}</span>
+                            ${advancedBadge}
                         </div>
                     `;
                     list.appendChild(li);
@@ -757,7 +872,6 @@
                 const stepsList = document.getElementById('project-steps');
                 
                 if (mod.id === 'mod_quiz') {
-                    // Hide default instruction list for quiz
                     document.getElementById('instructions-box').classList.add('hidden');
                 } else {
                     document.getElementById('instructions-box').classList.remove('hidden');
@@ -807,41 +921,10 @@
                 this.loadModule(this.activeModuleIndex);
             },
 
-            // Instructor Modal Logic
-            openInstructorModal() {
-                const modal = document.getElementById('password-modal');
-                const input = document.getElementById('instructor-password-input');
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                setTimeout(() => modal.querySelector('div').classList.remove('scale-95', 'opacity-0'), 10);
-                input.value = ''; input.focus();
-            },
-            
-            closeInstructorModal() {
-                const modal = document.getElementById('password-modal');
-                modal.querySelector('div').classList.add('scale-95', 'opacity-0');
-                setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 200);
-            },
-            
-            submitInstructorPassword() {
-                const input = document.getElementById('instructor-password-input');
-                if (input.value.trim().toLowerCase() === "teacher") {
-                    this.closeInstructorModal();
-                    if(window.currentSolver) window.currentSolver();
-                } else {
-                    input.classList.add('border-red-500', 'animate-pulse');
-                    setTimeout(() => input.classList.remove('border-red-500', 'animate-pulse'), 500);
+            revealAnswers() {
+                if (window.currentSolver) {
+                    window.currentSolver();
                 }
-            },
-
-            triggerDownload(filename) {
-                const element = document.createElement('a');
-                element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent("This is a placeholder file for " + filename));
-                element.setAttribute('download', filename);
-                element.style.display = 'none';
-                document.body.appendChild(element);
-                element.click();
-                document.body.removeChild(element);
             }
         };
 
@@ -849,16 +932,13 @@
         function enableIntellisense(inp, container) {
             let dropdown = null;
 
-            // Handle Input changes
             inp.addEventListener('keyup', (e) => {
                 const val = inp.value;
                 const cursorPos = inp.selectionStart;
                 
-                // Dropdown Logic
                 const textBeforeCursor = val.substring(0, cursorPos);
                 const match = textBeforeCursor.match(/([a-zA-Z0-9_\[\]]+)$/);
                 
-                // Signature Logic
                 const lastOpenParen = val.lastIndexOf('(', cursorPos - 1);
                 const lastCloseParen = val.lastIndexOf(')', cursorPos - 1);
                 let currentSig = "";
@@ -879,6 +959,7 @@
                         let suggestions = [];
                         suggestions.push(...DAX_METADATA.functions.map(f => ({ type: 'func', text: f.name })));
                         suggestions.push(...DAX_METADATA.tables.map(t => ({ type: 'table', text: t })));
+                        suggestions.push(...DAX_METADATA.measures.map(m => ({ type: 'measure', text: m })));
                         Object.values(DAX_METADATA.columns).flat().forEach(c => {
                             suggestions.push({ type: 'col', text: c });
                         });
@@ -891,8 +972,6 @@
                             dropdown.className = 'suggestions-box';
                             document.body.appendChild(dropdown);
                             
-                            // Initialize Drag
-                            // We need to create the structure first
                             dropdown.innerHTML = `
                                 <div class="suggestions-header" id="drag-${inp.id}">
                                     <span>Suggestions</span>
@@ -904,17 +983,12 @@
                             makeDraggable(dropdown, document.getElementById(`drag-${inp.id}`));
                         }
                         
-                        // Positioning
                         const rect = inp.getBoundingClientRect();
-                        // Only reset position if it hasn't been moved by user interaction logic
                         if (!dropdown.hasMoved) {
-                            // Position ABOVE the input by calculating approximate height
-                            // Default 250px height guess to place above
                             dropdown.style.top = (rect.top + window.scrollY - 300) + 'px'; 
                             dropdown.style.left = (rect.left + window.scrollX) + 'px';
                         }
 
-                        // Update Signature
                         const sigArea = document.getElementById(`sig-${inp.id}`);
                         if(currentSig) {
                             sigArea.style.display = 'block';
@@ -923,13 +997,13 @@
                             sigArea.style.display = 'none';
                         }
 
-                        // Update List
                         const listContainer = document.getElementById(`list-${inp.id}`);
                         listContainer.innerHTML = filtered.map(s => {
                             let icon = '';
                             if(s.type === 'func') icon = '<span class="icon-func">fx</span>';
                             if(s.type === 'table') icon = '<span class="icon-table">▦</span>';
                             if(s.type === 'col') icon = '<span class="icon-col">◫</span>';
+                            if(s.type === 'measure') icon = '<span class="icon-measure">∑</span>';
                             return `<div class="suggestion-item" onclick="insertSuggestion('${s.text}', '${inp.id}')">${icon} ${s.text}</div>`;
                         }).join('');
                         
@@ -978,7 +1052,6 @@
                 if(dropdown) { dropdown.remove(); dropdown = null; }
             }
             
-            // Allow clicking suggestions before blur
             inp.addEventListener('blur', (e) => {
                 setTimeout(() => { closeDropdown(); }, 200);
             });
@@ -996,7 +1069,6 @@
                 input.value = newText;
                 input.focus();
                 
-                // Trigger keyup to refresh state (e.g. show signature if func selected)
                 const event = new Event('keyup');
                 input.dispatchEvent(event);
             };
@@ -1004,7 +1076,6 @@
 
         // --- 4. RENDERERS ---
 
-        // Generic Grid Renderer
         function renderGridDemo(container, inputs, onComplete, tableName = "Sales") {
             let inputsHTML = inputs.map((inp, idx) => {
                 let badgeClass = inp.type === 'measure' ? 'measure-badge' : 'column-badge';
@@ -1021,13 +1092,14 @@
                         <input id="dax-inp-${idx}" class="dax-input w-full text-sm font-mono outline-none text-slate-700" placeholder="Type DAX..." autocomplete="off">
                         <button onclick="validateInput(${idx})" class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs px-3 py-1 rounded font-bold transition-colors">✓</button>
                     </div>
-                    <div id="res-${idx}" class="hidden text-xs text-slate-500 bg-slate-50 p-1 border-t mt-1 font-mono"></div>
+                    <div id="res-${idx}" class="hidden text-xs text-slate-500 bg-slate-50 p-2 border-t mt-1 font-mono break-all"></div>
                 </div>
             `}).join('');
 
-            // Data rows logic based on table name
             let rowsHTML = "";
             let headerHTML = "";
+            let bannerHTML = "";
+            let displayTableName = tableName;
             
             if (tableName === "Customer") {
                 headerHTML = `<tr><th class="border p-1">ID</th><th class="border p-1">FirstName</th><th class="border p-1">LastName</th></tr>`;
@@ -1035,22 +1107,68 @@
                     <tr><td class="border p-1">101</td><td class="border p-1">John</td><td class="border p-1">Doe</td></tr>
                     <tr><td class="border p-1">102</td><td class="border p-1">Jane</td><td class="border p-1">Smith</td></tr>
                     <tr><td class="border p-1">103</td><td class="border p-1">Bob</td><td class="border p-1">Jones</td></tr>
+                    <tr><td class="border p-1">104</td><td class="border p-1">Alice</td><td class="border p-1">Wong</td></tr>
                 `;
-            } else if (tableName === "Sales_Iter") {
-                 headerHTML = `<tr><th class="border p-1">Product</th><th class="border p-1">Amount</th><th class="border p-1">Qty</th></tr>`;
+            } else if (tableName === "Sales_SafeMath") {
+                 displayTableName = "Sales";
+                 headerHTML = `<tr><th class="border p-1">Product</th><th class="border p-1">Total Cost</th><th class="border p-1">Quantity</th></tr>`;
                  rowsHTML = `
-                    <tr><td class="border p-1">Widget A</td><td class="border p-1">500</td><td class="border p-1">2</td></tr>
+                    <tr><td class="border p-1">Widget A</td><td class="border p-1">1000</td><td class="border p-1">10</td></tr>
                     <tr><td class="border p-1">Widget B</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
-                    <tr><td class="border p-1">Widget C</td><td class="border p-1">0</td><td class="border p-1">0</td></tr>
+                    <tr><td class="border p-1">Widget C</td><td class="border p-1">50</td><td class="border p-1 text-red-500 font-bold">0</td></tr>
                     <tr><td class="border p-1">Widget A</td><td class="border p-1">200</td><td class="border p-1">1</td></tr>
                 `;
-            } else {
-                 headerHTML = `<tr><th class="border p-1">Date</th><th class="border p-1">Product</th><th class="border p-1">Amount</th><th class="border p-1">Qty</th></tr>`;
+            } else if (tableName === "Sales_Agg") {
+                 displayTableName = "Sales";
+                 headerHTML = `<tr><th class="border p-1">Date</th><th class="border p-1">Product</th><th class="border p-1">Price</th><th class="border p-1">Quantity</th></tr>`;
                  rowsHTML = `
-                    <tr><td class="border p-1">1/1/24</td><td class="border p-1">Widget A</td><td class="border p-1">500</td><td class="border p-1">2</td></tr>
-                    <tr><td class="border p-1">1/2/24</td><td class="border p-1">Widget B</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
-                    <tr><td class="border p-1">1/3/24</td><td class="border p-1">Widget C</td><td class="border p-1">0</td><td class="border p-1">0</td></tr>
-                    <tr><td class="border p-1">1/4/24</td><td class="border p-1">Widget A</td><td class="border p-1">200</td><td class="border p-1">1</td></tr>
+                    <tr><td class="border p-1">1/1/24</td><td class="border p-1">Widget A</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
+                    <tr><td class="border p-1">1/2/24</td><td class="border p-1">Widget B</td><td class="border p-1">200</td><td class="border p-1">2</td></tr>
+                    <tr><td class="border p-1">1/2/24</td><td class="border p-1">Widget C</td><td class="border p-1">300</td><td class="border p-1">1</td></tr>
+                `;
+            } else if (tableName === "Sales_Iter") {
+                 displayTableName = "Sales";
+                 headerHTML = `<tr><th class="border p-1">Product</th><th class="border p-1">Price</th><th class="border p-1">Quantity</th></tr>`;
+                 rowsHTML = `
+                    <tr><td class="border p-1">Widget A</td><td class="border p-1">50</td><td class="border p-1">2</td></tr>
+                    <tr><td class="border p-1">Widget B</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
+                    <tr><td class="border p-1">Widget C</td><td class="border p-1">50</td><td class="border p-1">2</td></tr>
+                `;
+            } else if (tableName === "Sales_Calc") {
+                 displayTableName = "Sales (Joined w/ Products)";
+                 headerHTML = `<tr><th class="border p-1">Product</th><th class="border p-1">Color</th><th class="border p-1">Price</th><th class="border p-1">Quantity</th></tr>`;
+                 rowsHTML = `
+                    <tr><td class="border p-1">Laptop</td><td class="border p-1">Red</td><td class="border p-1">250</td><td class="border p-1">2</td></tr>
+                    <tr><td class="border p-1">Phone</td><td class="border p-1">Blue</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
+                    <tr><td class="border p-1">Tablet</td><td class="border p-1">Red</td><td class="border p-1">200</td><td class="border p-1">1</td></tr>
+                `;
+            } else if (tableName === "Sales_Time") {
+                 displayTableName = "Sales (Linked to Calendar)";
+                 bannerHTML = `<div class="bg-blue-100 text-blue-800 text-[10px] p-1 text-center font-bold">Current Visual Context: Year = 2026</div>`;
+                 headerHTML = `<tr><th class="border p-1">Date</th><th class="border p-1">Price</th><th class="border p-1">Quantity</th></tr>`;
+                 rowsHTML = `
+                    <tr><td class="border p-1">1/1/2025</td><td class="border p-1">200</td><td class="border p-1">2</td></tr>
+                    <tr><td class="border p-1">6/1/2025</td><td class="border p-1">250</td><td class="border p-1">1</td></tr>
+                    <tr class="bg-blue-50"><td class="border p-1 font-bold">1/1/2026</td><td class="border p-1">250</td><td class="border p-1">2</td></tr>
+                    <tr class="bg-blue-50"><td class="border p-1 font-bold">3/1/2026</td><td class="border p-1">300</td><td class="border p-1">1</td></tr>
+                `;
+            } else if (tableName === "Sales_Mods") {
+                 displayTableName = "Sales (Joined w/ Products)";
+                 bannerHTML = `<div class="bg-blue-100 text-blue-800 text-[10px] p-1 text-center font-bold">Current Visual Context: Product = 'Laptop'</div>`;
+                 headerHTML = `<tr><th class="border p-1">Category</th><th class="border p-1">Product</th><th class="border p-1">Price</th><th class="border p-1">Quantity</th></tr>`;
+                 rowsHTML = `
+                    <tr class="bg-blue-50"><td class="border p-1 font-bold">Electronics</td><td class="border p-1 font-bold text-blue-800">Laptop</td><td class="border p-1">250</td><td class="border p-1">2</td></tr>
+                    <tr><td class="border p-1">Electronics</td><td class="border p-1">Phone</td><td class="border p-1">200</td><td class="border p-1">1</td></tr>
+                    <tr><td class="border p-1">Home</td><td class="border p-1">Desk</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
+                `;
+            } else {
+                 displayTableName = "Sales";
+                 headerHTML = `<tr><th class="border p-1">Date</th><th class="border p-1">Product</th><th class="border p-1">Price</th><th class="border p-1">Quantity</th></tr>`;
+                 rowsHTML = `
+                    <tr><td class="border p-1">1/1/26</td><td class="border p-1">Widget A</td><td class="border p-1">500</td><td class="border p-1">2</td></tr>
+                    <tr><td class="border p-1">1/2/26</td><td class="border p-1">Widget B</td><td class="border p-1">100</td><td class="border p-1">1</td></tr>
+                    <tr><td class="border p-1">1/3/26</td><td class="border p-1">Widget C</td><td class="border p-1">0</td><td class="border p-1">0</td></tr>
+                    <tr><td class="border p-1">1/4/26</td><td class="border p-1">Widget A</td><td class="border p-1">200</td><td class="border p-1">1</td></tr>
                 `;
             }
 
@@ -1062,7 +1180,8 @@
                         </div>
                     </div>
                     <div class="w-1/3 bg-white border rounded shadow-sm p-0 flex flex-col">
-                        <div class="bg-slate-100 p-2 text-xs font-bold border-b text-center">Data Preview (${tableName})</div>
+                        <div class="bg-slate-100 p-2 text-xs font-bold border-b text-center">Data Preview (${displayTableName})</div>
+                        ${bannerHTML}
                         <div class="flex-1 overflow-auto p-2">
                             <table class="w-full text-[10px] text-left border-collapse" id="preview-table">
                                 <thead class="bg-slate-50 sticky top-0">${headerHTML}</thead>
@@ -1094,17 +1213,17 @@
                         
                         // Show Result
                         if (def.type === 'measure') {
-                            resEl.innerHTML = `<strong>Result:</strong> ${def.result}`;
+                            resEl.innerHTML = def.resultHtml ? def.resultHtml : `<strong>Result:</strong> ${def.result}`;
                             resEl.classList.remove('hidden');
                         } else if (def.type === 'column' && Array.isArray(def.result)) {
-                            // Append column to table
                             const tbl = document.getElementById('preview-table');
                             const headRow = tbl.querySelector('thead tr');
-                            headRow.innerHTML += `<th class="border p-1 bg-green-50 text-green-700">${def.label}</th>`;
+                            headRow.innerHTML += `<th class="border p-1 bg-green-50 text-green-700 whitespace-nowrap">${def.label}</th>`;
                             const rows = tbl.querySelectorAll('tbody tr');
                             rows.forEach((r, i) => {
                                 let val = def.result[i] || "";
-                                r.innerHTML += `<td class="border p-1 bg-green-50 font-bold">${val}</td>`;
+                                let errClass = (val === 'Infinity' || val === 'NaN') ? 'text-red-500 italic' : '';
+                                r.innerHTML += `<td class="border p-1 bg-green-50 font-bold ${errClass}">${val}</td>`;
                             });
                         }
 
@@ -1118,19 +1237,17 @@
                 }
             };
 
-            // Improved Auto Solver with Delay
             window.currentSolver = async () => {
                 for(let i=0; i<inputs.length; i++) {
                      const def = inputs[i];
                      const el = document.getElementById(`dax-inp-${i}`);
                      el.value = def.hint;
                      validateInput(i);
-                     await new Promise(r => setTimeout(r, 1000)); // Delay for visual feedback
+                     await new Promise(r => setTimeout(r, 600)); 
                 }
             };
         }
 
-        // Module 9: Slicer/Visual Renderer
         function renderSlicerDemo(container, inputs, onComplete) {
             let inputsHTML = inputs.map((inp, idx) => `
                 <div class="da-expression-bar p-2 mb-3 rounded shadow-sm flex flex-col gap-1 relative">
@@ -1145,7 +1262,7 @@
                         <input id="dax-inp-${idx}" class="dax-input w-full text-sm font-mono outline-none text-slate-700" placeholder="Type DAX..." autocomplete="off">
                         <button onclick="validateInput(${idx})" class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs px-3 py-1 rounded font-bold transition-colors">✓</button>
                     </div>
-                    <div id="res-${idx}" class="hidden text-xs text-slate-500 bg-slate-50 p-1 border-t mt-1 font-mono"></div>
+                    <div id="res-${idx}" class="hidden text-xs text-slate-500 bg-slate-50 p-2 border-t mt-1 font-mono break-all"></div>
                 </div>
             `).join('');
 
@@ -1155,12 +1272,11 @@
                         <div class="bg-white border rounded shadow-sm p-4">
                            ${inputsHTML}
                         </div>
-                        <!-- Extended Data Table -->
                         <div class="flex-1 bg-white border rounded shadow-sm p-2 flex flex-col overflow-hidden">
-                            <div class="text-[10px] font-bold border-b pb-1 mb-1">Data Context (Sales)</div>
+                            <div class="text-[10px] font-bold border-b pb-1 mb-1">Data Context (Products & Sales)</div>
                             <div class="overflow-auto">
                                 <table class="w-full text-[9px] text-left border-collapse">
-                                    <thead class="bg-slate-50 sticky top-0"><tr><th class="border p-1">Category</th><th class="border p-1">Product</th><th class="border p-1">Amount</th></tr></thead>
+                                    <thead class="bg-slate-50 sticky top-0"><tr><th class="border p-1">Category</th><th class="border p-1">Product</th><th class="border p-1">Price</th><th class="border p-1">Qty</th></tr></thead>
                                     <tbody id="slicer-data-table">
                                         <!-- Injected by JS -->
                                     </tbody>
@@ -1169,7 +1285,6 @@
                         </div>
                     </div>
                     <div class="w-1/3 flex flex-col gap-2">
-                        <!-- Slicer Sim -->
                         <div class="bg-white border rounded shadow-sm p-2">
                             <div class="text-[10px] uppercase font-bold text-slate-400 mb-1">Slicer: Category</div>
                             <div class="space-y-1" id="slicer-container">
@@ -1181,14 +1296,13 @@
                                 <div class="slicer-item text-xs p-1 cursor-pointer border rounded hover:bg-slate-50" onclick="toggleSlicer(this, 'Home')">Home</div>
                             </div>
                         </div>
-                        <!-- Visual Sim -->
                         <div class="flex-1 bg-white border rounded shadow-sm p-2 flex flex-col relative min-h-[150px]">
                              <div class="text-[10px] uppercase font-bold text-slate-400 mb-1">Visual</div>
                              <div class="absolute inset-0 top-6 flex items-center justify-center bg-slate-50 opacity-90 z-10" id="vis-overlay">
                                 <span class="text-xs text-slate-500">Enter DAX to render</span>
                              </div>
                              <div class="flex-1 flex flex-col gap-2">
-                                <h4 class="font-bold text-sm text-center border-b pb-1" id="chart-title">Sales by Rank</h4>
+                                <h4 class="font-bold text-sm text-center border-b pb-1" id="chart-title">Revenue by Rank</h4>
                                 <div class="flex-1 flex items-end justify-around gap-1 px-2 pb-2" id="bar-chart-container">
                                     <!-- Dynamic Bars -->
                                 </div>
@@ -1198,36 +1312,33 @@
                 </div>
             `;
 
-            // Extended Data
             const salesData = [
-                {cat: "Electronics", prod: "Laptop", amt: 1200},
-                {cat: "Electronics", prod: "Smartphone", amt: 800},
-                {cat: "Electronics", prod: "Tablet", amt: 600},
-                {cat: "Electronics", prod: "Monitor", amt: 300},
-                {cat: "Clothing", prod: "Jacket", amt: 150},
-                {cat: "Clothing", prod: "Jeans", amt: 100},
-                {cat: "Clothing", prod: "Shirt", amt: 50},
-                {cat: "Clothing", prod: "Hat", amt: 20},
-                {cat: "Home", prod: "Sofa", amt: 500},
-                {cat: "Home", prod: "Table", amt: 200},
-                {cat: "Home", prod: "Chair", amt: 100},
-                {cat: "Home", prod: "Lamp", amt: 40}
+                {cat: "Electronics", prod: "Laptop", price: 600, qty: 2, rev: 1200},
+                {cat: "Electronics", prod: "Smartphone", price: 800, qty: 1, rev: 800},
+                {cat: "Electronics", prod: "Tablet", price: 300, qty: 2, rev: 600},
+                {cat: "Electronics", prod: "Monitor", price: 300, qty: 1, rev: 300},
+                {cat: "Clothing", prod: "Jacket", price: 75, qty: 2, rev: 150},
+                {cat: "Clothing", prod: "Jeans", price: 50, qty: 2, rev: 100},
+                {cat: "Clothing", prod: "Shirt", price: 25, qty: 2, rev: 50},
+                {cat: "Clothing", prod: "Hat", price: 20, qty: 1, rev: 20},
+                {cat: "Home", prod: "Sofa", price: 500, qty: 1, rev: 500},
+                {cat: "Home", prod: "Table", price: 100, qty: 2, rev: 200},
+                {cat: "Home", prod: "Chair", price: 50, qty: 2, rev: 100},
+                {cat: "Home", prod: "Lamp", price: 40, qty: 1, rev: 40}
             ];
 
-            // Render Table
             const tbody = document.getElementById('slicer-data-table');
             salesData.forEach(r => {
-                tbody.innerHTML += `<tr><td class="border p-1">${r.cat}</td><td class="border p-1">${r.prod}</td><td class="border p-1">${r.amt}</td></tr>`;
+                tbody.innerHTML += `<tr><td class="border p-1">${r.cat}</td><td class="border p-1">${r.prod}</td><td class="border p-1">${r.price}</td><td class="border p-1">${r.qty}</td></tr>`;
             });
             
-            // Logic to render Chart
             const renderChart = (category) => {
-                const filtered = salesData.filter(d => d.cat === category).sort((a,b) => b.amt - a.amt).slice(0,3);
-                const max = filtered[0].amt;
+                const filtered = salesData.filter(d => d.cat === category).sort((a,b) => b.rev - a.rev).slice(0,3);
+                const max = filtered[0].rev;
                 const container = document.getElementById('bar-chart-container');
                 
                 container.innerHTML = filtered.map((d, i) => {
-                    const height = (d.amt / max) * 100;
+                    const height = (d.rev / max) * 100;
                     const colors = ["bg-blue-600", "bg-blue-400", "bg-blue-200"];
                     return `
                         <div class="w-8 ${colors[i]} rounded-t relative group flex flex-col justify-end items-center transition-all duration-500" style="height: ${height}%">
@@ -1236,18 +1347,16 @@
                         </div>
                     `;
                 }).join('');
-                document.getElementById('chart-title').innerText = `${category} Sales Top 3`;
+                document.getElementById('chart-title').innerText = `${category} Revenue Top 3`;
             };
 
-            // Initial Render
             renderChart('Electronics');
 
-            // Slicer Logic
             window.toggleSlicer = (el, cat) => {
                 const items = document.querySelectorAll('.slicer-item');
                 items.forEach(i => {
                     i.className = 'slicer-item text-xs p-1 cursor-pointer border rounded hover:bg-slate-50';
-                    i.innerHTML = i.innerText.trim(); // Reset content
+                    i.innerHTML = i.innerText.trim(); 
                 });
                 el.className = 'slicer-item text-xs p-1 cursor-pointer border rounded flex items-center justify-between bg-blue-50 border-blue-200';
                 el.innerHTML = `<span>${cat}</span><i data-lucide="check" class="w-3 h-3 text-blue-500"></i>`;
@@ -1275,9 +1384,8 @@
                         inputEl.classList.add('text-green-700', 'font-bold');
                         inputEl.disabled = true;
                         
-                        // Show Result
                         if (def.result) {
-                            resEl.innerHTML = `<strong>Result:</strong> ${def.result}`;
+                            resEl.innerHTML = def.resultHtml ? def.resultHtml : `<strong>Result:</strong> ${def.result}`;
                             resEl.classList.remove('hidden');
                         }
 
@@ -1301,12 +1409,11 @@
                     const el = document.getElementById(`dax-inp-${i}`);
                     el.value = def.hint;
                     validateInput(i);
-                    await new Promise(r => setTimeout(r, 1000));
+                    await new Promise(r => setTimeout(r, 600));
                 }
             };
         }
 
-        // Module 10: Quiz Renderer
         function renderQuizDemo(container, onComplete) {
             container.innerHTML = `
                 <div class="flex flex-col h-full bg-white border rounded shadow-sm overflow-hidden">
@@ -1325,7 +1432,7 @@
                             <!-- Question injected here -->
                         </div>
                         <div class="mt-4 flex justify-end">
-                            <button id="btn-next-q" class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-bold disabled:opacity-50" disabled>Next Question</button>
+                            <button id="btn-next-q" class="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-4 py-2 rounded text-sm font-bold disabled:opacity-50" disabled>Next Question</button>
                         </div>
                     </div>
                 </div>
@@ -1337,13 +1444,11 @@
                 const q = QUIZ_DATA[currentQ];
                 document.getElementById('q-num').innerText = currentQ + 1;
                 
-                // Update dots
                 const dots = document.getElementById('q-dots').children;
                 for(let i=0; i<5; i++) {
                     dots[i].className = `w-2 h-2 rounded-full ${i === currentQ ? 'bg-blue-500' : (i < currentQ ? 'bg-green-500' : 'bg-slate-300')}`;
                 }
 
-                // Render Table
                 let tableHTML = `<table class="w-full text-xs text-left border mb-4"><thead class="bg-slate-50"><tr>`;
                 q.context.header.forEach(h => tableHTML += `<th class="border p-2">${h}</th>`);
                 tableHTML += `</tr></thead><tbody>`;
@@ -1363,23 +1468,21 @@
                             <div class="quiz-option border rounded p-3 text-sm cursor-pointer" onclick="checkAnswer(${i}, this)">${opt}</div>
                         `).join('')}
                     </div>
-                    <div id="explanation" class="hidden mt-4 p-3 bg-blue-50 border border-blue-100 rounded text-xs text-blue-800"></div>
+                    <div id="explanation" class="hidden mt-4 p-3 bg-blue-50 border border-blue-100 rounded text-sm text-blue-900 leading-relaxed"></div>
                 `;
                 
                 document.getElementById('btn-next-q').disabled = true;
             };
 
             window.checkAnswer = (idx, el) => {
-                // Prevent multiple clicks
                 if(document.querySelector('.quiz-option.correct') || document.querySelector('.quiz-option.incorrect')) return;
 
                 const q = QUIZ_DATA[currentQ];
                 if (idx === q.correct) {
                     el.classList.add('correct');
-                    el.innerHTML += `<i data-lucide="check" class="w-4 h-4 inline ml-2"></i>`;
+                    el.innerHTML += `<i data-lucide="check" class="w-4 h-4 inline ml-2 text-green-700"></i>`;
                 } else {
                     el.classList.add('incorrect');
-                    // Highlight correct one
                     const opts = document.querySelectorAll('.quiz-option');
                     opts[q.correct].classList.add('correct');
                 }
@@ -1403,13 +1506,17 @@
 
             renderQ();
 
-            // Auto Solver for Quiz
             window.currentSolver = async () => {
                 const q = QUIZ_DATA[currentQ];
                 const opts = document.querySelectorAll('.quiz-option');
                 window.checkAnswer(q.correct, opts[q.correct]);
-                await new Promise(r => setTimeout(r, 1000));
+                await new Promise(r => setTimeout(r, 600));
                 document.getElementById('btn-next-q').click();
+                
+                // If there are more questions, recursively solve the next one
+                if(currentQ <= 4 && document.getElementById('btn-next-q')) {
+                    setTimeout(() => window.currentSolver(), 200);
+                }
             };
         }
 
