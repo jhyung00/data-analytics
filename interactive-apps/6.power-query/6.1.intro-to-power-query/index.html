@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Power Query? The Ultimate Data Cleaning Showdown</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Add SheetJS for Excel file generation -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .excel-theme { color: #107c41; }
+        .excel-bg { background-color: #107c41; }
+        .excel-border { border-color: #107c41; }
+        .pq-theme { color: #f2c811; }
+        .pq-bg { background-color: #f2c811; }
+        .pq-border { border-color: #f2c811; }
+        .pq-text-dark { color: #5c4b00; }
+        
+        .dataset-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .dataset-table th { background-color: #1e293b; color: white; padding: 10px; text-align: left; }
+        .dataset-table td { background-color: white; padding: 10px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+        .dataset-table tr:hover td { background-color: #f1f5f9; }
+        .dirty-cell { background-color: #fee2e2 !important; border-left: 3px solid #ef4444; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased">
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white py-12 px-6 shadow-lg">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-4xl font-bold mb-4 flex items-center gap-3">
+                <i data-lucide="zap" class="text-yellow-400 w-10 h-10"></i>
+                A Better Way to Clean Data: An Introduction to Power Query
+            </h1>
+            <p class="text-xl text-slate-300">A side-by-side comparison of how modern analysts clean and combine data.</p>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-6 space-y-12 mt-8">
+
+        <!-- Introduction to the Problem -->
+        <section class="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+            <h2 class="text-2xl font-bold mb-6 border-b pb-2 flex items-center gap-2">
+                <i data-lucide="database" class="text-slate-500"></i> The Scenario: "Dirty" Monthly Sales Data
+            </h2>
+            <p class="mb-6 text-slate-600">
+                You receive this data export every month. It has combined columns, messy text, wide formats (months across the top), and missing region names. You need to clean it and merge it with a Region lookup table.
+            </p>
+
+            <!-- Demo Setup Instructions -->
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-5 mb-8 rounded-r-lg shadow-sm">
+                <h3 class="text-lg font-bold text-blue-800 mb-2 flex items-center gap-2">
+                    <i data-lucide="file-input" class="w-5 h-5"></i> Demo Setup Instructions
+                </h3>
+                <p class="text-sm text-blue-900 mb-2">To follow along:</p>
+                <ol class="list-decimal list-inside text-sm text-blue-900 space-y-1.5 ml-2 font-medium mb-4">
+                    <li>Download the <strong>Starting Data Workbook</strong> below (contains both Dataset 1 and 2 on separate tabs).</li>
+                    <li>Import both tables into Power Query.</li>
+                    <li>Later, for Task 5, imagine the source sales table is updated with new Q2 sales columns.</li>
+                </ol>
+                <button id="btn-download-start" class="bg-green-600 hover:bg-green-700 text-white text-sm py-2 px-4 rounded flex items-center gap-2 shadow-sm transition">
+                    <i data-lucide="download" class="w-4 h-4"></i> Download Starting Data (Excel)
+                </button>
+                <p class="text-xs text-blue-700 mt-3 italic">
+                    * In Excel, use <strong>Data &rarr; Get Data &rarr; From Table/Range</strong> to bring each table into Power Query.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="md:col-span-2 overflow-x-auto">
+                    <div class="mb-3">
+                        <h3 class="font-semibold text-lg">Dataset 1: Messy Sales Export (Tab 1)</h3>
+                    </div>
+                    <table class="dataset-table shadow-sm rounded-lg overflow-hidden">
+                        <thead>
+                            <tr>
+                                <th>Order_Info</th>
+                                <th>Category</th>
+                                <th>Region_ID</th>
+                                <th>Jan_Sales</th>
+                                <th>Feb_Sales</th>
+                                <th>Mar_Sales</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="dirty-cell">ORD101-smith</td>
+                                <td class="dirty-cell">&nbsp;&nbsp;lapTOps&nbsp;</td>
+                                <td>R01</td>
+                                <td>1200</td>
+                                <td>1500</td>
+                                <td>1100</td>
+                            </tr>
+                            <tr>
+                                <td class="dirty-cell">ORD102-JONES</td>
+                                <td class="dirty-cell">TabLEts&nbsp;&nbsp;&nbsp;</td>
+                                <td>R02</td>
+                                <td>800</td>
+                                <td>950</td>
+                                <td>900</td>
+                            </tr>
+                            <tr>
+                                <td class="dirty-cell">ORD103-davis</td>
+                                <td class="dirty-cell">&nbsp;monitors</td>
+                                <td>R01</td>
+                                <td>450</td>
+                                <td>500</td>
+                                <td>480</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="text-xs text-red-500 mt-2 font-medium">* Highlighted cells contain structural or formatting issues.</p>
+                    
+                    <div class="flex justify-between items-center mb-4 mt-10 border-t pt-8">
+                        <h3 class="font-semibold text-lg">Dataset 3: Updated Sales Table (Now Includes Q2)</h3>
+                        <button id="btn-download-q2" class="bg-blue-600 hover:bg-blue-700 text-white text-sm py-1.5 px-3 rounded flex items-center gap-2 shadow-sm transition">
+                            <i data-lucide="download" class="w-4 h-4"></i> Download Updated Excel
+                        </button>
+                    </div>
+                    <table class="dataset-table shadow-sm rounded-lg overflow-hidden text-xs">
+                        <thead>
+                            <tr>
+                                <th>Order_Info</th>
+                                <th>Category</th>
+                                <th>Region_ID</th>
+                                <th>Jan_Sales</th>
+                                <th>Feb_Sales</th>
+                                <th>Mar_Sales</th>
+                                <th class="bg-blue-50 text-blue-800">Apr_Sales</th>
+                                <th class="bg-blue-50 text-blue-800">May_Sales</th>
+                                <th class="bg-blue-50 text-blue-800">Jun_Sales</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="dirty-cell">ORD101-smith</td>
+                                <td class="dirty-cell">&nbsp;&nbsp;lapTOps&nbsp;</td>
+                                <td>R01</td>
+                                <td>1200</td>
+                                <td>1500</td>
+                                <td>1100</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">1300</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">1400</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">1500</td>
+                            </tr>
+                            <tr>
+                                <td class="dirty-cell">ORD102-JONES</td>
+                                <td class="dirty-cell">TabLEts&nbsp;&nbsp;&nbsp;</td>
+                                <td>R02</td>
+                                <td>800</td>
+                                <td>950</td>
+                                <td>900</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">900</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">850</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">950</td>
+                            </tr>
+                            <tr>
+                                <td class="dirty-cell">ORD103-davis</td>
+                                <td class="dirty-cell">&nbsp;monitors</td>
+                                <td>R01</td>
+                                <td>450</td>
+                                <td>500</td>
+                                <td>480</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">500</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">520</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">510</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <div class="mb-3">
+                        <h3 class="font-semibold text-lg">Dataset 2: Region Mapping (Tab 2)</h3>
+                    </div>
+                    <table class="dataset-table shadow-sm rounded-lg overflow-hidden">
+                        <thead>
+                            <tr>
+                                <th>Region_ID</th>
+                                <th>Region_Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>R01</td>
+                                <td>North America</td>
+                            </tr>
+                            <tr>
+                                <td>R02</td>
+                                <td>Europe</td>
+                            </tr>
+                            <tr>
+                                <td>R03</td>
+                                <td>Asia Pacific</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step by Step Comparisons -->
+        <h2 class="text-3xl font-bold text-center mt-16 mb-8 text-slate-800">Step-by-Step Task Comparison</h2>
+
+        <!-- Task 1 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 excel-border">
+                <div class="flex items-center gap-2 mb-4 excel-theme">
+                    <i data-lucide="file-spreadsheet"></i>
+                    <h3 class="text-xl font-bold">Traditional Excel</h3>
+                </div>
+                <h4 class="font-semibold text-slate-800 mb-2">Task 1: Split "Order_Info"</h4>
+                <p class="text-sm text-slate-600 mb-4">Separate "ORD101-smith" into Order ID and Salesperson.</p>
+                <div class="bg-slate-100 p-4 rounded text-sm font-mono text-slate-700 mb-4">
+                    <span class="text-slate-500">// Requires creating two new columns and typing:</span><br>
+                    Col 1: =LEFT(A2, FIND("-", A2)-1)<br>
+                    Col 2: =RIGHT(A2, LEN(A2)-FIND("-", A2))
+                </div>
+                <p class="text-sm text-red-600 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Prone to breaking if a hyphen is missing. Requires manual copy-pasting down rows.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 pq-border">
+                <div class="flex items-center gap-2 mb-4 pq-text-dark">
+                    <i data-lucide="zap"></i>
+                    <h3 class="text-xl font-bold">Power Query</h3>
+                </div>
+                <h4 class="font-semibold text-slate-800 mb-2">Task 1: Split "Order_Info"</h4>
+                <p class="text-sm text-slate-600 mb-4">Separate "ORD101-smith" into Order ID and Salesperson.</p>
+                <div class="bg-[#fffbeb] p-4 rounded text-sm font-semibold text-slate-700 mb-4 border border-yellow-200">
+                    Right-Click Column &rarr; Split Column &rarr; By Delimiter &rarr; Choose Hyphen (-)
+                </div>
+                <p class="text-sm text-green-700 flex items-center gap-1"><i data-lucide="check-circle" class="w-4 h-4"></i> Zero formulas. Done in 3 clicks. Automatically handles varying text lengths.</p>
+            </div>
+        </div>
+
+        <!-- Task 2 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 excel-border">
+                <div class="flex items-center gap-2 mb-4 excel-theme">
+                    <i data-lucide="file-spreadsheet"></i>
+                    <h3 class="text-xl font-bold">Traditional Excel</h3>
+                </div>
+                <h4 class="font-semibold text-slate-800 mb-2">Task 2: Clean Category Text</h4>
+                <p class="text-sm text-slate-600 mb-4">Fix "  lapTOps " to "Laptops" (Trim spaces, fix casing).</p>
+                <div class="bg-slate-100 p-4 rounded text-sm font-mono text-slate-700 mb-4">
+                    <span class="text-slate-500">// Requires nested formulas in a helper column:</span><br>
+                    =PROPER(TRIM(B2))
+                </div>
+                <p class="text-sm text-red-600 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-4 h-4"></i> You now have a duplicate "helper" column taking up space. You must copy/paste as values to delete the original.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 pq-border">
+                <div class="flex items-center gap-2 mb-4 pq-text-dark">
+                    <i data-lucide="zap"></i>
+                    <h3 class="text-xl font-bold">Power Query</h3>
+                </div>
+                <h4 class="font-semibold text-slate-800 mb-2">Task 2: Clean Category Text</h4>
+                <p class="text-sm text-slate-600 mb-4">Fix "  lapTOps " to "Laptops" (Trim spaces, fix casing).</p>
+                <div class="bg-[#fffbeb] p-4 rounded text-sm font-semibold text-slate-700 mb-4 border border-yellow-200">
+                    Right-Click Column &rarr; Transform &rarr; Trim<br>
+                    Right-Click Column &rarr; Transform &rarr; Capitalize Each Word
+                </div>
+                <p class="text-sm text-green-700 flex items-center gap-1"><i data-lucide="check-circle" class="w-4 h-4"></i> Cleans the data in place. No helper columns needed. 100% UI driven.</p>
+            </div>
+        </div>
+
+        <!-- Task 3 (The Game Changer) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 excel-border">
+                <div class="flex items-center gap-2 mb-4 excel-theme">
+                    <i data-lucide="file-spreadsheet"></i>
+                    <h3 class="text-xl font-bold">Traditional Excel</h3>
+                </div>
+                <h4 class="font-semibold text-slate-800 mb-2">Task 3: Unpivot Months</h4>
+                <p class="text-sm text-slate-600 mb-4">Turn wide columns (Jan, Feb, Mar) into a proper database format (Month | Sales).</p>
+                <div class="bg-slate-100 p-4 rounded text-sm font-mono text-slate-700 mb-4">
+                    <span class="text-slate-500">// Nightmare Scenario:</span><br>
+                    Requires extremely complex dynamic array formulas (INDEX/MATCH with MOD/ROW math) OR manual Copy > Paste Special > Transpose repeatedly.
+                </div>
+                <p class="text-sm text-red-600 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Often the point where Excel users give up or spend hours writing VBA macros.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 pq-border relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg">KILLER FEATURE</div>
+                <div class="flex items-center gap-2 mb-4 pq-text-dark">
+                    <i data-lucide="zap"></i>
+                    <h3 class="text-xl font-bold">Power Query</h3>
+                </div>
+                <h4 class="font-semibold text-slate-800 mb-2">Task 3: Unpivot Months</h4>
+                <p class="text-sm text-slate-600 mb-4">Turn wide columns (Jan, Feb, Mar) into a proper database format (Month | Sales).</p>
+                <div class="bg-[#fffbeb] p-4 rounded text-sm font-semibold text-slate-700 mb-4 border border-yellow-200">
+                    Select Order, Category, Region Columns<br>
+                    Right-Click &rarr; Unpivot Other Columns
+                </div>
+                
+                <!-- NEW: Resulting Table Snippet -->
+                <div class="mb-4 border border-slate-200 rounded shadow-sm overflow-hidden">
+                    <div class="bg-slate-50 px-3 py-1.5 border-b border-slate-200 text-[10px] uppercase tracking-wider font-bold text-slate-500 flex items-center gap-1">
+                        <i data-lucide="table" class="w-3 h-3"></i> Resulting Table Structure
+                    </div>
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-100 text-slate-600">
+                            <tr>
+                                <th class="py-1.5 px-2">Order_ID</th>
+                                <th class="py-1.5 px-2">Category</th>
+                                <th class="py-1.5 px-2 bg-yellow-200 text-yellow-900">Month</th>
+                                <th class="py-1.5 px-2 bg-yellow-200 text-yellow-900">Sales</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-slate-600">
+                            <tr class="border-t border-slate-100">
+                                <td class="py-1 px-2 truncate max-w-[80px]">ORD101</td>
+                                <td class="py-1 px-2">Laptops</td>
+                                <td class="py-1 px-2 bg-yellow-50 font-medium text-yellow-900">Jan_Sales</td>
+                                <td class="py-1 px-2 bg-yellow-50 font-mono text-yellow-900">1200</td>
+                            </tr>
+                            <tr class="border-t border-slate-100">
+                                <td class="py-1 px-2 truncate max-w-[80px]">ORD101</td>
+                                <td class="py-1 px-2">Laptops</td>
+                                <td class="py-1 px-2 bg-yellow-50 font-medium text-yellow-900">Feb_Sales</td>
+                                <td class="py-1 px-2 bg-yellow-50 font-mono text-yellow-900">1500</td>
+                            </tr>
+                            <tr class="border-t border-slate-100">
+                                <td class="py-1 px-2 truncate max-w-[80px]">ORD101</td>
+                                <td class="py-1 px-2">Laptops</td>
+                                <td class="py-1 px-2 bg-yellow-50 font-medium text-yellow-900">Mar_Sales</td>
+                                <td class="py-1 px-2 bg-yellow-50 font-mono text-yellow-900">1100</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="text-sm text-green-700 flex items-center gap-1"><i data-lucide="check-circle" class="w-4 h-4 min-w-max"></i> Takes literally 2 seconds. Dynamically handles new months added later (e.g., April) without changing any code.</p>
+            </div>
+        </div>
+
+        <!-- Task 4 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 excel-border">
+                <div class="flex items-center gap-2 mb-4 excel-theme">
+                    <i data-lucide="file-spreadsheet"></i>
+                    <h3 class="text-xl font-bold">Traditional Excel</h3>
+                </div>
+                <h4 class="font-semibold text-slate-800 mb-2">Task 4: Merge Region Name</h4>
+                <p class="text-sm text-slate-600 mb-4">Lookup Region Name from Dataset 2 based on Region_ID.</p>
+                <div class="bg-slate-100 p-4 rounded text-sm font-mono text-slate-700 mb-4">
+                    <span class="text-slate-500">// Standard Lookup Formula:</span><br>
+                    =XLOOKUP(C2, RegionMap!A:A, RegionMap!B:B, "Not Found")
+                </div>
+                <p class="text-sm text-red-600 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-4 h-4"></i> If your table is 500,000 rows, pasting this formula down will significantly slow down your workbook or freeze Excel.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 pq-border">
+                <div class="flex items-center gap-2 mb-4 pq-text-dark">
+                    <i data-lucide="zap"></i>
+                    <h3 class="text-xl font-bold">Power Query</h3>
+                </div>
+                <h4 class="font-semibold text-slate-800 mb-2">Task 4: Merge Region Name</h4>
+                <p class="text-sm text-slate-600 mb-4">Lookup Region Name from Dataset 2 based on Region_ID.</p>
+                <div class="bg-[#fffbeb] p-4 rounded text-sm font-semibold text-slate-700 mb-4 border border-yellow-200">
+                    Home &rarr; Merge Queries<br>
+                    Select Dataset 1 (Region_ID) and Dataset 2 (Region_ID) &rarr; OK<br>
+                    Expand the new column to show Region_Name.
+                </div>
+                <p class="text-sm text-green-700 flex items-center gap-1"><i data-lucide="check-circle" class="w-4 h-4"></i> Acts like an SQL JOIN. Processes in memory, keeping your Excel file size tiny and blazing fast.</p>
+            </div>
+        </div>
+
+        <!-- Task 5 (The Update) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 excel-border">
+                <div class="flex items-center gap-2 mb-4 excel-theme">
+                    <i data-lucide="file-spreadsheet"></i>
+                    <h3 class="text-xl font-bold">Traditional Excel</h3>
+                </div>
+                <h4 class="font-semibold text-slate-800 mb-2">Task 5: Source Data Gets Updated with Q2 Sales</h4>
+                <p class="text-sm text-slate-600 mb-4">A new quarter is added to the original sales sheet. You now need to extend your formulas and reshape the data again.</p>
+                <div class="bg-slate-100 p-4 rounded text-sm font-mono text-slate-700 mb-4">
+                    <span class="text-slate-500">// The Manual Grind:</span><br>
+                    1. Insert new Apr/May/Jun columns into the worksheet.<br>
+                    2. Update formulas or helper columns.<br>
+                    3. Rebuild or extend the reshaped table.<br>
+                    4. Recheck lookups and Pivot Table source ranges.<br>
+                    5. Hope nothing breaks.
+                </div>
+                <p class="text-sm text-red-600 flex items-center gap-1">
+                    <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                    Every structural update means more manual fixing and more chances for errors.
+                </p>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 pq-border relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg">THE MAGIC</div>
+                <div class="flex items-center gap-2 mb-4 pq-text-dark">
+                    <i data-lucide="zap"></i>
+                    <h3 class="text-xl font-bold">Power Query</h3>
+                </div>
+                <h4 class="font-semibold text-slate-800 mb-2">Task 5: Source Data Gets Updated with Q2 Sales</h4>
+                <p class="text-sm text-slate-600 mb-4">This represents the same source data after the next quarter has been added. In Power Query, you do not rebuild the process — you just refresh.</p>
+                <div class="bg-[#fffbeb] p-4 rounded text-sm font-semibold text-slate-700 mb-4 border border-yellow-200">
+                    The original source table is updated with Apr, May, and Jun sales.<br>
+                    In Excel, go to <strong>Data &rarr; Refresh All</strong>.
+                </div>
+                <p class="text-sm text-green-700 flex items-center gap-1">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    Power Query automatically reapplies all prior steps — split text, trim, capitalize, unpivot, and merge — without rebuilding anything.
+                </p>
+            </div>
+        </div>
+
+        <!-- Executive Summary Table -->
+        <section class="mt-16 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-900 text-white p-6">
+                <h2 class="text-2xl font-bold flex items-center gap-2">
+                    <i data-lucide="bar-chart-2"></i> The Bottom Line: Excel vs Power Query
+                </h2>
+            </div>
+            <div class="p-0">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 border-b">
+                            <th class="p-4 font-bold text-slate-700 w-1/3">Feature / Capability</th>
+                            <th class="p-4 font-bold excel-theme w-1/3 bg-green-50/50">Traditional Excel</th>
+                            <th class="p-4 font-bold pq-text-dark w-1/3 bg-yellow-50/50">Power Query</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        <tr>
+                            <td class="p-4 font-semibold text-slate-700">Automation (Next Month's Data)</td>
+                            <td class="p-4 text-slate-600 bg-green-50/50">Manual: Open file, copy-paste new data, drag down formulas, hope nothing breaks.</td>
+                            <td class="p-4 text-slate-600 bg-yellow-50/50 font-semibold text-green-700">Automated: Save new file in folder, click "Refresh All". Done.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-semibold text-slate-700">Data Transformations (Unpivot, Split)</td>
+                            <td class="p-4 text-slate-600 bg-green-50/50">Requires complex nested formulas, helper columns, or VBA.</td>
+                            <td class="p-4 text-slate-600 bg-yellow-50/50">100% UI Driven. Ribbons, buttons, and right-clicks.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-semibold text-slate-700">Handling Large Datasets</td>
+                            <td class="p-4 text-slate-600 bg-green-50/50">Slows down significantly past 100k rows. 1M row absolute limit.</td>
+                            <td class="p-4 text-slate-600 bg-yellow-50/50">Processes millions of rows efficiently in the background engine.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-semibold text-slate-700">Auditability</td>
+                            <td class="p-4 text-slate-600 bg-green-50/50">Clicking randomly through cells to figure out how someone's nested IFs work.</td>
+                            <td class="p-4 text-slate-600 bg-yellow-50/50">Linear "Applied Steps" window on the right. Like a time machine for data.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-semibold text-slate-700">File Size</td>
+                            <td class="p-4 text-slate-600 bg-green-50/50">Massive. Every formula and cell data point is saved in the grid.</td>
+                            <td class="p-4 text-slate-600 bg-yellow-50/50">Tiny. Stores only the *instructions* to get the data, loading only the final result.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Call to action -->
+        <div class="text-center mt-12 mb-16">
+            <h3 class="text-2xl font-bold text-slate-800 mb-4">Ready to level up your data analysis?</h3>
+            <p class="text-slate-600">In Excel, go to <strong>Data &rarr; Get Data</strong> to launch Power Query and start exploring today.</p>
+        </div>
+
+    </main>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // --- Excel File Generation Logic ---
+        // Updated to handle multiple sheets per workbook
+        function downloadExcel(sheetsData, fileName) {
+            // Create a new workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Loop through each sheet data object and append it
+            sheetsData.forEach(sheet => {
+                const ws = XLSX.utils.json_to_sheet(sheet.data);
+                XLSX.utils.book_append_sheet(wb, ws, sheet.name);
+            });
+            
+            // Trigger the download of the file
+            XLSX.writeFile(wb, fileName);
+        }
+
+        // Shared Region Data used in both files
+        const regionData = [
+            {"Region_ID": "R01", "Region_Name": "North America"},
+            {"Region_ID": "R02", "Region_Name": "Europe"},
+            {"Region_ID": "R03", "Region_Name": "Asia Pacific"},
+            {"Region_ID": "R04", "Region_Name": "Latin America"}
+        ];
+
+        // Attach event listener for the Starting Data button (Contains Dataset 1 and 2)
+        document.getElementById('btn-download-start').addEventListener('click', () => {
+            const messyData = [
+                {"Order_Info": "ORD101-smith", "Category": "  lapTOps ", "Region_ID": "R01", "Jan_Sales": 1200, "Feb_Sales": 1500, "Mar_Sales": 1100},
+                {"Order_Info": "ORD102-JONES", "Category": "TabLEts   ", "Region_ID": "R02", "Jan_Sales": 800, "Feb_Sales": 950, "Mar_Sales": 900},
+                {"Order_Info": "ORD103-davis", "Category": " monitors", "Region_ID": "R01", "Jan_Sales": 450, "Feb_Sales": 500, "Mar_Sales": 480},
+                {"Order_Info": "ORD104-BROWN", "Category": " smartPHONES ", "Region_ID": "R03", "Jan_Sales": 2100, "Feb_Sales": 1800, "Mar_Sales": 2200},
+                {"Order_Info": "ORD105-wilson", "Category": "  lapTOps", "Region_ID": "R02", "Jan_Sales": 1300, "Feb_Sales": 1400, "Mar_Sales": 1350},
+                {"Order_Info": "ORD106-taylor", "Category": "TabLEts", "Region_ID": "R04", "Jan_Sales": 600, "Feb_Sales": 750, "Mar_Sales": 800},
+                {"Order_Info": "ORD107-clark", "Category": "   monitors  ", "Region_ID": "R01", "Jan_Sales": 550, "Feb_Sales": 600, "Mar_Sales": 590},
+                {"Order_Info": "ORD108-EVANS", "Category": "smartPHONES", "Region_ID": "R03", "Jan_Sales": 1900, "Feb_Sales": 2000, "Mar_Sales": 2150}
+            ];
+            
+            downloadExcel([
+                { data: messyData, name: 'Sales Data' },
+                { data: regionData, name: 'Region Mapping' }
+            ], 'Starting_Data.xlsx');
+        });
+
+        // Attach event listener for the Q2 Data button (Now representing Q1 + Q2 combined)
+        document.getElementById('btn-download-q2').addEventListener('click', () => {
+            const q2Data = [
+                {"Order_Info": "ORD101-smith", "Category": "  lapTOps ", "Region_ID": "R01", "Jan_Sales": 1200, "Feb_Sales": 1500, "Mar_Sales": 1100, "Apr_Sales": 1300, "May_Sales": 1400, "Jun_Sales": 1500},
+                {"Order_Info": "ORD102-JONES", "Category": "TabLEts   ", "Region_ID": "R02", "Jan_Sales": 800, "Feb_Sales": 950, "Mar_Sales": 900, "Apr_Sales": 900, "May_Sales": 850, "Jun_Sales": 950},
+                {"Order_Info": "ORD103-davis", "Category": " monitors", "Region_ID": "R01", "Jan_Sales": 450, "Feb_Sales": 500, "Mar_Sales": 480, "Apr_Sales": 500, "May_Sales": 520, "Jun_Sales": 510},
+                {"Order_Info": "ORD104-BROWN", "Category": " smartPHONES ", "Region_ID": "R03", "Jan_Sales": 2100, "Feb_Sales": 1800, "Mar_Sales": 2200, "Apr_Sales": 2300, "May_Sales": 2100, "Jun_Sales": 2500},
+                {"Order_Info": "ORD105-wilson", "Category": "  lapTOps", "Region_ID": "R02", "Jan_Sales": 1300, "Feb_Sales": 1400, "Mar_Sales": 1350, "Apr_Sales": 1350, "May_Sales": 1450, "Jun_Sales": 1400},
+                {"Order_Info": "ORD106-taylor", "Category": "TabLEts", "Region_ID": "R04", "Jan_Sales": 600, "Feb_Sales": 750, "Mar_Sales": 800, "Apr_Sales": 700, "May_Sales": 800, "Jun_Sales": 850},
+                {"Order_Info": "ORD107-clark", "Category": "   monitors  ", "Region_ID": "R01", "Jan_Sales": 550, "Feb_Sales": 600, "Mar_Sales": 590, "Apr_Sales": 600, "May_Sales": 650, "Jun_Sales": 620},
+                {"Order_Info": "ORD108-EVANS", "Category": "smartPHONES", "Region_ID": "R03", "Jan_Sales": 1900, "Feb_Sales": 2000, "Mar_Sales": 2150, "Apr_Sales": 2050, "May_Sales": 2100, "Jun_Sales": 2250}
+            ];
+            
+            // We include the Region Mapping tab here as well so the new workbook is fully complete
+            downloadExcel([
+                { data: q2Data, name: 'Sales Data' },
+                { data: regionData, name: 'Region Mapping' }
+            ], 'Updated_Sales_Data_Q1_Q2.xlsx');
+        });
+    </script>
+</body>
+</html>
