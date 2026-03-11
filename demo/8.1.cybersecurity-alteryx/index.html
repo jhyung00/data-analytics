@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Alteryx Audit Simulator - Designer UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* Exact Alteryx Designer Typography & Colors */
+        :root {
+            --ax-blue: #0082ca;
+            --ax-dark-blue: #005c97;
+            --ax-bg-gray: #f0f0f0;
+            --ax-border: #abadb3;
+            --ax-text: #333333;
+            --ax-canvas: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--ax-bg-gray);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            color: var(--ax-text);
+        }
+
+        /* --- Layout: Left Config, Right Canvas/Results --- */
+        .layout-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- Alteryx Configuration Pane (Left) --- */
+        .config-pane {
+            width: 340px;
+            background-color: var(--ax-bg-gray);
+            border-right: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            z-index: 20;
+        }
+
+        .config-header {
+            background-color: #e0e0e0;
+            border-bottom: 1px solid #ccc;
+            padding: 6px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .config-header img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .config-content {
+            padding: 10px;
+            overflow-y: auto;
+            flex: 1;
+            font-size: 11px;
+        }
+
+        /* Standard Alteryx UI Controls */
+        .ax-label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: 400;
+            color: #111;
+        }
+        
+        .ax-input, .ax-select, .ax-textarea {
+            width: 100%;
+            border: 1px solid var(--ax-border);
+            padding: 3px 5px;
+            font-size: 12px;
+            font-family: 'Segoe UI', sans-serif;
+            box-sizing: border-box;
+            background-color: white;
+            color: black;
+        }
+        
+        .ax-input:focus, .ax-select:focus, .ax-textarea:focus {
+            outline: 1px solid var(--ax-blue);
+            border-color: var(--ax-blue);
+        }
+
+        .ax-input:disabled, .ax-textarea:disabled {
+            background-color: #f5f5f5;
+            color: #666;
+        }
+
+        .ax-section {
+            margin-bottom: 12px;
+        }
+
+        .ax-grid {
+            border: 1px solid var(--ax-border);
+            background: white;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ax-grid th {
+            background-color: #f5f5f5;
+            border-bottom: 1px solid var(--ax-border);
+            border-right: 1px solid var(--ax-border);
+            padding: 2px 4px;
+            text-align: left;
+            font-weight: normal;
+        }
+
+        .ax-grid td {
+            border-bottom: 1px solid #eee;
+            border-right: 1px solid #eee;
+            padding: 2px 4px;
+        }
+
+        /* --- Right Column (Canvas + Results) --- */
+        .right-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* Top Menu Bar */
+        .ax-menu-bar {
+            background-color: white;
+            border-bottom: 1px solid #ccc;
+            padding: 4px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 40px;
+        }
+
+        .run-button {
+            background-color: var(--ax-blue);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .run-button:hover { background-color: var(--ax-dark-blue); }
+        .run-button:active { transform: scale(0.95); }
+
+        /* Workflow Canvas */
+        .workflow-canvas {
+            background-color: var(--ax-canvas);
+            background-image: radial-gradient(#d4d4d4 1px, transparent 1px);
+            background-size: 20px 20px;
+            flex: 6; /* 60% height */
+            position: relative;
+            overflow: auto;
+            border-bottom: 4px solid #e0e0e0;
+        }
+
+        .canvas-scaler {
+            position: relative;
+            min-width: 1100px;
+            min-height: 400px;
+        }
+
+        /* Tool Nodes */
+        .tool-node {
+            width: 72px;
+            height: 80px;
+            position: absolute;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background: transparent;
+            cursor: pointer;
+            z-index: 10;
+            user-select: none;
+        }
+
+        .tool-node img {
+            width: 44px;
+            height: 44px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            background: white;
+            border: 2px solid transparent;
+        }
+
+        .tool-node.active img {
+            border-color: var(--ax-blue);
+            box-shadow: 0 0 0 2px rgba(0, 130, 202, 0.4);
+        }
+
+        /* Fake anchors for connections */
+        .node-anchor-in, .node-anchor-out {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border: 1px solid #666;
+            border-radius: 50%;
+            top: 20px; /* middle of icon */
+        }
+        .node-anchor-in { left: 8px; }
+        .node-anchor-out { right: 8px; }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #cbd5e1;
+            position: absolute;
+            top: -4px;
+            right: 8px;
+            border: 1px solid white;
+            display: none; /* Hide until run */
+        }
+
+        .tool-node.completed .status-dot {
+            display: block;
+            background-color: #22c55e; /* Green check state */
+        }
+
+        .tool-label {
+            font-size: 11px;
+            font-weight: 400;
+            color: #333;
+            text-align: center;
+            line-height: 1.2;
+            margin-top: 4px;
+            max-width: 80px;
+            text-shadow: 0 1px 1px white;
+        }
+
+        /* --- Results Pane (Bottom) --- */
+        .results-pane {
+            flex: 4; /* 40% height */
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .results-header {
+            background-color: #e0e0e0;
+            border-bottom: 1px solid #ccc;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .results-toolbar {
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ccc;
+            padding: 2px 10px;
+            font-size: 11px;
+            color: #555;
+            display: flex;
+            gap: 15px;
+        }
+
+        .data-grid-container {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+        }
+
+        .data-grid {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 11px;
+        }
+
+        .data-grid th {
+            background-color: #f0f0f0;
+            position: sticky;
+            top: 0;
+            border: 1px solid #ccc;
+            padding: 3px 6px;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 5;
+            box-shadow: inset 0 -1px 0 #ccc;
+        }
+
+        .data-grid td {
+            border: 1px solid #e0e0e0;
+            padding: 3px 6px;
+            white-space: nowrap;
+            color: #222;
+        }
+        
+        .row-num {
+            background-color: #f5f5f5;
+            color: #888;
+            text-align: center !important;
+            width: 30px;
+            font-style: italic;
+            border-right: 1px solid #ccc !important;
+        }
+
+        .data-grid tr:nth-child(even) td:not(.row-num) {
+            background-color: #fafafa;
+        }
+
+        /* Empty State */
+        #empty-results-msg {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            color: #777;
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .layout-container { flex-direction: column; }
+            .config-pane { width: 100%; height: 40%; border-right: none; border-bottom: 2px solid #ccc; }
+            .right-column { height: 60%; }
+            .workflow-canvas { flex: 1; }
+            .results-pane { display: none; /* Hide results on mobile, rely on config */ }
+            .canvas-scaler { transform: scale(0.6); transform-origin: 0 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="layout-container">
+        
+        <!-- Left Pane: Configuration -->
+        <aside class="config-pane">
+            <div class="config-header" id="config-title">
+                <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Icon" id="config-icon">
+                <span id="config-name">Configuration - Select a Tool</span>
+            </div>
+            <div class="config-content" id="config-content">
+                <div class="text-center mt-10 text-gray-500 italic">Select a tool on the canvas to view its configuration.</div>
+            </div>
+        </aside>
+
+        <!-- Right Pane: Canvas + Results -->
+        <main class="right-column">
+            
+            <!-- Menu Bar -->
+            <div class="ax-menu-bar">
+                <div class="flex items-center gap-4">
+                    <span class="font-semibold text-[13px] text-gray-700">CyberAudit_Threat_Analysis.yxmd *</span>
+                    <button class="bg-gray-200 hover:bg-gray-300 px-2 py-1 border border-gray-400 text-xs rounded" onclick="location.reload()">Reset</button>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-[11px] text-gray-500 italic hidden sm:inline" id="run-status">Ready</span>
+                    <button onclick="runWorkflow()" class="run-button" title="Run Workflow (Ctrl+R)">
+                        <i class="fa-solid fa-play ml-0.5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Workflow Canvas -->
+            <div class="workflow-canvas">
+                <div class="canvas-scaler">
+                    <!-- Connections -->
+                    <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;">
+                        <path d="M 94 62 C 120 62, 120 122, 194 122" stroke="#444" stroke-width="1.5" fill="none"/>
+                        <path d="M 94 182 C 120 182, 120 122, 194 122" stroke="#444" stroke-width="1.5" fill="none"/>
+                        <line x1="230" y1="122" x2="314" y2="122" stroke="#444" stroke-width="1.5" />
+                        <line x1="350" y1="122" x2="434" y2="122" stroke="#444" stroke-width="1.5" />
+                        <line x1="470" y1="122" x2="554" y2="122" stroke="#444" stroke-width="1.5" />
+                        <!-- Connection from Filter (T anchor) to Sort -->
+                        <path d="M 590 114 C 620 114, 620 124, 662 124" stroke="#444" stroke-width="1.5" fill="none"/>
+                        <!-- Connection from Sort to Output -->
+                        <line x1="710" y1="122" x2="794" y2="122" stroke="#444" stroke-width="1.5" />
+                    </svg>
+
+                    <!-- Nodes -->
+                    <!-- 1. Input Logs -->
+                    <div class="tool-node" id="node-1" style="left: 40px; top: 40px;" onclick="selectNode(1)">
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input">
+                        <div class="node-anchor-out"></div>
+                        <span class="tool-label">Input Logs</span>
+                        <div class="status-dot"></div>
+                    </div>
+
+                    <!-- 2. Input HR -->
+                    <div class="tool-node" id="node-2" style="left: 40px; top: 160px;" onclick="selectNode(2)">
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input">
+                        <div class="node-anchor-out"></div>
+                        <span class="tool-label">Input HR</span>
+                        <div class="status-dot"></div>
+                    </div>
+
+                    <!-- 3. Join -->
+                    <div class="tool-node" id="node-3" style="left: 170px; top: 100px;" onclick="selectNode(3)">
+                        <div class="node-anchor-in" style="top: 10px;"></div>
+                        <div class="node-anchor-in" style="top: 30px;"></div>
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/MolecularJoin2_71x71.png" alt="Join">
+                        <div class="node-anchor-out"></div>
+                        <span class="tool-label">Join</span>
+                        <div class="status-dot"></div>
+                    </div>
+
+                    <!-- 4. DateTime -->
+                    <div class="tool-node" id="node-4" style="left: 290px; top: 100px;" onclick="selectNode(4)">
+                        <div class="node-anchor-in"></div>
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DateTime">
+                        <div class="node-anchor-out"></div>
+                        <span class="tool-label">DateTime</span>
+                        <div class="status-dot"></div>
+                    </div>
+
+                    <!-- 5. Formula -->
+                    <div class="tool-node" id="node-5" style="left: 410px; top: 100px;" onclick="selectNode(5)">
+                        <div class="node-anchor-in"></div>
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Formula_71x71.png" alt="Formula">
+                        <div class="node-anchor-out"></div>
+                        <span class="tool-label">Formula</span>
+                        <div class="status-dot"></div>
+                    </div>
+
+                    <!-- 6. Filter -->
+                    <div class="tool-node" id="node-6" style="left: 530px; top: 100px;" onclick="selectNode(6, 'T')">
+                        <div class="node-anchor-in"></div>
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Filter_71x71.png" alt="Filter">
+                        <div class="node-anchor-out" style="top: 10px; border-color: #22c55e; background: #22c55e;" onclick="event.stopPropagation(); selectNode(6, 'T')"><span style="position:absolute; right:-12px; top:-5px; font-size:10px; font-weight:bold; color:#16a34a;">T</span></div>
+                        <div class="node-anchor-out" style="top: 30px; border-color: #ef4444; background: #ef4444;" onclick="event.stopPropagation(); selectNode(6, 'F')"><span style="position:absolute; right:-12px; top:-5px; font-size:10px; font-weight:bold; color:#dc2626;">F</span></div>
+                        <span class="tool-label">Filter</span>
+                        <div class="status-dot"></div>
+                    </div>
+
+                    <!-- 7. Sort -->
+                    <div class="tool-node" id="node-7" style="left: 650px; top: 100px;" onclick="selectNode(7)">
+                        <div class="node-anchor-in"></div>
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Sort_71x71.png" alt="Sort">
+                        <div class="node-anchor-out"></div>
+                        <span class="tool-label">Sort</span>
+                        <div class="status-dot"></div>
+                    </div>
+
+                    <!-- 8. Output Data -->
+                    <div class="tool-node" id="node-8" style="left: 770px; top: 100px;" onclick="selectNode(8)">
+                        <div class="node-anchor-in"></div>
+                        <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Output2_71x71.png" alt="Output Data">
+                        <span class="tool-label">Output Data</span>
+                        <div class="status-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Pane -->
+            <div class="results-pane">
+                <div class="results-header">
+                    <span id="results-title"><i class="fa-solid fa-table mr-2 text-blue-600"></i>Results</span>
+                </div>
+                <div class="results-toolbar">
+                    <span id="results-meta">0 records displayed</span>
+                    <span class="text-green-600 hidden" id="results-ok"><i class="fa-solid fa-check"></i> OK</span>
+                </div>
+                <div class="data-grid-container">
+                    <table class="data-grid" id="results-table">
+                        <thead id="results-head"></thead>
+                        <tbody id="results-body"></tbody>
+                    </table>
+                    <div id="empty-results-msg">Click 'Run' to populate data, or select a tool.</div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <script>
+        // --- 1. DATA GENERATION ENGINE ---
+        let workflowRun = false;
+
+        // User Configuration State Object
+        let userConfig = {
+            dtFormat: 'yyyy-MM-dd hh:mm:ss' // Default configured format
+        };
+
+        const LOGS = [
+            { LogID: 5001, UserID: 1001, Timestamp: "2023-11-15 08:30:00", IP_Address: "192.168.1.101", Login_Result: "Success" },
+            { LogID: 5002, UserID: 1002, Timestamp: "2023-11-15 09:15:00", IP_Address: "192.168.1.102", Login_Result: "Success" },
+            { LogID: 5003, UserID: 1003, Timestamp: "2023-11-15 10:05:00", IP_Address: "192.168.1.103", Login_Result: "Success" },
+            { LogID: 5004, UserID: 1004, Timestamp: "2023-11-15 14:20:00", IP_Address: "192.168.1.104", Login_Result: "Success" },
+            { LogID: 5005, UserID: 1005, Timestamp: "2023-11-15 03:15:00", IP_Address: "45.33.12.99", Login_Result: "Success" },
+            { LogID: 5006, UserID: 1006, Timestamp: "2023-11-15 11:45:00", IP_Address: "192.168.1.106", Login_Result: "Success" },
+            { LogID: 5007, UserID: 1007, Timestamp: "2023-11-15 16:30:00", IP_Address: "192.168.1.107", Login_Result: "Success" },
+            { LogID: 5008, UserID: 1008, Timestamp: "2023-11-15 05:45:00", IP_Address: "192.168.1.108", Login_Result: "Success" },
+            { LogID: 5009, UserID: 1009, Timestamp: "2023-11-15 23:10:00", IP_Address: "45.33.88.21", Login_Result: "Success" },
+            { LogID: 5010, UserID: 1010, Timestamp: "2023-11-15 09:00:00", IP_Address: "192.168.1.110", Login_Result: "Success" },
+            { LogID: 5011, UserID: 1001, Timestamp: "2023-11-15 18:05:00", IP_Address: "45.33.55.11", Login_Result: "Success" },
+            { LogID: 5012, UserID: 1002, Timestamp: "2023-11-15 13:20:00", IP_Address: "192.168.1.102", Login_Result: "Success" }
+        ];
+
+        const EMPLOYEES = [
+            { EmpID: 1001, Name: "Alice Smith", Dept: "Sales", Status: "Active" },
+            { EmpID: 1002, Name: "Bob Jones", Dept: "IT", Status: "Active" },
+            { EmpID: 1003, Name: "Charlie Brown", Dept: "Finance", Status: "Terminated" },
+            { EmpID: 1004, Name: "Diana Prince", Dept: "HR", Status: "Active" },
+            { EmpID: 1005, Name: "Evan Wright", Dept: "Legal", Status: "Terminated" },
+            { EmpID: 1006, Name: "Fiona Gallagher", Dept: "Sales", Status: "Active" },
+            { EmpID: 1007, Name: "George Michael", Dept: "IT", Status: "Active" },
+            { EmpID: 1008, Name: "Hannah Abbott", Dept: "Finance", Status: "Active" },
+            { EmpID: 1009, Name: "Ian Malcolm", Dept: "Legal", Status: "Terminated" },
+            { EmpID: 1010, Name: "Jane Doe", Dept: "HR", Status: "Active" }
+        ];
+
+        // State holds data for each step
+        let workflowState = {
+            1: { data: LOGS, name: "Input Logs (1)" },
+            2: { data: EMPLOYEES, name: "Input HR (2)" },
+            3: { data: [], name: "Join (3)" },
+            4: { data: [], name: "DateTime (4)" },
+            5: { data: [], name: "Formula (5)" },
+            6: { data: [], dataT: [], dataF: [], name: "Filter (6)" },
+            7: { data: [], name: "Sort (7)" },
+            8: { data: [], name: "Output Data (8)" }
+        };
+
+        // --- Global Config Handlers ---
+        function updateDateTimeConfig(val) {
+            userConfig.dtFormat = val;
+            const outElem = document.getElementById('dt-preview-out');
+            if(outElem) {
+                // Determine if parsing succeeds
+                if(val === 'yyyy-MM-dd hh:mm:ss') {
+                    outElem.innerText = "2023-11-15 14:30:00";
+                    outElem.className = "text-green-700 font-bold font-mono";
+                } else {
+                    outElem.innerText = "Null";
+                    outElem.className = "text-red-600 font-bold font-mono italic";
+                }
+            }
+        }
+
+        function downloadRawCSV(type) {
+            let data, filename;
+            if (type === 'logs') {
+                data = LOGS;
+                filename = 'System_Logs_Raw.csv';
+            } else if (type === 'hr') {
+                data = EMPLOYEES;
+                filename = 'HR_Master_List.csv';
+            }
+
+            if (!data || data.length === 0) return;
+
+            const headers = Object.keys(data[0]).join(',');
+            const rows = data.map(obj => Object.values(obj).map(val => `"${val}"`).join(',')).join('\n');
+            const csvContent = headers + '\n' + rows;
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // --- 2. CONFIGURATION TEMPLATES (Alteryx Replicas) ---
+        const configTemplates = {
+            1: {
+                icon: "Input_71x71.png",
+                title: "Configuration - Input Logs (1)",
+                html: `
+                    <div class="ax-section">
+                        <label class="ax-label">Connect a File or Database</label>
+                        <div class="flex">
+                            <input class="ax-input flex-1" value="C:\\Logs\\System_Logs_Raw.csv" disabled>
+                            <button class="bg-gray-200 border border-[#abadb3] px-2 text-xs">▼</button>
+                        </div>
+                        <div class="mt-2 text-right">
+                            <button onclick="downloadRawCSV('logs')" class="text-[11px] text-[#0082ca] hover:underline flex items-center gap-1 justify-end w-full transition transform active:scale-95"><i class="fa-solid fa-download"></i> Download System_Logs_Raw.csv for practice</button>
+                        </div>
+                    </div>
+                    <div class="ax-section border border-gray-300 bg-white">
+                        <div class="bg-[#e0e0e0] border-b border-gray-300 p-1 font-semibold text-[11px]">Options</div>
+                        <table class="ax-grid">
+                            <tr><td class="w-6 text-center text-gray-500">1</td><td class="w-24">Record Limit</td><td><input class="ax-input" placeholder="Leave blank for all"></td></tr>
+                            <tr><td class="text-center text-gray-500">2</td><td>File Format</td><td>Comma Separated Values (*.csv)</td></tr>
+                            <tr><td class="text-center text-gray-500">3</td><td>Search SubDirs</td><td><input type="checkbox"></td></tr>
+                            <tr><td class="text-center text-gray-500">4</td><td>Output File Name</td><td><select class="ax-select"><option>No</option></select></td></tr>
+                        </table>
+                    </div>
+                `
+            },
+            2: {
+                icon: "Input_71x71.png",
+                title: "Configuration - Input HR (2)",
+                html: `
+                    <div class="ax-section">
+                        <label class="ax-label">Connect a File or Database</label>
+                        <div class="flex">
+                            <input class="ax-input flex-1" value="\\\\HR-SERVER\\Master\\HR_Master_List.csv" disabled>
+                            <button class="bg-gray-200 border border-[#abadb3] px-2 text-xs">▼</button>
+                        </div>
+                        <div class="mt-2 text-right flex justify-between items-center">
+                            <div class="text-blue-700 cursor-pointer hover:underline text-[10px]">Table or Query: \`Sheet1$\`</div>
+                            <button onclick="downloadRawCSV('hr')" class="text-[11px] text-[#0082ca] hover:underline flex items-center gap-1 transition transform active:scale-95"><i class="fa-solid fa-download"></i> Download HR_Master_List.csv</button>
+                        </div>
+                    </div>
+                    <div class="ax-section border border-gray-300 bg-white">
+                        <div class="bg-[#e0e0e0] border-b border-gray-300 p-1 font-semibold text-[11px]">Options</div>
+                        <table class="ax-grid">
+                            <tr><td class="w-6 text-center text-gray-500">1</td><td class="w-24">Record Limit</td><td><input class="ax-input"></td></tr>
+                            <tr><td class="text-center text-gray-500">2</td><td>File Format</td><td>Comma Separated Values (*.csv)</td></tr>
+                            <tr><td class="text-center text-gray-500">3</td><td>First Row Data</td><td><input type="checkbox"></td></tr>
+                        </table>
+                    </div>
+                `
+            },
+            3: {
+                icon: "MolecularJoin2_71x71.png",
+                title: "Configuration - Join (3)",
+                html: `
+                    <div class="ax-section">
+                        <div class="mb-2"><input type="radio" checked> Join by Specific Fields</div>
+                        <div class="flex gap-4">
+                            <div class="w-1/2">
+                                <label class="ax-label font-bold text-blue-800">Left</label>
+                                <select class="ax-select"><option>UserID</option><option>LogID</option></select>
+                            </div>
+                            <div class="w-1/2">
+                                <label class="ax-label font-bold text-blue-800">Right</label>
+                                <select class="ax-select"><option>EmpID</option><option>Name</option></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ax-section">
+                        <div class="border border-gray-300 bg-white h-48 overflow-y-auto">
+                            <table class="ax-grid">
+                                <tr><th class="w-6 text-center">✓</th><th>Input</th><th>Field</th><th>Type</th><th>Rename</th></tr>
+                                <tr><td class="text-center"><input type="checkbox" checked disabled></td><td class="text-gray-500 font-bold">L</td><td>LogID</td><td>Int32</td><td></td></tr>
+                                <tr><td class="text-center"><input type="checkbox" checked disabled></td><td class="text-gray-500 font-bold">L</td><td>UserID</td><td>Int32</td><td></td></tr>
+                                <tr><td class="text-center"><input type="checkbox" checked disabled></td><td class="text-gray-500 font-bold">L</td><td>Timestamp</td><td>V_String</td><td></td></tr>
+                                <tr><td class="text-center"><input type="checkbox" checked disabled></td><td class="text-gray-500 font-bold">L</td><td>IP_Address</td><td>V_String</td><td></td></tr>
+                                <tr><td class="text-center"><input type="checkbox" checked disabled></td><td class="text-gray-500 font-bold">L</td><td>Login_Result</td><td>V_String</td><td></td></tr>
+                                <tr><td class="text-center"><input type="checkbox" checked disabled></td><td class="text-gray-500 font-bold">R</td><td>EmpID</td><td>Int32</td><td>Right_EmpID</td></tr>
+                                <tr><td class="text-center"><input type="checkbox" checked disabled></td><td class="text-gray-500 font-bold">R</td><td>Name</td><td>V_String</td><td></td></tr>
+                                <tr><td class="text-center"><input type="checkbox" checked disabled></td><td class="text-gray-500 font-bold">R</td><td>Dept</td><td>V_String</td><td></td></tr>
+                                <tr><td class="text-center"><input type="checkbox" checked disabled></td><td class="text-gray-500 font-bold">R</td><td>Status</td><td>V_String</td><td></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                `
+            },
+            4: {
+                icon: "Date_Time_71x71.png",
+                title: "Configuration - DateTime (4)",
+                html: `
+                    <div class="ax-section bg-white border border-gray-300 p-2">
+                        <div class="mb-2"><input type="radio" checked> String to Date/Time format</div>
+                        <div class="mb-2"><input type="radio" disabled> Date/Time to String</div>
+                    </div>
+                    <div class="ax-section">
+                        <label class="ax-label">Select the string field to convert</label>
+                        <select class="ax-select mb-3"><option>Timestamp</option></select>
+                        
+                        <label class="ax-label">Specify the format to match the incoming string field</label>
+                        <select class="ax-select mb-1" id="dt-format" onchange="updateDateTimeConfig(this.value)">
+                            <option value="yyyy-MM-dd hh:mm:ss">yyyy-MM-dd hh:mm:ss</option>
+                            <option value="yyyy-MM-dd">yyyy-MM-dd</option>
+                            <option value="MM/dd/yyyy">MM/dd/yyyy</option>
+                            <option value="dd/MM/yyyy">dd/MM/yyyy</option>
+                            <option value="dd-MMM-yy">dd-MMM-yy</option>
+                            <option value="Month dd, yyyy">Month dd, yyyy</option>
+                            <option value="Custom">Custom</option>
+                        </select>
+                        
+                        <div class="mt-3 bg-gray-50 border border-gray-300 p-2 text-[11px] shadow-inner">
+                            <div class="text-gray-500 mb-1 font-semibold flex items-center justify-between">
+                                <span>Parse Preview (Row 1):</span>
+                                <i class="fa-solid fa-eye text-blue-500"></i>
+                            </div>
+                            <div class="flex justify-between items-center bg-white p-1 border border-gray-200 mt-1">
+                                <span class="text-gray-800 font-mono" id="dt-preview-in">2023-11-15 14:30:00</span>
+                                <i class="fa-solid fa-arrow-right text-gray-400 text-[10px] mx-2"></i>
+                                <span class="text-green-700 font-bold font-mono" id="dt-preview-out">2023-11-15 14:30:00</span>
+                            </div>
+                            <div class="text-gray-400 mt-1 text-[9px] italic">*If format does not match, output defaults to Null.</div>
+                        </div>
+
+                        <label class="ax-label mt-4">Select the column to output</label>
+                        <input class="ax-input" value="Parsed_Timestamp" disabled>
+                    </div>
+                `
+            },
+            5: {
+                icon: "Formula_71x71.png",
+                title: "Configuration - Formula (5)",
+                html: `
+                    <div class="ax-section border border-gray-300 bg-white shadow-sm mb-2">
+                        <div class="bg-gray-100 border-b border-gray-300 p-1 flex items-center gap-2">
+                            <select class="ax-select w-28"><option>Add Column</option></select>
+                            <input class="ax-input w-full" value="Login_Hour">
+                        </div>
+                        <div class="p-1">
+                            <textarea class="ax-textarea font-mono h-10 text-blue-800" spellcheck="false" disabled>DateTimeHour([Parsed_Timestamp])</textarea>
+                        </div>
+                        <div class="bg-gray-100 border-t border-gray-300 p-1 flex gap-2 items-center">
+                            <span class="text-[10px]">Data type:</span>
+                            <select class="ax-select w-24"><option>Int16</option></select>
+                        </div>
+                    </div>
+                    <div class="ax-section border border-gray-300 bg-white shadow-sm">
+                        <div class="bg-gray-100 border-b border-gray-300 p-1 flex items-center gap-2">
+                            <select class="ax-select w-28"><option>Add Column</option></select>
+                            <input class="ax-input w-full" value="Risk_Level">
+                        </div>
+                        <div class="p-1">
+                            <textarea class="ax-textarea font-mono h-20 text-blue-800" spellcheck="false" disabled>IF [Status] == 'Terminated' THEN 'Critical'
+ELSEIF !IsNull([Login_Hour]) AND ([Login_Hour] < 6 OR [Login_Hour] > 22) THEN 'High'
+ELSEIF StartsWith([IP_Address], '45.') THEN 'Medium'
+ELSE Null()
+ENDIF</textarea>
+                        </div>
+                        <div class="bg-gray-100 border-t border-gray-300 p-1 flex gap-2 items-center">
+                            <span class="text-[10px]">Data type:</span>
+                            <select class="ax-select w-24"><option>V_WString</option></select>
+                            <span class="text-[10px]">Size:</span>
+                            <input class="ax-input w-16" value="64">
+                        </div>
+                    </div>
+                `
+            },
+            6: {
+                icon: "Filter_71x71.png",
+                title: "Configuration - Filter (6)",
+                html: `
+                    <div class="ax-section bg-white p-2 border border-gray-300">
+                        <div class="mb-2"><input type="radio" checked> Basic filter</div>
+                        <div class="flex gap-2 mb-4">
+                            <select class="ax-select w-1/3"><option>Risk_Level</option></select>
+                            <select class="ax-select w-1/3"><option>Is Not Null</option></select>
+                        </div>
+                        <div class="mb-2"><input type="radio" disabled> Custom filter</div>
+                        <textarea class="ax-textarea h-16 bg-gray-50 text-blue-800 font-mono" disabled>!IsNull([Risk_Level])</textarea>
+                    </div>
+                `
+            },
+            7: {
+                icon: "Sort_71x71.png",
+                title: "Configuration - Sort (7)",
+                html: `
+                    <div class="ax-section border border-gray-300 bg-white h-48 overflow-y-auto">
+                        <table class="ax-grid">
+                            <tr><th>Name</th><th>Order</th></tr>
+                            <tr>
+                                <td><select class="ax-select border-none"><option>Risk_Level</option></select></td>
+                                <td><select class="ax-select border-none"><option>Descending</option></select></td>
+                            </tr>
+                            <tr>
+                                <td><select class="ax-select border-none"><option>Timestamp</option></select></td>
+                                <td><select class="ax-select border-none"><option>Descending</option></select></td>
+                            </tr>
+                            <tr>
+                                <td><select class="ax-select border-none text-gray-400"><option>-- Select --</option></select></td>
+                                <td><select class="ax-select border-none text-gray-400" disabled></select></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="mt-2 text-gray-500">Use dictionary order <input type="checkbox"></div>
+                `
+            },
+            8: {
+                icon: "Output2_71x71.png",
+                title: "Configuration - Output Data (8)",
+                html: `
+                    <div class="ax-section">
+                        <label class="ax-label">Write to File or Database</label>
+                        <div class="flex">
+                            <input class="ax-input flex-1" value="C:\\Audit\\Final_Audit_Findings.xlsx" disabled>
+                            <button class="bg-gray-200 border border-[#abadb3] px-2 text-xs">▼</button>
+                        </div>
+                    </div>
+                    <div class="ax-section border border-gray-300 bg-white">
+                        <div class="bg-[#e0e0e0] border-b border-gray-300 p-1 font-semibold text-[11px]">Options</div>
+                        <table class="ax-grid">
+                            <tr><td class="w-6 text-center text-gray-500">1</td><td class="w-32">Output Options</td><td><select class="ax-select"><option>Create New Sheet</option><option>Append to Existing Sheet</option><option>Overwrite Sheet (Drop)</option><option selected>Overwrite File (Remove)</option></select></td></tr>
+                            <tr><td class="text-center text-gray-500">2</td><td>Max Records Per File</td><td><input class="ax-input" placeholder="Leave blank for no limit"></td></tr>
+                            <tr><td class="text-center text-gray-500">3</td><td>Password</td><td><input type="password" class="ax-input" placeholder="Optional"></td></tr>
+                            <tr><td class="text-center text-gray-500">4</td><td>Preserve Formatting (Excel)</td><td><input type="checkbox"></td></tr>
+                            <tr><td class="text-center text-gray-500">5</td><td>Take File/Table Name From Field</td><td><input type="checkbox"></td></tr>
+                        </table>
+                    </div>
+                    <div class="mt-6 border-t border-gray-300 pt-4">
+                        <button onclick="downloadData()" class="w-full bg-[#0082ca] text-white py-1.5 rounded shadow hover:bg-[#005c97] flex items-center justify-center gap-2 text-xs transition">
+                            <i class="fa-solid fa-file-excel"></i> Simulate Excel Export
+                        </button>
+                    </div>
+                `
+            }
+        };
+
+        let currentStep = 1;
+
+        // --- 3. UI INTERACTIONS ---
+
+        function selectNode(id, anchor = null) {
+            currentStep = id;
+            
+            // Highlight node
+            document.querySelectorAll('.tool-node').forEach(n => n.classList.remove('active'));
+            document.getElementById(`node-${id}`).classList.add('active');
+            
+            // Update Config Pane
+            const tpl = configTemplates[id];
+            document.getElementById('config-icon').src = `https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/${tpl.icon}`;
+            document.getElementById('config-name').innerText = tpl.title;
+            document.getElementById('config-content').innerHTML = tpl.html;
+
+            // Initialize dynamic config UI elements if they exist
+            if (id === 4) {
+                document.getElementById('dt-format').value = userConfig.dtFormat;
+                updateDateTimeConfig(userConfig.dtFormat);
+            }
+
+            // Determine data to display based on selected anchor
+            let displayData = workflowState[id].data;
+            let anchorName = "Output";
+
+            if (id === 6) {
+                if (anchor === 'F') {
+                    displayData = workflowState[id].dataF || [];
+                    anchorName = "False";
+                } else {
+                    displayData = workflowState[id].dataT || [];
+                    anchorName = "True";
+                }
+            }
+
+            // Update Results Pane
+            document.getElementById('results-title').innerHTML = `<i class="fa-solid fa-table mr-2 text-blue-600"></i>Results - ${workflowState[id].name} - ${anchorName}`;
+            
+            if (!workflowRun && id > 2) {
+                // If not run yet, show empty state for downstream tools
+                document.getElementById('empty-results-msg').style.display = 'flex';
+                document.getElementById('results-head').innerHTML = '';
+                document.getElementById('results-body').innerHTML = '';
+                document.getElementById('results-meta').innerText = '0 records displayed';
+                document.getElementById('results-ok').classList.add('hidden');
+            } else {
+                // Show data
+                document.getElementById('empty-results-msg').style.display = 'none';
+                renderTable(displayData);
+            }
+        }
+
+        function renderTable(data) {
+            const head = document.getElementById('results-head');
+            const body = document.getElementById('results-body');
+            const meta = document.getElementById('results-meta');
+            const okIcon = document.getElementById('results-ok');
+
+            meta.innerText = `${data.length} records displayed (${Math.floor(data.length * 0.15)} KB)`;
+            
+            if (data.length > 0) {
+                okIcon.classList.remove('hidden');
+            } else {
+                okIcon.classList.add('hidden');
+            }
+
+            if (data.length === 0) {
+                head.innerHTML = '';
+                body.innerHTML = '';
+                return;
+            }
+
+            const keys = Object.keys(data[0]);
+            head.innerHTML = `<tr><th class="w-8 text-center text-gray-500 italic">#</th>${keys.map(k => `<th>${k}</th>`).join('')}</tr>`;
+
+            const displayData = data.slice(0, 100); 
+            body.innerHTML = displayData.map((row, idx) => {
+                return `<tr>
+                    <td class="row-num">${idx + 1}</td>
+                    ${keys.map(k => `<td>${row[k] !== null ? row[k] : '<i class="text-gray-400">Null</i>'}</td>`).join('')}
+                </tr>`;
+            }).join('');
+        }
+
+        // --- 4. WORKFLOW EXECUTION ---
+
+        function runWorkflow() {
+            const status = document.getElementById('run-status');
+            status.innerText = "Running...";
+            status.classList.add('text-blue-600');
+
+            setTimeout(() => {
+                // Step 3: Join
+                const joined = LOGS.map(log => {
+                    const emp = EMPLOYEES.find(e => e.EmpID === log.UserID);
+                    return { ...log, ...emp }; // Simple merge
+                });
+                workflowState[3].data = joined;
+
+                // Step 4: DateTime
+                // Parsing depends on configured string format
+                const parsed = joined.map(row => {
+                    let parsedDt = null;
+                    if (userConfig.dtFormat === 'yyyy-MM-dd hh:mm:ss') {
+                        parsedDt = row.Timestamp; 
+                    }
+                    return { ...row, Parsed_Timestamp: parsedDt };
+                });
+                workflowState[4].data = parsed;
+
+                // Step 5: Formula
+                // Calculate Login_Hour and Risk_Level natively 
+                const scored = parsed.map(row => {
+                    let hour = null;
+                    if (row.Parsed_Timestamp !== null) {
+                        hour = new Date(row.Parsed_Timestamp).getHours();
+                    }
+
+                    let risk = null;
+                    if (row.Status === 'Terminated') risk = 'Critical';
+                    else if (hour !== null && (hour < 6 || hour > 22)) risk = 'High';
+                    else if (row.IP_Address.startsWith('45.')) risk = 'Medium';
+                    
+                    return { ...row, Login_Hour: hour, Risk_Level: risk };
+                });
+                workflowState[5].data = scored;
+
+                // Step 6: Filter
+                const filteredT = scored.filter(r => r.Risk_Level !== null);
+                const filteredF = scored.filter(r => r.Risk_Level === null);
+                workflowState[6].dataT = filteredT;
+                workflowState[6].dataF = filteredF;
+                workflowState[6].data = filteredT; // Default for normal tool click
+
+                // Step 7: Sort
+                const riskWeight = { 'Critical': 3, 'High': 2, 'Medium': 1 };
+                const sorted = [...filteredT].sort((a, b) => {
+                    return riskWeight[b.Risk_Level] - riskWeight[a.Risk_Level];
+                });
+                workflowState[7].data = sorted;
+
+                // Step 8: Output
+                workflowState[8].data = sorted;
+
+                workflowRun = true;
+
+                // UI Updates
+                document.querySelectorAll('.tool-node').forEach(n => n.classList.add('completed'));
+                status.innerText = `Finished in 0.8s with ${sorted.length} alerts`;
+                status.classList.remove('text-blue-600');
+                status.classList.add('text-green-600');
+
+                // Refresh current view
+                selectNode(currentStep);
+
+            }, 600); // Fake delay for realism
+        }
+
+        // --- 5. EXPORT LOGIC ---
+        function downloadData() {
+            if (!workflowRun) {
+                alert("Please click the 'Run Workflow' button (blue play icon) before exporting.");
+                return;
+            }
+            if (typeof XLSX === 'undefined') {
+                alert("Excel library loading... please wait.");
+                return;
+            }
+            const wb = XLSX.utils.book_new();
+            const wsFindings = XLSX.utils.json_to_sheet(workflowState[7].data);
+            XLSX.utils.book_append_sheet(wb, wsFindings, "Audit_Findings");
+            XLSX.writeFile(wb, "Final_Audit_Findings.xlsx");
+        }
+
+        // Init
+        window.onload = () => {
+            selectNode(1);
+        };
+    </script>
+</body>
+</html>
