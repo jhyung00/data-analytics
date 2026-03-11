@@ -185,6 +185,10 @@
         .anim-calc-3 { animation: iterCalc3 8s infinite; }
         
         .anim-total { animation: iterShowTotal 8s infinite; }
+
+        /* Instructor Mode Styles */
+        .instructor-answer { display: none !important; }
+        .instructor-mode .instructor-answer { display: block !important; animation: fade-in 0.3s ease-out; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden">
@@ -232,6 +236,10 @@
                     <div class="w-px h-8 bg-slate-200 mx-1"></div>
                     <button onclick="app.resetCurrentModule()" class="text-sm px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg flex items-center gap-2 transition-colors">
                         <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reset
+                    </button>
+                    <!-- Instructor Padlock -->
+                    <button onclick="app.toggleInstructor()" title="Instructor Mode (Password Protected)" class="text-sm px-3 py-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-2 transition-colors">
+                        <i data-lucide="lock" id="instructor-icon" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
@@ -306,15 +314,16 @@
         // --- 1. DATA & METADATA ---
         
         const DAX_METADATA = {
-            tables: ['Sales', 'Products', 'Calendar', 'Customer'],
+            tables: ['Sales', 'Products', 'Calendar', 'Customer', 'tblFactTransactions', 'Dim_Account', 'Dim_Department', 'Dim_Entity'],
             columns: {
                 'Sales': ['Sales[Price]', 'Sales[Quantity]', 'Sales[Date]', 'Sales[OrderNo]', 'Sales[Total Cost]'],
                 'Products': ['Products[Product Name]', 'Products[Color]', 'Products[Category]'],
                 'Calendar': ['Calendar[Date]', 'Calendar[Year]', 'Calendar[Month]'],
-                'Customer': ['Customer[FirstName]', 'Customer[LastName]', 'Customer[FullName]']
+                'Customer': ['Customer[FirstName]', 'Customer[LastName]', 'Customer[FullName]'],
+                'tblFactTransactions': ['tblFactTransactions[Net]', 'tblFactTransactions[Credit]', 'tblFactTransactions[Debit]', 'tblFactTransactions[TransID]']
             },
             measures: [
-                '[Total Revenue]', '[Total Units]'
+                '[Total Revenue]', '[Total Units]', '[Net Amount]'
             ],
             functions: [
                 { name: 'SUM', sig: 'SUM(<column>)' },
@@ -337,7 +346,8 @@
                 { name: 'ALLEXCEPT', sig: 'ALLEXCEPT(<table>, <column1>, ...)' },
                 { name: 'CONCATENATE', sig: 'CONCATENATE(<text1>, <text2>)' },
                 { name: 'FORMAT', sig: 'FORMAT(<value>, <format_string>)' },
-                { name: 'RELATED', sig: 'RELATED(<column>)' }
+                { name: 'RELATED', sig: 'RELATED(<column>)' },
+                { name: 'ABS', sig: 'ABS(<number>)' }
             ]
         };
 
@@ -781,38 +791,248 @@
                 `,
                 project: {
                     title: "Comprehensive Lab",
-                    brief: "Download the dataset and build the report locally.",
+                    brief: "Complete the instructions embedded in the interactive viewer below.",
                     steps: [
-                        "Download the <strong>Star Schema Data</strong> file and Instructions.",
-                        "Import tables: Fact_Transactions, Dim_Account, Dim_Department, Dim_Entity.",
-                        "Create Relationships (Star Schema).",
-                        "Create Measures: Total Revenue (Credit - Debit), Net Income.",
-                        "Create YTD and PY comparisons."
+                        "Download the <strong>Star Schema Data</strong> file.",
+                        "Follow Phase 1 and Phase 2 to build core measures.",
+                        "Challenge yourself with the Bonus sections.",
+                        "Answer the analytical questions in Part D."
                     ]
                 },
                 inputs: [],
                 renderDemo: (container) => {
                     container.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-full text-center p-8 bg-slate-50">
-                            <div class="bg-white p-6 rounded-xl shadow-lg border max-w-lg w-full">
-                                <h3 class="text-lg font-bold text-slate-800 mb-2">Final Challenge: Star Schema</h3>
-                                <div class="text-left text-xs bg-slate-100 p-4 rounded mb-6 space-y-2 font-mono">
-                                    <p><strong>Fact Table:</strong> Fact_Transactions (90 rows)</p>
-                                    <ul class="list-disc pl-4 text-slate-500">
-                                        <li>Cols: TransID, Date, AcctNo, DeptCode, Debit, Credit, Net</li>
+                        <div class="flex flex-col h-full bg-white rounded-xl shadow-sm border overflow-hidden">
+                            <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 z-10">
+                                <h3 class="font-bold text-lg text-slate-800">Capstone Lab Instructions</h3>
+                                <a href="data/PowerBI_DAX_Accounting_Student.xlsx" download class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded flex items-center gap-2 transition-transform active:scale-95 no-underline">
+                                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Download Data (Excel)
+                                </a>
+                            </div>
+                            
+                            <div class="flex-1 overflow-y-auto p-8 space-y-8 text-slate-700 text-sm">
+                                
+                                <!-- Part A -->
+                                <section>
+                                    <h4 class="font-bold text-lg text-slate-800 mb-3 border-b pb-1">Part A — Import + Model Setup</h4>
+                                    <p class="mb-2 text-red-600 font-bold text-xs bg-red-50 p-2 rounded border border-red-200">Important for copy/paste: The DAX below assumes your Power BI model uses these exact table names: tblFactTransactions, tblDimAccount, tblDimDepartment, tblDimEntity, and tblCalendarRef.</p>
+                                    <ul class="list-disc pl-5 space-y-2">
+                                        <li>Import these tables from the workbook: tblFactTransactions, tblDimAccount, tblDimDepartment, tblDimEntity, and tblCalendarRef.</li>
+                                        <li>Create these star-schema relationships:
+                                            <ul class="list-none pl-5 mt-1 text-xs font-mono text-slate-600 bg-slate-50 p-2 rounded border space-y-1">
+                                                <li>tblFactTransactions[AccountNo] <i data-lucide="arrow-right" class="w-3 h-3 inline"></i> tblDimAccount[AccountNo]</li>
+                                                <li>tblFactTransactions[DeptCode] <i data-lucide="arrow-right" class="w-3 h-3 inline"></i> tblDimDepartment[DeptCode]</li>
+                                                <li>tblFactTransactions[EntityID] <i data-lucide="arrow-right" class="w-3 h-3 inline"></i> tblDimEntity[EntityID]</li>
+                                                <li>tblFactTransactions[TransDate] <i data-lucide="arrow-right" class="w-3 h-3 inline"></i> tblCalendarRef[Date]</li>
+                                            </ul>
+                                        </li>
+                                        <li>Mark tblCalendarRef as the date table using the Date column.</li>
                                     </ul>
-                                    <p><strong>Dimensions:</strong> Dim_Account, Dim_Department, Dim_Entity</p>
-                                    <p><strong>Task:</strong> Build Model & YTD Measures</p>
-                                </div>
-                                <div class="space-y-3">
-                                    <a href="data/PowerBI_DAX_Accounting_Student.xlsx" download class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded flex items-center justify-center gap-2 transition-transform active:scale-95 no-underline">
-                                        <i data-lucide="file-spreadsheet" class="w-5 h-5"></i> Download Student Data (Excel)
-                                    </a>
-                                    <a href="data/PowerBI_DAX_Accounting_Lab_Instruction.pdf" download class="block w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded flex items-center justify-center gap-2 transition-transform active:scale-95 no-underline">
-                                        <i data-lucide="file-text" class="w-5 h-5"></i> Download Instructions (PDF)
-                                    </a>
-                                </div>
-                                <p class="text-xs text-slate-400 mt-4">Open these files in Power BI Desktop to begin.</p>
+                                </section>
+
+                                <!-- Part B Required -->
+                                <section>
+                                    <h4 class="font-bold text-lg text-slate-800 mb-3 border-b pb-1">Part B — Required Measures</h4>
+                                    <p class="mb-4 text-slate-600">Build the foundational calculations for your financial report. Think about which functions to use before revealing the answers!</p>
+                                    
+                                    <div class="space-y-4">
+                                        <!-- Group 1: Base Metrics -->
+                                        <div class="bg-slate-50 p-4 rounded-lg border">
+                                            <strong class="text-base block mb-1">Base Aggregations & Counts</strong>
+                                            <p class="text-xs text-slate-600 mb-2"><strong>Hint:</strong> How do you calculate the sum for Net Amount, Total Debit, and Total Credit? Which function gives you the transaction counts? How do you find the number of distinct entities?</p>
+                                            <details class="group/dax mt-2">
+                                                <summary class="font-semibold text-emerald-600 hover:text-emerald-800 cursor-pointer text-xs select-none flex items-center gap-1"><i data-lucide="code" class="w-3 h-3"></i> Reveal DAX</summary>
+                                                <div class="mt-2 p-3 bg-slate-800 text-green-400 font-mono text-xs rounded shadow-inner overflow-x-auto whitespace-pre">Net Amount = SUM(tblFactTransactions[Net])
+Total Debit = SUM(tblFactTransactions[Debit])
+Total Credit = SUM(tblFactTransactions[Credit])
+Transaction Count = COUNTROWS(tblFactTransactions)
+Distinct Entities = DISTINCTCOUNT(tblFactTransactions[EntityID])</div>
+                                            </details>
+                                        </div>
+
+                                        <!-- Group 2: P&L -->
+                                        <div class="bg-slate-50 p-4 rounded-lg border">
+                                            <strong class="text-base block mb-1">Income Statement Measures</strong>
+                                            <p class="text-xs text-slate-600 mb-2"><strong>Hint:</strong> Use <code>CALCULATE</code> to modify the context of your [Net Amount] measure to get specific Revenue and Expense totals. Then, do basic math for Net Income, and safely divide for Profit Margin %.</p>
+                                            <details class="group/dax mt-2">
+                                                <summary class="font-semibold text-emerald-600 hover:text-emerald-800 cursor-pointer text-xs select-none flex items-center gap-1"><i data-lucide="code" class="w-3 h-3"></i> Reveal DAX</summary>
+                                                <div class="mt-2 p-3 bg-slate-800 text-green-400 font-mono text-xs rounded shadow-inner overflow-x-auto whitespace-pre">Revenue = CALCULATE([Net Amount], tblDimAccount[AccountType] = "Revenue")
+Expense = CALCULATE([Net Amount], tblDimAccount[AccountType] = "Expense")
+Net Income = [Revenue] - [Expense]
+Profit Margin % = DIVIDE([Net Income], [Revenue])</div>
+                                            </details>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- Part B Bonus -->
+                                <section>
+                                    <h4 class="font-bold text-lg text-purple-800 mb-3 border-b border-purple-200 pb-1 flex items-center gap-2">
+                                        <i data-lucide="zap" class="w-5 h-5"></i> Part B — Bonus / Extra Measures
+                                    </h4>
+                                    
+                                    <div class="space-y-4">
+                                        <!-- Time Intel -->
+                                        <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                                            <strong class="text-base text-purple-900 block mb-1">Time Intelligence & Status</strong>
+                                            <p class="text-xs text-slate-700 mb-2"><strong>Hint:</strong> Use <code>CALCULATE</code> for specific transaction statuses. For time logic, look into DAX time-intelligence functions like <code>TOTALYTD</code> and <code>SAMEPERIODLASTYEAR</code>. Use <code>DIVIDE</code> for YoY %.</p>
+                                            <details class="group/dax mt-2">
+                                                <summary class="font-semibold text-purple-600 hover:text-purple-800 cursor-pointer text-xs select-none flex items-center gap-1"><i data-lucide="code" class="w-3 h-3"></i> Reveal DAX</summary>
+                                                <div class="mt-2 p-3 bg-slate-800 text-green-400 font-mono text-xs rounded shadow-inner overflow-x-auto whitespace-pre">Posted Net = CALCULATE([Net Amount], tblFactTransactions[Status] = "Posted")
+YTD Net = TOTALYTD([Net Amount], tblCalendarRef[Date])
+Net PY = CALCULATE([Net Amount], SAMEPERIODLASTYEAR(tblCalendarRef[Date]))
+YoY Change = [Net Amount] - [Net PY]
+YoY % = DIVIDE([YoY Change], [Net PY])</div>
+                                            </details>
+                                        </div>
+
+                                        <!-- Filters & Iterators -->
+                                        <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                                            <strong class="text-base text-purple-900 block mb-1">Filters & Iterators</strong>
+                                            <p class="text-xs text-slate-700 mb-2"><strong>Hint:</strong> You will need to nest a <code>FILTER</code> inside <code>CALCULATE</code> to check if the absolute value (<code>ABS</code>) is over 5000. How do you find missing departments? Also, what "X" function lets you multiply row-by-row before summing?</p>
+                                            <details class="group/dax mt-2">
+                                                <summary class="font-semibold text-purple-600 hover:text-purple-800 cursor-pointer text-xs select-none flex items-center gap-1"><i data-lucide="code" class="w-3 h-3"></i> Reveal DAX</summary>
+                                                <div class="mt-2 p-3 bg-slate-800 text-green-400 font-mono text-xs rounded shadow-inner overflow-x-auto whitespace-pre">Materials Net Over 5000 = 
+CALCULATE(
+    [Net Amount],
+    FILTER(
+        tblFactTransactions,
+        ABS(tblFactTransactions[Net]) > 5000
+    )
+)
+
+Missing Dept Count = 
+COUNTROWS(
+    FILTER(
+        tblFactTransactions,
+        tblFactTransactions[DeptCode] = ""
+    )
+)
+
+Extended Amount (SUMX) = 
+SUMX(
+    tblFactTransactions,
+    tblFactTransactions[Quantity] * tblFactTransactions[UnitPrice]
+)</div>
+                                            </details>
+                                        </div>
+
+                                        <!-- Ranking -->
+                                        <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                                            <strong class="text-base text-purple-900 block mb-1">Ranking & Scoping</strong>
+                                            <p class="text-xs text-slate-700 mb-2"><strong>Hint:</strong> To get % of total, divide your measure by a version of that measure that ignores all filters (<code>ALL</code>). Use <code>RANKX</code> and <code>TOPN</code> for ranking logic.</p>
+                                            <details class="group/dax mt-2">
+                                                <summary class="font-semibold text-purple-600 hover:text-purple-800 cursor-pointer text-xs select-none flex items-center gap-1"><i data-lucide="code" class="w-3 h-3"></i> Reveal DAX</summary>
+                                                <div class="mt-2 p-3 bg-slate-800 text-green-400 font-mono text-xs rounded shadow-inner overflow-x-auto whitespace-pre">% of Total by Account = 
+DIVIDE([Net Amount], CALCULATE([Net Amount], ALL(tblDimAccount)))
+
+Vendor Rank = RANKX(ALL(tblDimEntity[EntityName]), [Net Amount], , DESC)
+
+Top 5 Vendor Spend = 
+CALCULATE(
+    [Net Amount],
+    TOPN(5, ALL(tblDimEntity[EntityName]), [Net Amount], DESC)
+)</div>
+                                            </details>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- Part C -->
+                                <section>
+                                    <h4 class="font-bold text-lg text-slate-800 mb-3 border-b pb-1">Part C — Required Visuals</h4>
+                                    <p class="mb-4 text-slate-600">Build the visual dashboard in Power BI. Try to determine the correct axes, values, and visual types yourself before revealing the precise setup.</p>
+                                    
+                                    <div class="space-y-3">
+                                        <div class="bg-slate-50 p-3 rounded border">
+                                            <strong class="text-sm">1. Monthly Trend</strong>
+                                            <p class="text-xs text-slate-600 mt-1 mb-2">Create a visual showing how the Net Amount trends over time, and add a way to interactively filter by transaction status.</p>
+                                            <details>
+                                                <summary class="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer text-xs select-none">Reveal Setup</summary>
+                                                <div class="mt-2 text-xs text-slate-700 pl-4 border-l-2 border-blue-400">Use a line or clustered column chart. <strong>Axis:</strong> tblCalendarRef[YearMonth]; <strong>Values:</strong> [Net Amount]; add a slicer for tblFactTransactions[Status].</div>
+                                            </details>
+                                        </div>
+
+                                        <div class="bg-slate-50 p-3 rounded border">
+                                            <strong class="text-sm">2. Income Statement Matrix</strong>
+                                            <p class="text-xs text-slate-600 mt-1 mb-2">Create a matrix visual breaking down the Net Amount by Account Type over months/years.</p>
+                                            <details>
+                                                <summary class="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer text-xs select-none">Reveal Setup</summary>
+                                                <div class="mt-2 text-xs text-slate-700 pl-4 border-l-2 border-blue-400"><strong>Rows:</strong> tblDimAccount[AccountType]; <strong>Columns:</strong> tblCalendarRef[YearMonth]; <strong>Values:</strong> [Net Amount].</div>
+                                            </details>
+                                        </div>
+
+                                        <div class="bg-slate-50 p-3 rounded border">
+                                            <strong class="text-sm">3. Exception Cards</strong>
+                                            <p class="text-xs text-slate-600 mt-1 mb-2">Add high-level KPI cards to summarize anomalies and totals.</p>
+                                            <details>
+                                                <summary class="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer text-xs select-none">Reveal Setup</summary>
+                                                <div class="mt-2 text-xs text-slate-700 pl-4 border-l-2 border-blue-400">Use Card visuals for: [Materials Net Over 5000], [Missing Dept Count], and [Transaction Count].</div>
+                                            </details>
+                                        </div>
+
+                                        <div class="bg-slate-50 p-3 rounded border">
+                                            <strong class="text-sm">4. Top Vendors Bar Chart</strong>
+                                            <p class="text-xs text-slate-600 mt-1 mb-2">Show spending ranked by Vendor. Try to limit the chart to only the top 5 spenders.</p>
+                                            <details>
+                                                <summary class="font-semibold text-blue-600 hover:text-blue-800 cursor-pointer text-xs select-none">Reveal Setup</summary>
+                                                <div class="mt-2 text-xs text-slate-700 pl-4 border-l-2 border-blue-400">Use a Bar Chart. <strong>Axis:</strong> tblDimEntity[EntityName]; <strong>Values:</strong> [Net Amount]; apply a Top 5 visual level filter (or use your Top 5 measure).</div>
+                                            </details>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <!-- Part D -->
+                                <section>
+                                    <h4 class="font-bold text-lg text-emerald-800 mb-3 border-b border-emerald-200 pb-1 flex items-center gap-2">
+                                        <i data-lucide="help-circle" class="w-5 h-5"></i> Part D: Student Questions
+                                    </h4>
+                                    <p class="text-sm text-slate-500 mb-4">Analyze your report to answer the following questions.</p>
+
+                                    <div class="grid gap-4">
+                                        <div class="border rounded-lg p-4 bg-white shadow-sm">
+                                            <p class="font-bold text-slate-700">Q1. What is [Net Income] for the full period?</p>
+                                            <div class="instructor-answer">
+                                                <div class="mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded text-emerald-800 text-sm font-medium flex items-center gap-2">
+                                                    <i data-lucide="key" class="w-4 h-4"></i> Answer: Check the Income Statement Matrix Total.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border rounded-lg p-4 bg-white shadow-sm">
+                                            <p class="font-bold text-slate-700">Q2. Why is [Posted Net] different from [Net Amount]?</p>
+                                            <div class="instructor-answer">
+                                                <div class="mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded text-emerald-800 text-sm font-medium flex items-center gap-2">
+                                                    <i data-lucide="key" class="w-4 h-4"></i> Answer: Net Amount includes all statuses (e.g., Unposted/Draft transactions).
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border rounded-lg p-4 bg-white shadow-sm">
+                                            <p class="font-bold text-slate-700">Q3. How many transactions are missing DeptCode? Why is that a reporting risk?</p>
+                                            <div class="instructor-answer">
+                                                <div class="mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded text-emerald-800 text-sm font-medium flex items-center gap-2">
+                                                    <i data-lucide="key" class="w-4 h-4"></i> Answer: View your [Missing Dept Count] card. Blank codes distort departmental P&L allocations.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border rounded-lg p-4 bg-white shadow-sm">
+                                            <p class="font-bold text-slate-700">Q4. From the transactions fact table, without creating a calculated column, how do we calculate the sum of revenue? (quantity x price)</p>
+                                            <div class="instructor-answer">
+                                                <div class="mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded text-emerald-800 text-sm font-medium flex items-center gap-2">
+                                                    <i data-lucide="key" class="w-4 h-4"></i> Answer: Use the SUMX iterator function to multiply Quantity and UnitPrice row-by-row before aggregating the total.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="border rounded-lg p-4 bg-white shadow-sm">
+                                            <p class="font-bold text-slate-700">Q5. Which vendor has the highest net impact?</p>
+                                            <div class="instructor-answer">
+                                                <div class="mt-3 p-2 bg-emerald-50 border border-emerald-200 rounded text-emerald-800 text-sm font-medium flex items-center gap-2">
+                                                    <i data-lucide="key" class="w-4 h-4"></i> Answer: Look at the Top Vendors Bar Chart to find the #1 Vendor Rank.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                                
                             </div>
                         </div>
                     `;
@@ -824,11 +1044,31 @@
         // --- 2. APP LOGIC ---
         const app = {
             activeModuleIndex: 0,
+            isInstructor: false,
             
             init() {
                 this.renderSidebar();
                 this.loadModule(0);
                 lucide.createIcons();
+            },
+
+            toggleInstructor() {
+                if (this.isInstructor) {
+                    this.isInstructor = false;
+                    document.body.classList.remove('instructor-mode');
+                    document.getElementById('instructor-icon').setAttribute('data-lucide', 'lock');
+                    lucide.createIcons();
+                } else {
+                    const pwd = prompt("Enter Instructor Password:");
+                    if (pwd === "teacher") {
+                        this.isInstructor = true;
+                        document.body.classList.add('instructor-mode');
+                        document.getElementById('instructor-icon').setAttribute('data-lucide', 'unlock');
+                        lucide.createIcons();
+                    } else if (pwd !== null) {
+                        alert("Incorrect password.");
+                    }
+                }
             },
 
             renderSidebar() {
@@ -1176,7 +1416,7 @@
                 <div class="flex h-full gap-4">
                     <div class="flex-1 flex flex-col">
                         <div class="flex-1 bg-white border rounded shadow-sm p-4 overflow-y-auto">
-                           ${inputsHTML}
+                            ${inputsHTML}
                         </div>
                     </div>
                     <div class="w-1/3 bg-white border rounded shadow-sm p-0 flex flex-col">
@@ -1270,7 +1510,7 @@
                 <div class="flex h-full gap-4">
                     <div class="flex-1 flex flex-col gap-4">
                         <div class="bg-white border rounded shadow-sm p-4">
-                           ${inputsHTML}
+                            ${inputsHTML}
                         </div>
                         <div class="flex-1 bg-white border rounded shadow-sm p-2 flex flex-col overflow-hidden">
                             <div class="text-[10px] font-bold border-b pb-1 mb-1">Data Context (Products & Sales)</div>
