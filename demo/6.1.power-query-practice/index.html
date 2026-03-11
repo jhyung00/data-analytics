@@ -12,11 +12,11 @@
         body { font-family: 'Inter', sans-serif; }
         .mono { font-family: 'JetBrains Mono', monospace; }
         
-        /* Custom Scrollbar */
+        /* Custom Scrollbar - Amber theme */
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar-track { background: #fefce8; }
+        ::-webkit-scrollbar-thumb { background: #fcd34d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
 
         .timeline-line {
             position: absolute;
@@ -24,34 +24,38 @@
             top: 0;
             bottom: 0;
             width: 2px;
-            background-color: #e2e8f0;
+            background-color: #fde68a; /* amber-200 */
             z-index: 0;
         }
 
         .step-card {
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .step-card:hover {
-            border-color: #3b82f6;
+            border-color: #f59e0b;
+            box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.1), 0 4px 6px -2px rgba(245, 158, 11, 0.05);
             transform: translateX(4px);
+        }
+        
+        .think-box {
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(245, 158, 11, 0.03) 10px, rgba(245, 158, 11, 0.03) 20px);
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden">
+<body class="bg-yellow-50 text-slate-800 h-screen flex overflow-hidden">
 
     <!-- Mobile Overlay (Backdrop) -->
-    <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-20 hidden transition-opacity md:hidden glass"></div>
+    <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/60 z-20 hidden transition-opacity md:hidden backdrop-blur-sm"></div>
 
-    <!-- Sidebar Navigation -->
-    <!-- Added: fixed positioning for mobile, transform logic for drawer effect, md:relative for desktop -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 shadow-xl z-30 transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0">
-        <div class="p-6 border-b border-slate-700 flex justify-between items-center">
+    <!-- Sidebar Navigation - Beach Theme (Teal/Cyan) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-teal-800 text-teal-50 flex flex-col flex-shrink-0 shadow-xl z-30 transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0 border-r border-teal-600">
+        <div class="p-6 border-b border-teal-900/50 flex justify-between items-center bg-teal-900/30">
             <div>
-                <h1 class="font-bold text-xl tracking-tight"><i class="fa-solid fa-table-pivot text-emerald-400 mr-2"></i>PQ Academy</h1>
-                <p class="text-xs text-slate-400 mt-1 uppercase tracking-wider">Beginner 4-File Lab</p>
+                <h1 class="font-bold text-xl tracking-tight text-white"><i class="fa-solid fa-table-pivot text-amber-300 mr-2 drop-shadow-md"></i>PQ Academy</h1>
+                <p class="text-xs text-teal-200 mt-1 uppercase tracking-wider font-semibold">Beginner 4-File Lab</p>
             </div>
             <!-- Mobile Close Button -->
-            <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-white">
+            <button onclick="toggleSidebar()" class="md:hidden text-teal-200 hover:text-white transition-colors">
                 <i class="fa-solid fa-times text-lg"></i>
             </button>
         </div>
@@ -59,54 +63,54 @@
         <nav class="flex-1 overflow-y-auto py-4">
             <ul class="space-y-1">
                 <li>
-                    <button onclick="showSection('overview'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-slate-800 border-l-4 border-transparent hover:border-emerald-400 transition-all flex items-center bg-slate-800 border-emerald-400" id="btn-overview">
+                    <button onclick="showSection('overview'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-teal-900 border-l-4 border-transparent hover:border-amber-400 transition-all flex items-center bg-teal-900 border-amber-400 text-amber-400" id="btn-overview">
                         <i class="fa-solid fa-map w-6"></i> Setup & Outcomes
                     </button>
                 </li>
                 <li>
-                    <button onclick="showSection('dataset'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-slate-800 border-l-4 border-transparent hover:border-emerald-400 transition-all flex items-center" id="btn-dataset">
+                    <button onclick="showSection('dataset'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-teal-900 border-l-4 border-transparent hover:border-amber-400 transition-all flex items-center" id="btn-dataset">
                         <i class="fa-solid fa-database w-6"></i> Dataset Context
                     </button>
                 </li>
                 <li>
-                    <button onclick="showSection('day1'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-slate-800 border-l-4 border-transparent hover:border-emerald-400 transition-all flex items-center" id="btn-day1">
-                        <i class="fa-solid fa-wand-magic-sparkles w-6"></i> Part 1: Clean
+                    <button onclick="showSection('day1'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-teal-900 border-l-4 border-transparent hover:border-amber-400 transition-all flex items-center" id="btn-day1">
+                        <i class="fa-solid fa-broom w-6"></i> Part 1: Clean
                     </button>
                 </li>
                 <li>
-                    <button onclick="showSection('day2'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-slate-800 border-l-4 border-transparent hover:border-emerald-400 transition-all flex items-center" id="btn-day2">
+                    <button onclick="showSection('day2'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-teal-900 border-l-4 border-transparent hover:border-amber-400 transition-all flex items-center" id="btn-day2">
                         <i class="fa-solid fa-network-wired w-6"></i> Part 2: Merge & Report
                     </button>
                 </li>
             </ul>
         </nav>
 
-        <div class="p-4 border-t border-slate-700 flex justify-between items-center">
-            <div class="text-xs text-slate-500">v3.1</div>
+        <div class="p-4 border-t border-teal-900/50 flex justify-between items-center bg-teal-900/20">
+            <div></div>
             <!-- Tiny Hidden Key -->
-            <button onclick="openPasswordModal()" class="text-slate-700 hover:text-amber-400 transition-colors p-1" title="Instructor Access">
+            <button onclick="openPasswordModal()" class="text-teal-600 hover:text-amber-400 transition-colors p-1" title="Instructor Access">
                 <i class="fa-solid fa-key text-[10px]"></i>
             </button>
         </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto relative w-full bg-slate-50">
+    <main class="flex-1 overflow-y-auto relative w-full bg-yellow-50/50">
         
         <!-- HEADER -->
-        <header class="bg-white border-b border-slate-200 sticky top-0 z-10 px-4 md:px-8 py-4 flex justify-between items-center shadow-sm">
+        <header class="bg-white border-b border-amber-200/60 sticky top-0 z-10 px-4 md:px-8 py-4 flex justify-between items-center shadow-sm">
             <div class="flex items-center gap-3">
                 <!-- Mobile Toggle Button -->
-                <button onclick="toggleSidebar()" class="md:hidden text-slate-600 hover:text-slate-900 focus:outline-none">
+                <button onclick="toggleSidebar()" class="md:hidden text-slate-600 hover:text-amber-600 focus:outline-none">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
                 <div>
                     <h2 class="text-lg md:text-2xl font-bold text-slate-800 truncate max-w-[200px] md:max-w-none" id="page-title">Course Setup</h2>
-                    <p class="text-xs md:text-sm text-slate-500 hidden md:block">Beginner Mode (Zero Formulas)</p>
+                    <p class="text-xs md:text-sm text-slate-500 hidden md:block">Beginner Mode</p>
                 </div>
             </div>
             <div class="flex gap-3">
-                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold border border-blue-200 whitespace-nowrap">2 Parts</span>
+                <span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold border border-amber-200 whitespace-nowrap shadow-sm"><i class="fa-solid fa-bolt mr-1"></i>Power Query</span>
             </div>
         </header>
 
@@ -117,39 +121,44 @@
             <section id="overview" class="content-section block animate-fade-in">
                 
                 <!-- Setup Card -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-8 mb-6">
+                <div class="bg-white rounded-xl shadow-sm border border-amber-200 p-5 md:p-8 mb-6 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
                     <h3 class="text-xl font-bold mb-4 text-slate-800">Part 0: Pre-Class Setup</h3>
-                    <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6">
+                    <div class="bg-amber-50 border border-amber-200 p-4 mb-6 rounded flex items-center justify-between">
                         <p class="text-amber-800 text-sm font-semibold">
                             <i class="fa-solid fa-stopwatch mr-2"></i>Time required: 2 minutes
                         </p>
+                        <i class="fa-solid fa-gears text-amber-200 text-2xl"></i>
                     </div>
                     <div class="space-y-4">
                         <div class="flex items-start">
-                            <div class="bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 shrink-0">1</div>
+                            <div class="bg-amber-100 text-amber-700 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 shrink-0 border border-amber-200">1</div>
                             <div>
-                                <h4 class="font-bold">Download Data</h4>
+                                <h4 class="font-bold text-slate-800">Download Data</h4>
                                 <p class="text-slate-600 text-sm">Download the 4 individual CSV files from the <strong>Dataset Context</strong> tab.</p>
                             </div>
                         </div>
                         <div class="flex items-start">
-                            <div class="bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 shrink-0">2</div>
+                            <div class="bg-amber-100 text-amber-700 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 shrink-0 border border-amber-200">2</div>
                             <div>
-                                <h4 class="font-bold">Initialize Excel</h4>
-                                <p class="text-slate-600 text-sm">Open Excel &rarr; Create new blank workbook &rarr; Save as <code class="bg-slate-100 px-1 rounded border break-all">PQ_ETL_Lab.xlsx</code>.</p>
+                                <h4 class="font-bold text-slate-800">Initialize Excel</h4>
+                                <p class="text-slate-600 text-sm">Open Excel &rarr; Create new blank workbook &rarr; Save as <code class="bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded border border-yellow-200 break-all font-mono text-xs">PQ_ETL_Lab.xlsx</code>.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Learning Outcomes Card -->
-                <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-5 md:p-8">
-                    <h3 class="text-xl font-bold mb-6 text-slate-800">Learning Outcomes</h3>
-                    
+                <div class="bg-white rounded-xl shadow-sm border border-amber-200 p-5 md:p-8">
+                    <h3 class="text-xl font-bold mb-6 text-slate-800"><i class="fa-solid fa-bullseye text-amber-500 mr-2"></i>Educational Outcomes</h3>
+
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <!-- Card 1 -->
-                        <div class="bg-white p-5 rounded-lg border border-slate-200">
-                            <h4 class="font-bold text-emerald-600 mb-2">"T" in ETL (Transform)</h4>
+                        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 hover:border-amber-300 transition-colors">
+                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-slate-200 mb-3 shadow-sm text-amber-600">
+                                <i class="fa-solid fa-broom"></i>
+                            </div>
+                            <h4 class="font-bold text-slate-800 mb-2">"T" in ETL (Transform)</h4>
                             <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
                                 <li>Trim/Clean text</li>
                                 <li>Replace Values (Standardization)</li>
@@ -158,8 +167,11 @@
                         </div>
 
                         <!-- Card 2 -->
-                        <div class="bg-white p-5 rounded-lg border border-slate-200">
-                            <h4 class="font-bold text-blue-600 mb-2">"E/L" in ETL (Extract/Load)</h4>
+                        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 hover:border-amber-300 transition-colors">
+                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-slate-200 mb-3 shadow-sm text-amber-600">
+                                <i class="fa-solid fa-link"></i>
+                            </div>
+                            <h4 class="font-bold text-slate-800 mb-2">"E/L" in ETL (Extract/Load)</h4>
                             <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
                                 <li>Import multiple tables</li>
                                 <li>Merge queries (Joins)</li>
@@ -168,8 +180,11 @@
                         </div>
 
                         <!-- Card 3 -->
-                        <div class="bg-white p-5 rounded-lg border border-slate-200">
-                            <h4 class="font-bold text-purple-600 mb-2">Controls Mindset</h4>
+                        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 hover:border-amber-300 transition-colors">
+                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-slate-200 mb-3 shadow-sm text-red-500">
+                                <i class="fa-solid fa-shield"></i>
+                            </div>
+                            <h4 class="font-bold text-slate-800 mb-2">Audit & Risk Controls</h4>
                             <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
                                 <li>Duplicates check (Payment risk)</li>
                                 <li>PO match check (Procurement control)</li>
@@ -184,15 +199,15 @@
             <section id="dataset" class="content-section hidden animate-fade-in">
                 
                 <!-- Intro -->
-                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 md:p-6 mb-8 rounded-r-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="bg-white border-l-4 border-amber-500 p-4 md:p-6 mb-8 rounded-r-lg shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h3 class="font-bold text-blue-800 text-lg">Download Beginner Materials</h3>
-                        <p class="text-blue-700 text-sm mt-1">
-                            Click "Download All" to get the 4 CSV files tailored for this specific script.
+                        <h3 class="font-bold text-slate-800 text-lg">Download Lab Materials</h3>
+                        <p class="text-slate-600 text-sm mt-1">
+                            Click "Download All" to get the 4 CSV files. Take a moment to understand the context of each file below before you begin the lab.
                         </p>
                     </div>
-                    <button onclick="downloadAllFiles()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition-colors">
-                        Download All (4 Files)
+                    <button onclick="downloadAllFiles()" class="w-full md:w-auto bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-6 rounded shadow transition-colors flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i> Download All (4 Files)
                     </button>
                 </div>
 
@@ -200,64 +215,62 @@
                 <div class="space-y-6">
                     
                     <!-- File 1 -->
-                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2">
-                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-file-csv text-emerald-500 mr-2"></i>Raw_AP_Transactions.csv</h4>
-                            <button onclick="downloadFile('raw_ap')" class="self-start md:self-auto text-xs font-bold text-blue-600 hover:underline border border-blue-100 bg-blue-50 px-3 py-1 rounded">Download</button>
+                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-slate-100 px-3 py-1 rounded-bl-lg text-xs font-bold text-slate-500 border-b border-l border-slate-200">Fact Table</div>
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2 mt-2">
+                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-file-csv text-slate-400 mr-2"></i>Raw_AP_Transactions.csv</h4>
+                            <button onclick="downloadFile('raw_ap')" class="self-start md:self-auto text-xs font-bold text-amber-700 hover:text-amber-900 border border-amber-200 bg-amber-50 px-3 py-1 rounded transition-colors">Download</button>
                         </div>
-                        <p class="text-sm text-slate-600 mb-3 font-semibold">The Messy Operational Data</p>
-                        <div class="text-sm text-slate-600 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-slate-50 p-3 rounded">
-                                <span class="uppercase text-xs font-bold text-slate-400 block mb-1">Why it's messy</span>
-                                <ul class="list-disc list-inside space-y-1">
-                                    <li>Inconsistent Vendors (Staples vs STAPLES)</li>
-                                    <li>Varying Dept names (Fin, Finance)</li>
-                                    <li>Mixed Payment Terms & Dates</li>
-                                </ul>
-                            </div>
-                            <div class="bg-slate-50 p-3 rounded">
-                                <span class="uppercase text-xs font-bold text-slate-400 block mb-1">Student Job</span>
-                                <p>Turn this into a standardized, analysis-ready AP table.</p>
-                            </div>
+                        <p class="text-sm text-slate-600 mb-4">The Messy Operational Data exported directly from an old ERP system.</p>
+                        
+                        <div class="bg-yellow-50/50 rounded-lg p-4 border border-yellow-100">
+                            <p class="text-xs uppercase tracking-wider font-bold text-amber-800 mb-2"><i class="fa-solid fa-briefcase mr-1"></i> Business Context</p>
+                            <p class="text-sm text-slate-700">Notice the inconsistencies: "Staples" vs "STAPLES", dates like "1/15/2025" mixed with "2025-01-16", and amounts that include dollar signs randomly. <strong>Your job</strong> is to build an automated pipeline that catches and fixes these human-entry errors.</p>
                         </div>
                     </div>
 
                     <!-- File 2 -->
-                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2">
-                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-map-location-dot text-blue-500 mr-2"></i>Vendor_Alias_Map.csv</h4>
-                            <button onclick="downloadFile('alias')" class="self-start md:self-auto text-xs font-bold text-blue-600 hover:underline border border-blue-100 bg-blue-50 px-3 py-1 rounded">Download</button>
+                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-slate-100 px-3 py-1 rounded-bl-lg text-xs font-bold text-slate-500 border-b border-l border-slate-200">Mapping Table</div>
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2 mt-2">
+                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-map-location-dot text-amber-500 mr-2"></i>Vendor_Alias_Map.csv</h4>
+                            <button onclick="downloadFile('alias')" class="self-start md:self-auto text-xs font-bold text-amber-700 hover:text-amber-900 border border-amber-200 bg-amber-50 px-3 py-1 rounded transition-colors">Download</button>
                         </div>
-                        <p class="text-sm text-slate-600 mb-3 font-semibold">The "Translation Table"</p>
-                        <div class="text-sm text-slate-600">
-                            <p class="mb-2">Connects messy text to official names (e.g., <code>UPS 0039</code> &rarr; <code>United Parcel Service</code>).</p>
-                            <p class="bg-blue-50 p-2 rounded inline-block text-blue-800 text-xs font-bold">Student Job: Merge to get Clean Names.</p>
+                        <p class="text-sm text-slate-600 mb-4">The "Translation Dictionary" created by the accounting team.</p>
+                        
+                        <div class="bg-yellow-50/50 rounded-lg p-4 border border-yellow-100">
+                            <p class="text-xs uppercase tracking-wider font-bold text-amber-800 mb-2"><i class="fa-solid fa-briefcase mr-1"></i> Business Context</p>
+                            <p class="text-sm text-slate-700">Because AP clerks type "UPS 0039" and "U.P.S." randomly, a simple group-by won't work. We need this file to act as a bridge, converting all variations into a clean, unified name: <code>United Parcel Service</code>.</p>
                         </div>
                     </div>
 
                     <!-- File 3 -->
-                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2">
-                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-database text-amber-500 mr-2"></i>Vendor_Master.csv</h4>
-                            <button onclick="downloadFile('vendor_master')" class="self-start md:self-auto text-xs font-bold text-blue-600 hover:underline border border-blue-100 bg-blue-50 px-3 py-1 rounded">Download</button>
+                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-slate-100 px-3 py-1 rounded-bl-lg text-xs font-bold text-slate-500 border-b border-l border-slate-200">Dim Table</div>
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2 mt-2">
+                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-database text-slate-400 mr-2"></i>Vendor_Master.csv</h4>
+                            <button onclick="downloadFile('vendor_master')" class="self-start md:self-auto text-xs font-bold text-amber-700 hover:text-amber-900 border border-amber-200 bg-amber-50 px-3 py-1 rounded transition-colors">Download</button>
                         </div>
-                        <p class="text-sm text-slate-600 mb-3 font-semibold">The Official Vendor Master</p>
-                        <div class="text-sm text-slate-600">
-                            <p class="mb-2">Contains <code>VendorID</code>, <code>Category</code>, and default terms. Only joins once names are clean.</p>
-                            <p class="bg-amber-50 p-2 rounded inline-block text-amber-800 text-xs font-bold">Student Job: Attach ID & Category.</p>
+                        <p class="text-sm text-slate-600 mb-4">The Official System of Record for Vendors.</p>
+                        
+                        <div class="bg-yellow-50/50 rounded-lg p-4 border border-yellow-100">
+                            <p class="text-xs uppercase tracking-wider font-bold text-amber-800 mb-2"><i class="fa-solid fa-briefcase mr-1"></i> Business Context</p>
+                            <p class="text-sm text-slate-700">This table contains the golden data: <code>VendorID</code> and <code>Category</code>. But notice there are no messy names here. You <strong>cannot</strong> join this table to the raw data until you've successfully cleaned the raw vendor names in Part 2!</p>
                         </div>
                     </div>
 
                     <!-- File 4 -->
-                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2">
+                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-red-100 text-red-800 px-3 py-1 rounded-bl-lg text-xs font-bold border-b border-l border-red-200">Control Table</div>
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2 mt-2">
                             <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-receipt text-red-500 mr-2"></i>Purchase_Orders.csv</h4>
-                            <button onclick="downloadFile('po')" class="self-start md:self-auto text-xs font-bold text-blue-600 hover:underline border border-blue-100 bg-blue-50 px-3 py-1 rounded">Download</button>
+                            <button onclick="downloadFile('po')" class="self-start md:self-auto text-xs font-bold text-amber-700 hover:text-amber-900 border border-amber-200 bg-amber-50 px-3 py-1 rounded transition-colors">Download</button>
                         </div>
-                        <p class="text-sm text-slate-600 mb-3 font-semibold">The "Control Test" Table</p>
-                        <div class="text-sm text-slate-600">
-                            <p class="mb-2">PO Register with approved amounts. Used for the 3-way match logic.</p>
-                            <p class="bg-red-50 p-2 rounded inline-block text-red-800 text-xs font-bold">Student Job: Compare Invoice Amount vs PO Amount.</p>
+                        <p class="text-sm text-slate-600 mb-4">The approved purchasing log used for internal audits.</p>
+                        
+                        <div class="bg-red-50/50 rounded-lg p-4 border border-red-100">
+                            <p class="text-xs uppercase tracking-wider font-bold text-red-800 mb-2"><i class="fa-solid fa-briefcase mr-1"></i> Business Context</p>
+                            <p class="text-sm text-slate-700">This is our audit test. We will compare the <code>Amount</code> billed in the AP Transactions against the <code>PO_Amount</code> approved here. Variances mean someone is over-billing us or bypassing procurement rules.</p>
                         </div>
                     </div>
 
@@ -266,179 +279,262 @@
 
             <!-- SECTION: PART 1 -->
             <section id="day1" class="content-section hidden animate-fade-in">
-                <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-2">
+                <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-2 bg-white p-6 rounded-xl border border-amber-200 shadow-sm">
                     <div>
                         <h3 class="text-2xl font-bold text-slate-800">Part 1: Clean AP Table</h3>
-                        <p class="text-slate-600">Steps 1 - 11</p>
+                        <p class="text-slate-500 mt-1">Transforming messy inputs into reliable data types. (Steps 1 - 11)</p>
                     </div>
                     <div class="text-right">
-                         <span class="text-xs bg-slate-200 px-2 py-1 rounded text-slate-600 font-mono">AP_Raw</span>
+                         <span class="text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded font-mono border border-amber-200 font-bold shadow-inner">Query: AP_Raw</span>
                     </div>
                 </div>
 
-                <div class="relative pl-10 space-y-6">
+                <div class="relative pl-10 space-y-8">
                     <div class="timeline-line"></div>
 
                     <!-- Step 1 -->
-                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">1</div>
-                        <h4 class="font-bold text-slate-800 mb-2">Import Raw Data</h4>
-                        <p class="text-sm text-slate-700">Excel Ribbon &rarr; Data &rarr; Get Data &rarr; From Text/CSV.</p>
-                        <p class="text-sm text-slate-700">Select <code>Raw_AP_Transactions.csv</code> &rarr; <strong>Transform Data</strong>.</p>
+                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">1</div>
+                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Import Raw Data</h4>
+                        <p class="text-sm text-slate-700 mb-3">Excel Ribbon &rarr; Data &rarr; Get Data &rarr; From Text/CSV.</p>
+                        <p class="text-sm text-slate-700">Select <code>Raw_AP_Transactions.csv</code> &rarr; Click <strong>Transform Data</strong> (Not Load).</p>
                     </div>
 
                     <!-- Step 2 -->
-                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">2</div>
-                        <h4 class="font-bold text-slate-800 mb-2">Rename Query</h4>
+                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">2</div>
+                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Rename Query</h4>
                         <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
-                            <li>Right-click query name &rarr; Rename.</li>
-                            <li>New Name: <code class="bg-slate-100 px-1 rounded font-bold">AP_Raw</code></li>
+                            <li>Right-click query name (on the left panel) &rarr; Rename.</li>
+                            <li>New Name: <code class="bg-slate-100 px-1.5 py-0.5 border border-slate-300 rounded font-bold text-slate-800">AP_Raw</code></li>
                         </ul>
                     </div>
 
                     <!-- Step 3-6 -->
-                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">3</div>
-                        <h4 class="font-bold text-slate-800 mb-2">Clean Text & Numbers</h4>
-                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
-                            <li><strong>Vendor:</strong> Transform &rarr; Format &rarr; Trim, then Clean.</li>
-                            <li><strong>Amount:</strong> Replace Values <code>$</code> with (blank). Replace <code>,</code> with (blank).</li>
-                            <li><strong>Amount:</strong> Transform &rarr; Data Type &rarr; Decimal Number.</li>
+                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">3</div>
+                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Clean Text & Numbers</h4>
+                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-2 mb-4">
+                            <li><strong>Vendor:</strong> Select column. Transform tab &rarr; Format &rarr; Trim. (Repeat: Format &rarr; Clean).</li>
+                            <li><strong>Amount:</strong> Right-click column &rarr; Replace Values. Find <code>$</code> and replace with (leave blank). Repeat: Find <code>,</code> and replace with (leave blank).</li>
+                            <li><strong>Amount:</strong> Click the 'ABC/123' icon in the column header &rarr; Data Type &rarr; Decimal Number.</li>
                         </ul>
+
+                        <!-- Interactive Think Box -->
+                        <div class="mt-4 border border-amber-200 rounded-lg overflow-hidden shadow-sm">
+                            <button onclick="toggleThinkBox(this)" class="w-full flex justify-between items-center text-left bg-amber-50 hover:bg-amber-100 transition-colors px-4 py-3 focus:outline-none">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-brain text-amber-600"></i>
+                                    <span class="font-bold text-amber-800 text-sm">Stop & Think: What happens if we skip the 'Trim' step?</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-amber-600 transition-transform duration-300 transform"></i>
+                            </button>
+                            <div class="hidden bg-amber-50/50 p-4 border-t border-amber-200 text-sm text-slate-700 think-box">
+                                <p><span class="text-slate-600 italic">Computers are literal. A leading space makes it an entirely different text string. " STAPLES " will not match with "STAPLES". Trimming invisible whitespace is the #1 fix for failed Joins.</span></p>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Step 7 -->
-                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">7</div>
-                        <h4 class="font-bold text-slate-800 mb-2">Fix Dates</h4>
-                        <p class="text-sm text-slate-700"><strong>InvoiceDate:</strong> Click Type Icon &rarr; Using Locale &rarr; Date (English US).</p>
-                        <p class="text-xs text-slate-500 mt-1 italic">Handles mixed formats like 1/15/2023 and 2023-01-16.</p>
+                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">7</div>
+                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Fix Dates</h4>
+                        <p class="text-sm text-slate-700 mb-2"><strong>InvoiceDate:</strong> Click Type Icon (ABC) in header &rarr; Using Locale &rarr; Date (English US).</p>
+                        <p class="text-xs text-slate-500 italic bg-slate-50 p-2 rounded border border-slate-100">This elegantly handles mixed system formats like "1/15/2025" and "2025-01-16" simultaneously.</p>
+
+                        <!-- Interactive Think Box -->
+                        <div class="mt-4 border border-amber-200 rounded-lg overflow-hidden shadow-sm">
+                            <button onclick="toggleThinkBox(this)" class="w-full flex justify-between items-center text-left bg-amber-50 hover:bg-amber-100 transition-colors px-4 py-3 focus:outline-none">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-brain text-amber-600"></i>
+                                    <span class="font-bold text-amber-800 text-sm">Stop & Think: Why fix dates if they already look correct?</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-amber-600 transition-transform duration-300 transform"></i>
+                            </button>
+                            <div class="hidden bg-amber-50/50 p-4 border-t border-amber-200 text-sm text-slate-700 think-box">
+                                <p><span class="text-slate-600 italic">If dates remain formatted as "Text", you cannot sort them chronologically (e.g., February 2024 would sort alphabetically before January 2024), nor can you extract Month/Year for period-over-period reporting.</span></p>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Step 8-9 -->
-                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">8</div>
-                        <h4 class="font-bold text-slate-800 mb-2">Standardize Dept & Terms</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            <div class="bg-slate-50 p-2 rounded">
-                                <span class="font-bold block mb-1">Dept (Replace Values)</span>
-                                Finance &rarr; FIN<br>
-                                Fin &rarr; FIN<br>
-                                Operations/Ops &rarr; OPS<br>
-                                Warehouse &rarr; WH
+                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">8</div>
+                        <h4 class="font-bold text-slate-800 mb-4 text-lg">Standardize Dept & Terms</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
+                            <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                <span class="font-bold block mb-2 text-slate-800 border-b pb-1">Dept (Right Click &rarr; Replace Values)</span>
+                                <ul class="space-y-1 text-slate-600">
+                                    <li>Finance &rarr; <strong class="text-slate-800">FIN</strong></li>
+                                    <li>Fin &rarr; <strong class="text-slate-800">FIN</strong></li>
+                                    <li>Operations/Ops &rarr; <strong class="text-slate-800">OPS</strong></li>
+                                    <li>Warehouse &rarr; <strong class="text-slate-800">WH</strong></li>
+                                </ul>
                             </div>
-                            <div class="bg-slate-50 p-2 rounded">
-                                <span class="font-bold block mb-1">Terms (Replace Values)</span>
-                                NET30/Net30 &rarr; Net 30<br>
-                                DOR &rarr; Due on receipt<br>
-                                NET15 &rarr; Net 15
+                            <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                <span class="font-bold block mb-2 text-slate-800 border-b pb-1">Terms (Right Click &rarr; Replace Values)</span>
+                                <ul class="space-y-1 text-slate-600">
+                                    <li>NET30/Net30 &rarr; <strong class="text-slate-800">Net 30</strong></li>
+                                    <li>DOR &rarr; <strong class="text-slate-800">Due on receipt</strong></li>
+                                    <li>NET15 &rarr; <strong class="text-slate-800">Net 15</strong></li>
+                                </ul>
                             </div>
                         </div>
                     </div>
 
                     <!-- Step 10-11 -->
-                    <div class="relative z-10 step-card bg-slate-100 p-4 rounded-lg border-2 border-slate-300 border-dashed">
-                        <div class="absolute -left-10 bg-slate-700 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md"><i class="fa-solid fa-flag"></i></div>
-                        <h4 class="font-bold text-slate-700 mb-2">Checkpoint & Save</h4>
-                        <ul class="text-sm text-slate-600 space-y-1 mb-2">
-                            <li><i class="fa-regular fa-square-check mr-1"></i> Dates are actual Dates (calendar icon).</li>
-                            <li><i class="fa-regular fa-square-check mr-1"></i> Amount is Decimal (1.2 icon).</li>
-                            <li><i class="fa-regular fa-square-check mr-1"></i> Depts are FIN/OPS/WH/IT.</li>
+                    <div class="relative z-10 step-card bg-amber-50 p-5 rounded-lg border-2 border-amber-300 border-dashed">
+                        <div class="absolute -left-10 bg-amber-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md"><i class="fa-solid fa-flag"></i></div>
+                        <h4 class="font-bold text-slate-800 mb-3 text-lg">Checkpoint & Save</h4>
+                        <p class="text-sm text-slate-700 mb-2 font-semibold">Verify your data types in the column headers before proceeding:</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-4 bg-white p-3 rounded border border-amber-200">
+                            <li class="flex items-center gap-2"><i class="fa-regular fa-calendar-check text-amber-500"></i> Dates are actual Dates (calendar icon).</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-hashtag text-amber-500"></i> Amount is Decimal (1.2 icon).</li>
+                            <li class="flex items-center gap-2"><i class="fa-solid fa-spell-check text-amber-500"></i> Depts are standardized to FIN/OPS/WH/IT.</li>
                         </ul>
-                        <p class="text-sm font-bold text-slate-800">Close & Load To... &rarr; Only Create Connection.</p>
+                        <p class="text-sm font-bold text-slate-800 bg-amber-200 inline-block px-3 py-1.5 rounded">Home Tab &rarr; Close & Load To... &rarr; Only Create Connection.</p>
+                        <p class="text-xs text-slate-500 mt-2 italic">We don't want to load this messy intermediate step to the workbook yet. We have more joining to do!</p>
                     </div>
                 </div>
             </section>
 
              <!-- SECTION: PART 2 -->
              <section id="day2" class="content-section hidden animate-fade-in">
-                <div class="mb-6">
+                <div class="mb-6 bg-white p-6 rounded-xl border border-amber-200 shadow-sm">
                     <h3 class="text-2xl font-bold text-slate-800">Part 2: Merge & Report</h3>
-                    <p class="text-slate-600">Steps 12 - 22</p>
+                    <p class="text-slate-500 mt-1">Combining tables and building audit controls. (Steps 12 - 22)</p>
                 </div>
 
-                <div class="relative pl-10 space-y-6">
+                <div class="relative pl-10 space-y-8">
                     <div class="timeline-line"></div>
 
                     <!-- Step 12-14 -->
-                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">12</div>
-                        <h4 class="font-bold text-slate-800 mb-2">Merge Alias Map</h4>
-                        <ol class="list-decimal list-inside text-sm text-slate-700 space-y-1">
-                            <li>Open <code>AP_Raw</code>. New Source &rarr; <code>Vendor_Alias_Map.csv</code>.</li>
-                            <li><strong>Important:</strong> Transform &rarr; Use First Row as Headers (if needed).</li>
-                            <li>Clean <code>VendorRaw</code> (Trim/Clean).</li>
-                            <li><strong>Merge Queries:</strong> AP_Raw (Vendor) ↔ Alias (VendorRaw). Join: Left Outer.</li>
-                            <li>Expand: <code>VendorName_Clean</code> only.</li>
+                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">12</div>
+                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Merge Alias Map</h4>
+                        <ol class="list-decimal list-inside text-sm text-slate-700 space-y-2 mb-4">
+                            <li>Double click <code>AP_Raw</code> in Excel queries pane to re-open Power Query. Right click empty space in queries pane &rarr; New Query &rarr; File &rarr; Text/CSV &rarr; <code>Vendor_Alias_Map.csv</code>.</li>
+                            <li><strong>Important:</strong> Transform Tab &rarr; Use First Row as Headers (if it didn't automatically).</li>
+                            <li>Clean <code>VendorRaw</code> column (Trim/Clean) just like we did earlier.</li>
+                            <li>Click back to <code>AP_Raw</code>. Home Tab &rarr; <strong>Merge Queries</strong>. 
+                                <br><span class="ml-5 italic text-slate-500">Top table: AP_Raw (Click Vendor). Bottom table: Alias Map (Click VendorRaw). Join Kind: Left Outer.</span></li>
+                            <li>Click the expand icon <i class="fa-solid fa-arrows-left-right text-slate-400"></i> on the new column header. Select <strong>only</strong> <code>VendorName_Clean</code>. Uncheck original column prefix.</li>
                         </ol>
+
+                        <!-- Interactive Think Box -->
+                        <div class="mt-4 border border-amber-200 rounded-lg overflow-hidden shadow-sm">
+                            <button onclick="toggleThinkBox(this)" class="w-full flex justify-between items-center text-left bg-amber-50 hover:bg-amber-100 transition-colors px-4 py-3 focus:outline-none">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-brain text-amber-600"></i>
+                                    <span class="font-bold text-amber-800 text-sm">Stop & Think: Why use a 'Left Outer' join?</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-amber-600 transition-transform duration-300 transform"></i>
+                            </button>
+                            <div class="hidden bg-amber-50/50 p-4 border-t border-amber-200 text-sm text-slate-700 think-box">
+                                <p><span class="text-slate-600 italic">An Inner Join drops any row that doesn't have a match. In accounting, we can't just "delete" an invoice because a vendor was missing from our map—that's how liabilities get understated! A Left Outer Join keeps all AP invoices and simply puts a "null" where mapping is missing, allowing us to flag it for review.</span></p>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Step 15-16 -->
-                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">15</div>
-                        <h4 class="font-bold text-slate-800 mb-2">Merge Vendor Master</h4>
-                        <p class="text-sm text-slate-700 mb-2">New Source &rarr; <code>Vendor_Master.csv</code>. Clean name.</p>
-                        <p class="text-sm text-slate-700"><strong>Merge:</strong> AP_Raw (VendorName_Clean) ↔ Master (VendorName_Clean). Left Outer.</p>
-                        <p class="text-sm text-slate-700">Expand: <code>VendorID</code>, <code>Category</code>.</p>
+                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">15</div>
+                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Merge Vendor Master</h4>
+                        <p class="text-sm text-slate-700 mb-2">New Source &rarr; Text/CSV &rarr; <code>Vendor_Master.csv</code>. Clean the VendorName column (Trim/Clean).</p>
+                        <p class="text-sm text-slate-700 mb-2">Go back to <code>AP_Raw</code>. <strong>Merge Queries</strong>: AP_Raw (Select <code>VendorName_Clean</code>) ↔ Vendor Master (Select <code>VendorName_Clean</code>). Join Kind: Left Outer.</p>
+                        <p class="text-sm text-slate-700">Expand the new column. Select: <code>VendorID</code> and <code>Category</code>.</p>
                     </div>
 
                     <!-- Step 17-19 -->
-                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">17</div>
-                        <h4 class="font-bold text-slate-800 mb-2">PO Match Logic</h4>
-                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
-                            <li>New Source &rarr; <code>Purchase_Orders.csv</code>.</li>
-                            <li>Merge into AP_Raw on <code>PO_Number</code>. Expand <code>PO_Amount</code>.</li>
-                            <li><strong>Conditional Column (POMatchStatus):</strong>
-                                <ul class="pl-6 mt-1 text-xs bg-slate-50 p-2 rounded border font-mono">
-                                    <li>If PO_Amount is null -> No PO</li>
-                                    <li>Else if Amount equals PO_Amount -> Match</li>
-                                    <li>Else -> Mismatch</li>
+                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">17</div>
+                        <h4 class="font-bold text-slate-800 mb-2 text-lg">PO Match Logic (3-Way Match Check)</h4>
+                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-2 mb-4">
+                            <li>New Source &rarr; Text/CSV &rarr; <code>Purchase_Orders.csv</code>.</li>
+                            <li>Go back to <code>AP_Raw</code>. Merge Queries with Purchase Orders using the <code>PO_Number</code> columns. Expand to get <code>PO_Amount</code>.</li>
+                            <li>Add Column Tab &rarr; <strong>Conditional Column</strong> (Name it <code>POMatchStatus</code>):
+                                <ul class="pl-6 mt-2 text-xs bg-slate-800 text-amber-400 p-3 rounded border font-mono space-y-1 shadow-inner">
+                                    <li>If PO_Amount <span class="text-white">is</span> null <span class="text-white">Then</span> No PO</li>
+                                    <li>Else If Amount <span class="text-white">equals</span> [Select Column: PO_Amount] <span class="text-white">Then</span> Match</li>
+                                    <li>Else <span class="text-white">Then</span> Mismatch</li>
                                 </ul>
                             </li>
                         </ul>
+
+                        <!-- Interactive Think Box -->
+                        <div class="mt-4 border border-amber-200 rounded-lg overflow-hidden shadow-sm">
+                            <button onclick="toggleThinkBox(this)" class="w-full flex justify-between items-center text-left bg-amber-50 hover:bg-amber-100 transition-colors px-4 py-3 focus:outline-none">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-brain text-amber-600"></i>
+                                    <span class="font-bold text-amber-800 text-sm">Stop & Think: What does "No PO" indicate?</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-amber-600 transition-transform duration-300 transform"></i>
+                            </button>
+                            <div class="hidden bg-amber-50/50 p-4 border-t border-amber-200 text-sm text-slate-700 think-box">
+                                <p><span class="text-slate-600 italic">It means the business spent money without getting pre-approval from procurement. This is a massive red flag for unauthorized spending, maverick purchasing, or potential fraud. It requires immediate manager review.</span></p>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Step 20 -->
-                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">20</div>
-                        <h4 class="font-bold text-slate-800 mb-2">Duplicate Check (Duplicate Strategy)</h4>
-                        <ol class="list-decimal list-inside text-sm text-slate-700 space-y-1">
-                            <li>Right-click <code>AP_Raw</code> &rarr; <strong>Duplicate</strong> (Do NOT use Reference).</li>
-                            <li>Rename new query to <code>DupCounts</code>.</li>
-                            <li>Keep VendorName_Clean, Amount. Remove Others.</li>
-                            <li><strong>Group By:</strong> VendorName_Clean, Amount. Operation: Count Rows.</li>
-                            <li>Go back to AP_Raw. Merge <code>DupCounts</code> in. Expand Count.</li>
-                            <li>Conditional Column <code>DuplicateFlag</code>: If Count > 1 then TRUE else FALSE.</li>
+                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">20</div>
+                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Duplicate Check Strategy</h4>
+                        <ol class="list-decimal list-inside text-sm text-slate-700 space-y-2 mb-4">
+                            <li>Right-click <code>AP_Raw</code> in left pane &rarr; <strong>Duplicate</strong> (Do NOT use Reference here).</li>
+                            <li>Rename this new query to <code>DupCounts</code>.</li>
+                            <li>Select <code>VendorName_Clean</code> and <code>Amount</code>. Right click header &rarr; Remove Other Columns.</li>
+                            <li>Home Tab &rarr; <strong>Group By</strong>. 
+                                <br><span class="ml-5 italic">Group by: VendorName_Clean AND Amount (use Advanced to add grouping). New column name: 'Count'. Operation: Count Rows.</span></li>
+                            <li>Go back to <code>AP_Raw</code>. Merge Queries. Join to <code>DupCounts</code>. Click both VendorName_Clean + Amount in top, hold CTRL, click both in bottom. Expand the <code>Count</code> column.</li>
+                            <li>Add Conditional Column named <code>DuplicateRisk</code>: If Count > 1 then TRUE else FALSE.</li>
                         </ol>
+
+                         <!-- Interactive Think Box -->
+                         <div class="mt-4 border border-amber-200 rounded-lg overflow-hidden shadow-sm">
+                            <button onclick="toggleThinkBox(this)" class="w-full flex justify-between items-center text-left bg-amber-50 hover:bg-amber-100 transition-colors px-4 py-3 focus:outline-none">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-brain text-amber-600"></i>
+                                    <span class="font-bold text-amber-800 text-sm">Stop & Think: Is it possible for two distinct invoices to share an exact amount?</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-amber-600 transition-transform duration-300 transform"></i>
+                            </button>
+                            <div class="hidden bg-amber-50/50 p-4 border-t border-amber-200 text-sm text-slate-700 think-box">
+                                <p><span class="text-slate-600 italic">Yes, recurring flat-fee services (like a $50/mo internet bill) will have identical amounts. However, seeing the exact same dollar amount billed by the exact same vendor on the same day/week is the most common fingerprint of a duplicate invoice submission. It's a risk indicator, not a guarantee.</span></p>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Step 21-22 -->
-                    <div class="relative z-10 step-card bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md">21</div>
-                        <h4 class="font-bold text-slate-800 mb-2">Exception Report & Output</h4>
-                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
-                            <li>Right-click AP_Raw &rarr; Reference &rarr; Rename <code>Exception_Report</code>.</li>
-                            <li>Conditional Column <code>ExceptionFlag</code>: Catch null Vendors, Mismatches, or Duplicates. Filter to keep Exceptions.</li>
-                            <li>Rename AP_Raw to <code>Clean_AP_Transactions</code>.</li>
-                            <li><strong>Close & Load To:</strong> Load both as Tables on New Worksheets.</li>
+                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm border-t-4 border-t-amber-500">
+                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">21</div>
+                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Exception Report & Final Output</h4>
+                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-2 mb-4">
+                            <li>Right-click <code>AP_Raw</code> &rarr; <strong>Reference</strong> (Creates a linked view). Rename it <code>Exception_Report</code>.</li>
+                            <li>Add Conditional Column <code>ExceptionFlag</code>: Catch unmapped Vendors (VendorID is null), Mismatches, or DuplicateRisk=TRUE. </li>
+                            <li>Filter the <code>ExceptionFlag</code> column to keep only the Exceptions.</li>
+                            <li>Rename your main <code>AP_Raw</code> to <code>Clean_AP_Transactions</code>.</li>
+                            <li><strong>Home Tab &rarr; Close & Load To:</strong> Choose Table, load both the Clean table and Exception Report to New Worksheets.</li>
                         </ul>
+                        <div class="bg-green-50 text-green-800 p-3 rounded border border-green-200 flex items-center gap-2 font-bold mt-4">
+                            <i class="fa-solid fa-check-circle text-green-600 text-xl"></i>
+                            Lab Complete! You built an automated ETL and Audit pipeline.
+                        </div>
                     </div>
                 </div>
             </section>
 
              <!-- SECTION: INSTRUCTOR KEY -->
              <section id="instructor" class="content-section hidden animate-fade-in">
-                <div class="bg-slate-900 text-white p-4 md:p-6 rounded-t-lg flex justify-between items-center">
-                    <h3 class="text-lg md:text-xl font-bold"><i class="fa-solid fa-lock mr-2 text-amber-400"></i>Instructor Script</h3>
-                    <button onclick="lockInstructor()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1 rounded">Lock Section</button>
+                <div class="bg-slate-900 text-white p-4 md:p-6 rounded-t-lg flex justify-between items-center border-b-4 border-amber-500">
+                    <h3 class="text-lg md:text-xl font-bold"><i class="fa-solid fa-lock mr-2 text-amber-400"></i>Instructor Script & Key</h3>
+                    <button onclick="lockInstructor()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded transition-colors border border-slate-600">Lock Section</button>
                 </div>
                 <div class="bg-white border border-slate-200 p-4 md:p-8 rounded-b-lg shadow-sm">
                     <div class="prose max-w-none text-sm text-slate-700">
-                        <h4 class="font-bold text-lg mb-4 text-slate-900">Step-by-Step Instructor Guide (No Missed Steps)</h4>
+                        <h4 class="font-bold text-xl mb-4 text-slate-900 border-b border-slate-200 pb-2">Step-by-Step Instructor Guide (No Missed Steps)</h4>
                         
-                        <div class="bg-slate-100 p-4 rounded mb-6 border-l-4 border-slate-400">
+                        <div class="bg-amber-50 p-4 rounded mb-6 border-l-4 border-amber-500 shadow-sm">
                             <strong>Part 0 — Setup:</strong>
                             <ol class="list-decimal pl-5 mt-2 space-y-1">
                                 <li>Unzip dataset to one folder.</li>
@@ -446,8 +542,8 @@
                             </ol>
                         </div>
 
-                        <h5 class="font-bold text-blue-800 mt-4 mb-2 border-b border-blue-200 pb-1">Part 1: Clean (50 min)</h5>
-                        <ul class="space-y-3 mb-6">
+                        <h5 class="font-bold text-amber-700 mt-6 mb-2 border-b border-amber-200 pb-1 text-lg">Part 1: Clean (50 min)</h5>
+                        <ul class="space-y-3 mb-6 bg-slate-50 p-4 rounded border border-slate-200">
                             <li><strong>1. Import:</strong> Data &rarr; Get Data &rarr; CSV &rarr; <code>Raw_AP_Transactions.csv</code> &rarr; Transform.</li>
                             <li><strong>2. Rename:</strong> Query name to <code>AP_Raw</code>.</li>
                             <li><strong>3. Vendor:</strong> Transform &rarr; Format &rarr; Trim, then Clean.</li>
@@ -458,8 +554,8 @@
                             <li><strong>8. Save:</strong> Close & Load To... &rarr; Only Create Connection.</li>
                         </ul>
 
-                        <h5 class="font-bold text-blue-800 mt-4 mb-2 border-b border-blue-200 pb-1">Part 2: Merge & Report (50 min)</h5>
-                        <ul class="space-y-3">
+                        <h5 class="font-bold text-amber-700 mt-6 mb-2 border-b border-amber-200 pb-1 text-lg">Part 2: Merge & Report (50 min)</h5>
+                        <ul class="space-y-3 bg-slate-50 p-4 rounded border border-slate-200">
                             <li><strong>9. Alias Map:</strong> New Source CSV &rarr; <code>Vendor_Alias_Map.csv</code>. Use First Row Headers. Clean VendorRaw.</li>
                             <li><strong>10. Merge 1:</strong> AP_Raw (Vendor) &#8596; Alias (VendorRaw). Expand <code>VendorName_Clean</code>.</li>
                             <li><strong>11. Master:</strong> New Source CSV &rarr; <code>Vendor_Master.csv</code>. Clean VendorName.</li>
@@ -478,14 +574,14 @@
     </main>
     
     <!-- PASSWORD MODAL -->
-    <div id="password-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 px-4">
-        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
-            <h3 class="font-bold text-lg mb-4 text-slate-800"><i class="fa-solid fa-lock text-amber-500 mr-2"></i>Instructor Access</h3>
-            <p class="text-xs text-slate-500 mb-3">Enter the password to view the answer key.</p>
-            <input type="password" id="instructor-pass" class="w-full border p-2 rounded mb-4 text-sm focus:border-amber-400 focus:outline-none" placeholder="Password">
-            <div class="flex justify-end gap-2">
-                <button onclick="closePasswordModal()" class="text-slate-500 hover:bg-slate-100 px-3 py-1 rounded text-sm">Cancel</button>
-                <button onclick="checkPassword()" class="bg-slate-800 text-white px-3 py-1 rounded hover:bg-slate-700 text-sm">Unlock</button>
+    <div id="password-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 px-4 transition-opacity">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm border-t-4 border-t-amber-500 transform transition-transform scale-100">
+            <h3 class="font-bold text-xl mb-2 text-slate-800"><i class="fa-solid fa-lock text-amber-500 mr-2"></i>Instructor Access</h3>
+            <p class="text-sm text-slate-500 mb-5">Enter the password to view the answer key.</p>
+            <input type="password" id="instructor-pass" class="w-full border-2 border-slate-200 p-3 rounded mb-4 text-sm focus:border-amber-400 focus:ring focus:ring-amber-200 focus:outline-none transition-all" placeholder="Enter password...">
+            <div class="flex justify-end gap-3">
+                <button onclick="closePasswordModal()" class="text-slate-500 hover:bg-slate-100 px-4 py-2 rounded text-sm font-semibold transition-colors">Cancel</button>
+                <button onclick="checkPassword()" class="bg-slate-800 text-amber-400 px-5 py-2 rounded hover:bg-slate-700 text-sm font-bold shadow transition-colors border border-slate-900">Unlock</button>
             </div>
         </div>
     </div>
@@ -497,8 +593,6 @@
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobile-overlay');
             
-            // If class -translate-x-full is present, sidebar is hidden on mobile (default state). 
-            // Removing it slides it in.
             if (sidebar.classList.contains('-translate-x-full')) {
                 sidebar.classList.remove('-translate-x-full');
                 overlay.classList.remove('hidden');
@@ -508,9 +602,7 @@
             }
         }
 
-        // Close sidebar automatically when a link is clicked on mobile
         function closeSidebarMobile() {
-            // Only act if we are in mobile mode (window width < 768px matches tailwind 'md')
             if (window.innerWidth < 768) {
                 const sidebar = document.getElementById('sidebar');
                 const overlay = document.getElementById('mobile-overlay');
@@ -523,25 +615,43 @@
         function showSection(id) {
             document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
             document.getElementById(id).classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('bg-slate-800', 'border-emerald-400', 'border-amber-400', 'text-amber-400'));
             
+            // Reset nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-teal-900', 'border-amber-400', 'text-amber-400');
+            });
+            
+            // Set active nav button
             const btn = document.getElementById('btn-' + id);
             if(btn) {
-                 if(id === 'instructor') {
-                    btn.classList.add('bg-slate-800', 'border-amber-400', 'text-amber-400');
-                } else {
-                    btn.classList.add('bg-slate-800', 'border-emerald-400');
-                }
+                btn.classList.add('bg-teal-900', 'border-amber-400', 'text-amber-400');
             }
 
             const titles = {
-                'overview': 'Course Overview & Outcomes',
+                'overview': 'Course Setup & Outcomes',
                 'dataset': 'Dataset Context',
                 'day1': 'Part 1: Clean AP Table',
                 'day2': 'Part 2: Merge & Report',
                 'instructor': 'Instructor Restricted Area'
             };
             document.getElementById('page-title').innerText = titles[id];
+            
+            // Scroll to top of main content area
+            document.querySelector('main').scrollTop = 0;
+        }
+
+        // --- Interactive Stop & Think Logic ---
+        function toggleThinkBox(btn) {
+            const contentBox = btn.nextElementSibling;
+            const chevronIcon = btn.querySelector('.fa-chevron-down');
+            
+            if (contentBox.classList.contains('hidden')) {
+                contentBox.classList.remove('hidden');
+                chevronIcon.classList.add('rotate-180');
+            } else {
+                contentBox.classList.add('hidden');
+                chevronIcon.classList.remove('rotate-180');
+            }
         }
 
         // --- 2. Instructor Lock/Unlock Logic ---
@@ -560,15 +670,18 @@
             if (pass === 'teacher') {
                 closePasswordModal();
                 showSection('instructor');
-                closeSidebarMobile(); // Close sidebar if opened on mobile
+                closeSidebarMobile(); 
             } else {
+                // Shake effect or alert
+                const input = document.getElementById('instructor-pass');
+                input.classList.add('border-red-500');
+                setTimeout(() => input.classList.remove('border-red-500'), 500);
                 alert("Incorrect password.");
-                document.getElementById('instructor-pass').value = '';
-                document.getElementById('instructor-pass').focus();
+                input.value = '';
+                input.focus();
             }
         }
         
-        // Allow Enter key to submit
         document.getElementById('instructor-pass').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 checkPassword();
@@ -682,6 +795,7 @@ PO-7810,01/10/2025,Globex Software,3000.0`
                 setTimeout(() => downloadFile(key), delay);
                 delay += 500; 
             });
+            // Show a custom nice alert instead of standard alert if desired, but standard works for simplicity
             alert("Starting 4 file downloads... Check your download folder.");
         }
 
