@@ -3,114 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Power Query Accounting ETL | Beginner 4-File</title>
+    <title>PAC-ETL: Data Maze | Beginner Quest</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&display=swap');
         
-        body { font-family: 'Inter', sans-serif; }
+        /* Deep Arcade Blue Background (Not Black) */
+        body { font-family: 'Inter', sans-serif; background-color: #0a0f24; color: #cbd5e1; }
         .mono { font-family: 'JetBrains Mono', monospace; }
+        .game-font { font-family: 'Press Start 2P', cursive; }
         
-        /* Custom Scrollbar - Amber theme */
+        /* Custom Scrollbar - Pacman Theme */
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #fefce8; }
-        ::-webkit-scrollbar-thumb { background: #fcd34d; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
+        ::-webkit-scrollbar-track { background: #0a0f24; }
+        ::-webkit-scrollbar-thumb { background: #fde047; border-radius: 4px; } /* yellow-300 */
+        ::-webkit-scrollbar-thumb:hover { background: #eab308; } /* yellow-500 */
 
         .timeline-line {
             position: absolute;
             left: 24px;
             top: 0;
             bottom: 0;
-            width: 2px;
-            background-color: #fde68a; /* amber-200 */
+            width: 4px;
+            background-color: #1e3a8a; /* blue-900 */
+            border-left: 1px solid #3b82f6;
+            border-right: 1px solid #3b82f6;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
             z-index: 0;
+            border-radius: 2px;
         }
 
+        /* Maze Wall styling for Cards */
         .step-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
+            background-color: #0f172a; 
+            border: 3px solid #1d4ed8; /* blue-700 */
+            border-radius: 12px;
+            box-shadow: inset 0 0 15px rgba(29, 78, 216, 0.4);
         }
         .step-card:hover {
-            border-color: #f59e0b;
-            box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.1), 0 4px 6px -2px rgba(245, 158, 11, 0.05);
-            transform: translateX(4px);
+            border-color: #3b82f6; /* blue-500 */
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), inset 0 0 15px rgba(59, 130, 246, 0.4);
+            transform: translateX(6px) scale(1.01);
+        }
+
+        .neon-shadow {
+            box-shadow: 4px 4px 0px 0px rgba(59, 130, 246, 0.8);
         }
         
-        .think-box {
-            background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(245, 158, 11, 0.03) 10px, rgba(245, 158, 11, 0.03) 20px);
+        .neon-text {
+            text-shadow: 0 0 10px rgba(253, 224, 71, 0.8), 0 0 20px rgba(253, 224, 71, 0.4);
+        }
+        
+        .ghost-pink { color: #ffb8ff; text-shadow: 0 0 10px #ffb8ff; }
+        .ghost-red { color: #ff0000; text-shadow: 0 0 10px #ff0000; }
+        .ghost-cyan { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+        .ghost-orange { color: #ffb852; text-shadow: 0 0 10px #ffb852; }
+
+        /* Animations */
+        @keyframes waka {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.4); }
+        }
+        .animate-waka { animation: waka 0.5s infinite; }
+
+        @keyframes pulse-yellow {
+            0%, 100% { box-shadow: 0 0 8px rgba(253, 224, 71, 0.4); }
+            50% { box-shadow: 0 0 20px rgba(253, 224, 71, 0.8); }
+        }
+        .animate-pulse-yellow { animation: pulse-yellow 2s infinite; }
+
+        /* Dot Background */
+        .bg-dots {
+            background-image: radial-gradient(#fde047 2px, transparent 2px);
+            background-size: 40px 40px;
+            background-position: 0 0;
+            background-color: #080c1d;
         }
     </style>
 </head>
-<body class="bg-yellow-50 text-slate-800 h-screen flex overflow-hidden">
+<body class="h-screen flex overflow-hidden bg-dots">
 
-    <!-- Mobile Overlay (Backdrop) -->
-    <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/60 z-20 hidden transition-opacity md:hidden backdrop-blur-sm"></div>
+    <!-- Mobile Overlay -->
+    <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/80 z-20 hidden transition-opacity md:hidden backdrop-blur-sm"></div>
 
-    <!-- Sidebar Navigation - Beach Theme (Teal/Cyan) -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-teal-800 text-teal-50 flex flex-col flex-shrink-0 shadow-xl z-30 transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0 border-r border-teal-600">
-        <div class="p-6 border-b border-teal-900/50 flex justify-between items-center bg-teal-900/30">
-            <div>
-                <h1 class="font-bold text-xl tracking-tight text-white"><i class="fa-solid fa-table-pivot text-amber-300 mr-2 drop-shadow-md"></i>PQ Academy</h1>
-                <p class="text-xs text-teal-200 mt-1 uppercase tracking-wider font-semibold">Beginner 4-File Lab</p>
+    <!-- Sidebar Navigation - Arcade Theme -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-slate-950 text-yellow-50 flex flex-col flex-shrink-0 shadow-[4px_0_20px_rgba(0,0,0,0.8)] z-30 transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0 border-r-4 border-blue-700">
+        <div class="p-6 border-b-4 border-blue-900 flex justify-between items-center bg-slate-900">
+            <div class="flex items-center gap-2">
+                <div class="text-yellow-400 text-2xl animate-waka"><i class="fa-solid fa-cookie"></i></div>
+                <div>
+                    <h1 class="font-black text-xl tracking-tight text-yellow-400 neon-text game-font text-sm mt-1">PAC-ETL</h1>
+                    <p class="text-[10px] text-blue-400 mt-1 uppercase tracking-widest font-bold">The Data Maze</p>
+                </div>
             </div>
-            <!-- Mobile Close Button -->
-            <button onclick="toggleSidebar()" class="md:hidden text-teal-200 hover:text-white transition-colors">
+            <!-- Mobile Close -->
+            <button onclick="toggleSidebar()" class="md:hidden text-blue-400 hover:text-yellow-400">
                 <i class="fa-solid fa-times text-lg"></i>
             </button>
         </div>
         
-        <nav class="flex-1 overflow-y-auto py-4">
-            <ul class="space-y-1">
+        <nav class="flex-1 overflow-y-auto py-6 px-3">
+            <ul class="space-y-4">
                 <li>
-                    <button onclick="showSection('overview'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-teal-900 border-l-4 border-transparent hover:border-amber-400 transition-all flex items-center bg-teal-900 border-amber-400 text-amber-400" id="btn-overview">
-                        <i class="fa-solid fa-map w-6"></i> Setup & Outcomes
+                    <button onclick="showSection('overview'); closeSidebarMobile()" class="nav-btn w-full text-left px-4 py-3 rounded-full hover:bg-blue-900 border-2 border-transparent transition-all flex items-center bg-blue-900 border-yellow-400 text-yellow-400 shadow-[0_0_15px_rgba(253,224,71,0.4)] font-bold game-font text-[10px] leading-relaxed" id="btn-overview">
+                        <i class="fa-solid fa-flag w-6 text-center text-lg text-white"></i> Start
                     </button>
                 </li>
                 <li>
-                    <button onclick="showSection('dataset'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-teal-900 border-l-4 border-transparent hover:border-amber-400 transition-all flex items-center" id="btn-dataset">
-                        <i class="fa-solid fa-database w-6"></i> Dataset Context
+                    <button onclick="showSection('dataset'); closeSidebarMobile()" class="nav-btn w-full text-left px-4 py-3 rounded-full hover:bg-blue-900 border-2 border-transparent transition-all flex items-center font-bold text-blue-300 game-font text-[10px] leading-relaxed" id="btn-dataset">
+                        <i class="fa-solid fa-database w-6 text-center text-lg text-white"></i> Intel
                     </button>
                 </li>
                 <li>
-                    <button onclick="showSection('day1'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-teal-900 border-l-4 border-transparent hover:border-amber-400 transition-all flex items-center" id="btn-day1">
-                        <i class="fa-solid fa-broom w-6"></i> Part 1: Clean
-                    </button>
-                </li>
-                <li>
-                    <button onclick="showSection('day2'); closeSidebarMobile()" class="nav-btn w-full text-left px-6 py-3 hover:bg-teal-900 border-l-4 border-transparent hover:border-amber-400 transition-all flex items-center" id="btn-day2">
-                        <i class="fa-solid fa-network-wired w-6"></i> Part 2: Merge & Report
+                    <button onclick="showSection('mission'); closeSidebarMobile()" class="nav-btn w-full text-left px-4 py-3 rounded-full hover:bg-blue-900 border-2 border-transparent transition-all flex items-center font-bold text-blue-300 game-font text-[10px] leading-relaxed" id="btn-mission">
+                        <i class="fa-solid fa-play w-6 text-center text-lg text-white"></i> Play
                     </button>
                 </li>
             </ul>
         </nav>
 
-        <div class="p-4 border-t border-teal-900/50 flex justify-between items-center bg-teal-900/20">
-            <div></div>
-            <!-- Tiny Hidden Key -->
-            <button onclick="openPasswordModal()" class="text-teal-600 hover:text-amber-400 transition-colors p-1" title="Instructor Access">
-                <i class="fa-solid fa-key text-[10px]"></i>
+        <div class="p-4 border-t-4 border-blue-900 flex justify-between items-center bg-slate-900">
+            <div class="text-[10px] text-blue-500 font-mono tracking-widest flex gap-2">
+                <i class="fa-solid fa-heart text-red-500"></i>
+                <i class="fa-solid fa-heart text-red-500"></i>
+                <i class="fa-solid fa-heart text-red-500"></i>
+            </div>
+            <button onclick="openPasswordModal()" class="text-slate-600 hover:text-yellow-400 transition-colors p-1" title="Admin Override">
+                <i class="fa-solid fa-key text-[12px]"></i>
             </button>
         </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto relative w-full bg-yellow-50/50">
+    <main class="flex-1 overflow-y-auto relative w-full h-full">
         
         <!-- HEADER -->
-        <header class="bg-white border-b border-amber-200/60 sticky top-0 z-10 px-4 md:px-8 py-4 flex justify-between items-center shadow-sm">
+        <header class="bg-blue-950/90 backdrop-blur-md border-b-4 border-blue-600 sticky top-0 z-10 px-4 md:px-8 py-4 flex justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
             <div class="flex items-center gap-3">
-                <!-- Mobile Toggle Button -->
-                <button onclick="toggleSidebar()" class="md:hidden text-slate-600 hover:text-amber-600 focus:outline-none">
+                <button onclick="toggleSidebar()" class="md:hidden text-yellow-400 hover:text-white focus:outline-none">
                     <i class="fa-solid fa-bars text-xl"></i>
                 </button>
                 <div>
-                    <h2 class="text-lg md:text-2xl font-bold text-slate-800 truncate max-w-[200px] md:max-w-none" id="page-title">Course Setup</h2>
-                    <p class="text-xs md:text-sm text-slate-500 hidden md:block">Beginner Mode</p>
+                    <h2 class="text-sm md:text-lg font-bold text-white tracking-wide game-font uppercase" id="page-title">Ready!</h2>
                 </div>
             </div>
-            <div class="flex gap-3">
-                <span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold border border-amber-200 whitespace-nowrap shadow-sm"><i class="fa-solid fa-bolt mr-1"></i>Power Query</span>
+            <div class="flex gap-3 text-xs md:text-sm font-bold text-white game-font">
+                SCORE: <span id="scoreDisplay" class="text-yellow-400">0000</span>
             </div>
         </header>
 
@@ -120,75 +160,60 @@
             <!-- SECTION: OVERVIEW -->
             <section id="overview" class="content-section block animate-fade-in">
                 
-                <!-- Setup Card -->
-                <div class="bg-white rounded-xl shadow-sm border border-amber-200 p-5 md:p-8 mb-6 relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
-                    <h3 class="text-xl font-bold mb-4 text-slate-800">Part 0: Pre-Class Setup</h3>
-                    <div class="bg-amber-50 border border-amber-200 p-4 mb-6 rounded flex items-center justify-between">
-                        <p class="text-amber-800 text-sm font-semibold">
-                            <i class="fa-solid fa-stopwatch mr-2"></i>Time required: 2 minutes
-                        </p>
-                        <i class="fa-solid fa-gears text-amber-200 text-2xl"></i>
+                <div class="flex flex-col md:flex-row gap-6 mb-8 items-center bg-slate-900 p-8 rounded-xl border-4 border-blue-600 shadow-[0_0_30px_rgba(37,99,235,0.3)] relative overflow-hidden">
+                    <div class="absolute inset-0 opacity-10" style="background-image: repeating-linear-gradient(45deg, #3b82f6 25%, transparent 25%, transparent 75%, #3b82f6 75%, #3b82f6), repeating-linear-gradient(45deg, #3b82f6 25%, #0f172a 25%, #0f172a 75%, #3b82f6 75%, #3b82f6); background-position: 0 0, 10px 10px; background-size: 20px 20px;"></div>
+                    
+                    <!-- SVG Graphic -->
+                    <div class="shrink-0 relative z-10 flex gap-2 text-4xl">
+                        <i class="fa-solid fa-cookie text-yellow-400 animate-waka"></i>
+                        <i class="fa-solid fa-circle text-white text-sm self-center"></i>
+                        <i class="fa-solid fa-circle text-white text-sm self-center"></i>
+                        <i class="fa-solid fa-ghost ghost-red animate-bounce"></i>
                     </div>
-                    <div class="space-y-4">
-                        <div class="flex items-start">
-                            <div class="bg-amber-100 text-amber-700 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 shrink-0 border border-amber-200">1</div>
-                            <div>
-                                <h4 class="font-bold text-slate-800">Download Data</h4>
-                                <p class="text-slate-600 text-sm">Download the 4 individual CSV files from the <strong>Dataset Context</strong> tab.</p>
-                            </div>
-                        </div>
-                        <div class="flex items-start">
-                            <div class="bg-amber-100 text-amber-700 rounded-full w-8 h-8 flex items-center justify-center font-bold mr-4 shrink-0 border border-amber-200">2</div>
-                            <div>
-                                <h4 class="font-bold text-slate-800">Initialize Excel</h4>
-                                <p class="text-slate-600 text-sm">Open Excel &rarr; Create new blank workbook &rarr; Save as <code class="bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded border border-yellow-200 break-all font-mono text-xs">PQ_ETL_Lab.xlsx</code>.</p>
-                            </div>
-                        </div>
+                    <div class="relative z-10">
+                        <h2 class="text-xl md:text-2xl font-black text-yellow-400 mb-4 tracking-tight uppercase game-font leading-relaxed">Ghosts in the Data!</h2>
+                        <p class="text-slate-300">The Accounts Payable database is contaminated with raw, unstructured inputs. We suspect duplicate invoices and unauthorized maverick spending. Your mission: Build a localized ETL pipeline to eat the dots, clean the logs, and extract the fraudulent records.</p>
                     </div>
                 </div>
 
                 <!-- Learning Outcomes Card -->
-                <div class="bg-white rounded-xl shadow-sm border border-amber-200 p-5 md:p-8">
-                    <h3 class="text-xl font-bold mb-6 text-slate-800"><i class="fa-solid fa-bullseye text-amber-500 mr-2"></i>Educational Outcomes</h3>
+                <div class="bg-slate-900 rounded-xl shadow-lg border-4 border-blue-800 p-5 md:p-8 relative mb-8">
+                    <h3 class="text-lg md:text-xl font-bold mb-6 text-white flex items-center game-font uppercase"><i class="fa-solid fa-trophy text-yellow-400 text-2xl mr-3"></i> Level Objectives</h3>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Card 1 -->
-                        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 hover:border-amber-300 transition-colors">
-                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-slate-200 mb-3 shadow-sm text-amber-600">
-                                <i class="fa-solid fa-broom"></i>
+                        <div class="bg-blue-950 p-5 rounded-lg border-2 border-blue-600 hover:border-yellow-400 transition-colors text-center">
+                            <div class="text-yellow-400 text-4xl mb-3">
+                                <i class="fa-solid fa-filter"></i>
                             </div>
-                            <h4 class="font-bold text-slate-800 mb-2">"T" in ETL (Transform)</h4>
-                            <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
-                                <li>Trim/Clean text</li>
-                                <li>Replace Values (Standardization)</li>
-                                <li>Change Data Type (Date/Decimal)</li>
+                            <h4 class="font-bold text-white mb-2 game-font text-[10px] leading-relaxed">Transform</h4>
+                            <ul class="text-sm text-slate-300 space-y-2 list-none font-mono">
+                                <li>> Trim_Strings()</li>
+                                <li>> Clean_DataTypes()</li>
+                                <li>> Format_Syntax()</li>
                             </ul>
                         </div>
 
-                        <!-- Card 2 -->
-                        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 hover:border-amber-300 transition-colors">
-                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-slate-200 mb-3 shadow-sm text-amber-600">
+                        <div class="bg-blue-950 p-5 rounded-lg border-2 border-blue-600 hover:border-yellow-400 transition-colors text-center">
+                            <div class="text-yellow-400 text-4xl mb-3">
                                 <i class="fa-solid fa-link"></i>
                             </div>
-                            <h4 class="font-bold text-slate-800 mb-2">"E/L" in ETL (Extract/Load)</h4>
-                            <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
-                                <li>Import multiple tables</li>
-                                <li>Merge queries (Joins)</li>
-                                <li>Expand fields</li>
+                            <h4 class="font-bold text-white mb-2 game-font text-[10px] leading-relaxed">Extract/Load</h4>
+                            <ul class="text-sm text-slate-300 space-y-2 list-none font-mono">
+                                <li>> Import_CSV()</li>
+                                <li>> Outer_Join()</li>
+                                <li>> Expand_Data()</li>
                             </ul>
                         </div>
 
-                        <!-- Card 3 -->
-                        <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 hover:border-amber-300 transition-colors">
-                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-slate-200 mb-3 shadow-sm text-red-500">
+                        <div class="bg-blue-950 p-5 rounded-lg border-2 border-blue-600 hover:border-yellow-400 transition-colors text-center">
+                            <div class="text-yellow-400 text-4xl mb-3">
                                 <i class="fa-solid fa-shield"></i>
                             </div>
-                            <h4 class="font-bold text-slate-800 mb-2">Audit & Risk Controls</h4>
-                            <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
-                                <li>Duplicates check (Payment risk)</li>
-                                <li>PO match check (Procurement control)</li>
-                                <li>Unmapped vendor check (Fraud risk)</li>
+                            <h4 class="font-bold text-white mb-2 game-font text-[10px] leading-relaxed">Controls</h4>
+                            <ul class="text-sm text-slate-300 space-y-2 list-none font-mono">
+                                <li>> Detect_Dupes()</li>
+                                <li>> 3-Way_Match()</li>
+                                <li>> Flag_Orphans()</li>
                             </ul>
                         </div>
                     </div>
@@ -199,372 +224,337 @@
             <section id="dataset" class="content-section hidden animate-fade-in">
                 
                 <!-- Intro -->
-                <div class="bg-white border-l-4 border-amber-500 p-4 md:p-6 mb-8 rounded-r-lg shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="bg-blue-900 border-l-8 border-yellow-400 p-4 md:p-6 mb-8 rounded shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h3 class="font-bold text-slate-800 text-lg">Download Lab Materials</h3>
-                        <p class="text-slate-600 text-sm mt-1">
-                            Click "Download All" to get the 4 CSV files. Take a moment to understand the context of each file below before you begin the lab.
+                        <h3 class="font-bold text-yellow-400 text-lg game-font uppercase leading-relaxed">Study The Map</h3>
+                        <p class="text-white text-sm mt-3">
+                            Review the data tables below to understand the maze architecture before extracting them to your local drive.
                         </p>
                     </div>
-                    <button onclick="downloadAllFiles()" class="w-full md:w-auto bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-6 rounded shadow transition-colors flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-download"></i> Download All (4 Files)
-                    </button>
                 </div>
 
                 <!-- Context Cards -->
                 <div class="space-y-6">
                     
                     <!-- File 1 -->
-                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-slate-100 px-3 py-1 rounded-bl-lg text-xs font-bold text-slate-500 border-b border-l border-slate-200">Fact Table</div>
-                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2 mt-2">
-                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-file-csv text-slate-400 mr-2"></i>Raw_AP_Transactions.csv</h4>
-                            <button onclick="downloadFile('raw_ap')" class="self-start md:self-auto text-xs font-bold text-amber-700 hover:text-amber-900 border border-amber-200 bg-amber-50 px-3 py-1 rounded transition-colors">Download</button>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-4">The Messy Operational Data exported directly from an old ERP system.</p>
+                    <div class="bg-slate-900 rounded-lg border-4 border-blue-800 p-6 hover:border-yellow-400 transition-colors relative overflow-hidden group shadow-lg">
+                        <div class="absolute top-0 right-0 bg-blue-800 px-3 py-1 rounded-bl-lg text-[10px] font-bold text-white font-mono border-b-2 border-l-2 border-blue-600">FACT_TABLE</div>
+                        <h4 class="font-bold text-white text-lg mb-2 mt-1 flex items-center gap-2"><i class="fa-solid fa-file-csv text-blue-400"></i> Raw_AP_Transactions.csv</h4>
+                        <p class="text-sm text-slate-300 mb-4">The raw operational output from the legacy accounting mainframe.</p>
                         
-                        <div class="bg-yellow-50/50 rounded-lg p-4 border border-yellow-100">
-                            <p class="text-xs uppercase tracking-wider font-bold text-amber-800 mb-2"><i class="fa-solid fa-briefcase mr-1"></i> Business Context</p>
-                            <p class="text-sm text-slate-700">Notice the inconsistencies: "Staples" vs "STAPLES", dates like "1/15/2025" mixed with "2025-01-16", and amounts that include dollar signs randomly. <strong>Your job</strong> is to build an automated pipeline that catches and fixes these human-entry errors.</p>
+                        <div class="bg-slate-950 rounded p-4 border border-blue-900">
+                            <p class="text-xs font-bold text-red-500 mb-2 font-mono"><i class="fa-solid fa-ghost mr-1"></i> IDENTIFIED GHOSTS (ERRORS)</p>
+                            <p class="text-sm text-slate-400">Inconsistent vendor casing ("Staples" vs "STAPLES"), corrupted amount strings containing symbols ($), and unstandardized department codes. Requires immediate sanitation.</p>
                         </div>
                     </div>
 
                     <!-- File 2 -->
-                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-slate-100 px-3 py-1 rounded-bl-lg text-xs font-bold text-slate-500 border-b border-l border-slate-200">Mapping Table</div>
-                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2 mt-2">
-                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-map-location-dot text-amber-500 mr-2"></i>Vendor_Alias_Map.csv</h4>
-                            <button onclick="downloadFile('alias')" class="self-start md:self-auto text-xs font-bold text-amber-700 hover:text-amber-900 border border-amber-200 bg-amber-50 px-3 py-1 rounded transition-colors">Download</button>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-4">The "Translation Dictionary" created by the accounting team.</p>
+                    <div class="bg-slate-900 rounded-lg border-4 border-blue-800 p-6 hover:border-yellow-400 transition-colors relative overflow-hidden group shadow-lg">
+                        <div class="absolute top-0 right-0 bg-blue-800 px-3 py-1 rounded-bl-lg text-[10px] font-bold text-white font-mono border-b-2 border-l-2 border-blue-600">MAP_TABLE</div>
+                        <h4 class="font-bold text-white text-lg mb-2 mt-1 flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-blue-400"></i> Vendor_Alias_Map.csv</h4>
+                        <p class="text-sm text-slate-300 mb-4">The Rosetta Stone provided by the finance division.</p>
                         
-                        <div class="bg-yellow-50/50 rounded-lg p-4 border border-yellow-100">
-                            <p class="text-xs uppercase tracking-wider font-bold text-amber-800 mb-2"><i class="fa-solid fa-briefcase mr-1"></i> Business Context</p>
-                            <p class="text-sm text-slate-700">Because AP clerks type "UPS 0039" and "U.P.S." randomly, a simple group-by won't work. We need this file to act as a bridge, converting all variations into a clean, unified name: <code>United Parcel Service</code>.</p>
+                        <div class="bg-slate-950 rounded p-4 border border-blue-900">
+                            <p class="text-xs font-bold text-yellow-400 mb-2 font-mono"><i class="fa-solid fa-cookie mr-1"></i> INTEGRATION PLAN</p>
+                            <p class="text-sm text-slate-400">Because AP clerks input "UPS 0039" and "U.P.S." randomly, standard grouping fails. This mapping table must be joined to translate raw text into unified official names.</p>
                         </div>
                     </div>
 
                     <!-- File 3 -->
-                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-slate-100 px-3 py-1 rounded-bl-lg text-xs font-bold text-slate-500 border-b border-l border-slate-200">Dim Table</div>
-                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2 mt-2">
-                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-database text-slate-400 mr-2"></i>Vendor_Master.csv</h4>
-                            <button onclick="downloadFile('vendor_master')" class="self-start md:self-auto text-xs font-bold text-amber-700 hover:text-amber-900 border border-amber-200 bg-amber-50 px-3 py-1 rounded transition-colors">Download</button>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-4">The Official System of Record for Vendors.</p>
+                    <div class="bg-slate-900 rounded-lg border-4 border-blue-800 p-6 hover:border-yellow-400 transition-colors relative overflow-hidden group shadow-lg">
+                        <div class="absolute top-0 right-0 bg-blue-800 px-3 py-1 rounded-bl-lg text-[10px] font-bold text-white font-mono border-b-2 border-l-2 border-blue-600">DIM_TABLE</div>
+                        <h4 class="font-bold text-white text-lg mb-2 mt-1 flex items-center gap-2"><i class="fa-solid fa-database text-blue-400"></i> Vendor_Master.csv</h4>
+                        <p class="text-sm text-slate-300 mb-4">The secure Master Database.</p>
                         
-                        <div class="bg-yellow-50/50 rounded-lg p-4 border border-yellow-100">
-                            <p class="text-xs uppercase tracking-wider font-bold text-amber-800 mb-2"><i class="fa-solid fa-briefcase mr-1"></i> Business Context</p>
-                            <p class="text-sm text-slate-700">This table contains the golden data: <code>VendorID</code> and <code>Category</code>. But notice there are no messy names here. You <strong>cannot</strong> join this table to the raw data until you've successfully cleaned the raw vendor names in Part 2!</p>
+                        <div class="bg-slate-950 rounded p-4 border border-blue-900">
+                            <p class="text-xs font-bold text-yellow-400 mb-2 font-mono"><i class="fa-solid fa-lock mr-1"></i> REQUIREMENT</p>
+                            <p class="text-sm text-slate-400">Contains golden `VendorID` data. You cannot successfully join this table until Step 2 is fully executed and aliases are resolved.</p>
                         </div>
                     </div>
 
                     <!-- File 4 -->
-                    <div class="bg-white rounded-lg border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-red-100 text-red-800 px-3 py-1 rounded-bl-lg text-xs font-bold border-b border-l border-red-200">Control Table</div>
-                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-2 gap-2 mt-2">
-                            <h4 class="font-bold text-slate-800 text-lg break-all"><i class="fa-solid fa-receipt text-red-500 mr-2"></i>Purchase_Orders.csv</h4>
-                            <button onclick="downloadFile('po')" class="self-start md:self-auto text-xs font-bold text-amber-700 hover:text-amber-900 border border-amber-200 bg-amber-50 px-3 py-1 rounded transition-colors">Download</button>
-                        </div>
-                        <p class="text-sm text-slate-600 mb-4">The approved purchasing log used for internal audits.</p>
+                    <div class="bg-slate-900 rounded-lg border-4 border-blue-800 p-6 hover:border-yellow-400 transition-colors relative overflow-hidden group shadow-lg">
+                        <div class="absolute top-0 right-0 bg-blue-800 px-3 py-1 rounded-bl-lg text-[10px] font-bold text-white font-mono border-b-2 border-l-2 border-blue-600">CONTROL_NODE</div>
+                        <h4 class="font-bold text-white text-lg mb-2 mt-1 flex items-center gap-2"><i class="fa-solid fa-receipt text-blue-400"></i> Purchase_Orders.csv</h4>
+                        <p class="text-sm text-slate-300 mb-4">The approved purchasing ledger used for fraud audits.</p>
                         
-                        <div class="bg-red-50/50 rounded-lg p-4 border border-red-100">
-                            <p class="text-xs uppercase tracking-wider font-bold text-red-800 mb-2"><i class="fa-solid fa-briefcase mr-1"></i> Business Context</p>
-                            <p class="text-sm text-slate-700">This is our audit test. We will compare the <code>Amount</code> billed in the AP Transactions against the <code>PO_Amount</code> approved here. Variances mean someone is over-billing us or bypassing procurement rules.</p>
+                        <div class="bg-slate-950 rounded p-4 border border-blue-900">
+                            <p class="text-xs font-bold text-red-500 mb-2 font-mono"><i class="fa-solid fa-ghost mr-1"></i> THE TRAP</p>
+                            <p class="text-sm text-slate-400">Used to perform a 3-way match. Any discrepancy between the invoice amount and this PO amount indicates potential embezzlement or policy violation.</p>
                         </div>
                     </div>
 
                 </div>
             </section>
 
-            <!-- SECTION: PART 1 -->
-            <section id="day1" class="content-section hidden animate-fade-in">
-                <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-2 bg-white p-6 rounded-xl border border-amber-200 shadow-sm">
-                    <div>
-                        <h3 class="text-2xl font-bold text-slate-800">Part 1: Clean AP Table</h3>
-                        <p class="text-slate-500 mt-1">Transforming messy inputs into reliable data types. (Steps 1 - 11)</p>
-                    </div>
-                    <div class="text-right">
-                         <span class="text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded font-mono border border-amber-200 font-bold shadow-inner">Query: AP_Raw</span>
-                    </div>
+            <!-- SECTION: MISSION -->
+            <section id="mission" class="content-section hidden animate-fade-in">
+                
+                <div class="mb-10 text-center">
+                    <h3 class="text-2xl md:text-4xl font-black text-yellow-400 uppercase tracking-widest game-font mb-4 text-shadow neon-text">Level 1</h3>
+                    <p class="text-white mt-2 font-mono text-sm uppercase">Clear the maze data.</p>
                 </div>
 
-                <div class="relative pl-10 space-y-8">
+                <div class="relative pl-8 md:pl-12 space-y-10 font-mono text-sm">
+                    <!-- The continuous line down the left -->
                     <div class="timeline-line"></div>
 
-                    <!-- Step 1 -->
-                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">1</div>
-                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Import Raw Data</h4>
-                        <p class="text-sm text-slate-700 mb-3">Excel Ribbon &rarr; Data &rarr; Get Data &rarr; From Text/CSV.</p>
-                        <p class="text-sm text-slate-700">Select <code>Raw_AP_Transactions.csv</code> &rarr; Click <strong>Transform Data</strong> (Not Load).</p>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">2</div>
-                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Rename Query</h4>
-                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-1">
-                            <li>Right-click query name (on the left panel) &rarr; Rename.</li>
-                            <li>New Name: <code class="bg-slate-100 px-1.5 py-0.5 border border-slate-300 rounded font-bold text-slate-800">AP_Raw</code></li>
-                        </ul>
-                    </div>
-
-                    <!-- Step 3-6 -->
-                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">3</div>
-                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Clean Text & Numbers</h4>
-                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-2 mb-4">
-                            <li><strong>Vendor:</strong> Select column. Transform tab &rarr; Format &rarr; Trim. (Repeat: Format &rarr; Clean).</li>
-                            <li><strong>Amount:</strong> Right-click column &rarr; Replace Values. Find <code>$</code> and replace with (leave blank). Repeat: Find <code>,</code> and replace with (leave blank).</li>
-                            <li><strong>Amount:</strong> Click the 'ABC/123' icon in the column header &rarr; Data Type &rarr; Decimal Number.</li>
-                        </ul>
-
-                        <!-- Interactive Think Box -->
-                        <div class="mt-4 border border-amber-200 rounded-lg overflow-hidden shadow-sm">
-                            <button onclick="toggleThinkBox(this)" class="w-full flex justify-between items-center text-left bg-amber-50 hover:bg-amber-100 transition-colors px-4 py-3 focus:outline-none">
-                                <div class="flex items-center gap-3">
-                                    <i class="fa-solid fa-brain text-amber-600"></i>
-                                    <span class="font-bold text-amber-800 text-sm">Stop & Think: What happens if we skip the 'Trim' step?</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down text-amber-600 transition-transform duration-300 transform"></i>
+                    <!-- Step 1: Download -->
+                    <div class="relative z-10 step-card p-5">
+                        <div class="absolute -left-10 md:-left-14 bg-slate-900 text-yellow-400 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center font-bold shadow-[0_0_10px_rgba(253,224,71,0.8)] game-font text-[10px]">1</div>
+                        
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 border-b border-blue-900 pb-3">
+                            <h4 class="font-bold text-white text-lg uppercase tracking-wider text-yellow-400">Insert Coin (Download)</h4>
+                            <button onclick="downloadAllFiles()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-black py-2 px-6 rounded-full border-2 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.8)] transition-all active:scale-95 animate-pulse-yellow uppercase">
+                                Get 4 CSVs
                             </button>
-                            <div class="hidden bg-amber-50/50 p-4 border-t border-amber-200 text-sm text-slate-700 think-box">
-                                <p><span class="text-slate-600 italic">Computers are literal. A leading space makes it an entirely different text string. " STAPLES " will not match with "STAPLES". Trimming invisible whitespace is the #1 fix for failed Joins.</span></p>
+                        </div>
+                        <p class="text-slate-300">Extract the 4 raw data fragments to your local secure drive using the button above.</p>
+                    </div>
+
+                    <!-- Step 2: Initialize -->
+                    <div class="relative z-10 step-card p-5">
+                        <div class="absolute -left-10 md:-left-14 bg-slate-900 text-yellow-400 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center font-bold shadow-[0_0_10px_rgba(253,224,71,0.8)] game-font text-[10px]">2</div>
+                        <h4 class="font-bold text-white mb-3 text-lg uppercase tracking-wider text-yellow-400">Player 1 Start (Excel)</h4>
+                        <p class="text-slate-300 mb-2">Open local Excel client &rarr; Create blank architecture.</p>
+                        <p class="text-slate-300">Save file to directory containing CSVs as: <code class="bg-blue-900 text-white px-2 py-1 rounded border border-blue-500">PQ_ETL_Lab.xlsx</code>.</p>
+                    </div>
+
+                    <!-- Step 3: Import -->
+                    <div class="relative z-10 step-card p-5">
+                        <div class="absolute -left-10 md:-left-14 bg-slate-900 text-yellow-400 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center font-bold shadow-[0_0_10px_rgba(253,224,71,0.8)] game-font text-[10px]">3</div>
+                        <h4 class="font-bold text-white mb-3 text-lg uppercase tracking-wider text-yellow-400">Eat Raw Data</h4>
+                        <ul class="text-slate-300 space-y-2 list-none">
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Navigate to <strong class="text-white">Data</strong> tab &rarr; <strong class="text-white">Get Data</strong> &rarr; <strong class="text-white">From Text/CSV</strong>.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Target <span class="text-blue-300">Raw_AP_Transactions.csv</span> &rarr; Execute <strong class="text-white">Transform Data</strong>.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Rename query parameter to: <code class="text-yellow-300 font-bold">AP_Raw</code></li>
+                        </ul>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="relative z-10 step-card p-5">
+                        <div class="absolute -left-10 md:-left-14 bg-slate-900 text-yellow-400 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center font-bold shadow-[0_0_10px_rgba(253,224,71,0.8)] game-font text-[10px]">4</div>
+                        <h4 class="font-bold text-white mb-3 text-lg uppercase tracking-wider text-yellow-400">Chomp The Noise</h4>
+                        <ul class="text-slate-300 space-y-2 list-none mb-4">
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> <strong class="text-white">Vendor:</strong> Execute Transform &rarr; Format &rarr; <strong class="text-white">Trim</strong>. Then <strong class="text-white">Clean</strong>.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> <strong class="text-white">Amount:</strong> Replace Values <code>$</code> &rarr; (blank). Replace <code>,</code> &rarr; (blank).</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> <strong class="text-white">Amount:</strong> Mutate Data Type to <strong class="text-white">Decimal Number</strong>.</li>
+                        </ul>
+
+                        <!-- Hackable Hint Button -->
+                        <div class="mt-6 border-2 border-blue-800 rounded-full bg-slate-950 p-1">
+                            <button id="btn-hint-1" onclick="hackHint('btn-hint-1', 'hint-1')" class="w-full py-2 bg-blue-900 hover:bg-blue-800 text-yellow-400 font-bold transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs rounded-full">
+                                <i class="fa-solid fa-cookie text-lg"></i> Eat Power Pellet For Hint
+                            </button>
+                            <div id="hint-1" class="hidden p-5 bg-slate-900 text-white border-l-4 border-yellow-400 text-sm rounded-lg shadow-inner">
+                                <span class="text-yellow-400 font-bold game-font text-[10px] leading-relaxed">QUESTION:</span> What happens if we skip the 'Trim' step on the Vendor names?<br><br>
+                                <span class="text-blue-200 italic block">> ANSWER: Computers are literal. A leading space makes it an entirely different string. " STAPLES " will not match with "STAPLES" in our alias map. Trimming invisible whitespace is the #1 fix for failed joins.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="relative z-10 step-card p-5">
+                        <div class="absolute -left-10 md:-left-14 bg-slate-900 text-yellow-400 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center font-bold shadow-[0_0_10px_rgba(253,224,71,0.8)] game-font text-[10px]">5</div>
+                        <h4 class="font-bold text-white mb-3 text-lg uppercase tracking-wider text-yellow-400">Temporal Sync</h4>
+                        <p class="text-slate-300 mb-2"><strong class="text-white">InvoiceDate:</strong> Click Type Icon (ABC) &rarr; Using Locale &rarr; Date (English US).</p>
+                        <p class="text-xs text-blue-400 italic border-l-2 border-blue-600 pl-3 py-1">Bypasses localization errors and unifies mixed temporal arrays like 1/15/2025 and 2025-01-16.</p>
+
+                        <!-- Hackable Hint Button -->
+                        <div class="mt-6 border-2 border-blue-800 rounded-full bg-slate-950 p-1">
+                            <button id="btn-hint-dates" onclick="hackHint('btn-hint-dates', 'hint-dates')" class="w-full py-2 bg-blue-900 hover:bg-blue-800 text-yellow-400 font-bold transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs rounded-full">
+                                <i class="fa-solid fa-cookie text-lg"></i> Eat Power Pellet For Hint
+                            </button>
+                            <div id="hint-dates" class="hidden p-5 bg-slate-900 text-white border-l-4 border-yellow-400 text-sm rounded-lg shadow-inner">
+                                <span class="text-yellow-400 font-bold game-font text-[10px] leading-relaxed">QUESTION:</span> Why fix dates if they already look correct to the human eye?<br><br>
+                                <span class="text-blue-200 italic block">> ANSWER: If dates remain formatted as "Text", you cannot sort them chronologically (e.g., February 2024 would sort alphabetically before January 2024), nor can you extract Month/Year for period-over-period financial reporting.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 6 -->
+                    <div class="relative z-10 step-card p-5">
+                        <div class="absolute -left-10 md:-left-14 bg-slate-900 text-yellow-400 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center font-bold shadow-[0_0_10px_rgba(253,224,71,0.8)] game-font text-[10px]">6</div>
+                        <h4 class="font-bold text-white mb-4 text-lg uppercase tracking-wider text-yellow-400">Standardize Paths</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-blue-950 p-4 rounded-lg border-2 border-blue-800">
+                                <span class="text-blue-300 block mb-3 border-b-2 border-blue-800 pb-2 text-xs font-bold uppercase tracking-widest">DEPT (Replace Values)</span>
+                                <ul class="text-slate-300 text-xs space-y-2">
+                                    <li>Finance &rarr; <span class="text-white font-bold bg-blue-900 px-2 py-0.5 rounded">FIN</span></li>
+                                    <li>Fin &rarr; <span class="text-white font-bold bg-blue-900 px-2 py-0.5 rounded">FIN</span></li>
+                                    <li>Operations/Ops &rarr; <span class="text-white font-bold bg-blue-900 px-2 py-0.5 rounded">OPS</span></li>
+                                    <li>Warehouse &rarr; <span class="text-white font-bold bg-blue-900 px-2 py-0.5 rounded">WH</span></li>
+                                </ul>
+                            </div>
+                            <div class="bg-blue-950 p-4 rounded-lg border-2 border-blue-800">
+                                <span class="text-blue-300 block mb-3 border-b-2 border-blue-800 pb-2 text-xs font-bold uppercase tracking-widest">TERMS (Replace Values)</span>
+                                <ul class="text-slate-300 text-xs space-y-2">
+                                    <li>NET30/Net30 &rarr; <span class="text-white font-bold bg-blue-900 px-2 py-0.5 rounded">Net 30</span></li>
+                                    <li>DOR &rarr; <span class="text-white font-bold bg-blue-900 px-2 py-0.5 rounded">Due on receipt</span></li>
+                                    <li>NET15 &rarr; <span class="text-white font-bold bg-blue-900 px-2 py-0.5 rounded">Net 15</span></li>
+                                </ul>
                             </div>
                         </div>
                     </div>
 
                     <!-- Step 7 -->
-                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">7</div>
-                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Fix Dates</h4>
-                        <p class="text-sm text-slate-700 mb-2"><strong>InvoiceDate:</strong> Click Type Icon (ABC) in header &rarr; Using Locale &rarr; Date (English US).</p>
-                        <p class="text-xs text-slate-500 italic bg-slate-50 p-2 rounded border border-slate-100">This elegantly handles mixed system formats like "1/15/2025" and "2025-01-16" simultaneously.</p>
-
-                        <!-- Interactive Think Box -->
-                        <div class="mt-4 border border-amber-200 rounded-lg overflow-hidden shadow-sm">
-                            <button onclick="toggleThinkBox(this)" class="w-full flex justify-between items-center text-left bg-amber-50 hover:bg-amber-100 transition-colors px-4 py-3 focus:outline-none">
-                                <div class="flex items-center gap-3">
-                                    <i class="fa-solid fa-brain text-amber-600"></i>
-                                    <span class="font-bold text-amber-800 text-sm">Stop & Think: Why fix dates if they already look correct?</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down text-amber-600 transition-transform duration-300 transform"></i>
-                            </button>
-                            <div class="hidden bg-amber-50/50 p-4 border-t border-amber-200 text-sm text-slate-700 think-box">
-                                <p><span class="text-slate-600 italic">If dates remain formatted as "Text", you cannot sort them chronologically (e.g., February 2024 would sort alphabetically before January 2024), nor can you extract Month/Year for period-over-period reporting.</span></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 8-9 -->
-                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">8</div>
-                        <h4 class="font-bold text-slate-800 mb-4 text-lg">Standardize Dept & Terms</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
-                            <div class="bg-slate-50 p-3 rounded border border-slate-200">
-                                <span class="font-bold block mb-2 text-slate-800 border-b pb-1">Dept (Right Click &rarr; Replace Values)</span>
-                                <ul class="space-y-1 text-slate-600">
-                                    <li>Finance &rarr; <strong class="text-slate-800">FIN</strong></li>
-                                    <li>Fin &rarr; <strong class="text-slate-800">FIN</strong></li>
-                                    <li>Operations/Ops &rarr; <strong class="text-slate-800">OPS</strong></li>
-                                    <li>Warehouse &rarr; <strong class="text-slate-800">WH</strong></li>
-                                </ul>
-                            </div>
-                            <div class="bg-slate-50 p-3 rounded border border-slate-200">
-                                <span class="font-bold block mb-2 text-slate-800 border-b pb-1">Terms (Right Click &rarr; Replace Values)</span>
-                                <ul class="space-y-1 text-slate-600">
-                                    <li>NET30/Net30 &rarr; <strong class="text-slate-800">Net 30</strong></li>
-                                    <li>DOR &rarr; <strong class="text-slate-800">Due on receipt</strong></li>
-                                    <li>NET15 &rarr; <strong class="text-slate-800">Net 15</strong></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 10-11 -->
-                    <div class="relative z-10 step-card bg-amber-50 p-5 rounded-lg border-2 border-amber-300 border-dashed">
-                        <div class="absolute -left-10 bg-amber-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md"><i class="fa-solid fa-flag"></i></div>
-                        <h4 class="font-bold text-slate-800 mb-3 text-lg">Checkpoint & Save</h4>
-                        <p class="text-sm text-slate-700 mb-2 font-semibold">Verify your data types in the column headers before proceeding:</p>
-                        <ul class="text-sm text-slate-600 space-y-2 mb-4 bg-white p-3 rounded border border-amber-200">
-                            <li class="flex items-center gap-2"><i class="fa-regular fa-calendar-check text-amber-500"></i> Dates are actual Dates (calendar icon).</li>
-                            <li class="flex items-center gap-2"><i class="fa-solid fa-hashtag text-amber-500"></i> Amount is Decimal (1.2 icon).</li>
-                            <li class="flex items-center gap-2"><i class="fa-solid fa-spell-check text-amber-500"></i> Depts are standardized to FIN/OPS/WH/IT.</li>
+                    <div class="relative z-10 step-card p-5">
+                        <div class="absolute -left-10 md:-left-14 bg-slate-900 text-yellow-400 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center font-bold shadow-[0_0_10px_rgba(253,224,71,0.8)] game-font text-[10px]">7</div>
+                        <h4 class="font-bold text-white mb-3 text-lg uppercase tracking-wider text-yellow-400">Map The Tunnels (Merge)</h4>
+                        <ul class="text-slate-300 space-y-3 list-none mb-4">
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Import New Source &rarr; <code>Vendor_Alias_Map.csv</code>.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Execute <strong class="text-white">Use First Row as Headers</strong>. Clean <code>VendorRaw</code> column.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Return to <code>AP_Raw</code>. Execute <strong class="text-white">Merge Queries</strong> (Left Outer) joining on Vendor.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Expand payload to extract <strong class="text-white">only</strong> <code>VendorName_Clean</code>.</li>
                         </ul>
-                        <p class="text-sm font-bold text-slate-800 bg-amber-200 inline-block px-3 py-1.5 rounded">Home Tab &rarr; Close & Load To... &rarr; Only Create Connection.</p>
-                        <p class="text-xs text-slate-500 mt-2 italic">We don't want to load this messy intermediate step to the workbook yet. We have more joining to do!</p>
+                        
+                        <!-- Hackable Hint Button -->
+                        <div class="mt-6 border-2 border-blue-800 rounded-full bg-slate-950 p-1">
+                            <button id="btn-hint-join" onclick="hackHint('btn-hint-join', 'hint-join')" class="w-full py-2 bg-blue-900 hover:bg-blue-800 text-yellow-400 font-bold transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs rounded-full">
+                                <i class="fa-solid fa-cookie text-lg"></i> Eat Power Pellet For Hint
+                            </button>
+                            <div id="hint-join" class="hidden p-5 bg-slate-900 text-white border-l-4 border-yellow-400 text-sm rounded-lg shadow-inner">
+                                <span class="text-yellow-400 font-bold game-font text-[10px] leading-relaxed">QUESTION:</span> Why use a 'Left Outer' join instead of an 'Inner' join?<br><br>
+                                <span class="text-blue-200 italic block">> ANSWER: An Inner Join drops any row that doesn't have a match. We can't just "delete" an invoice because a vendor was missing from our map—that understates liabilities! A Left Outer Join keeps all AP invoices and puts a "null" where mapping is missing, flagging it for review.</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </section>
 
-             <!-- SECTION: PART 2 -->
-             <section id="day2" class="content-section hidden animate-fade-in">
-                <div class="mb-6 bg-white p-6 rounded-xl border border-amber-200 shadow-sm">
-                    <h3 class="text-2xl font-bold text-slate-800">Part 2: Merge & Report</h3>
-                    <p class="text-slate-500 mt-1">Combining tables and building audit controls. (Steps 12 - 22)</p>
-                </div>
+                    <!-- Step 8 -->
+                    <div class="relative z-10 step-card p-5">
+                        <div class="absolute -left-10 md:-left-14 bg-slate-900 text-yellow-400 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center font-bold shadow-[0_0_10px_rgba(253,224,71,0.8)] game-font text-[10px]">8</div>
+                        <h4 class="font-bold text-white mb-3 text-lg uppercase tracking-wider text-yellow-400">Master DB Uplink</h4>
+                        <ul class="text-slate-300 space-y-2 list-none">
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Import New Source &rarr; <code>Vendor_Master.csv</code>. Clean VendorName.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Merge into <code>AP_Raw</code> linking via <code>VendorName_Clean</code> (Left Outer).</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Expand payload to extract: <code class="text-white">VendorID</code>, <code class="text-white">Category</code>.</li>
+                        </ul>
+                    </div>
 
-                <div class="relative pl-10 space-y-8">
-                    <div class="timeline-line"></div>
+                    <!-- Step 9 -->
+                    <div class="relative z-10 step-card p-5">
+                        <div class="absolute -left-10 md:-left-14 bg-slate-900 text-yellow-400 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center font-bold shadow-[0_0_10px_rgba(253,224,71,0.8)] game-font text-[10px]">9</div>
+                        <h4 class="font-bold text-white mb-3 text-lg uppercase tracking-wider text-yellow-400 flex items-center gap-2"><i class="fa-solid fa-ghost ghost-cyan"></i> Fraud Trap Alg.</h4>
+                        <ul class="text-slate-300 space-y-2 list-none mb-4">
+                            <li><span class="text-cyan-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Import <code>Purchase_Orders.csv</code> and merge into AP_Raw via <code>PO_Number</code>. Expand <code>PO_Amount</code>.</li>
+                            <li><span class="text-cyan-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Deploy Conditional Column <code>POMatchStatus</code>:</li>
+                        </ul>
+                        <div class="bg-blue-950 p-4 rounded-lg border-2 border-blue-800 text-sm ml-6 font-bold shadow-inner text-white">
+                            <span class="text-cyan-400">IF</span> PO_Amount is null <span class="text-cyan-400">THEN</span> "No PO"<br>
+                            <span class="text-cyan-400">ELSE IF</span> Amount equals PO_Amount <span class="text-cyan-400">THEN</span> "Match"<br>
+                            <span class="text-cyan-400">ELSE</span> "Mismatch"
+                        </div>
+                        
+                        <!-- Hackable Hint Button -->
+                        <div class="mt-6 border-2 border-blue-800 rounded-full bg-slate-950 p-1">
+                            <button id="btn-hint-po" onclick="hackHint('btn-hint-po', 'hint-po')" class="w-full py-2 bg-blue-900 hover:bg-blue-800 text-yellow-400 font-bold transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs rounded-full">
+                                <i class="fa-solid fa-cookie text-lg"></i> Eat Power Pellet For Hint
+                            </button>
+                            <div id="hint-po" class="hidden p-5 bg-slate-900 text-white border-l-4 border-yellow-400 text-sm rounded-lg shadow-inner">
+                                <span class="text-yellow-400 font-bold game-font text-[10px] leading-relaxed">QUESTION:</span> From an audit perspective, what does "No PO" indicate?<br><br>
+                                <span class="text-blue-200 italic block">> ANSWER: It means the business spent money without getting pre-approval from procurement. This is a massive red flag for unauthorized spending, maverick purchasing, or potential fraud. It requires immediate manager review.</span>
+                            </div>
+                        </div>
+                    </div>
 
-                    <!-- Step 12-14 -->
-                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">12</div>
-                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Merge Alias Map</h4>
-                        <ol class="list-decimal list-inside text-sm text-slate-700 space-y-2 mb-4">
-                            <li>Double click <code>AP_Raw</code> in Excel queries pane to re-open Power Query. Right click empty space in queries pane &rarr; New Query &rarr; File &rarr; Text/CSV &rarr; <code>Vendor_Alias_Map.csv</code>.</li>
-                            <li><strong>Important:</strong> Transform Tab &rarr; Use First Row as Headers (if it didn't automatically).</li>
-                            <li>Clean <code>VendorRaw</code> column (Trim/Clean) just like we did earlier.</li>
-                            <li>Click back to <code>AP_Raw</code>. Home Tab &rarr; <strong>Merge Queries</strong>. 
-                                <br><span class="ml-5 italic text-slate-500">Top table: AP_Raw (Click Vendor). Bottom table: Alias Map (Click VendorRaw). Join Kind: Left Outer.</span></li>
-                            <li>Click the expand icon <i class="fa-solid fa-arrows-left-right text-slate-400"></i> on the new column header. Select <strong>only</strong> <code>VendorName_Clean</code>. Uncheck original column prefix.</li>
+                    <!-- Step 10 -->
+                    <div class="relative z-10 step-card p-5">
+                        <div class="absolute -left-10 md:-left-14 bg-slate-900 text-yellow-400 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center font-bold shadow-[0_0_10px_rgba(253,224,71,0.8)] game-font text-[10px]">10</div>
+                        <h4 class="font-bold text-white mb-3 text-lg uppercase tracking-wider text-yellow-400 flex items-center gap-2"><i class="fa-solid fa-ghost ghost-pink"></i> Duplicate Sweep</h4>
+                        <ol class="list-decimal list-inside text-slate-300 space-y-2 text-xs md:text-sm mb-4">
+                            <li>Right-click <code>AP_Raw</code> &rarr; <strong class="text-white">Duplicate</strong> query. Rename to <code>DupCounts</code>.</li>
+                            <li>Isolate <code>VendorName_Clean</code> and <code>Amount</code> (Remove others).</li>
+                            <li>Execute <strong class="text-white">Group By</strong>. Operation: Count Rows.</li>
+                            <li>Merge <code>DupCounts</code> back into <code>AP_Raw</code>. Expand Count.</li>
+                            <li>Deploy Conditional Column <code>DuplicateFlag</code>: If Count > 1 then TRUE else FALSE.</li>
                         </ol>
-
-                        <!-- Interactive Think Box -->
-                        <div class="mt-4 border border-amber-200 rounded-lg overflow-hidden shadow-sm">
-                            <button onclick="toggleThinkBox(this)" class="w-full flex justify-between items-center text-left bg-amber-50 hover:bg-amber-100 transition-colors px-4 py-3 focus:outline-none">
-                                <div class="flex items-center gap-3">
-                                    <i class="fa-solid fa-brain text-amber-600"></i>
-                                    <span class="font-bold text-amber-800 text-sm">Stop & Think: Why use a 'Left Outer' join?</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down text-amber-600 transition-transform duration-300 transform"></i>
+                        
+                        <!-- Hackable Hint Button -->
+                        <div class="mt-6 border-2 border-blue-800 rounded-full bg-slate-950 p-1">
+                            <button id="btn-hint-2" onclick="hackHint('btn-hint-2', 'hint-2')" class="w-full py-2 bg-blue-900 hover:bg-blue-800 text-yellow-400 font-bold transition-all flex items-center justify-center gap-3 uppercase tracking-widest text-xs rounded-full">
+                                <i class="fa-solid fa-cookie text-lg"></i> Eat Power Pellet For Hint
                             </button>
-                            <div class="hidden bg-amber-50/50 p-4 border-t border-amber-200 text-sm text-slate-700 think-box">
-                                <p><span class="text-slate-600 italic">An Inner Join drops any row that doesn't have a match. In accounting, we can't just "delete" an invoice because a vendor was missing from our map—that's how liabilities get understated! A Left Outer Join keeps all AP invoices and simply puts a "null" where mapping is missing, allowing us to flag it for review.</span></p>
+                            <div id="hint-2" class="hidden p-5 bg-slate-900 text-white border-l-4 border-yellow-400 text-sm rounded-lg shadow-inner">
+                                <span class="text-yellow-400 font-bold game-font text-[10px] leading-relaxed">QUESTION:</span> Why group by BOTH Vendor and Amount? Is it possible for two distinct invoices to share an exact amount?<br><br>
+                                <span class="text-blue-200 italic block">> ANSWER: Yes, recurring flat-fee services (like a $50/mo bill) will have identical amounts. However, seeing the exact same dollar amount billed by the exact same vendor on the same day is the mathematical fingerprint of a duplicate submission. It's a risk indicator, not a guarantee.</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Step 15-16 -->
-                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">15</div>
-                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Merge Vendor Master</h4>
-                        <p class="text-sm text-slate-700 mb-2">New Source &rarr; Text/CSV &rarr; <code>Vendor_Master.csv</code>. Clean the VendorName column (Trim/Clean).</p>
-                        <p class="text-sm text-slate-700 mb-2">Go back to <code>AP_Raw</code>. <strong>Merge Queries</strong>: AP_Raw (Select <code>VendorName_Clean</code>) ↔ Vendor Master (Select <code>VendorName_Clean</code>). Join Kind: Left Outer.</p>
-                        <p class="text-sm text-slate-700">Expand the new column. Select: <code>VendorID</code> and <code>Category</code>.</p>
-                    </div>
-
-                    <!-- Step 17-19 -->
-                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">17</div>
-                        <h4 class="font-bold text-slate-800 mb-2 text-lg">PO Match Logic (3-Way Match Check)</h4>
-                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-2 mb-4">
-                            <li>New Source &rarr; Text/CSV &rarr; <code>Purchase_Orders.csv</code>.</li>
-                            <li>Go back to <code>AP_Raw</code>. Merge Queries with Purchase Orders using the <code>PO_Number</code> columns. Expand to get <code>PO_Amount</code>.</li>
-                            <li>Add Column Tab &rarr; <strong>Conditional Column</strong> (Name it <code>POMatchStatus</code>):
-                                <ul class="pl-6 mt-2 text-xs bg-slate-800 text-amber-400 p-3 rounded border font-mono space-y-1 shadow-inner">
-                                    <li>If PO_Amount <span class="text-white">is</span> null <span class="text-white">Then</span> No PO</li>
-                                    <li>Else If Amount <span class="text-white">equals</span> [Select Column: PO_Amount] <span class="text-white">Then</span> Match</li>
-                                    <li>Else <span class="text-white">Then</span> Mismatch</li>
-                                </ul>
-                            </li>
+                    <!-- Step 11 -->
+                    <div class="relative z-10 step-card border-4 border-yellow-400 p-5 shadow-[0_0_20px_rgba(253,224,71,0.3)]">
+                        <div class="absolute -left-11 md:-left-16 bg-yellow-400 text-blue-900 w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-[0_0_15px_rgba(253,224,71,1)] game-font text-xs">11</div>
+                        <h4 class="font-black text-white mb-3 text-xl uppercase tracking-widest text-yellow-400">Final Extraction</h4>
+                        <ul class="text-slate-200 space-y-3 list-none font-bold">
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-play text-xs"></i></span> Right-click AP_Raw &rarr; Reference. Rename to <code>Exception_Report</code>.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-play text-xs"></i></span> Filter to keep anomalies (Mismatches, Null Vendors, Duplicates).</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-play text-xs"></i></span> Rename AP_Raw to <code>Clean_AP_Transactions</code>.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-play text-xs"></i></span> Execute: Close & Load To... (Table).</li>
                         </ul>
-
-                        <!-- Interactive Think Box -->
-                        <div class="mt-4 border border-amber-200 rounded-lg overflow-hidden shadow-sm">
-                            <button onclick="toggleThinkBox(this)" class="w-full flex justify-between items-center text-left bg-amber-50 hover:bg-amber-100 transition-colors px-4 py-3 focus:outline-none">
-                                <div class="flex items-center gap-3">
-                                    <i class="fa-solid fa-brain text-amber-600"></i>
-                                    <span class="font-bold text-amber-800 text-sm">Stop & Think: What does "No PO" indicate?</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down text-amber-600 transition-transform duration-300 transform"></i>
-                            </button>
-                            <div class="hidden bg-amber-50/50 p-4 border-t border-amber-200 text-sm text-slate-700 think-box">
-                                <p><span class="text-slate-600 italic">It means the business spent money without getting pre-approval from procurement. This is a massive red flag for unauthorized spending, maverick purchasing, or potential fraud. It requires immediate manager review.</span></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 20 -->
-                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
-                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">20</div>
-                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Duplicate Check Strategy</h4>
-                        <ol class="list-decimal list-inside text-sm text-slate-700 space-y-2 mb-4">
-                            <li>Right-click <code>AP_Raw</code> in left pane &rarr; <strong>Duplicate</strong> (Do NOT use Reference here).</li>
-                            <li>Rename this new query to <code>DupCounts</code>.</li>
-                            <li>Select <code>VendorName_Clean</code> and <code>Amount</code>. Right click header &rarr; Remove Other Columns.</li>
-                            <li>Home Tab &rarr; <strong>Group By</strong>. 
-                                <br><span class="ml-5 italic">Group by: VendorName_Clean AND Amount (use Advanced to add grouping). New column name: 'Count'. Operation: Count Rows.</span></li>
-                            <li>Go back to <code>AP_Raw</code>. Merge Queries. Join to <code>DupCounts</code>. Click both VendorName_Clean + Amount in top, hold CTRL, click both in bottom. Expand the <code>Count</code> column.</li>
-                            <li>Add Conditional Column named <code>DuplicateRisk</code>: If Count > 1 then TRUE else FALSE.</li>
-                        </ol>
-
-                         <!-- Interactive Think Box -->
-                         <div class="mt-4 border border-amber-200 rounded-lg overflow-hidden shadow-sm">
-                            <button onclick="toggleThinkBox(this)" class="w-full flex justify-between items-center text-left bg-amber-50 hover:bg-amber-100 transition-colors px-4 py-3 focus:outline-none">
-                                <div class="flex items-center gap-3">
-                                    <i class="fa-solid fa-brain text-amber-600"></i>
-                                    <span class="font-bold text-amber-800 text-sm">Stop & Think: Is it possible for two distinct invoices to share an exact amount?</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down text-amber-600 transition-transform duration-300 transform"></i>
-                            </button>
-                            <div class="hidden bg-amber-50/50 p-4 border-t border-amber-200 text-sm text-slate-700 think-box">
-                                <p><span class="text-slate-600 italic">Yes, recurring flat-fee services (like a $50/mo internet bill) will have identical amounts. However, seeing the exact same dollar amount billed by the exact same vendor on the same day/week is the most common fingerprint of a duplicate invoice submission. It's a risk indicator, not a guarantee.</span></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 21-22 -->
-                    <div class="relative z-10 step-card bg-white p-5 rounded-lg border border-slate-200 shadow-sm border-t-4 border-t-amber-500">
-                        <div class="absolute -left-10 bg-teal-800 text-amber-400 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-md border-2 border-amber-400">21</div>
-                        <h4 class="font-bold text-slate-800 mb-2 text-lg">Exception Report & Final Output</h4>
-                        <ul class="list-disc list-inside text-sm text-slate-700 space-y-2 mb-4">
-                            <li>Right-click <code>AP_Raw</code> &rarr; <strong>Reference</strong> (Creates a linked view). Rename it <code>Exception_Report</code>.</li>
-                            <li>Add Conditional Column <code>ExceptionFlag</code>: Catch unmapped Vendors (VendorID is null), Mismatches, or DuplicateRisk=TRUE. </li>
-                            <li>Filter the <code>ExceptionFlag</code> column to keep only the Exceptions.</li>
-                            <li>Rename your main <code>AP_Raw</code> to <code>Clean_AP_Transactions</code>.</li>
-                            <li><strong>Home Tab &rarr; Close & Load To:</strong> Choose Table, load both the Clean table and Exception Report to New Worksheets.</li>
-                        </ul>
-                        <div class="bg-green-50 text-green-800 p-3 rounded border border-green-200 flex items-center gap-2 font-bold mt-4">
-                            <i class="fa-solid fa-check-circle text-green-600 text-xl"></i>
-                            Lab Complete! You built an automated ETL and Audit pipeline.
-                        </div>
                     </div>
                 </div>
+
+                <!-- MINI PACMAN EASTER EGG & SUBMISSION -->
+                <div id="submission" class="mt-16 pt-8 border-t-4 border-dashed border-blue-800">
+                    
+                    <div class="bg-blue-950 border-4 border-yellow-400 p-6 md:p-10 rounded-2xl shadow-[0_0_30px_rgba(253,224,71,0.2)] text-center max-w-2xl mx-auto relative overflow-hidden">
+                        
+                        <div class="text-yellow-400 text-5xl mb-4 drop-shadow-[0_0_10px_rgba(253,224,71,0.8)] relative z-10"><i class="fa-solid fa-trophy"></i></div>
+                        <h3 class="text-2xl md:text-3xl font-black text-white mb-2 uppercase tracking-widest relative z-10 game-font text-shadow text-yellow-400 neon-text">Level Cleared!</h3>
+                        <p class="text-blue-200 mb-6 font-mono text-sm relative z-10">Data successfully decrypted, scrubbed, and secured.</p>
+                        
+                        <div class="bg-slate-900 p-6 rounded-xl border-2 border-blue-600 inline-block text-left w-full relative z-10 mb-8">
+                            <p class="font-bold text-white mb-4 text-sm font-mono border-b-2 border-blue-800 pb-3"><i class="fa-solid fa-upload text-yellow-400 mr-2"></i> > SUBMIT_SCORE_TO_CANVAS</p>
+                            <ol class="list-decimal list-inside text-blue-200 space-y-3 text-xs font-mono">
+                                <li>Save <code class="text-yellow-400 font-bold bg-blue-950 px-2 py-1 rounded">PQ_ETL_Lab.xlsx</code> to local drive.</li>
+                                <li>Access the university Canvas portal.</li>
+                                <li>Upload file to target drop zone to collect XP.</li>
+                            </ol>
+                        </div>
+
+                        <!-- PACMAN GAME -->
+                        <div class="border-t-2 border-blue-800 pt-8">
+                            <h4 class="text-white font-bold mb-4 font-mono uppercase tracking-widest text-sm">Are you finished? Play this game while you wait.</h4>
+                            <p class="text-xs text-blue-300 mb-4 font-mono">Click canvas or swipe to start. Use ARROW KEYS or SWIPE to move. Eat all dots to win!</p>
+                            
+                            <div class="relative w-full max-w-[480px] mx-auto bg-black p-1 rounded-lg border-4 border-blue-600 shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+                                <canvas id="pacmanCanvas" width="440" height="260" class="w-full bg-black rounded cursor-pointer focus:outline-none focus:border-yellow-400 transition-colors" tabindex="0"></canvas>
+                                <div id="pacmanOverlay" class="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/60 rounded">
+                                    <span class="text-yellow-400 font-mono font-bold tracking-widest px-4 py-2 animate-pulse game-font text-[10px] md:text-xs text-center leading-loose">CLICK OR SWIPE<br>TO START</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
             </section>
 
              <!-- SECTION: INSTRUCTOR KEY -->
              <section id="instructor" class="content-section hidden animate-fade-in">
-                <div class="bg-slate-900 text-white p-4 md:p-6 rounded-t-lg flex justify-between items-center border-b-4 border-amber-500">
-                    <h3 class="text-lg md:text-xl font-bold"><i class="fa-solid fa-lock mr-2 text-amber-400"></i>Instructor Script & Key</h3>
-                    <button onclick="lockInstructor()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded transition-colors border border-slate-600">Lock Section</button>
+                <div class="bg-blue-900 text-white p-4 md:p-6 flex justify-between items-center border-4 border-yellow-400 shadow-[0_0_15px_rgba(253,224,71,0.3)] rounded-t-xl">
+                    <h3 class="text-lg md:text-xl font-black uppercase tracking-widest text-yellow-400 game-font text-sm"><i class="fa-solid fa-user-secret mr-2"></i>Admin Override</h3>
+                    <button onclick="lockInstructor()" class="text-xs bg-slate-900 hover:bg-slate-800 px-4 py-2 font-mono transition-colors border-2 border-blue-500 text-blue-300 rounded-full font-bold">LOCK_TERMINAL</button>
                 </div>
-                <div class="bg-white border border-slate-200 p-4 md:p-8 rounded-b-lg shadow-sm">
-                    <div class="prose max-w-none text-sm text-slate-700">
-                        <h4 class="font-bold text-xl mb-4 text-slate-900 border-b border-slate-200 pb-2">Step-by-Step Instructor Guide (No Missed Steps)</h4>
+                <div class="bg-slate-900 border-x-4 border-b-4 border-blue-800 p-4 md:p-8 shadow-xl font-mono text-sm rounded-b-xl">
+                    <div class="prose max-w-none text-slate-300">
+                        <h4 class="font-bold text-lg mb-4 text-blue-300 border-b-2 border-blue-800 pb-2">Master Decryption Sequence (No Missed Steps)</h4>
                         
-                        <div class="bg-amber-50 p-4 rounded mb-6 border-l-4 border-amber-500 shadow-sm">
-                            <strong>Part 0 — Setup:</strong>
-                            <ol class="list-decimal pl-5 mt-2 space-y-1">
-                                <li>Unzip dataset to one folder.</li>
-                                <li>Open Excel &rarr; Blank Workbook &rarr; Save as <code>PQ_ETL_Lab.xlsx</code>.</li>
-                            </ol>
-                        </div>
-
-                        <h5 class="font-bold text-amber-700 mt-6 mb-2 border-b border-amber-200 pb-1 text-lg">Part 1: Clean (50 min)</h5>
-                        <ul class="space-y-3 mb-6 bg-slate-50 p-4 rounded border border-slate-200">
-                            <li><strong>1. Import:</strong> Data &rarr; Get Data &rarr; CSV &rarr; <code>Raw_AP_Transactions.csv</code> &rarr; Transform.</li>
-                            <li><strong>2. Rename:</strong> Query name to <code>AP_Raw</code>.</li>
-                            <li><strong>3. Vendor:</strong> Transform &rarr; Format &rarr; Trim, then Clean.</li>
-                            <li><strong>4. Amount:</strong> Replace Values <code>$</code> &rarr; (blank). Replace <code>,</code> &rarr; (blank). Data Type &rarr; Decimal Number.</li>
-                            <li><strong>5. Date:</strong> Data Type &rarr; Date (Use Locale if needed).</li>
-                            <li><strong>6. Dept:</strong> Replace Values (Fin&rarr;FIN, Ops&rarr;OPS, Warehouse&rarr;WH).</li>
-                            <li><strong>7. Terms:</strong> Replace Values (NET30&rarr;Net 30, DOR&rarr;Due on receipt).</li>
-                            <li><strong>8. Save:</strong> Close & Load To... &rarr; Only Create Connection.</li>
-                        </ul>
-
-                        <h5 class="font-bold text-amber-700 mt-6 mb-2 border-b border-amber-200 pb-1 text-lg">Part 2: Merge & Report (50 min)</h5>
-                        <ul class="space-y-3 bg-slate-50 p-4 rounded border border-slate-200">
-                            <li><strong>9. Alias Map:</strong> New Source CSV &rarr; <code>Vendor_Alias_Map.csv</code>. Use First Row Headers. Clean VendorRaw.</li>
-                            <li><strong>10. Merge 1:</strong> AP_Raw (Vendor) &#8596; Alias (VendorRaw). Expand <code>VendorName_Clean</code>.</li>
-                            <li><strong>11. Master:</strong> New Source CSV &rarr; <code>Vendor_Master.csv</code>. Clean VendorName.</li>
-                            <li><strong>12. Merge 2:</strong> AP_Raw (Clean Name) &#8596; Master (Clean Name). Expand ID, Category.</li>
-                            <li><strong>13. POs:</strong> New Source CSV &rarr; <code>Purchase_Orders.csv</code>. Merge on PO_Number. Expand Amount.</li>
-                            <li><strong>14. Logic:</strong> Add Conditional Col <code>POMatchStatus</code> (Match/Mismatch/No PO).</li>
-                            <li><strong>15. Duplicates:</strong> Right-click AP_Raw &rarr; <strong>Duplicate</strong>. Group By (Vendor+Amount). Merge back.</li>
-                            <li><strong>16. Exception Report:</strong> Reference AP_Raw. Filter for Mismatches/Nulls.</li>
-                            <li><strong>17. Final Load:</strong> Load AP_Raw and Exception_Report as Tables.</li>
+                        <ul class="space-y-3 p-6 rounded-xl border-2 border-blue-700 bg-slate-950">
+                            <li><span class="text-yellow-400 font-bold">1.</span> <strong>Import:</strong> Data &rarr; Get Data &rarr; CSV &rarr; <code>Raw_AP_Transactions.csv</code> &rarr; Transform. Rename <code>AP_Raw</code>.</li>
+                            <li><span class="text-yellow-400 font-bold">2.</span> <strong>Vendor:</strong> Transform &rarr; Format &rarr; Trim, then Clean.</li>
+                            <li><span class="text-yellow-400 font-bold">3.</span> <strong>Amount:</strong> Replace Values <code>$</code> &rarr; (blank). Replace <code>,</code> &rarr; (blank). Data Type &rarr; Decimal Number.</li>
+                            <li><span class="text-yellow-400 font-bold">4.</span> <strong>Date:</strong> Data Type &rarr; Date (Use Locale if needed).</li>
+                            <li><span class="text-yellow-400 font-bold">5.</span> <strong>Dept/Terms:</strong> Replace Values.</li>
+                            <li><span class="text-yellow-400 font-bold">6.</span> <strong>Alias Map:</strong> New Source CSV &rarr; <code>Vendor_Alias_Map.csv</code>. Use First Row Headers. Clean VendorRaw.</li>
+                            <li><span class="text-yellow-400 font-bold">7.</span> <strong>Merge 1:</strong> AP_Raw (Vendor) &#8596; Alias (VendorRaw). Expand <code>VendorName_Clean</code>.</li>
+                            <li><span class="text-yellow-400 font-bold">8.</span> <strong>Master:</strong> New Source CSV &rarr; <code>Vendor_Master.csv</code>. Clean VendorName.</li>
+                            <li><span class="text-yellow-400 font-bold">9.</span> <strong>Merge 2:</strong> AP_Raw (Clean Name) &#8596; Master (Clean Name). Expand ID, Category.</li>
+                            <li><span class="text-yellow-400 font-bold">10.</span> <strong>POs:</strong> New Source CSV &rarr; <code>Purchase_Orders.csv</code>. Merge on PO_Number. Expand Amount.</li>
+                            <li><span class="text-yellow-400 font-bold">11.</span> <strong>Logic:</strong> Add Conditional Col <code>POMatchStatus</code> (Match/Mismatch/No PO).</li>
+                            <li><span class="text-yellow-400 font-bold">12.</span> <strong>Duplicates:</strong> Right-click AP_Raw &rarr; <strong>Duplicate</strong>. Group By (Vendor+Amount). Merge back.</li>
+                            <li><span class="text-yellow-400 font-bold">13.</span> <strong>Exception Report:</strong> Reference AP_Raw. Filter for Mismatches/Nulls.</li>
+                            <li><span class="text-yellow-400 font-bold">14.</span> <strong>Final Load:</strong> Load AP_Raw and Exception_Report as Tables.</li>
                         </ul>
                     </div>
                 </div>
@@ -574,14 +564,14 @@
     </main>
     
     <!-- PASSWORD MODAL -->
-    <div id="password-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 px-4 transition-opacity">
-        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm border-t-4 border-t-amber-500 transform transition-transform scale-100">
-            <h3 class="font-bold text-xl mb-2 text-slate-800"><i class="fa-solid fa-lock text-amber-500 mr-2"></i>Instructor Access</h3>
-            <p class="text-sm text-slate-500 mb-5">Enter the password to view the answer key.</p>
-            <input type="password" id="instructor-pass" class="w-full border-2 border-slate-200 p-3 rounded mb-4 text-sm focus:border-amber-400 focus:ring focus:ring-amber-200 focus:outline-none transition-all" placeholder="Enter password...">
-            <div class="flex justify-end gap-3">
-                <button onclick="closePasswordModal()" class="text-slate-500 hover:bg-slate-100 px-4 py-2 rounded text-sm font-semibold transition-colors">Cancel</button>
-                <button onclick="checkPassword()" class="bg-slate-800 text-amber-400 px-5 py-2 rounded hover:bg-slate-700 text-sm font-bold shadow transition-colors border border-slate-900">Unlock</button>
+    <div id="password-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center z-50 px-4 transition-opacity">
+        <div class="bg-slate-900 p-8 shadow-[0_0_40px_rgba(37,99,235,0.6)] w-full max-w-sm border-4 border-blue-600 rounded-xl relative">
+            <h3 class="font-black text-xl mb-4 text-yellow-400 game-font text-sm"><i class="fa-solid fa-terminal mr-2 text-blue-400"></i>SYS.LOGIN</h3>
+            <p class="text-xs text-slate-400 mb-6 font-mono">ENTER OVERRIDE CREDENTIALS.</p>
+            <input type="password" id="instructor-pass" class="w-full bg-slate-950 border-2 border-blue-800 p-3 mb-6 text-sm focus:border-yellow-400 focus:ring-2 focus:ring-yellow-900 focus:outline-none text-yellow-400 font-mono rounded" placeholder="PASSWORD_">
+            <div class="flex justify-end gap-3 font-mono text-xs">
+                <button onclick="closePasswordModal()" class="text-slate-400 hover:text-white px-4 py-2 transition-colors font-bold">ABORT</button>
+                <button onclick="checkPassword()" class="bg-blue-700 text-white px-5 py-2 border-2 border-blue-400 hover:bg-blue-600 transition-colors shadow-[0_0_15px_rgba(59,130,246,0.6)] font-bold rounded">EXECUTE</button>
             </div>
         </div>
     </div>
@@ -614,44 +604,53 @@
 
         function showSection(id) {
             document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
+            
+            // Show requested section
             document.getElementById(id).classList.remove('hidden');
             
             // Reset nav buttons
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-teal-900', 'border-amber-400', 'text-amber-400');
+                btn.classList.remove('bg-blue-900', 'border-yellow-400', 'text-yellow-400', 'shadow-[0_0_15px_rgba(253,224,71,0.4)]');
+                btn.classList.add('border-transparent', 'text-blue-300');
             });
             
             // Set active nav button
             const btn = document.getElementById('btn-' + id);
             if(btn) {
-                btn.classList.add('bg-teal-900', 'border-amber-400', 'text-amber-400');
+                btn.classList.remove('border-transparent', 'text-blue-300');
+                btn.classList.add('bg-blue-900', 'border-yellow-400', 'text-yellow-400', 'shadow-[0_0_15px_rgba(253,224,71,0.4)]');
             }
 
             const titles = {
-                'overview': 'Course Setup & Outcomes',
-                'dataset': 'Dataset Context',
-                'day1': 'Part 1: Clean AP Table',
-                'day2': 'Part 2: Merge & Report',
-                'instructor': 'Instructor Restricted Area'
+                'overview': 'Level Select',
+                'dataset': 'Map Intel',
+                'mission': 'Play Mission',
+                'instructor': 'Admin Mode'
             };
             document.getElementById('page-title').innerText = titles[id];
             
             // Scroll to top of main content area
             document.querySelector('main').scrollTop = 0;
+
+            // Give canvas initial draw if navigating to mission
+            if(id === 'mission' && !gameActive) {
+                drawGame();
+            }
         }
 
-        // --- Interactive Stop & Think Logic ---
-        function toggleThinkBox(btn) {
-            const contentBox = btn.nextElementSibling;
-            const chevronIcon = btn.querySelector('.fa-chevron-down');
+        // --- Interactive Hint Logic ---
+        function hackHint(btnId, hintId) {
+            const btn = document.getElementById(btnId);
+            const hint = document.getElementById(hintId);
             
-            if (contentBox.classList.contains('hidden')) {
-                contentBox.classList.remove('hidden');
-                chevronIcon.classList.add('rotate-180');
-            } else {
-                contentBox.classList.add('hidden');
-                chevronIcon.classList.remove('rotate-180');
-            }
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-lg"></i> MUNCHING...';
+            btn.classList.add('text-white');
+            
+            setTimeout(() => {
+                btn.classList.add('hidden');
+                hint.classList.remove('hidden');
+                hint.classList.add('animate-fade-in');
+            }, 800);
         }
 
         // --- 2. Instructor Lock/Unlock Logic ---
@@ -672,12 +671,13 @@
                 showSection('instructor');
                 closeSidebarMobile(); 
             } else {
-                // Shake effect or alert
                 const input = document.getElementById('instructor-pass');
-                input.classList.add('border-red-500');
-                setTimeout(() => input.classList.remove('border-red-500'), 500);
-                alert("Incorrect password.");
-                input.value = '';
+                input.classList.add('border-red-500', 'text-red-500');
+                input.value = "ACCESS DENIED";
+                setTimeout(() => {
+                    input.classList.remove('border-red-500', 'text-red-500');
+                    input.value = '';
+                }, 800);
                 input.focus();
             }
         }
@@ -692,7 +692,7 @@
             showSection('overview');
         }
 
-        // --- 3. Data Generation Logic (Exact User Uploads) ---
+        // --- 3. Data Generation Logic (Accounting Dataset) ---
         const datasets = {
             raw_ap: `InvoiceID,InvoiceDate,Vendor,Amount,GL_Account,Dept,PaymentTerms,PO_Number,Status
 AP-1001,2025-01-28, Spokane Water Dept ,620.40,6100,IT,NET30,PO-7808,Pending
@@ -795,11 +795,341 @@ PO-7810,01/10/2025,Globex Software,3000.0`
                 setTimeout(() => downloadFile(key), delay);
                 delay += 500; 
             });
-            // Show a custom nice alert instead of standard alert if desired, but standard works for simplicity
-            alert("Starting 4 file downloads... Check your download folder.");
+            setTimeout(() => alert("SYS.MSG: 4 Files intercepted and downloading."), 100);
         }
 
-        // Initialize view
+        // --- 4. ADVANCED PACMAN MINI-GAME LOGIC ---
+        const canvas = document.getElementById('pacmanCanvas');
+        const ctx = canvas.getContext('2d');
+        const overlay = document.getElementById('pacmanOverlay');
+        
+        // 22x13 grid. Cell size: 20px
+        const CELL = 20; 
+        const mapData = [
+            "1111111111111111111111",
+            "1000000000110000000001",
+            "1011101110110111011101",
+            "1000001110000111000001",
+            "1011101111111111011101",
+            "1000000000110000000001",
+            "1111101110110111011111",
+            "2222101000000001012222",
+            "1111101011221101011111",
+            "1000000012222100000001",
+            "1011101011111101011101",
+            "1000001000000001000001",
+            "1111111111111111111111"
+        ];
+
+        let dots = [];
+        let walls = [];
+        
+        // Parse map
+        for(let r=0; r<mapData.length; r++) {
+            for(let c=0; c<mapData[r].length; c++) {
+                if(mapData[r][c] === '1') {
+                    walls.push({x: c*CELL, y: r*CELL, w: CELL, h: CELL});
+                } else if(mapData[r][c] === '0') {
+                    dots.push({x: c*CELL + CELL/2, y: r*CELL + CELL/2, active: true});
+                }
+            }
+        }
+
+        let pacman = { x: 11*CELL + CELL/2, y: 11*CELL + CELL/2, radius: 7, angle: 0, mouth: 0, mouthDir: 1, speed: 1.5, dx: 0, dy: 0, nextDx: 0, nextDy: 0 };
+        
+        // Ghosts
+        let ghosts = [
+            { x: 10*CELL + CELL/2, y: 8*CELL + CELL/2, color: '#ff0000', dx: 1, dy: 0 }, // Blinky
+            { x: 11*CELL + CELL/2, y: 8*CELL + CELL/2, color: '#ffb8ff', dx: -1, dy: 0 }, // Pinky
+            { x: 10*CELL + CELL/2, y: 9*CELL + CELL/2, color: '#00ffff', dx: 0, dy: -1 }  // Inky
+        ];
+
+        let gameActive = false;
+        let score = 0;
+        let gameStatusText = "";
+
+        // Core Drawing Function to ensure it's visible before start
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Walls
+            ctx.fillStyle = '#1e3a8a';
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 1.5;
+            walls.forEach(w => {
+                ctx.fillRect(w.x, w.y, w.w, w.h);
+                ctx.strokeRect(w.x, w.y, w.w, w.h);
+            });
+
+            // Draw dots
+            dots.forEach(d => {
+                if(d.active) {
+                    ctx.fillStyle = '#fde047'; 
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, 2.5, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            });
+
+            // Draw ghosts
+            ghosts.forEach(g => drawGhost(g));
+
+            // Draw Pacman
+            ctx.save();
+            ctx.translate(pacman.x, pacman.y);
+            ctx.rotate(pacman.angle);
+            ctx.fillStyle = '#fde047'; 
+            ctx.beginPath();
+            ctx.arc(0, 0, pacman.radius, pacman.mouth * Math.PI, (2 - pacman.mouth) * Math.PI);
+            ctx.lineTo(0, 0);
+            ctx.fill();
+            ctx.restore();
+        }
+        
+        // Initial paint
+        drawGame();
+
+        function updateScore(points) {
+            score += points;
+            const sd = document.getElementById('scoreDisplay');
+            if(sd) sd.innerText = score.toString().padStart(4, '0');
+        }
+
+        canvas.addEventListener('click', () => {
+            if(!gameActive && gameStatusText !== "YOU WIN!" && gameStatusText !== "GAME OVER") {
+                gameActive = true;
+                overlay.classList.add('hidden');
+                canvas.classList.replace('border-blue-600', 'border-yellow-400');
+                pacLoop();
+            } else if (gameStatusText === "YOU WIN!" || gameStatusText === "GAME OVER") {
+                // Reset game
+                score = 0;
+                updateScore(0); // refresh UI
+                gameStatusText = "";
+                pacman.x = 11*CELL + CELL/2; pacman.y = 11*CELL + CELL/2; pacman.dx=0; pacman.dy=0; pacman.nextDx=0; pacman.nextDy=0;
+                dots.forEach(d => d.active = true);
+                ghosts[0].x = 10*CELL + CELL/2; ghosts[0].y = 8*CELL + CELL/2;
+                ghosts[1].x = 11*CELL + CELL/2; ghosts[1].y = 8*CELL + CELL/2;
+                ghosts[2].x = 10*CELL + CELL/2; ghosts[2].y = 9*CELL + CELL/2;
+                gameActive = true;
+                overlay.classList.add('hidden');
+                pacLoop();
+            }
+            canvas.focus();
+        });
+
+        canvas.addEventListener('blur', () => {
+            if(gameActive) {
+                gameActive = false;
+                overlay.classList.remove('hidden');
+                overlay.innerHTML = '<span class="text-yellow-400 font-mono font-bold tracking-widest px-4 py-2 game-font text-[10px]">PAUSED</span>';
+                canvas.classList.replace('border-yellow-400', 'border-blue-600');
+            }
+        });
+
+        // Keyboard Controls
+        canvas.addEventListener('keydown', (e) => {
+            if(!gameActive) return;
+            if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault(); 
+            if(e.key === 'ArrowRight') { pacman.nextDx = pacman.speed; pacman.nextDy = 0; }
+            if(e.key === 'ArrowDown')  { pacman.nextDx = 0; pacman.nextDy = pacman.speed; }
+            if(e.key === 'ArrowLeft')  { pacman.nextDx = -pacman.speed; pacman.nextDy = 0; }
+            if(e.key === 'ArrowUp')    { pacman.nextDx = 0; pacman.nextDy = -pacman.speed; }
+        });
+
+        // Touch/Swipe Controls for Mobile
+        let touchStartX = 0;
+        let touchStartY = 0;
+        
+        canvas.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            // Also trigger start game on mobile touch
+            if (!gameActive) canvas.click();
+        }, {passive: true});
+
+        canvas.addEventListener('touchend', e => {
+            if(!gameActive) return;
+            let touchEndX = e.changedTouches[0].screenX;
+            let touchEndY = e.changedTouches[0].screenY;
+            let dx = touchEndX - touchStartX;
+            let dy = touchEndY - touchStartY;
+            
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 20) { pacman.nextDx = pacman.speed; pacman.nextDy = 0; }
+                else if (dx < -20) { pacman.nextDx = -pacman.speed; pacman.nextDy = 0; }
+            } else {
+                if (dy > 20) { pacman.nextDx = 0; pacman.nextDy = pacman.speed; }
+                else if (dy < -20) { pacman.nextDx = 0; pacman.nextDy = -pacman.speed; }
+            }
+        }, {passive: true});
+
+        function checkWallCollision(x, y, radius) {
+            for(let w of walls) {
+                let testX = x;
+                let testY = y;
+                
+                if (x < w.x) testX = w.x;      
+                else if (x > w.x + w.w) testX = w.x + w.w;   
+                if (y < w.y) testY = w.y;      
+                else if (y > w.y + w.h) testY = w.y + w.h;   
+                
+                let distX = x - testX;
+                let distY = y - testY;
+                let distance = Math.sqrt((distX*distX) + (distY*distY));
+                
+                if (distance < radius) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function drawGhost(g) {
+            ctx.fillStyle = g.color;
+            ctx.beginPath();
+            ctx.arc(g.x, g.y, 8, Math.PI, 0);
+            ctx.lineTo(g.x + 8, g.y + 8);
+            ctx.lineTo(g.x + 4, g.y + 6);
+            ctx.lineTo(g.x, g.y + 8);
+            ctx.lineTo(g.x - 4, g.y + 6);
+            ctx.lineTo(g.x - 8, g.y + 8);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Eyes
+            ctx.fillStyle = 'white';
+            ctx.beginPath(); ctx.arc(g.x - 3, g.y - 2, 2.5, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(g.x + 3, g.y - 2, 2.5, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = 'blue';
+            ctx.beginPath(); ctx.arc(g.x - 3 + (g.dx > 0 ? 1 : (g.dx < 0 ? -1 : 0)), g.y - 2 + (g.dy > 0 ? 1 : (g.dy < 0 ? -1 : 0)), 1, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(g.x + 3 + (g.dx > 0 ? 1 : (g.dx < 0 ? -1 : 0)), g.y - 2 + (g.dy > 0 ? 1 : (g.dy < 0 ? -1 : 0)), 1, 0, Math.PI*2); ctx.fill();
+        }
+
+        function endGame(text, color) {
+            gameActive = false;
+            gameStatusText = text;
+            drawGame(); // Final frame
+            overlay.classList.remove('hidden');
+            overlay.innerHTML = `<span class="text-${color}-400 font-mono font-bold tracking-widest px-4 py-2 game-font text-xs text-center leading-loose">${text}<br><span class="text-[8px] text-white mt-2 block">CLICK TO RESTART</span></span>`;
+            canvas.classList.replace('border-yellow-400', 'border-blue-600');
+        }
+
+        function pacLoop() {
+            if(!gameActive) return;
+
+            let collisionRadius = 3; // Highly forgiving hitbox for smooth maze navigation
+
+            // Cornering / Turning Logic (Auto-Snap to center of lanes)
+            if (pacman.nextDx !== pacman.dx || pacman.nextDy !== pacman.dy) {
+                let cellCenterX = Math.floor(pacman.x / CELL) * CELL + CELL/2;
+                let cellCenterY = Math.floor(pacman.y / CELL) * CELL + CELL/2;
+                
+                // If changing axis (90 degree turn)
+                if ((pacman.nextDx !== 0 && pacman.dx === 0) || (pacman.nextDy !== 0 && pacman.dy === 0)) {
+                    // Check if close enough to intersection to turn
+                    if (Math.abs(pacman.x - cellCenterX) <= 10 && Math.abs(pacman.y - cellCenterY) <= 10) {
+                        let testX = (pacman.nextDx !== 0) ? cellCenterX : pacman.x;
+                        let testY = (pacman.nextDy !== 0) ? cellCenterY : pacman.y;
+                        
+                        if (!checkWallCollision(testX + pacman.nextDx, testY + pacman.nextDy, collisionRadius)) {
+                            pacman.x = testX;
+                            pacman.y = testY;
+                            pacman.dx = pacman.nextDx;
+                            pacman.dy = pacman.nextDy;
+                            
+                            if(pacman.dx > 0) pacman.angle = 0;
+                            else if(pacman.dx < 0) pacman.angle = Math.PI;
+                            else if(pacman.dy > 0) pacman.angle = Math.PI/2;
+                            else if(pacman.dy < 0) pacman.angle = -Math.PI/2;
+                        }
+                    }
+                } else {
+                    // 180 degree turn (U-turn)
+                    if (!checkWallCollision(pacman.x + pacman.nextDx, pacman.y + pacman.nextDy, collisionRadius)) {
+                        pacman.dx = pacman.nextDx;
+                        pacman.dy = pacman.nextDy;
+                        if(pacman.dx > 0) pacman.angle = 0;
+                        else if(pacman.dx < 0) pacman.angle = Math.PI;
+                        else if(pacman.dy > 0) pacman.angle = Math.PI/2;
+                        else if(pacman.dy < 0) pacman.angle = -Math.PI/2;
+                    }
+                }
+            }
+
+            // Move Pacman
+            if (!checkWallCollision(pacman.x + pacman.dx, pacman.y + pacman.dy, collisionRadius)) {
+                pacman.x += pacman.dx;
+                pacman.y += pacman.dy;
+            }
+
+            // FIX: Safe Tunnel Wrap to prevent edge-catching telefrags
+            if(pacman.x > canvas.width + pacman.radius) pacman.x = -pacman.radius;
+            if(pacman.x < -pacman.radius) pacman.x = canvas.width + pacman.radius;
+
+            // Eat dots
+            let dotsLeft = 0;
+            dots.forEach(d => {
+                if(d.active) {
+                    dotsLeft++;
+                    let dist = Math.hypot(pacman.x - d.x, pacman.y - d.y);
+                    if(dist < pacman.radius + 3) {
+                        d.active = false;
+                        updateScore(10);
+                    }
+                }
+            });
+
+            if(dotsLeft === 0) {
+                endGame("YOU WIN!", "yellow");
+                return;
+            }
+
+            // Move Ghosts
+            ghosts.forEach(g => {
+                if (checkWallCollision(g.x + g.dx, g.y + g.dy, 4)) {
+                    // Ghost snap to cell center when hitting wall to prevent vibrating
+                    g.x = Math.floor(g.x / CELL) * CELL + CELL/2;
+                    g.y = Math.floor(g.y / CELL) * CELL + CELL/2;
+
+                    let dirs = [{dx: 1, dy: 0}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 0, dy: -1}];
+                    let validDirs = dirs.filter(d => (d.dx !== -g.dx || d.dy !== -g.dy) && !checkWallCollision(g.x + d.dx, g.y + d.dy, 4));
+                    if(validDirs.length > 0) {
+                        let chosen = validDirs[Math.floor(Math.random() * validDirs.length)];
+                        g.dx = chosen.dx;
+                        g.dy = chosen.dy;
+                    } else {
+                        g.dx *= -1;
+                        g.dy *= -1;
+                    }
+                }
+                
+                g.x += g.dx;
+                g.y += g.dy;
+                
+                // Ghost Safe Wrap
+                if(g.x > canvas.width + 8) g.x = -8;
+                if(g.x < -8) g.x = canvas.width + 8;
+
+                let dist = Math.hypot(pacman.x - g.x, pacman.y - g.y);
+                if(dist < pacman.radius + 6) {
+                    endGame("GAME OVER", "red");
+                }
+            });
+
+            if(!gameActive) return;
+
+            // Mouth animation
+            if (pacman.dx !== 0 || pacman.dy !== 0) {
+                pacman.mouth += 0.08 * pacman.mouthDir;
+                if(pacman.mouth > 0.3 || pacman.mouth < 0) pacman.mouthDir *= -1;
+            }
+
+            drawGame();
+            requestAnimationFrame(pacLoop);
+        }
+
+        // Initialize default view
         showSection('overview');
 
     </script>
