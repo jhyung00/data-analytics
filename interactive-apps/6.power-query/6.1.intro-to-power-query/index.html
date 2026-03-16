@@ -86,7 +86,7 @@
                 <i data-lucide="database" class="text-slate-500"></i> The Scenario: The "Dirty" Sales Export
             </h2>
             <p class="mb-6 text-slate-600">
-                You receive this data every month. It's a mess. To progress, review the data below, then scroll down and <strong class="text-yellow-600">click the hidden cards</strong> to see how Power Query destroys the competition.
+                You receive this data every month. It's a mess. Review Dataset 1 and 2, and notice how Dataset 3 introduces new Q2 columns. To progress, scroll down and <strong class="text-yellow-600">click the hidden cards</strong> to see how Power Query destroys the competition.
             </p>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -97,7 +97,7 @@
                             <i data-lucide="download" class="w-3 h-3"></i> Get Excel File
                         </button>
                     </div>
-                    <table class="dataset-table shadow-sm rounded-lg overflow-hidden">
+                    <table class="dataset-table shadow-sm rounded-lg overflow-hidden mb-6">
                         <thead>
                             <tr>
                                 <th>Order_Info</th>
@@ -135,6 +135,63 @@
                             </tr>
                         </tbody>
                     </table>
+
+                    <div class="flex justify-between items-center mb-4 mt-10 border-t pt-8">
+                        <h3 class="font-semibold text-lg">Dataset 3: Updated Sales Table (Now Includes Q2)</h3>
+                        <button id="btn-download-q2" class="bg-blue-600 hover:bg-blue-700 text-white text-xs py-1.5 px-3 rounded flex items-center gap-2 shadow-sm transition">
+                            <i data-lucide="download" class="w-3 h-3"></i> Get Updated Excel
+                        </button>
+                    </div>
+                    <table class="dataset-table shadow-sm rounded-lg overflow-hidden text-xs">
+                        <thead>
+                            <tr>
+                                <th>Order_Info</th>
+                                <th>Category</th>
+                                <th>Region_ID</th>
+                                <th>Jan_Sales</th>
+                                <th>Feb_Sales</th>
+                                <th>Mar_Sales</th>
+                                <th class="bg-blue-50 text-blue-800">Apr_Sales</th>
+                                <th class="bg-blue-50 text-blue-800">May_Sales</th>
+                                <th class="bg-blue-50 text-blue-800">Jun_Sales</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="dirty-cell">ORD101-smith</td>
+                                <td class="dirty-cell">&nbsp;&nbsp;lapTOps&nbsp;</td>
+                                <td>R01</td>
+                                <td>1200</td>
+                                <td>1500</td>
+                                <td>1100</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">1300</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">1400</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">1500</td>
+                            </tr>
+                            <tr>
+                                <td class="dirty-cell">ORD102-JONES</td>
+                                <td class="dirty-cell">TabLEts&nbsp;&nbsp;&nbsp;</td>
+                                <td>R02</td>
+                                <td>800</td>
+                                <td>950</td>
+                                <td>900</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">900</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">850</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">950</td>
+                            </tr>
+                            <tr>
+                                <td class="dirty-cell">ORD103-davis</td>
+                                <td class="dirty-cell">&nbsp;monitors</td>
+                                <td>R01</td>
+                                <td>450</td>
+                                <td>500</td>
+                                <td>480</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">500</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">520</td>
+                                <td class="bg-blue-50 font-medium text-blue-800">510</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
                 <div>
                     <div class="mb-3">
@@ -155,6 +212,10 @@
                             <tr>
                                 <td>R02</td>
                                 <td>Europe</td>
+                            </tr>
+                            <tr>
+                                <td>R03</td>
+                                <td>Asia Pacific</td>
                             </tr>
                         </tbody>
                     </table>
@@ -565,7 +626,7 @@
         }
 
 
-        // --- Original Excel Download Logic Preserved ---
+        // --- Excel Download Logic ---
         function downloadExcel(sheetsData, fileName) {
             const wb = XLSX.utils.book_new();
             sheetsData.forEach(sheet => {
@@ -577,19 +638,45 @@
 
         const regionData = [
             {"Region_ID": "R01", "Region_Name": "North America"},
-            {"Region_ID": "R02", "Region_Name": "Europe"}
+            {"Region_ID": "R02", "Region_Name": "Europe"},
+            {"Region_ID": "R03", "Region_Name": "Asia Pacific"},
+            {"Region_ID": "R04", "Region_Name": "Latin America"}
         ];
 
+        // Original Dataset Download
         document.getElementById('btn-download-start').addEventListener('click', () => {
             const messyData = [
                 {"Order_Info": "ORD101-smith", "Category": "  lapTOps ", "Region_ID": "R01", "Jan_Sales": 1200, "Feb_Sales": 1500, "Mar_Sales": 1100},
                 {"Order_Info": "ORD102-JONES", "Category": "TabLEts   ", "Region_ID": "R02", "Jan_Sales": 800, "Feb_Sales": 950, "Mar_Sales": 900},
-                {"Order_Info": "ORD103-davis", "Category": " monitors", "Region_ID": "R01", "Jan_Sales": 450, "Feb_Sales": 500, "Mar_Sales": 480}
+                {"Order_Info": "ORD103-davis", "Category": " monitors", "Region_ID": "R01", "Jan_Sales": 450, "Feb_Sales": 500, "Mar_Sales": 480},
+                {"Order_Info": "ORD104-BROWN", "Category": " smartPHONES ", "Region_ID": "R03", "Jan_Sales": 2100, "Feb_Sales": 1800, "Mar_Sales": 2200},
+                {"Order_Info": "ORD105-wilson", "Category": "  lapTOps", "Region_ID": "R02", "Jan_Sales": 1300, "Feb_Sales": 1400, "Mar_Sales": 1350},
+                {"Order_Info": "ORD106-taylor", "Category": "TabLEts", "Region_ID": "R04", "Jan_Sales": 600, "Feb_Sales": 750, "Mar_Sales": 800},
+                {"Order_Info": "ORD107-clark", "Category": "   monitors  ", "Region_ID": "R01", "Jan_Sales": 550, "Feb_Sales": 600, "Mar_Sales": 590},
+                {"Order_Info": "ORD108-EVANS", "Category": "smartPHONES", "Region_ID": "R03", "Jan_Sales": 1900, "Feb_Sales": 2000, "Mar_Sales": 2150}
             ];
             downloadExcel([
                 { data: messyData, name: 'Sales Data' },
                 { data: regionData, name: 'Region Mapping' }
             ], 'Starting_Data.xlsx');
+        });
+
+        // Updated Q2 Dataset Download
+        document.getElementById('btn-download-q2').addEventListener('click', () => {
+            const q2Data = [
+                {"Order_Info": "ORD101-smith", "Category": "  lapTOps ", "Region_ID": "R01", "Jan_Sales": 1200, "Feb_Sales": 1500, "Mar_Sales": 1100, "Apr_Sales": 1300, "May_Sales": 1400, "Jun_Sales": 1500},
+                {"Order_Info": "ORD102-JONES", "Category": "TabLEts   ", "Region_ID": "R02", "Jan_Sales": 800, "Feb_Sales": 950, "Mar_Sales": 900, "Apr_Sales": 900, "May_Sales": 850, "Jun_Sales": 950},
+                {"Order_Info": "ORD103-davis", "Category": " monitors", "Region_ID": "R01", "Jan_Sales": 450, "Feb_Sales": 500, "Mar_Sales": 480, "Apr_Sales": 500, "May_Sales": 520, "Jun_Sales": 510},
+                {"Order_Info": "ORD104-BROWN", "Category": " smartPHONES ", "Region_ID": "R03", "Jan_Sales": 2100, "Feb_Sales": 1800, "Mar_Sales": 2200, "Apr_Sales": 2300, "May_Sales": 2100, "Jun_Sales": 2500},
+                {"Order_Info": "ORD105-wilson", "Category": "  lapTOps", "Region_ID": "R02", "Jan_Sales": 1300, "Feb_Sales": 1400, "Mar_Sales": 1350, "Apr_Sales": 1350, "May_Sales": 1450, "Jun_Sales": 1400},
+                {"Order_Info": "ORD106-taylor", "Category": "TabLEts", "Region_ID": "R04", "Jan_Sales": 600, "Feb_Sales": 750, "Mar_Sales": 800, "Apr_Sales": 700, "May_Sales": 800, "Jun_Sales": 850},
+                {"Order_Info": "ORD107-clark", "Category": "   monitors  ", "Region_ID": "R01", "Jan_Sales": 550, "Feb_Sales": 600, "Mar_Sales": 590, "Apr_Sales": 600, "May_Sales": 650, "Jun_Sales": 620},
+                {"Order_Info": "ORD108-EVANS", "Category": "smartPHONES", "Region_ID": "R03", "Jan_Sales": 1900, "Feb_Sales": 2000, "Mar_Sales": 2150, "Apr_Sales": 2050, "May_Sales": 2100, "Jun_Sales": 2250}
+            ];
+            downloadExcel([
+                { data: q2Data, name: 'Sales Data' },
+                { data: regionData, name: 'Region Mapping' }
+            ], 'Updated_Sales_Data_Q1_Q2.xlsx');
         });
     </script>
 </body>
