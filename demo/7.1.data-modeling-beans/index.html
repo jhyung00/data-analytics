@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Step-by-Step Guide: Beans Dataset Cleaning</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Nunito', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          colors: {
+            ink: '#0f172a',
+            mint: {50:'#f0fdf4',100:'#dcfce7',200:'#bbf7d0',500:'#22c55e',800:'#166534'},
+            amberContrast: {100:'#fef3c7',200:'#fde68a',500:'#f59e0b',600:'#d97706'},
+            line:'#cbd5e1'
+          },
+          boxShadow: {
+            game: '5px 5px 0px rgba(15,23,42,1)',
+            gameSm: '3px 3px 0px rgba(15,23,42,1)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html { scroll-behavior:smooth; }
+    body { background-color:#f0fdf4; color:#334155; margin:0; overflow:hidden; font-family:'Nunito', sans-serif; }
+    
+    /* Updated Sidebar CSS to fix width and resize handle */
+    .sidebar-nav { 
+      resize: horizontal; 
+      overflow: hidden; /* Keeps the resize handle glued to the visible bottom-right corner */
+      width: 280px; /* Explicit initial width so it isn't too wide */
+      min-width: 220px; 
+      max-width: 48%; 
+      border-right: 2px dashed #bbf7d0; 
+      background:#0f172a; 
+      color:#fff; 
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-content {
+      overflow-y: auto;
+      flex: 1;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-content::-webkit-scrollbar { width: 6px; height: 6px; }
+    .sidebar-content::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,.25); border-radius: 4px; }
+    
+    .main-content { overflow-y:auto; scroll-behavior:smooth; }
+    .step-card { transition:all .25s ease; position:relative; }
+    .step-card.completed { opacity:.78; background-color:#f8fafc; }
+    .step-card.completed .step-title { text-decoration:line-through; color:#94a3b8; }
+    .custom-checkbox { appearance:none; background-color:#fff; margin:0; width:1.45em; height:1.45em; border:2px solid #f59e0b; border-radius:.35em; display:grid; place-content:center; cursor:pointer; transition:background-color .2s,border-color .2s; position:relative; z-index:10; flex-shrink:0; }
+    .custom-checkbox::before { content:""; width:.78em; height:.78em; transform:scale(0); transition:120ms transform ease-in-out; box-shadow:inset 1em 1em white; background-color:white; transform-origin:center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+    .custom-checkbox:checked { background-color:#f59e0b; border-color:#f59e0b; }
+    .custom-checkbox:checked::before { transform:scale(1); }
+    .solution-content { display:none; animation:fadeIn .35s ease forwards; }
+    .solution-content.open { display:block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-5px);} to { opacity:1; transform:translateY(0);} }
+    code { background-color: rgba(245, 158, 11, 0.15); padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-size: 0.9em; color: #b45309; font-weight: 700; font-family:'JetBrains Mono', monospace; }
+    .bean { position:absolute; font-size:24px; user-select:none; pointer-events:none; animation:beanPop 1s ease-out forwards; z-index:50; }
+    @keyframes beanPop { 0% { transform: translate(0,0) scale(.5) rotate(0deg); opacity:1; } 50% { transform: translate(var(--dx), -50px) scale(1.2) rotate(var(--rot)); opacity:1; } 100% { transform: translate(var(--dx), 80px) scale(1) rotate(calc(var(--rot) * 2)); opacity:0; } }
+    .zoomable { cursor:zoom-in; }
+    .modal-backdrop { position:fixed; inset:0; background:rgba(15,23,42,.72); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:999; padding:20px; }
+    .modal-backdrop.open { display:flex; }
+    .modal-card { background:#fff; border:3px solid #0f172a; border-radius:22px; max-width:min(1100px, 96vw); max-height:90vh; overflow:auto; box-shadow:10px 10px 0 rgba(15,23,42,.35); padding:18px; }
+    .modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .modal-head h5 { margin:0; font-size:22px; font-weight:900; color:#0f172a; }
+    .icon-btn { border:3px solid #0f172a; background:#e2e8f0; color:#0f172a; border-radius:12px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:900; }
+    .modal-card img { display:block; max-width:none; width:auto; height:auto; background:#fff; border:1px solid #94a3b8; border-radius:10px; }
+  </style>
+</head>
+<body class="flex h-screen w-full font-sans">
+  
+  <nav class="sidebar-nav h-full z-20">
+    <div class="sidebar-content">
+      <div class="mb-6">
+        <div class="inline-flex items-center gap-2 rounded-full bg-amberContrast-100 text-amberContrast-600 px-3 py-1 border-2 border-white/10 font-extrabold text-xs mb-4">🫘 Interactive student file</div>
+        <h2 class="font-extrabold text-2xl text-white tracking-tight leading-tight">Beans Dataset<br><span class="text-sm font-semibold text-slate-300">Cleaning Guide</span></h2>
+        <p class="text-slate-300 text-sm font-semibold mt-3 leading-6">Open the workbook, clean the tables, reshape the data, and prepare the model in a clearer step-by-step format with matched screenshots.</p>
+      </div>
+      <ul class="space-y-2 text-slate-200 font-semibold flex-1 mb-4">
+        <li><a href="#overview" class="hover:text-white transition-colors block p-3 rounded-xl hover:bg-white/10">Overview</a></li>
+        <li><a href="#part1" class="hover:text-white transition-colors block p-3 rounded-xl hover:bg-white/10">Part 1: Simple ETL</a></li>
+        <li><a href="#part2" class="hover:text-white transition-colors block p-3 rounded-xl hover:bg-white/10">Part 2: Table Transform</a></li>
+        <li><a href="#part3" class="hover:text-white transition-colors block p-3 rounded-xl hover:bg-white/10">Part 3: Data Modeling</a></li>
+      </ul>
+    </div>
+    <!-- Pinned at the bottom so the resize handle logic is clear -->
+    <div class="p-3 border-t border-white/10 flex justify-between items-center bg-slate-900 shrink-0">
+      <p class="text-xs text-slate-400">Drag bottom corner to resize ↘</p>
+    </div>
+  </nav>
+
+  <main class="main-content flex-1 h-full w-full bg-mint-50/60 relative">
+    <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50">
+      <div class="max-w-5xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800">Beans Dataset Cleaning Guide</h1>
+          <p class="text-sm text-slate-500 font-semibold mt-1">Think like an analyst. Clean the workbook before you model it.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="data/Beans.xlsx" download class="bg-amberContrast-500 hover:bg-amberContrast-600 text-white font-bold py-2 px-5 rounded-full shadow-lg transform transition hover:-translate-y-0.5 flex items-center gap-2">
+            <span>⬇️</span><span>Get Dataset</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-8 pb-32">
+      <section id="overview" class="scroll-mt-24">
+        <div class="bg-white border-2 border-slate-900 rounded-3xl shadow-game p-7">
+          <div class="inline-flex items-center gap-2 rounded-full bg-mint-100 border-2 border-slate-900 px-3 py-1 text-xs font-extrabold text-mint-800">Overview</div>
+          <h2 class="text-3xl font-extrabold text-slate-900 mt-4 mb-3">Beans Dataset Cleaning with Power Query</h2>
+          <p class="text-slate-700 font-bold leading-7">This page now includes the main pieces your comparison file had that were missing from the earlier package: a real <code>data/Beans.xlsx</code> download path, a resizable sidebar, reveal-answer toggles, completion checkboxes, and a sticky header. The screenshots stay embedded inside the related steps.</p>
+        </div>
+        <div class="bg-amberContrast-100 border-l-4 border-amberContrast-500 p-4 rounded-r-xl shadow-sm mt-6">
+          <p class="text-amberContrast-600 font-bold mb-1">Interactive Learning Guide</p>
+          <p class="text-slate-700 text-sm">Read each task, think through what you would do in Power Query, then open the answer to see the guided steps. Check off each item as you complete it.</p>
+        </div>
+      </section>
+
+      <section id="part1" class="scroll-mt-24">
+        <h2 class="text-2xl font-extrabold text-mint-800 mb-4 border-b-2 border-mint-200 pb-2 flex items-center gap-2"><span class="bg-mint-200 text-mint-800 rounded-full w-8 h-8 flex items-center justify-center text-sm">1</span>Simple ETL & Setup</h2>
+        <div class="flex flex-col gap-4">
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">1. Open & Profile the Dataset</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Open the <code>Beans.xlsx</code> file in Power Query. How do you make sure profiling checks the <em>entire</em> dataset?</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100"><ul class="list-disc pl-5 text-slate-700 space-y-1 font-semibold"><li>Open <code>Beans.xlsx</code> and choose <strong>Transform Data</strong>.</li><li>At the bottom-left of Power Query Editor, change <strong>Column profiling based on top 1000 rows</strong> to <strong>entire data set</strong>.</li><li>Use the profile indicators to review the full workbook before cleaning.</li></ul><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image1.png" alt="Transform Data" class="rounded-xl zoomable" data-title="Open Beans.xlsx and choose Transform Data" data-src="image-source/image1.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Open the workbook and enter Power Query.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image2.png" alt="Entire dataset profiling" class="rounded-xl zoomable" data-title="Column profiling based on entire dataset" data-src="image-source/image2.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Switch profiling to the full dataset.</figcaption></figure></div></div></div></label>
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">2. Remove Irrelevant Data</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Identify fields that do not support the later analysis and remove them before modeling.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-slate-700 font-semibold">Remove columns that do not add analytical value for the task. The handout explicitly flags <code>Age</code> as a field to remove from the demographic view before continuing.<div class="grid md:grid-cols-1 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image3.png" alt="Remove Age" class="rounded-xl zoomable" data-title="Remove Age from the demographic table" data-src="image-source/image3.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Remove the irrelevant field before continuing.</figcaption></figure></div></div></div></label>
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">3. Rename Ambiguous Columns</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Generic names like <code>ID</code> or short abbreviations create confusion in the model. Rename them before relationships are formed.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100"><div class="grid md:grid-cols-2 gap-3 text-sm text-slate-700 font-semibold"><div><strong>CL Table:</strong> <code>ID</code> → <code>Client ID</code></div><div><strong>E-Dem Table:</strong> <code>CertList</code> → <code>Certification List</code></div><div><strong>Employee Table:</strong> <code>MS</code> → <code>Marital Status</code>, <code>ID</code> → <code>Employee ID</code></div><div><strong>Service Table:</strong> <code>ID</code> → <code>Service ID</code>, <code>ID_1</code> → <code>Task ID</code>, <code>Employee</code> → <code>Employee ID</code>, <code>Client</code> → <code>Client ID</code></div></div><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image4.png" alt="Rename columns" class="rounded-xl zoomable" data-title="Rename ambiguous ID-style columns" data-src="image-source/image4.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Rename business keys clearly.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image5.png" alt="Remove empty columns" class="rounded-xl zoomable" data-title="Remove empty columns from Service" data-src="image-source/image5.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Also remove fully empty columns where shown.</figcaption></figure></div></div></div></label>
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">4. Split Composite Name Fields</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Separate combined name fields so the final table has cleaner atomic columns.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 font-semibold">In the Employee table, split <code>Name</code> using <strong>Split Column by Delimiter</strong>, then rename the resulting fields to <code>First Name</code> and <code>Last Name</code>.<div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image6.png" alt="Split by delimiter" class="rounded-xl zoomable" data-title="Split the Name column by delimiter" data-src="image-source/image6.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Split the combined name field.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image7.png" alt="Rename split name columns" class="rounded-xl zoomable" data-title="Rename the split name columns" data-src="image-source/image7.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Finish the name cleanup.</figcaption></figure></div></div></div></label>
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">5. Hunt Down Outliers</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Sort and inspect time values so extreme errors are corrected or removed before analysis.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 font-semibold space-y-2"><p>Sort <code>Actual Time</code> descending to isolate unrealistic values.</p><p>Correct the typo where <code>25</code> should become <code>2.5</code>, then remove the obvious bad top rows shown in the handout.</p><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image8.png" alt="Sort actual time descending" class="rounded-xl zoomable" data-title="Sort Actual Time descending" data-src="image-source/image8.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Use sorting to isolate outliers.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image9.png" alt="Remove top rows" class="rounded-xl zoomable" data-title="Remove the bad top rows after fixing the typo" data-src="image-source/image9.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Fix the typo and remove the remaining extreme values.</figcaption></figure></div></div></div></label>
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">6. Standardize Inconsistent Values</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Replace inconsistent abbreviations and missing-value patterns with one standard business format.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700"><ul class="list-disc pl-5 space-y-1 font-semibold"><li><strong>University:</strong> Replace short acronyms with the full school names shown in the handout.</li><li><strong>Job Title:</strong> Standardize inconsistent senior-manager labels into one clean spelling.</li><li><strong>Marital Status:</strong> Replace letters and blanks with full terms such as <code>Married</code>, <code>Single</code>, and <code>Unknown</code>.</li></ul><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image10.png" alt="Replace values" class="rounded-xl zoomable" data-title="Replace inconsistent university and job values" data-src="image-source/image10.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Use replace values to standardize categories.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image11.png" alt="Standardize missing values" class="rounded-xl zoomable" data-title="Replace null and short-code marital-status values" data-src="image-source/image11.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Convert letter codes and blanks into full labels.</figcaption></figure></div></div></div></label>
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">7. Add Logic Checks with Conditional Columns</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Create text-based validation flags for actual hours and budget comparisons.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-3 font-semibold"><div><strong>Column 1: ActualhoursValid</strong><br>If Actual Time is within the acceptable range, label it <code>Valid</code>. Otherwise label it <code>Invalid</code>.</div><div><strong>Column 2: Above/Below Budget</strong><br>Compare Actual Time against Budgeted Time and label each record as <code>Above Budget</code>, <code>At the Budget</code>, or <code>Below Budget</code>.</div><div class="text-amberContrast-600 font-extrabold">Set these conditional columns to Text.</div><div class="grid md:grid-cols-1 gap-3 mt-2"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image12.png" alt="Conditional columns" class="rounded-xl zoomable" data-title="Create conditional columns for validity and budget status" data-src="image-source/image12.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Build both conditional flags before moving on.</figcaption></figure></div></div></div></label>
+        </div>
+      </section>
+
+      <section id="part2" class="scroll-mt-24">
+        <h2 class="text-2xl font-extrabold text-mint-800 mb-4 border-b-2 border-mint-200 pb-2 flex items-center gap-2"><span class="bg-mint-200 text-mint-800 rounded-full w-8 h-8 flex items-center justify-center text-sm">2</span>Table Transformation</h2>
+        <div class="flex flex-col gap-4">
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">8. Give Queries Clear Names</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Rename the imported queries so the final model uses readable business names.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 font-semibold">Rename the handout’s short query names to clear labels such as <code>Client</code> and <code>Employee Demographic</code> before you start merging or building dimensions.</div></div></label>
+        </div>
+      </section>
+
+      <section id="part3" class="scroll-mt-24">
+        <h2 class="text-2xl font-extrabold text-mint-800 mb-4 border-b-2 border-mint-200 pb-2 flex items-center gap-2"><span class="bg-mint-200 text-mint-800 rounded-full w-8 h-8 flex items-center justify-center text-sm">3</span>Data Modeling</h2>
+        <div class="flex flex-col gap-4">
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">9. Merge Employee Data with Fuzzy Matching</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Employee information is split across tables. Merge them while allowing imperfect name matches.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2 font-semibold"><p>Use <strong>Employee</strong> as the primary table and merge in <strong>Employee Demographic</strong>.</p><p>Turn on <strong>Use fuzzy matching</strong> and set the similarity threshold to <code>0.4</code>.</p><p>Expand only <code>Certification List</code> and <code>University</code>, and uncheck the prefix option.</p><p>Right-click the intermediate demographic query and uncheck <strong>Enable load</strong>.</p><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image13.png" alt="Fuzzy match" class="rounded-xl zoomable" data-title="Merge with fuzzy matching at 0.4" data-src="image-source/image13.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Use fuzzy matching for the merge.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image14.png" alt="Expand merged table" class="rounded-xl zoomable" data-title="Expand the merged table" data-src="image-source/image14.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Open the expand selector after merging.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image15.png" alt="Select merged columns" class="rounded-xl zoomable" data-title="Keep Certificate List and University only" data-src="image-source/image15.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Keep only the two needed fields.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image16.png" alt="Disable load" class="rounded-xl zoomable" data-title="Disable load for the intermediate query" data-src="image-source/image16.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Disable the helper query after combining.</figcaption></figure></div></div></div></label>
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">10. Build the Task Dimension</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Extract task attributes from Service into a cleaner dimension table.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2 font-semibold"><p>Duplicate <code>Service</code> and rename the new query <code>Task</code>.</p><p>Keep <code>Task ID</code>, <code>Area</code>, and <code>Task Name</code>, then remove duplicates based on <code>Task ID</code>.</p><p>Return to <code>Service</code> and remove the duplicated descriptive task fields.</p><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image17.png" alt="Create Task" class="rounded-xl zoomable" data-title="Duplicate Service and keep task columns" data-src="image-source/image17.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Build the Task query from Service.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image18.png" alt="Remove duplicates Task ID" class="rounded-xl zoomable" data-title="Remove duplicate Task IDs" data-src="image-source/image18.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Deduplicate the Task dimension.</figcaption></figure></div></div></div></label>
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">11. Build the Certifications Table</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Convert comma-separated certification lists into one certification per row.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2 font-semibold"><p>Duplicate <code>Employee</code> and rename it <code>Certifications</code>.</p><p>Keep only <code>Employee ID</code> and <code>Certification List</code>.</p><p>Split <code>Certification List</code> by comma, then select <code>Employee ID</code> and choose <strong>Unpivot Other Columns</strong>.</p><p>Delete <code>Attribute</code>, rename <code>Value</code> to <code>Certificate</code>, and use <strong>Trim</strong> to remove stray spaces.</p><p>Finally, remove <code>Certification List</code> from the main <code>Employee</code> table.</p><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image19.png" alt="Start certifications table" class="rounded-xl zoomable" data-title="Keep Employee ID and Certification List" data-src="image-source/image19.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Start the Certifications query.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image20.png" alt="Split certifications" class="rounded-xl zoomable" data-title="Split Certification List by comma" data-src="image-source/image20.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Split the multi-value list.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image21.png" alt="Unpivot other columns" class="rounded-xl zoomable" data-title="Unpivot the split certification columns" data-src="image-source/image21.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Unpivot into one row per certificate.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image24.png" alt="Trim certificate field" class="rounded-xl zoomable" data-title="Trim and finalize the Certificate field" data-src="image-source/image24.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Trim and finish the dimension table.</figcaption></figure></div></div></div></label>
+          <label class="step-card bg-amberContrast-100 p-5 rounded-2xl shadow-sm border border-amberContrast-200 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-amberContrast-600 mb-2">12. Close & Apply, Then Form Relationships</h3><div class="bg-white/70 p-3 rounded text-sm text-slate-700 mb-3 border-l-2 border-amberContrast-400"><strong>Task:</strong> Load the cleaned tables and connect the date field in the model.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-white p-4 rounded-xl border border-amberContrast-200 text-sm text-slate-700 font-semibold"><p>Choose <strong>Close & Apply</strong>.</p><p>In Model view, connect <code>Date</code> in <code>Service</code> to <code>Date</code> in <code>Calendar</code>. Confirm the main business keys are linked correctly as well.</p><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image25.png" alt="Create relationship" class="rounded-xl zoomable" data-title="Create the Date relationship" data-src="image-source/image25.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Link Service Date to Calendar Date.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image26.png" alt="Final model view" class="rounded-xl zoomable" data-title="Final relationship and model view" data-src="image-source/image26.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Review the final model layout.</figcaption></figure></div></div></div></label>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <div class="modal-backdrop" id="zoomModal" aria-hidden="true"><div class="modal-card"><div class="modal-head"><h5 id="zoomTitle">Screenshot</h5><button class="icon-btn" id="closeZoom" aria-label="Close image">✕</button></div><div id="zoomBody"></div></div></div>
+  <script>
+    function toggleReveal(btn) {
+      const solution = btn.nextElementSibling;
+      if (solution.classList.contains('open')) { solution.classList.remove('open'); btn.innerHTML = '👁️ Reveal Answer'; }
+      else { solution.classList.add('open'); btn.innerHTML = '🙈 Hide Answer'; }
+    }
+    function toggleComplete(checkbox, event) {
+      const card = checkbox.closest('.step-card');
+      if (checkbox.checked) { card.classList.add('completed'); createBeanExplosion(event.clientX, event.clientY); }
+      else { card.classList.remove('completed'); }
+    }
+    function createBeanExplosion(x, y) {
+      const numBeans = 6;
+      for (let i = 0; i < numBeans; i++) {
+        const bean = document.createElement('div'); bean.innerText = '🫘'; bean.classList.add('bean');
+        const dx = (Math.random() - 0.5) * 150; const rot = (Math.random() - 0.5) * 180;
+        bean.style.left = `${x}px`; bean.style.top = `${y}px`; bean.style.setProperty('--dx', `${dx}px`); bean.style.setProperty('--rot', `${rot}deg`);
+        document.body.appendChild(bean); setTimeout(() => bean.remove(), 1000);
+      }
+    }
+    function attachZoomHandlers() {
+      document.querySelectorAll('.zoomable').forEach(img => {
+        img.addEventListener('click', () => {
+          document.getElementById('zoomTitle').textContent = img.dataset.title || 'Screenshot';
+          document.getElementById('zoomBody').innerHTML = `<img src="${img.dataset.src}" alt="${img.dataset.title || 'Screenshot'}">`;
+          document.getElementById('zoomModal').classList.add('open');
+        });
+      });
+    }
+    function closeZoom() { document.getElementById('zoomModal').classList.remove('open'); document.getElementById('zoomBody').innerHTML = ''; }
+    document.getElementById('closeZoom').addEventListener('click', closeZoom);
+    document.getElementById('zoomModal').addEventListener('click', (e) => { if (e.target.id === 'zoomModal') closeZoom(); });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeZoom(); });
+    attachZoomHandlers();
+  </script>
+</body>
+</html>
