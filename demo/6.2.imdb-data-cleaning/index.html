@@ -63,13 +63,15 @@
     .step-content {flex: 1;}
     .step p{margin:6px 0 0;}
     
-    /* Inline step images */
-    .step-shots {display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 16px;}
-    .shot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;}
-    .shot-card{background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px; margin: 0;}
+    /* Inline step images - adjusted to align to top and not stretch images */
+    .step-shots {display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 16px; align-items: start;}
+    .shot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px; align-items: start;}
+    .shot-card{background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px; margin: 0; display: flex; flex-direction: column; align-items: flex-start;}
     .shot-card strong{display:block;color:var(--ink);margin-top:10px;margin-bottom:4px;font-size:14px;}
     .shot-card span{display:block;color:#475569;font-size:13px;line-height:1.4;font-weight:700;}
-    .native-shot{display:block;width:100%;height:auto;border:1.5px solid #94a3b8;border-radius:8px;background:#fff;cursor:zoom-in; object-fit: contain;}
+    
+    /* Image sizing updated: max-width 100% prevents overflowing, width auto prevents stretching */
+    .native-shot{display:block; max-width:100%; width:auto; height:auto; border:1.5px solid #94a3b8; border-radius:8px; background:#fff; cursor:zoom-in; object-fit: contain;}
     
     .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:999;padding:20px;}
     .modal-backdrop.open{display:flex;}
@@ -77,7 +79,10 @@
     .modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;}
     .modal-head h5{margin:0;font-size:22px;font-weight:900;color:var(--ink);}
     .icon-btn{border:3px solid var(--ink);background:#e2e8f0;color:var(--ink);border-radius:12px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900;}
+    
+    /* Modal image sizing: shows true original size */
     .modal-card img{display:block;max-width:none;width:auto;height:auto;background:#fff;border:1px solid #94a3b8;border-radius:10px;}
+    
     @media (max-width:1000px){.app-shell{flex-direction:column;height:auto;min-height:95vh;}.sidebar{width:100%;}.content{padding:18px;}.hero h2{font-size:32px;}}
     @media (max-width:760px){.hero h2{font-size:28px;}.hero p{font-size:16px;}}
   </style>
@@ -120,7 +125,7 @@
             "items": ["Importing web data into Power Query", "Renaming and removing columns", "Splitting Rank and Title", "Cleaning Box Office values and converting them into numbers", "Turning Duration into total minutes", "Reordering columns and loading the finished query into Excel"]
           }, 
           {
-            "type": "gridshots", "title": "Extracted screenshots from the DOCX", 
+            "type": "gridshots", "title": "Example Screenshots", 
             "shots": [
               {"file": "screenshot-01.png", "title": "Imported movie table", "desc": "The starting Power Query table after the web import."}, 
               {"file": "screenshot-23.png", "title": "From Web connection box", "desc": "The connection dialog used to paste the IMDB URL."}, 
@@ -230,8 +235,7 @@
               {"title": "Split the duration text into pieces", "body": "Use the split tools to separate hour and minute components from the text string.", "shots": [{"file": "screenshot-13.png", "title": "Split by Digit to Non-Digit", "desc": "One of the key split actions used for Duration."}]}, 
               {"title": "Replace missing minute values with zero", "body": "If a movie shows only hours, convert the missing minutes part to 0.", "shots": [{"file": "screenshot-16.png", "title": "Replace null values menu", "desc": "Context menu used during Duration cleanup."}]}, 
               {"title": "Change helper columns to Whole Number", "body": "Make sure the hour and minute parts are numeric before calculating total minutes."}, 
-              {"title": "Create a custom minutes field", "body": "Use a custom calculation to convert hours and minutes into one total Duration in minutes.", "shots": [{"file": "screenshot-14.png", "title": "Add Column tab highlighted", "desc": "Custom Column is used for the final minutes calculation."}, {"file": "screenshot-15.png", "title": "Custom Column for Duration", "desc": "Build the total-minutes formula here."}]}, 
-              {"title": "Remove temporary columns", "body": "Keep only the final minutes field once the calculation is complete.", "shots": [{"file": "screenshot-18.png", "title": "Remove columns menu", "desc": "Cleanup after helper fields are used."}]}
+              {"title": "Create a custom minutes field", "body": "Use a custom calculation to convert hours and minutes into one total Duration in minutes.", "shots": [{"file": "screenshot-14.png", "title": "Add Column tab highlighted", "desc": "Custom Column is used for the final minutes calculation."}, {"file": "screenshot-15.png", "title": "Custom Column for Duration", "desc": "Build the total-minutes formula here."}]}
             ]
           }
         ]
