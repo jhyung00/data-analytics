@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IMDB Box Office Cleaning Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0f172a', slatebg: '#e2e8f0', panel: '#ffffff', soft: '#f8fafc',
+            line: '#cbd5e1', blue: '#2563eb', teal: '#0f766e', amber: '#d97706', green: '#16a34a', rose: '#e11d48'
+          },
+          boxShadow: { game: '5px 5px 0px rgba(15,23,42,1)', gameSm: '3px 3px 0px rgba(15,23,42,1)' },
+          fontFamily: { sans: ['Nunito','system-ui','sans-serif'], mono: ['JetBrains Mono','monospace'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root{--ink:#0f172a;--line:#cbd5e1;--soft:#f8fafc;--panel:#ffffff;--blue:#2563eb;--teal:#0f766e;--amber:#d97706;--green:#16a34a;--rose:#e11d48;}
+    *{box-sizing:border-box;}
+    html,body{margin:0;height:100%;font-family:'Nunito',system-ui,sans-serif;color:var(--ink);background:#cbd5e1;}
+    body{background-image:radial-gradient(#1d4ed8 1.2px,transparent 1.2px),radial-gradient(#1d4ed8 1.2px,transparent 1.2px);background-size:36px 36px;background-position:0 0,18px 18px;}
+    .app-shell{width:min(1500px,96vw);height:min(94vh,980px);margin:3vh auto;background:#fff;border:3px solid var(--ink);border-radius:24px;overflow:hidden;box-shadow:8px 8px 0 rgba(15,23,42,1);display:flex;}
+    .sidebar{width:315px;background:var(--ink);color:#fff;display:flex;flex-direction:column;border-right:3px solid var(--ink);}
+    .brand{padding:28px 24px 24px;border-bottom:3px solid rgba(255,255,255,.08);}
+    .brand .badge{display:inline-flex;align-items:center;gap:8px;background:#fde68a;color:#7c2d12;border:2px solid var(--ink);border-radius:999px;font-size:12px;font-weight:900;padding:6px 12px;margin-bottom:14px;}
+    .brand h1{margin:0;font-size:28px;line-height:1.02;font-weight:900;letter-spacing:-.03em;}
+    .brand p{margin:10px 0 0;color:#cbd5e1;font-weight:700;line-height:1.45;font-size:14px;}
+    .nav{padding:14px 10px 18px;overflow:auto;}
+    .nav button{width:100%;border:none;background:transparent;color:#cbd5e1;display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;font-weight:800;font-size:15px;text-align:left;cursor:pointer;transition:all .15s ease;border-left:5px solid transparent;}
+    .nav button:hover{background:rgba(255,255,255,.08);color:#fff;}
+    .nav button.active{background:#2563eb;color:#fff;border-left-color:#fff;box-shadow:3px 3px 0 rgba(255,255,255,.18) inset;}
+    .content{flex:1;overflow:auto;background:#f1f5f9;padding:28px;}
+    .section.active{display:block;animation:fade .2s ease;}
+    @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+    .hero,.panel{background:var(--panel);border:3px solid var(--ink);border-radius:22px;box-shadow:5px 5px 0 rgba(15,23,42,1);}
+    .hero{padding:26px 28px;margin-bottom:24px;}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#475569;background:#e2e8f0;padding:7px 12px;border-radius:999px;border:2px solid var(--ink);}
+    .hero h2{margin:14px 0 8px;font-size:40px;line-height:1.02;letter-spacing:-.04em;color:var(--ink);}
+    .hero p{margin:0;font-size:18px;line-height:1.6;color:#334155;font-weight:700;max-width:900px;}
+    .stack{display:grid;gap:20px;}
+    .panel{padding:20px;}
+    .panel h3{margin:0 0 10px;color:var(--ink);font-size:22px;font-weight:900;letter-spacing:-.02em;}
+    .panel h4{margin:0 0 8px;color:var(--ink);font-size:18px;font-weight:900;}
+    .panel p,.panel li{color:#1e293b;font-size:16px;line-height:1.65;font-weight:700;}
+    .softbox{background:#f8fafc;border:2px solid var(--line);border-radius:18px;padding:16px;}
+    .list-clean{margin:0;padding-left:18px;display:grid;gap:10px;}
+    .steps{display:grid;gap:14px;}
+    .step{background:#f8fafc;border:2px solid var(--line);border-radius:18px;padding:16px 16px 16px 18px;}
+    .step-head{display:flex;align-items:flex-start;gap:14px;}
+    .step-num{min-width:36px;height:36px;border-radius:12px;background:#2563eb;color:#fff;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:3px 3px 0 rgba(15,23,42,1);margin-top:2px;}
+    .step-content{flex:1;}
+    .step p{margin:6px 0 0;}
+    .step-shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:16px;align-items:start;}
+    .shot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;align-items:start;}
+    .shot-card{background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px;margin:0;display:flex;flex-direction:column;align-items:flex-start;}
+    .shot-card strong{display:block;color:var(--ink);margin-top:10px;margin-bottom:4px;font-size:14px;}
+    .shot-card span{display:block;color:#475569;font-size:13px;line-height:1.4;font-weight:700;}
+    .native-shot{display:block;max-width:100%;width:auto;height:auto;border:1.5px solid #94a3b8;border-radius:8px;background:#fff;cursor:zoom-in;object-fit:contain;}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:999;padding:20px;}
+    .modal-backdrop.open{display:flex;}
+    .modal-card{background:#fff;border:3px solid var(--ink);border-radius:22px;max-width:min(1100px,96vw);max-height:90vh;overflow:auto;box-shadow:10px 10px 0 rgba(15,23,42,.35);padding:18px;}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;}
+    .modal-head h5{margin:0;font-size:22px;font-weight:900;color:var(--ink);}
+    .icon-btn{border:3px solid var(--ink);background:#e2e8f0;color:var(--ink);border-radius:12px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:900;}
+    .modal-card img{display:block;max-width:none;width:auto;height:auto;background:#fff;border:1px solid #94a3b8;border-radius:10px;}
+    @media (max-width:1000px){.app-shell{flex-direction:column;height:auto;min-height:95vh;}.sidebar{width:100%;}.content{padding:18px;}.hero h2{font-size:32px;}}
+    @media (max-width:760px){.hero h2{font-size:28px;}.hero p{font-size:16px;}}
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="badge"><i data-lucide="clapperboard"></i> Interactive student file</div>
+        <h1>IMDB Box Office<br>Cleaning Lab</h1>
+        <p>Import movie data from IMDB, clean the table in Power Query, convert text-based fields into usable numbers, standardize duration values, and load the finished query.</p>
+      </div>
+      <nav class="nav" id="nav"></nav>
+    </aside>
+    <main class="content" id="content"></main>
+  </div>
+
+  <div class="modal-backdrop" id="zoomModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h5 id="zoomTitle">Screenshot</h5>
+        <button class="icon-btn" id="closeZoom" aria-label="Close image"><i data-lucide="x"></i></button>
+      </div>
+      <div id="zoomBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const SECTIONS = [
+  {
+    "id": "overview",
+    "label": "Overview",
+    "icon": "film",
+    "title": "IMDB Box Office Cleaning Lab",
+    "intro": "Use Power Query to import the IMDB Top 250 page, rename the imported fields, clean the text-based columns, convert duration into total minutes, and load the finished query.",
+    "cards": [
+      {
+        "type": "callout",
+        "title": "Source website",
+        "items": [
+          "Website: https://www.imdb.com/chart/top/",
+          "Import the data from the IMDB Top 250 page into Power Query.",
+          "Final query name: Top 250 Movies"
+        ]
+      },
+      {
+        "type": "download",
+        "title": "Starter Excel File",
+        "url": "data/IMDB.xlsx",
+        "label": "Download IMDB.xlsx",
+        "desc": "Use this Excel file directly from the data folder."
+      },
+      {
+        "type": "checklist",
+        "title": "What you will practice",
+        "items": [
+          "Importing web data into Power Query",
+          "Renaming imported columns and the query",
+          "Removing unneeded columns",
+          "Cleaning the Number of Ratings field into a numeric value",
+          "Standardizing Duration and converting it into minutes",
+          "Duplicating the query for the IMDB Bottom list"
+        ]
+      },
+      {
+        "type": "gridshots",
+        "title": "Starting screenshots from the handout",
+        "shots": [
+          {
+            "file": "image1.png",
+            "title": "IMDB Top 250 website",
+            "desc": "The source page used in this exercise."
+          },
+          {
+            "file": "image2.png",
+            "title": "Renamed columns",
+            "desc": "The table after the first renaming step."
+          },
+          {
+            "file": "image22.png",
+            "title": "Close and Apply",
+            "desc": "The final load step in the handout."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rename",
+    "label": "Step 1: Rename",
+    "icon": "type",
+    "title": "Rename Columns and Rename Query",
+    "intro": "Rename the imported columns and change the query name so the dataset is readable and ready for the later cleaning steps.",
+    "cards": [
+      {
+        "type": "callout",
+        "title": "Rename these exactly",
+        "items": [
+          "Column1 → Ranking",
+          "Column2 → Title",
+          "Column3 → Rating Score",
+          "Column4 → Number of Ratings",
+          "Column5 → Year",
+          "Column6 → Duration",
+          "Column9 → Content Rating",
+          "Query name → Top 250 Movies"
+        ]
+      },
+      {
+        "type": "steps",
+        "steps": [
+          {
+            "title": "Review the imported table",
+            "body": "Start with the imported IMDB table from the website.",
+            "shots": [
+              {
+                "file": "image1.png",
+                "title": "Imported website source",
+                "desc": "The source used for the Power Query import."
+              }
+            ]
+          },
+          {
+            "title": "Rename Column1 through Column6 and Column9",
+            "body": "Rename the imported fields to Ranking, Title, Rating Score, Number of Ratings, Year, Duration, and Content Rating.",
+            "shots": [
+              {
+                "file": "image2.png",
+                "title": "Renamed columns in Power Query",
+                "desc": "The handout screenshot for the column renaming step."
+              }
+            ]
+          },
+          {
+            "title": "Rename the query",
+            "body": "Change the query name to Top 250 Movies.",
+            "shots": [
+              {
+                "file": "image3.png",
+                "title": "Query name changed",
+                "desc": "The query is renamed to Top 250 Movies."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "remove",
+    "label": "Step 2: Remove",
+    "icon": "trash-2",
+    "title": "Remove Columns",
+    "intro": "Delete the extra imported fields that are not needed for the finished movie table.",
+    "cards": [
+      {
+        "type": "callout",
+        "title": "Columns to remove",
+        "items": [
+          "Delete Column7 and Column8 because they are unneeded extras."
+        ]
+      },
+      {
+        "type": "steps",
+        "steps": [
+          {
+            "title": "Remove Column7 and Column8",
+            "body": "Delete the two extra columns so only the relevant fields remain.",
+            "shots": [
+              {
+                "file": "image4.png",
+                "title": "Remove extra columns",
+                "desc": "The handout screenshot showing the removal step."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rank",
+    "label": "Step 3: Ranking",
+    "icon": "hash",
+    "title": "Split Rank Cleanup",
+    "intro": "The Ranking field contains the hash symbol together with the rank number. Clean it so the field becomes a usable rank.",
+    "cards": [
+      {
+        "type": "callout",
+        "title": "Goal of this step",
+        "items": [
+          "The Ranking field contains # + Rank.",
+          "Replace the # symbol with blank."
+        ]
+      },
+      {
+        "type": "steps",
+        "steps": [
+          {
+            "title": "Remove the hash symbol from Ranking",
+            "body": "Use Replace Values so the Ranking field keeps only the rank number.",
+            "shots": [
+              {
+                "file": "image5.png",
+                "title": "Replace # with blank",
+                "desc": "The Ranking cleanup screenshot from the revised handout."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ratings",
+    "label": "Step 4: Ratings",
+    "icon": "badge-dollar-sign",
+    "title": "Clean Number of Ratings Field",
+    "intro": "Convert values such as (3.1M), (950K), and (1.2B) into usable numeric values by removing symbols, splitting the text, and applying a multiplier.",
+    "cards": [
+      {
+        "type": "callout",
+        "title": "Transformation logic",
+        "items": [
+          "Remove the opening and closing parentheses.",
+          "Split into a number part and a unit part.",
+          "Replace the unit: K → 1000 and M → 1000000.",
+          "Change Box Office.2 to Whole Number.",
+          "Create final Box Office = number × unit.",
+          "Change the final Box Office field to Number type."
+        ]
+      },
+      {
+        "type": "steps",
+        "steps": [
+          {
+            "title": "Remove the parentheses",
+            "body": "Use Replace Values to remove the opening and closing parentheses from the Number of Ratings field.",
+            "shots": [
+              {
+                "file": "image6.png",
+                "title": "Remove parentheses",
+                "desc": "The first cleanup step for the ratings field."
+              }
+            ]
+          },
+          {
+            "title": "Split the number part and unit",
+            "body": "Separate the text so the amount and the trailing unit are stored in different fields.",
+            "shots": [
+              {
+                "file": "image7.png",
+                "title": "Split ratings field",
+                "desc": "The ratings value is split into number and unit."
+              }
+            ]
+          },
+          {
+            "title": "Replace the unit values",
+            "body": "Convert K to 1000 and M to 1000000 so the unit becomes a multiplier.",
+            "shots": [
+              {
+                "file": "image8.png",
+                "title": "Replace unit text",
+                "desc": "Unit conversion in the revised handout."
+              }
+            ]
+          },
+          {
+            "title": "Change Box Office.2 to Whole Number",
+            "body": "Set the helper multiplier field to Whole Number before using it in a calculation.",
+            "shots": [
+              {
+                "file": "image9.png",
+                "title": "Change data type",
+                "desc": "The helper unit column is changed to Whole Number."
+              }
+            ]
+          },
+          {
+            "title": "Create the final Box Office field",
+            "body": "Create a custom calculation that multiplies the number part by the unit multiplier.",
+            "shots": [
+              {
+                "file": "image10.png",
+                "title": "Add custom column",
+                "desc": "Open the custom column step."
+              },
+              {
+                "file": "image11.png",
+                "title": "Custom formula for final value",
+                "desc": "Use the multiplication formula to create the final numeric field."
+              }
+            ]
+          },
+          {
+            "title": "Change the final Box Office data type",
+            "body": "Convert the finished Box Office field into a numeric type for analysis."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "duration",
+    "label": "Step 5: Duration",
+    "icon": "clock-3",
+    "title": "Duration to Minutes",
+    "intro": "Standardize different duration patterns such as 2h 22m, 3h, and 45m so each row has hours and minutes, then calculate a total minutes field.",
+    "cards": [
+      {
+        "type": "callout",
+        "title": "Duration logic from the handout",
+        "items": [
+          "Standardize the text first so each duration has both hours and minutes.",
+          "Use Conditional Column.",
+          "Extract the first character from Hour Text.",
+          "Extract the last 3 characters.",
+          "Replace m with blank.",
+          "Use Trim to remove leading spaces.",
+          "Change Hours Text and Minute Text to numeric type.",
+          "Create Duration in minutes with a custom calculation.",
+          "Remove the helper columns."
+        ]
+      },
+      {
+        "type": "steps",
+        "steps": [
+          {
+            "title": "Standardize duration with Conditional Column",
+            "body": "Because the current time format is not standardized, first standardize it so each duration includes both an hour part and a minute part.",
+            "shots": [
+              {
+                "file": "image12.png",
+                "title": "Conditional Column setup",
+                "desc": "Build the logic to standardize the duration text."
+              },
+              {
+                "file": "image13.png",
+                "title": "Conditional Column result",
+                "desc": "The result after standardizing duration patterns."
+              }
+            ]
+          },
+          {
+            "title": "Extract the 1st character from Hour Text",
+            "body": "Use the Hour Text field and extract the first character.",
+            "shots": [
+              {
+                "file": "image14.png",
+                "title": "Extract first character",
+                "desc": "The hours portion is isolated from the standardized text."
+              }
+            ]
+          },
+          {
+            "title": "Extract the last 3 characters for minutes",
+            "body": "Use the standardized text and extract the last 3 characters to isolate the minute text.",
+            "shots": [
+              {
+                "file": "image15.png",
+                "title": "Extract last 3 characters",
+                "desc": "The extraction option used for the minute text."
+              },
+              {
+                "file": "image16.png",
+                "title": "Minute text extracted",
+                "desc": "The minutes helper field after extraction."
+              }
+            ]
+          },
+          {
+            "title": "Replace value m with blank",
+            "body": "Remove the m character from the Minute Text field.",
+            "shots": [
+              {
+                "file": "image17.png",
+                "title": "Replace m with blank",
+                "desc": "The unit character is removed from the minutes helper field."
+              }
+            ]
+          },
+          {
+            "title": "Trim leading white spaces",
+            "body": "Use Trim to remove leading spaces from the Minute Text field.",
+            "shots": [
+              {
+                "file": "image18.png",
+                "title": "Trim spaces",
+                "desc": "Leading white spaces are removed in this step."
+              }
+            ]
+          },
+          {
+            "title": "Change Hours Text and Minute Text data types",
+            "body": "Convert both helper fields into numeric values.",
+            "shots": [
+              {
+                "file": "image19.png",
+                "title": "Change helper field types",
+                "desc": "Hours Text and Minute Text are converted to numbers."
+              }
+            ]
+          },
+          {
+            "title": "Create Duration in minutes",
+            "body": "Apply a custom calculation for total minutes and change the finished Duration field to Whole Number.",
+            "shots": [
+              {
+                "file": "image20.png",
+                "title": "Custom duration calculation",
+                "desc": "The formula used to convert hours and minutes into total minutes."
+              }
+            ]
+          },
+          {
+            "title": "Remove unnecessary helper columns",
+            "body": "Delete the temporary columns that were only used to build the final Duration field.",
+            "shots": [
+              {
+                "file": "image21.png",
+                "title": "Remove helper columns",
+                "desc": "The cleanup step at the end of the duration process."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "final",
+    "label": "Step 6: Finish",
+    "icon": "sparkles",
+    "title": "Final Touches",
+    "intro": "Complete the query and load the cleaned result.",
+    "cards": [
+      {
+        "type": "steps",
+        "steps": [
+          {
+            "title": "Close and Apply",
+            "body": "Finish the query and load the cleaned table.",
+            "shots": [
+              {
+                "file": "image22.png",
+                "title": "Close and Apply",
+                "desc": "The final load step shown in the revised handout."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bonus",
+    "label": "Bonus",
+    "icon": "copy",
+    "title": "Bonus: Apply the same steps to IMDB’s lowest rated movies",
+    "intro": "Reuse the same transformation process on the IMDB Bottom chart by duplicating the query and changing the source URL.",
+    "cards": [
+      {
+        "type": "callout",
+        "title": "Bonus URL",
+        "items": [
+          "https://www.imdb.com/chart/bottom/?ref_=chttp_ql_7"
+        ]
+      },
+      {
+        "type": "steps",
+        "steps": [
+          {
+            "title": "Duplicate the current query",
+            "body": "Duplicate the Top 250 Movies query so you keep the full transformation logic.",
+            "shots": [
+              {
+                "file": "image23.png",
+                "title": "Duplicate query",
+                "desc": "The query duplication step from the handout."
+              }
+            ]
+          },
+          {
+            "title": "Open the Source settings",
+            "body": "Go to Applied Steps, select Source, and click the gear button.",
+            "shots": [
+              {
+                "file": "image24.png",
+                "title": "Source gear button",
+                "desc": "Open the source settings to edit the URL."
+              }
+            ]
+          },
+          {
+            "title": "Replace the URL",
+            "body": "Swap the source URL with the IMDB Bottom chart URL and refresh the query.",
+            "shots": [
+              {
+                "file": "image25.png",
+                "title": "Replace source URL",
+                "desc": "The revised source URL is entered here."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "folder",
+    "label": "Folder Automation",
+    "icon": "folder-sync",
+    "title": "Folder Automation",
+    "intro": "A short extension showing how Power Query can combine invoice files from a folder and refresh automatically when a new file is added.",
+    "cards": [
+      {
+        "type": "download",
+        "title": "Exercise Data",
+        "url": "data/invoices.zip",
+        "label": "Download invoices.zip",
+        "desc": "This button downloads the invoice practice file from the data folder."
+      },
+      {
+        "type": "steps",
+        "steps": [
+          {
+            "title": "Load the folder of invoices",
+            "body": "Start with the Jan–Mar files."
+          },
+          {
+            "title": "Combine and transform",
+            "body": "Filter out Item_Name = TOTAL and set the correct data types."
+          },
+          {
+            "title": "Add a Tax column",
+            "body": "Create Tax_Amount = [Line_Total] * [Tax_Rate]. Optionally create Line_Total_With_Tax = [Line_Total] + [Tax_Amount]."
+          },
+          {
+            "title": "Refresh automation demo",
+            "body": "Copy Invoice_2025-04_NoTax.csv into the same folder and click Refresh so the April invoice appears automatically with tax calculated."
+          }
+        ]
+      },
+      {
+        "type": "callout",
+        "title": "Why this extension matters",
+        "items": [
+          "This shows how one Power Query workflow can absorb new files dropped into the same folder."
+        ]
+      }
+    ]
+  }
+];
+
+    const nav = document.getElementById('nav');
+    const content = document.getElementById('content');
+    let activeId = 'overview';
+
+    function esc(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    function renderNav() {
+      nav.innerHTML = '';
+      SECTIONS.forEach(section => {
+        const btn = document.createElement('button');
+        btn.className = section.id === activeId ? 'active' : '';
+        btn.innerHTML = `<i data-lucide="${section.icon}"></i><span>${esc(section.label)}</span>`;
+        btn.addEventListener('click', () => { activeId = section.id; renderNav(); renderContent(); });
+        nav.appendChild(btn);
+      });
+      lucide.createIcons();
+    }
+
+    function shotCard(shot) {
+      return `<figure class="shot-card">
+        <img src="image-source/${esc(shot.file)}" alt="${esc(shot.title)}" class="native-shot zoomable" data-title="${esc(shot.title)}" data-src="image-source/${esc(shot.file)}" loading="lazy">
+        <figcaption>
+          <strong>${esc(shot.title)}</strong>
+          <span>${esc(shot.desc || '')}</span>
+        </figcaption>
+      </figure>`;
+    }
+
+    function renderCard(card) {
+      if (card.type === 'download') {
+        return `<section class="panel">
+          <h3>${esc(card.title)}</h3>
+          <div class="softbox" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+            <a href="${esc(card.url)}" download class="inline-flex items-center gap-2 bg-[#2563eb] text-white px-5 py-2.5 rounded-xl font-black border-2 border-[#0f172a] shadow-[3px_3px_0_rgba(15,23,42,1)] hover:translate-y-[3px] hover:shadow-none transition-all" style="text-decoration:none;">
+              <i data-lucide="download"></i> ${esc(card.label)}
+            </a>
+            <span style="font-size:14px; font-weight:700; color:#475569;">${esc(card.desc)}</span>
+          </div>
+        </section>`;
+      }
+      if (card.type === 'callout' || card.type === 'checklist') {
+        return `<section class="panel">
+          <h3>${esc(card.title)}</h3>
+          <div class="softbox">
+            <ul class="list-clean">${card.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+          </div>
+        </section>`;
+      }
+      if (card.type === 'steps') {
+        return `<section class="panel">
+          <h3>Step-by-step</h3>
+          <div class="steps">
+            ${card.steps.map((step, i) => `
+              <div class="step">
+                <div class="step-head">
+                  <div class="step-num">${i + 1}</div>
+                  <div class="step-content">
+                    <h4>${esc(step.title)}</h4>
+                    <p>${esc(step.body)}</p>
+                    ${step.shots && step.shots.length > 0 ? `
+                      <div class="step-shots">
+                        ${step.shots.map(shot => shotCard(shot)).join('')}
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </section>`;
+      }
+      if (card.type === 'gridshots') {
+        return `<section class="panel">
+          <h3>${esc(card.title || 'Matched screenshots')}</h3>
+          <div class="shot-grid">
+            ${card.shots.map(shot => shotCard(shot)).join('')}
+          </div>
+        </section>`;
+      }
+      return '';
+    }
+
+    function attachZoomHandlers() {
+      document.querySelectorAll('.zoomable').forEach(img => {
+        img.addEventListener('click', () => {
+          document.getElementById('zoomTitle').textContent = img.dataset.title || 'Screenshot';
+          document.getElementById('zoomBody').innerHTML = `<img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}">`;
+          document.getElementById('zoomModal').classList.add('open');
+        });
+      });
+    }
+
+    function renderContent() {
+      const section = SECTIONS.find(s => s.id === activeId) || SECTIONS[0];
+      content.innerHTML = `<section class="section active">
+        <div class="hero">
+          <div class="eyebrow"><i data-lucide="${section.icon}"></i> ${esc(section.label)}</div>
+          <h2>${esc(section.title)}</h2>
+          <p>${esc(section.intro)}</p>
+        </div>
+        <div class="stack">
+          ${section.cards.map(renderCard).join('')}
+        </div>
+      </section>`;
+      lucide.createIcons();
+      attachZoomHandlers();
+    }
+
+    function closeZoom() {
+      document.getElementById('zoomModal').classList.remove('open');
+      document.getElementById('zoomBody').innerHTML = '';
+    }
+
+    document.getElementById('closeZoom').addEventListener('click', closeZoom);
+    document.getElementById('zoomModal').addEventListener('click', (e) => {
+      if (e.target.id === 'zoomModal') closeZoom();
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeZoom();
+    });
+
+    renderNav();
+    renderContent();
+  </script>
+</body>
+</html>
