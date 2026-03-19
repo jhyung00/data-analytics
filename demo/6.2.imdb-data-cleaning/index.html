@@ -74,6 +74,26 @@
     .modal-card img{display:block;max-width:none;width:auto;height:auto;background:#fff;border:1px solid #94a3b8;border-radius:10px;}
     @media (max-width:1000px){.app-shell{flex-direction:column;height:auto;min-height:95vh;}.sidebar{width:100%;}.content{padding:18px;}.hero h2{font-size:32px;}}
     @media (max-width:760px){.hero h2{font-size:28px;}.hero p{font-size:16px;}}
+    
+    /* Responsive Video Embed Styles */
+    .video-container {
+      position: relative;
+      padding-bottom: 56.25%; /* 16:9 ratio */
+      height: 0;
+      overflow: hidden;
+      max-width: 100%;
+      border-radius: 12px;
+      border: 2px solid var(--line);
+      background: #000;
+    }
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
   </style>
 </head>
 <body>
@@ -101,538 +121,568 @@
 
   <script>
     const SECTIONS = [
-  {
-    "id": "overview",
-    "label": "Overview",
-    "icon": "film",
-    "title": "IMDB Box Office Cleaning Lab",
-    "intro": "Use Power Query to import the IMDB Top 250 page, rename the imported fields, clean the text-based columns, convert duration into total minutes, and load the finished query.",
-    "cards": [
       {
-        "type": "callout",
-        "title": "Source website",
-        "items": [
-          "Website: https://www.imdb.com/chart/top/",
-          "Import the data from the IMDB Top 250 page into Power Query.",
-          "Final query name: Top 250 Movies"
-        ]
-      },
-      {
-        "type": "download",
-        "title": "Starter Excel File",
-        "url": "data/IMDB.xlsx",
-        "label": "Download IMDB.xlsx",
-        "desc": "Use this Excel file directly from the data folder."
-      },
-      {
-        "type": "checklist",
-        "title": "What you will practice",
-        "items": [
-          "Importing web data into Power Query",
-          "Renaming imported columns and the query",
-          "Removing unneeded columns",
-          "Cleaning the Number of Ratings field into a numeric value",
-          "Standardizing Duration and converting it into minutes",
-          "Duplicating the query for the IMDB Bottom list"
-        ]
-      },
-      {
-        "type": "gridshots",
-        "title": "Starting screenshots from the handout",
-        "shots": [
+        "id": "overview",
+        "label": "Overview",
+        "icon": "film",
+        "title": "IMDB Box Office Cleaning Lab",
+        "intro": "Use Power Query to import the IMDB Top 250 page, rename the imported fields, clean the text-based columns, convert duration into total minutes, and load the finished query.",
+        "cards": [
           {
-            "file": "image1.png",
-            "title": "IMDB Top 250 website",
-            "desc": "The source page used in this exercise."
+            "type": "callout",
+            "title": "Source website",
+            "items": [
+              "Website: https://www.imdb.com/chart/top/",
+              "Import the data from the IMDB Top 250 page into Power Query.",
+              "Final query name: Top 250 Movies"
+            ]
           },
           {
-            "file": "image2.png",
-            "title": "Renamed columns",
-            "desc": "The table after the first renaming step."
+            "type": "download",
+            "title": "Starter Excel File",
+            "url": "data/IMDB.xlsx",
+            "label": "Download IMDB.xlsx",
+            "desc": "Use this Excel file directly from the data folder."
           },
           {
-            "file": "image22.png",
-            "title": "Close and Apply",
-            "desc": "The final load step in the handout."
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "rename",
-    "label": "Step 1: Rename",
-    "icon": "type",
-    "title": "Rename Columns and Rename Query",
-    "intro": "Rename the imported columns and change the query name so the dataset is readable and ready for the later cleaning steps.",
-    "cards": [
-      {
-        "type": "callout",
-        "title": "Rename these exactly",
-        "items": [
-          "Column1 → Ranking",
-          "Column2 → Title",
-          "Column3 → Rating Score",
-          "Column4 → Number of Ratings",
-          "Column5 → Year",
-          "Column6 → Duration",
-          "Column9 → Content Rating",
-          "Query name → Top 250 Movies"
-        ]
-      },
-      {
-        "type": "steps",
-        "steps": [
+            "type": "checklist",
+            "title": "What you will practice",
+            "items": [
+              "Importing web data into Power Query",
+              "Renaming imported columns and the query",
+              "Removing unneeded columns",
+              "Cleaning the Number of Ratings field into a numeric value",
+              "Standardizing Duration and converting it into minutes",
+              "Duplicating the query for the IMDB Bottom list"
+            ]
+          },
           {
-            "title": "Review the imported table",
-            "body": "Start with the imported IMDB table from the website.",
+            "type": "gridshots",
+            "title": "Starting screenshots from the handout",
             "shots": [
               {
                 "file": "image1.png",
-                "title": "Imported website source",
-                "desc": "The source used for the Power Query import."
-              }
-            ]
-          },
-          {
-            "title": "Rename Column1 through Column6 and Column9",
-            "body": "Rename the imported fields to Ranking, Title, Rating Score, Number of Ratings, Year, Duration, and Content Rating.",
-            "shots": [
+                "title": "IMDB Top 250 website",
+                "desc": "The source page used in this exercise."
+              },
               {
                 "file": "image2.png",
-                "title": "Renamed columns in Power Query",
-                "desc": "The handout screenshot for the column renaming step."
-              }
-            ]
-          },
-          {
-            "title": "Rename the query",
-            "body": "Change the query name to Top 250 Movies.",
-            "shots": [
-              {
-                "file": "image3.png",
-                "title": "Query name changed",
-                "desc": "The query is renamed to Top 250 Movies."
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "remove",
-    "label": "Step 2: Remove",
-    "icon": "trash-2",
-    "title": "Remove Columns",
-    "intro": "Delete the extra imported fields that are not needed for the finished movie table.",
-    "cards": [
-      {
-        "type": "callout",
-        "title": "Columns to remove",
-        "items": [
-          "Delete Column7 and Column8 because they are unneeded extras."
-        ]
-      },
-      {
-        "type": "steps",
-        "steps": [
-          {
-            "title": "Remove Column7 and Column8",
-            "body": "Delete the two extra columns so only the relevant fields remain.",
-            "shots": [
-              {
-                "file": "image4.png",
-                "title": "Remove extra columns",
-                "desc": "The handout screenshot showing the removal step."
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "rank",
-    "label": "Step 3: Ranking",
-    "icon": "hash",
-    "title": "Split Rank Cleanup",
-    "intro": "The Ranking field contains the hash symbol together with the rank number. Clean it so the field becomes a usable rank.",
-    "cards": [
-      {
-        "type": "callout",
-        "title": "Goal of this step",
-        "items": [
-          "The Ranking field contains # + Rank.",
-          "Replace the # symbol with blank."
-        ]
-      },
-      {
-        "type": "steps",
-        "steps": [
-          {
-            "title": "Remove the hash symbol from Ranking",
-            "body": "Use Replace Values so the Ranking field keeps only the rank number.",
-            "shots": [
-              {
-                "file": "image5.png",
-                "title": "Replace # with blank",
-                "desc": "The Ranking cleanup screenshot from the revised handout."
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "ratings",
-    "label": "Step 4: Ratings",
-    "icon": "badge-dollar-sign",
-    "title": "Clean Number of Ratings Field",
-    "intro": "Convert values such as (3.1M), (950K), and (1.2B) into usable numeric values by removing symbols, splitting the text, and applying a multiplier.",
-    "cards": [
-      {
-        "type": "callout",
-        "title": "Transformation logic",
-        "items": [
-          "Remove the opening and closing parentheses.",
-          "Split into a number part and a unit part.",
-          "Replace the unit: K → 1000 and M → 1000000.",
-          "Change Box Office.2 to Whole Number.",
-          "Create final Box Office = number × unit.",
-          "Change the final Box Office field to Number type."
-        ]
-      },
-      {
-        "type": "steps",
-        "steps": [
-          {
-            "title": "Remove the parentheses",
-            "body": "Use Replace Values to remove the opening and closing parentheses from the Number of Ratings field.",
-            "shots": [
-              {
-                "file": "image6.png",
-                "title": "Remove parentheses",
-                "desc": "The first cleanup step for the ratings field."
-              }
-            ]
-          },
-          {
-            "title": "Split the number part and unit",
-            "body": "Separate the text so the amount and the trailing unit are stored in different fields.",
-            "shots": [
-              {
-                "file": "image7.png",
-                "title": "Split ratings field",
-                "desc": "The ratings value is split into number and unit."
-              }
-            ]
-          },
-          {
-            "title": "Replace the unit values",
-            "body": "Convert K to 1000 and M to 1000000 so the unit becomes a multiplier.",
-            "shots": [
-              {
-                "file": "image8.png",
-                "title": "Replace unit text",
-                "desc": "Unit conversion in the revised handout."
-              }
-            ]
-          },
-          {
-            "title": "Change Box Office.2 to Whole Number",
-            "body": "Set the helper multiplier field to Whole Number before using it in a calculation.",
-            "shots": [
-              {
-                "file": "image9.png",
-                "title": "Change data type",
-                "desc": "The helper unit column is changed to Whole Number."
-              }
-            ]
-          },
-          {
-            "title": "Create the final Box Office field",
-            "body": "Create a custom calculation that multiplies the number part by the unit multiplier.",
-            "shots": [
-              {
-                "file": "image10.png",
-                "title": "Add custom column",
-                "desc": "Open the custom column step."
+                "title": "Renamed columns",
+                "desc": "The table after the first renaming step."
               },
-              {
-                "file": "image11.png",
-                "title": "Custom formula for final value",
-                "desc": "Use the multiplication formula to create the final numeric field."
-              }
-            ]
-          },
-          {
-            "title": "Change the final Box Office data type",
-            "body": "Convert the finished Box Office field into a numeric type for analysis."
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "duration",
-    "label": "Step 5: Duration",
-    "icon": "clock-3",
-    "title": "Duration to Minutes",
-    "intro": "Standardize different duration patterns such as 2h 22m, 3h, and 45m so each row has hours and minutes, then calculate a total minutes field.",
-    "cards": [
-      {
-        "type": "callout",
-        "title": "Duration logic from the handout",
-        "items": [
-          "Standardize the text first so each duration has both hours and minutes.",
-          "Use Conditional Column.",
-          "Extract the first character from Hour Text.",
-          "Extract the last 3 characters.",
-          "Replace m with blank.",
-          "Use Trim to remove leading spaces.",
-          "Change Hours Text and Minute Text to numeric type.",
-          "Create Duration in minutes with a custom calculation.",
-          "Remove the helper columns."
-        ]
-      },
-      {
-        "type": "steps",
-        "steps": [
-          {
-            "title": "Standardize duration with Conditional Column",
-            "body": "Because the current time format is not standardized, first standardize it so each duration includes both an hour part and a minute part.",
-            "shots": [
-              {
-                "file": "image12.png",
-                "title": "Conditional Column setup",
-                "desc": "Build the logic to standardize the duration text."
-              },
-              {
-                "file": "image13.png",
-                "title": "Conditional Column result",
-                "desc": "The result after standardizing duration patterns."
-              }
-            ]
-          },
-          {
-            "title": "Extract the 1st character from Hour Text",
-            "body": "Use the Hour Text field and extract the first character.",
-            "shots": [
-              {
-                "file": "image14.png",
-                "title": "Extract first character",
-                "desc": "The hours portion is isolated from the standardized text."
-              }
-            ]
-          },
-          {
-            "title": "Extract the last 3 characters for minutes",
-            "body": "Use the standardized text and extract the last 3 characters to isolate the minute text.",
-            "shots": [
-              {
-                "file": "image15.png",
-                "title": "Extract last 3 characters",
-                "desc": "The extraction option used for the minute text."
-              },
-              {
-                "file": "image16.png",
-                "title": "Minute text extracted",
-                "desc": "The minutes helper field after extraction."
-              }
-            ]
-          },
-          {
-            "title": "Replace value m with blank",
-            "body": "Remove the m character from the Minute Text field.",
-            "shots": [
-              {
-                "file": "image17.png",
-                "title": "Replace m with blank",
-                "desc": "The unit character is removed from the minutes helper field."
-              }
-            ]
-          },
-          {
-            "title": "Trim leading white spaces",
-            "body": "Use Trim to remove leading spaces from the Minute Text field.",
-            "shots": [
-              {
-                "file": "image18.png",
-                "title": "Trim spaces",
-                "desc": "Leading white spaces are removed in this step."
-              }
-            ]
-          },
-          {
-            "title": "Change Hours Text and Minute Text data types",
-            "body": "Convert both helper fields into numeric values.",
-            "shots": [
-              {
-                "file": "image19.png",
-                "title": "Change helper field types",
-                "desc": "Hours Text and Minute Text are converted to numbers."
-              }
-            ]
-          },
-          {
-            "title": "Create Duration in minutes",
-            "body": "Apply a custom calculation for total minutes and change the finished Duration field to Whole Number.",
-            "shots": [
-              {
-                "file": "image20.png",
-                "title": "Custom duration calculation",
-                "desc": "The formula used to convert hours and minutes into total minutes."
-              }
-            ]
-          },
-          {
-            "title": "Remove unnecessary helper columns",
-            "body": "Delete the temporary columns that were only used to build the final Duration field.",
-            "shots": [
-              {
-                "file": "image21.png",
-                "title": "Remove helper columns",
-                "desc": "The cleanup step at the end of the duration process."
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "final",
-    "label": "Step 6: Finish",
-    "icon": "sparkles",
-    "title": "Final Touches",
-    "intro": "Complete the query and load the cleaned result.",
-    "cards": [
-      {
-        "type": "steps",
-        "steps": [
-          {
-            "title": "Close and Apply",
-            "body": "Finish the query and load the cleaned table.",
-            "shots": [
               {
                 "file": "image22.png",
                 "title": "Close and Apply",
-                "desc": "The final load step shown in the revised handout."
+                "desc": "The final load step in the handout."
               }
             ]
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "bonus",
-    "label": "Bonus",
-    "icon": "copy",
-    "title": "Bonus: Apply the same steps to IMDB’s lowest rated movies",
-    "intro": "Reuse the same transformation process on the IMDB Bottom chart by duplicating the query and changing the source URL.",
-    "cards": [
-      {
-        "type": "callout",
-        "title": "Bonus URL",
-        "items": [
-          "https://www.imdb.com/chart/bottom/?ref_=chttp_ql_7"
-        ]
       },
       {
-        "type": "download",
-        "title": "Bonus Excel File",
-        "url": "data/IMDB-bottom100.xlsx",
-        "label": "Download IMDB-bottom100.xlsx",
-        "desc": "Download this file to apply your cleaning steps to the bottom-rated movies dataset."
-      },
-      {
-        "type": "steps",
-        "steps": [
+        "id": "rename",
+        "label": "Step 1: Rename",
+        "icon": "type",
+        "title": "Rename Columns and Rename Query",
+        "intro": "Rename the imported columns and change the query name so the dataset is readable and ready for the later cleaning steps.",
+        "cards": [
           {
-            "title": "Duplicate the current query",
-            "body": "Duplicate the Top 250 Movies query so you keep the full transformation logic.",
-            "shots": [
-              {
-                "file": "image23.png",
-                "title": "Duplicate query",
-                "desc": "The query duplication step from the handout."
-              }
+            "type": "callout",
+            "title": "Rename these exactly",
+            "items": [
+              "Column1 → Ranking",
+              "Column2 → Title",
+              "Column3 → Rating Score",
+              "Column4 → Number of Ratings",
+              "Column5 → Year",
+              "Column6 → Duration",
+              "Column9 → Content Rating",
+              "Query name → Top 250 Movies"
             ]
           },
           {
-            "title": "Open the Source settings",
-            "body": "Go to Applied Steps, select Source, and click the gear button.",
-            "shots": [
+            "type": "steps",
+            "steps": [
               {
-                "file": "image24.png",
-                "title": "Source gear button",
-                "desc": "Open the source settings to edit the URL."
-              }
-            ]
-          },
-          {
-            "title": "Replace the URL",
-            "body": "Swap the source URL with the IMDB Bottom chart URL and refresh the query.",
-            "shots": [
+                "title": "Review the imported table",
+                "body": "Start with the imported IMDB table from the website.",
+                "shots": [
+                  {
+                    "file": "image1.png",
+                    "title": "Imported website source",
+                    "desc": "The source used for the Power Query import."
+                  }
+                ]
+              },
               {
-                "file": "image25.png",
-                "title": "Replace source URL",
-                "desc": "The revised source URL is entered here."
+                "title": "Rename Column1 through Column6 and Column9",
+                "body": "Rename the imported fields to Ranking, Title, Rating Score, Number of Ratings, Year, Duration, and Content Rating.",
+                "shots": [
+                  {
+                    "file": "image2.png",
+                    "title": "Renamed columns in Power Query",
+                    "desc": "The handout screenshot for the column renaming step."
+                  }
+                ]
+              },
+              {
+                "title": "Rename the query",
+                "body": "Change the query name to Top 250 Movies.",
+                "shots": [
+                  {
+                    "file": "image3.png",
+                    "title": "Query name changed",
+                    "desc": "The query is renamed to Top 250 Movies."
+                  }
+                ]
               }
             ]
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "folder",
-    "label": "Folder Automation",
-    "icon": "folder-sync",
-    "title": "Folder Automation",
-    "intro": "A short extension showing how Power Query can combine invoice files from a folder and refresh automatically when a new file is added.",
-    "cards": [
-      {
-        "type": "download",
-        "title": "Exercise Data",
-        "url": "data/invoices.zip",
-        "label": "Download invoices.zip",
-        "desc": "This button downloads the invoice practice file from the data folder."
       },
       {
-        "type": "steps",
-        "steps": [
+        "id": "remove",
+        "label": "Step 2: Remove",
+        "icon": "trash-2",
+        "title": "Remove Columns",
+        "intro": "Delete the extra imported fields that are not needed for the finished movie table.",
+        "cards": [
           {
-            "title": "Load the folder of invoices",
-            "body": "Start with the Jan–Mar files."
+            "type": "callout",
+            "title": "Columns to remove",
+            "items": [
+              "Delete Column7 and Column8 because they are unneeded extras."
+            ]
           },
           {
-            "title": "Combine and transform",
-            "body": "Filter out Item_Name = TOTAL and set the correct data types."
-          },
-          {
-            "title": "Add a Tax column",
-            "body": "Create Tax_Amount = [Line_Total] * [Tax_Rate]. Optionally create Line_Total_With_Tax = [Line_Total] + [Tax_Amount]."
-          },
-          {
-            "title": "Refresh automation demo",
-            "body": "Copy Invoice_2025-04_NoTax.csv into the same folder and click Refresh so the April invoice appears automatically with tax calculated."
+            "type": "steps",
+            "steps": [
+              {
+                "title": "Remove Column7 and Column8",
+                "body": "Delete the two extra columns so only the relevant fields remain.",
+                "shots": [
+                  {
+                    "file": "image4.png",
+                    "title": "Remove extra columns",
+                    "desc": "The handout screenshot showing the removal step."
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
       {
-        "type": "callout",
-        "title": "Why this extension matters",
-        "items": [
-          "This shows how one Power Query workflow can absorb new files dropped into the same folder."
+        "id": "rank",
+        "label": "Step 3: Ranking",
+        "icon": "hash",
+        "title": "Split Rank Cleanup",
+        "intro": "The Ranking field contains the hash symbol together with the rank number. Clean it so the field becomes a usable rank.",
+        "cards": [
+          {
+            "type": "callout",
+            "title": "Goal of this step",
+            "items": [
+              "The Ranking field contains # + Rank.",
+              "Replace the # symbol with blank."
+            ]
+          },
+          {
+            "type": "steps",
+            "steps": [
+              {
+                "title": "Remove the hash symbol from Ranking",
+                "body": "Use Replace Values so the Ranking field keeps only the rank number.",
+                "shots": [
+                  {
+                    "file": "image5.png",
+                    "title": "Replace # with blank",
+                    "desc": "The Ranking cleanup screenshot from the revised handout."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ratings",
+        "label": "Step 4: Ratings",
+        "icon": "badge-dollar-sign",
+        "title": "Clean Number of Ratings Field",
+        "intro": "Convert values such as (3.1M), (950K), and (1.2B) into usable numeric values by removing symbols, splitting the text, and applying a multiplier.",
+        "cards": [
+          {
+            "type": "callout",
+            "title": "Transformation logic",
+            "items": [
+              "Remove the opening and closing parentheses.",
+              "Split into a number part and a unit part.",
+              "Replace the unit: K → 1000 and M → 1000000.",
+              "Change Box Office.2 to Whole Number.",
+              "Create final Box Office = number × unit.",
+              "Change the final Box Office field to Number type."
+            ]
+          },
+          {
+            "type": "steps",
+            "steps": [
+              {
+                "title": "Remove the parentheses",
+                "body": "Use Replace Values to remove the opening and closing parentheses from the Number of Ratings field.",
+                "shots": [
+                  {
+                    "file": "image6.png",
+                    "title": "Remove parentheses",
+                    "desc": "The first cleanup step for the ratings field."
+                  }
+                ]
+              },
+              {
+                "title": "Split the number part and unit",
+                "body": "Separate the text so the amount and the trailing unit are stored in different fields.",
+                "shots": [
+                  {
+                    "file": "image7.png",
+                    "title": "Split ratings field",
+                    "desc": "The ratings value is split into number and unit."
+                  }
+                ]
+              },
+              {
+                "title": "Replace the unit values",
+                "body": "Convert K to 1000 and M to 1000000 so the unit becomes a multiplier.",
+                "shots": [
+                  {
+                    "file": "image8.png",
+                    "title": "Replace unit text",
+                    "desc": "Unit conversion in the revised handout."
+                  }
+                ]
+              },
+              {
+                "title": "Change Box Office.2 to Whole Number",
+                "body": "Set the helper multiplier field to Whole Number before using it in a calculation.",
+                "shots": [
+                  {
+                    "file": "image9.png",
+                    "title": "Change data type",
+                    "desc": "The helper unit column is changed to Whole Number."
+                  }
+                ]
+              },
+              {
+                "title": "Create the final Box Office field",
+                "body": "Create a custom calculation that multiplies the number part by the unit multiplier.",
+                "shots": [
+                  {
+                    "file": "image10.png",
+                    "title": "Add custom column",
+                    "desc": "Open the custom column step."
+                  },
+                  {
+                    "file": "image11.png",
+                    "title": "Custom formula for final value",
+                    "desc": "Use the multiplication formula to create the final numeric field."
+                  }
+                ]
+              },
+              {
+                "title": "Change the final Box Office data type",
+                "body": "Convert the finished Box Office field into a numeric type for analysis."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "duration",
+        "label": "Step 5: Duration",
+        "icon": "clock-3",
+        "title": "Duration to Minutes",
+        "intro": "Standardize different duration patterns such as 2h 22m, 3h, and 45m so each row has hours and minutes, then calculate a total minutes field.",
+        "cards": [
+          {
+            "type": "callout",
+            "title": "Duration logic from the handout",
+            "items": [
+              "Standardize the text first so each duration has both hours and minutes.",
+              "Use Conditional Column.",
+              "Extract the first character from Hour Text.",
+              "Extract the last 3 characters.",
+              "Replace m with blank.",
+              "Use Trim to remove leading spaces.",
+              "Change Hours Text and Minute Text to numeric type.",
+              "Create Duration in minutes with a custom calculation.",
+              "Remove the helper columns."
+            ]
+          },
+          {
+            "type": "steps",
+            "steps": [
+              {
+                "title": "Standardize duration with Conditional Column",
+                "body": "Because the current time format is not standardized, first standardize it so each duration includes both an hour part and a minute part.",
+                "shots": [
+                  {
+                    "file": "image12.png",
+                    "title": "Conditional Column setup",
+                    "desc": "Build the logic to standardize the duration text."
+                  },
+                  {
+                    "file": "image13.png",
+                    "title": "Conditional Column result",
+                    "desc": "The result after standardizing duration patterns."
+                  }
+                ]
+              },
+              {
+                "title": "Extract the 1st character from Hour Text",
+                "body": "Use the Hour Text field and extract the first character.",
+                "shots": [
+                  {
+                    "file": "image14.png",
+                    "title": "Extract first character",
+                    "desc": "The hours portion is isolated from the standardized text."
+                  }
+                ]
+              },
+              {
+                "title": "Extract the last 3 characters for minutes",
+                "body": "Use the standardized text and extract the last 3 characters to isolate the minute text.",
+                "shots": [
+                  {
+                    "file": "image15.png",
+                    "title": "Extract last 3 characters",
+                    "desc": "The extraction option used for the minute text."
+                  },
+                  {
+                    "file": "image16.png",
+                    "title": "Minute text extracted",
+                    "desc": "The minutes helper field after extraction."
+                  }
+                ]
+              },
+              {
+                "title": "Replace value m with blank",
+                "body": "Remove the m character from the Minute Text field.",
+                "shots": [
+                  {
+                    "file": "image17.png",
+                    "title": "Replace m with blank",
+                    "desc": "The unit character is removed from the minutes helper field."
+                  }
+                ]
+              },
+              {
+                "title": "Trim leading white spaces",
+                "body": "Use Trim to remove leading spaces from the Minute Text field.",
+                "shots": [
+                  {
+                    "file": "image18.png",
+                    "title": "Trim spaces",
+                    "desc": "Leading white spaces are removed in this step."
+                  }
+                ]
+              },
+              {
+                "title": "Change Hours Text and Minute Text data types",
+                "body": "Convert both helper fields into numeric values.",
+                "shots": [
+                  {
+                    "file": "image19.png",
+                    "title": "Change helper field types",
+                    "desc": "Hours Text and Minute Text are converted to numbers."
+                  }
+                ]
+              },
+              {
+                "title": "Create Duration in minutes",
+                "body": "Apply a custom calculation for total minutes and change the finished Duration field to Whole Number.",
+                "shots": [
+                  {
+                    "file": "image20.png",
+                    "title": "Custom duration calculation",
+                    "desc": "The formula used to convert hours and minutes into total minutes."
+                  }
+                ]
+              },
+              {
+                "title": "Remove unnecessary helper columns",
+                "body": "Delete the temporary columns that were only used to build the final Duration field.",
+                "shots": [
+                  {
+                    "file": "image21.png",
+                    "title": "Remove helper columns",
+                    "desc": "The cleanup step at the end of the duration process."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "final",
+        "label": "Step 6: Finish",
+        "icon": "sparkles",
+        "title": "Final Touches",
+        "intro": "Complete the query and load the cleaned result.",
+        "cards": [
+          {
+            "type": "steps",
+            "steps": [
+              {
+                "title": "Close and Apply",
+                "body": "Finish the query and load the cleaned table.",
+                "shots": [
+                  {
+                    "file": "image22.png",
+                    "title": "Close and Apply",
+                    "desc": "The final load step shown in the revised handout."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "bonus",
+        "label": "Bonus",
+        "icon": "copy",
+        "title": "Bonus: Apply the same steps to IMDB’s lowest rated movies",
+        "intro": "Reuse the same transformation process on the IMDB Bottom chart by duplicating the query and changing the source URL.",
+        "cards": [
+          {
+            "type": "callout",
+            "title": "Bonus URL",
+            "items": [
+              "https://www.imdb.com/chart/bottom/?ref_=chttp_ql_7"
+            ]
+          },
+          {
+            "type": "download",
+            "title": "Bonus Excel File",
+            "url": "data/IMDB-bottom100.xlsx",
+            "label": "Download IMDB-bottom100.xlsx",
+            "desc": "Download this file to apply your cleaning steps to the bottom-rated movies dataset."
+          },
+          {
+            "type": "steps",
+            "steps": [
+              {
+                "title": "Duplicate the current query",
+                "body": "Duplicate the Top 250 Movies query so you keep the full transformation logic.",
+                "shots": [
+                  {
+                    "file": "image23.png",
+                    "title": "Duplicate query",
+                    "desc": "The query duplication step from the handout."
+                  }
+                ]
+              },
+              {
+                "title": "Open the Source settings",
+                "body": "Go to Applied Steps, select Source, and click the gear button.",
+                "shots": [
+                  {
+                    "file": "image24.png",
+                    "title": "Source gear button",
+                    "desc": "Open the source settings to edit the URL."
+                  }
+                ]
+              },
+              {
+                "title": "Replace the URL",
+                "body": "Swap the source URL with the IMDB Bottom chart URL and refresh the query.",
+                "shots": [
+                  {
+                    "file": "image25.png",
+                    "title": "Replace source URL",
+                    "desc": "The revised source URL is entered here."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "folder",
+        "label": "Folder Automation",
+        "icon": "folder-sync",
+        "title": "Folder Automation",
+        "intro": "A short extension showing how Power Query can combine invoice files from a folder and refresh automatically when a new file is added.",
+        "cards": [
+          {
+            "type": "download",
+            "title": "Exercise Data",
+            "url": "data/invoices.zip",
+            "label": "Download invoices.zip",
+            "desc": "This button downloads the invoice practice file from the data folder."
+          },
+          {
+            "type": "steps",
+            "steps": [
+              {
+                "title": "Load the folder of invoices",
+                "body": "Start with the Jan–Mar files."
+              },
+              {
+                "title": "Combine and transform",
+                "body": "Filter out Item_Name = TOTAL and set the correct data types."
+              },
+              {
+                "title": "Add a Tax column",
+                "body": "Create Tax_Amount = [Line_Total] * [Tax_Rate]. Optionally create Line_Total_With_Tax = [Line_Total] + [Tax_Amount]."
+              },
+              {
+                "title": "Refresh automation demo",
+                "body": "Copy Invoice_2025-04_NoTax.csv into the same folder and click Refresh so the April invoice appears automatically with tax calculated."
+              }
+            ]
+          },
+          {
+            "type": "callout",
+            "title": "Why this extension matters",
+            "items": [
+              "This shows how one Power Query workflow can absorb new files dropped into the same folder."
+            ]
+          }
+        ]
+      },
+      {
+        "id": "walkthrough",
+        "label": "Solution & Video",
+        "icon": "play-circle",
+        "title": "Video Walkthrough & Finished File",
+        "intro": "Watch the complete step-by-step video of the data cleaning process and download the finished Power BI solution.",
+        "cards": [
+          {
+            "type": "embed",
+            "title": "Cleaning IMDB Dataset Walkthrough",
+            "html": "<div class=\"video-container\"><iframe id=\"kaltura_player\" src='https://cdnapisec.kaltura.com/p/1153021/embedPlaykitJs/uiconf_id/56739592?iframeembed=true&amp;entry_id=1_axspheka&amp;config%5Bprovider%5D=%7B%22widgetId%22%3A%221_b56310nt%22%7D&amp;config%5Bplayback%5D=%7B%22startTime%22%3A0%7D' allowfullscreen webkitallowfullscreen mozAllowFullScreen allow=\"autoplay *; fullscreen *; encrypted-media *\" sandbox=\"allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation\" title=\"Cleaning IMDB dataset\"></iframe></div>"
+          },
+          {
+            "type": "download",
+            "title": "Completed Power BI Solution",
+            "url": "data/IMDB-completed.pbix",
+            "label": "Download IMDB-completed.pbix",
+            "desc": "The fully cleaned Power BI dataset file containing all transformation steps."
+          },
+          {
+            "type": "callout",
+            "title": "How to review the solution steps",
+            "items": [
+              "Download and open IMDB-completed.pbix in Power BI Desktop.",
+              "Click the Transform Data button on the Home tab of the ribbon.",
+              "This will open the Power Query Editor where you can review all the applied steps on the right side."
+            ]
+          }
         ]
       }
-    ]
-  }
-];
+    ];
 
     const nav = document.getElementById('nav');
     const content = document.getElementById('content');
@@ -665,6 +715,14 @@
     }
 
     function renderCard(card) {
+      if (card.type === 'embed') {
+        return `<section class="panel">
+          <h3>${esc(card.title)}</h3>
+          <div class="softbox">
+            ${card.html}
+          </div>
+        </section>`;
+      }
       if (card.type === 'download') {
         return `<section class="panel">
           <h3>${esc(card.title)}</h3>
