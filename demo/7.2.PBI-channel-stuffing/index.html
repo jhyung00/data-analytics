@@ -693,7 +693,7 @@
                           <h2 className="text-xl font-bold text-white">Practice Data</h2>
                         </div>
                         <p className="text-gray-400 text-sm mb-6">
-                          This dataset contains 104 weeks (2 years) of financial records used in the Case Study. 
+                          This dataset contains 65 weeks (approx. 1.25 years) of financial records used in the Case Study. 
                           Download it to practice your own analysis in Excel, Power BI, or Tableau.
                         </p>
                         <button 
@@ -709,7 +709,7 @@
                         <h3 className="text-sm font-bold text-gray-300 mb-3">Dataset Specs</h3>
                         <ul className="space-y-2 text-xs text-gray-500">
                           <li className="flex justify-between"><span>Format:</span> <span className="text-gray-300">CSV (Comma Separated)</span></li>
-                          <li className="flex justify-between"><span>Rows:</span> <span className="text-gray-300">104 Weeks</span></li>
+                          <li className="flex justify-between"><span>Rows:</span> <span className="text-gray-300">65 Weeks</span></li>
                           <li className="flex justify-between"><span>Columns:</span> <span className="text-gray-300">Revenue, Cash, Returns, AR</span></li>
                           <li className="flex justify-between"><span>Scenario:</span> <span className="text-gray-300">Year-End Channel Stuffing</span></li>
                         </ul>
@@ -816,7 +816,7 @@
                             <h3 className="text-lg font-bold text-white mb-2">The "Cash Gap" Analysis (DAX)</h3>
                             <p className="text-gray-400 text-sm mb-2">We need to see if cash follows revenue. Create a DAX measure:</p>
                             <div className="bg-gray-950 p-4 rounded border border-gray-700 text-sm font-mono text-green-400 mb-3 overflow-x-auto">
-                                Cash Collection % = DIVIDE(SUM(Data[Cash_Collected]), SUM(Data[Revenue]))
+                                Cash Collection % = DIVIDE(SUM(channel_stuffing_audit_data[Cash_Collected]), SUM(channel_stuffing_audit_data[Revenue]))
                             </div>
                             <p className="text-gray-400 text-sm mb-2">Then, use a <strong>Line and Clustered Column Chart</strong>:</p>
                             <ul className="list-disc list-inside text-sm text-gray-400 space-y-1 ml-2">
