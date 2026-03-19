@@ -32,11 +32,10 @@
     html { scroll-behavior:smooth; }
     body { background-color:#f0fdf4; color:#334155; margin:0; overflow:hidden; font-family:'Nunito', sans-serif; }
     
-    /* Updated Sidebar CSS to fix width and resize handle */
     .sidebar-nav { 
       resize: horizontal; 
-      overflow: hidden; /* Keeps the resize handle glued to the visible bottom-right corner */
-      width: 280px; /* Explicit initial width so it isn't too wide */
+      overflow: hidden;
+      width: 280px; 
       min-width: 220px; 
       max-width: 48%; 
       border-right: 2px dashed #bbf7d0; 
@@ -84,18 +83,17 @@
   <nav class="sidebar-nav h-full z-20">
     <div class="sidebar-content">
       <div class="mb-6">
-        <div class="inline-flex items-center gap-2 rounded-full bg-amberContrast-100 text-amberContrast-600 px-3 py-1 border-2 border-white/10 font-extrabold text-xs mb-4">🫘 Interactive student file</div>
+        <div class="inline-flex items-center gap-2 rounded-full bg-amberContrast-100 text-amberContrast-600 px-3 py-1 border-2 border-white/10 font-extrabold text-xs mb-4">🫘 Interactive Learning Guide</div>
         <h2 class="font-extrabold text-2xl text-white tracking-tight leading-tight">Beans Dataset<br><span class="text-sm font-semibold text-slate-300">Cleaning Guide</span></h2>
-        <p class="text-slate-300 text-sm font-semibold mt-3 leading-6">Open the workbook, clean the tables, reshape the data, and prepare the model in a clearer step-by-step format with matched screenshots.</p>
+        <p class="text-slate-300 text-sm font-semibold mt-3 leading-6">Learn how to extract, clean, and reshape raw tables into a robust Star Schema model using Power Query.</p>
       </div>
       <ul class="space-y-2 text-slate-200 font-semibold flex-1 mb-4">
-        <li><a href="#overview" class="hover:text-white transition-colors block p-3 rounded-xl hover:bg-white/10">Overview</a></li>
+        <li><a href="#overview" class="hover:text-white transition-colors block p-3 rounded-xl hover:bg-white/10">Overview: Star Schema</a></li>
         <li><a href="#part1" class="hover:text-white transition-colors block p-3 rounded-xl hover:bg-white/10">Part 1: Simple ETL</a></li>
         <li><a href="#part2" class="hover:text-white transition-colors block p-3 rounded-xl hover:bg-white/10">Part 2: Table Transform</a></li>
         <li><a href="#part3" class="hover:text-white transition-colors block p-3 rounded-xl hover:bg-white/10">Part 3: Data Modeling</a></li>
       </ul>
     </div>
-    <!-- Pinned at the bottom so the resize handle logic is clear -->
     <div class="p-3 border-t border-white/10 flex justify-between items-center bg-slate-900 shrink-0">
       <p class="text-xs text-slate-400">Drag bottom corner to resize ↘</p>
     </div>
@@ -117,45 +115,338 @@
     </header>
 
     <div class="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-8 pb-32">
+      
+      <!-- Overview Section -->
       <section id="overview" class="scroll-mt-24">
         <div class="bg-white border-2 border-slate-900 rounded-3xl shadow-game p-7">
-          <div class="inline-flex items-center gap-2 rounded-full bg-mint-100 border-2 border-slate-900 px-3 py-1 text-xs font-extrabold text-mint-800">Overview</div>
-          <h2 class="text-3xl font-extrabold text-slate-900 mt-4 mb-3">Beans Dataset Cleaning with Power Query</h2>
-          <p class="text-slate-700 font-bold leading-7">This page now includes the main pieces your comparison file had that were missing from the earlier package: a real <code>data/Beans.xlsx</code> download path, a resizable sidebar, reveal-answer toggles, completion checkboxes, and a sticky header. The screenshots stay embedded inside the related steps.</p>
+          <div class="inline-flex items-center gap-2 rounded-full bg-mint-100 border-2 border-slate-900 px-3 py-1 text-xs font-extrabold text-mint-800">The Goal</div>
+          <h2 class="text-3xl font-extrabold text-slate-900 mt-4 mb-3">Building a Star Schema</h2>
+          <div class="text-slate-700 font-medium leading-7 space-y-4">
+            <p>The purpose of this exercise is to transform raw, messy data into a <strong>Star Schema</strong>—the gold standard for analytical data modeling. A star schema simplifies complex data by organizing it into two distinct types of tables: a central Fact Table surrounded by descriptive Dimension Tables.</p>
+            
+            <div class="grid md:grid-cols-2 gap-4 mt-4">
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 class="font-extrabold text-slate-800 mb-2">⭐ Dimension Tables (The Context)</h4>
+                <p class="text-sm text-slate-600">These tables provide the "who, what, where, and why." They contain descriptive text (like Employee Names, Task Descriptions, or Client Locations). They give meaning and filters to your metrics.</p>
+              </div>
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h4 class="font-extrabold text-slate-800 mb-2">📊 Fact Tables (The Events)</h4>
+                <p class="text-sm text-slate-600">The center of the star. These tables record measurable, quantitative events (like logged hours or billed amounts). <strong>Crucially, fact tables should <em>not</em> contain descriptive text.</strong> They should only contain numeric values and <em>Foreign Keys</em> (IDs) that connect back to your dimension tables.</p>
+              </div>
+            </div>
+
+            <p class="mt-4 border-l-4 border-amberContrast-500 pl-4 bg-amberContrast-50 p-3 rounded-r-xl">
+              By isolating descriptions into Dimension tables and keeping only numbers and IDs in the Fact table, you ensure your data model is fast, avoids data duplication, and is incredibly easy to filter and analyze. Keep this architecture in mind as you complete the cleaning steps below.
+            </p>
+          </div>
         </div>
-        <div class="bg-amberContrast-100 border-l-4 border-amberContrast-500 p-4 rounded-r-xl shadow-sm mt-6">
-          <p class="text-amberContrast-600 font-bold mb-1">Interactive Learning Guide</p>
-          <p class="text-slate-700 text-sm">Read each task, think through what you would do in Power Query, then open the answer to see the guided steps. Check off each item as you complete it.</p>
+        
+        <div class="bg-slate-800 border-l-4 border-mint-500 p-4 rounded-r-xl shadow-sm mt-6">
+          <p class="text-mint-400 font-bold mb-1">How to use this guide</p>
+          <p class="text-slate-300 text-sm">Read each task, think through how you would solve it in Power Query, then click "Reveal Answer" to check your logic against the guided steps. Check off each item as you complete it in your own file.</p>
         </div>
       </section>
 
       <section id="part1" class="scroll-mt-24">
         <h2 class="text-2xl font-extrabold text-mint-800 mb-4 border-b-2 border-mint-200 pb-2 flex items-center gap-2"><span class="bg-mint-200 text-mint-800 rounded-full w-8 h-8 flex items-center justify-center text-sm">1</span>Simple ETL & Setup</h2>
         <div class="flex flex-col gap-4">
-          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">1. Open & Profile the Dataset</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Open the <code>Beans.xlsx</code> file in Power Query. How do you make sure profiling checks the <em>entire</em> dataset?</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100"><ul class="list-disc pl-5 text-slate-700 space-y-1 font-semibold"><li>Open <code>Beans.xlsx</code> and choose <strong>Transform Data</strong>.</li><li>At the bottom-left of Power Query Editor, change <strong>Column profiling based on top 1000 rows</strong> to <strong>entire data set</strong>.</li><li>Use the profile indicators to review the full workbook before cleaning.</li></ul><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image1.png" alt="Transform Data" class="rounded-xl zoomable" data-title="Open Beans.xlsx and choose Transform Data" data-src="image-source/image1.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Open the workbook and enter Power Query.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image2.png" alt="Entire dataset profiling" class="rounded-xl zoomable" data-title="Column profiling based on entire dataset" data-src="image-source/image2.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Switch profiling to the full dataset.</figcaption></figure></div></div></div></label>
-          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">2. Remove Irrelevant Data</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Identify fields that do not support the later analysis and remove them before modeling.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-slate-700 font-semibold">Remove columns that do not add analytical value for the task. The handout explicitly flags <code>Age</code> as a field to remove from the demographic view before continuing.<div class="grid md:grid-cols-1 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image3.png" alt="Remove Age" class="rounded-xl zoomable" data-title="Remove Age from the demographic table" data-src="image-source/image3.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Remove the irrelevant field before continuing.</figcaption></figure></div></div></div></label>
-          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">3. Rename Ambiguous Columns</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Generic names like <code>ID</code> or short abbreviations create confusion in the model. Rename them before relationships are formed.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100"><div class="grid md:grid-cols-2 gap-3 text-sm text-slate-700 font-semibold"><div><strong>CL Table:</strong> <code>ID</code> → <code>Client ID</code></div><div><strong>E-Dem Table:</strong> <code>CertList</code> → <code>Certification List</code></div><div><strong>Employee Table:</strong> <code>MS</code> → <code>Marital Status</code>, <code>ID</code> → <code>Employee ID</code></div><div><strong>Service Table:</strong> <code>ID</code> → <code>Service ID</code>, <code>ID_1</code> → <code>Task ID</code>, <code>Employee</code> → <code>Employee ID</code>, <code>Client</code> → <code>Client ID</code></div></div><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image4.png" alt="Rename columns" class="rounded-xl zoomable" data-title="Rename ambiguous ID-style columns" data-src="image-source/image4.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Rename business keys clearly.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image5.png" alt="Remove empty columns" class="rounded-xl zoomable" data-title="Remove empty columns from Service" data-src="image-source/image5.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Also remove fully empty columns where shown.</figcaption></figure></div></div></div></label>
-          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">4. Split Composite Name Fields</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Separate combined name fields so the final table has cleaner atomic columns.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 font-semibold">In the Employee table, split <code>Name</code> using <strong>Split Column by Delimiter</strong>, then rename the resulting fields to <code>First Name</code> and <code>Last Name</code>.<div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image6.png" alt="Split by delimiter" class="rounded-xl zoomable" data-title="Split the Name column by delimiter" data-src="image-source/image6.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Split the combined name field.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image7.png" alt="Rename split name columns" class="rounded-xl zoomable" data-title="Rename the split name columns" data-src="image-source/image7.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Finish the name cleanup.</figcaption></figure></div></div></div></label>
-          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">5. Hunt Down Outliers</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Sort and inspect time values so extreme errors are corrected or removed before analysis.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 font-semibold space-y-2"><p>Sort <code>Actual Time</code> descending to isolate unrealistic values.</p><p>Correct the typo where <code>25</code> should become <code>2.5</code>, then remove the obvious bad top rows shown in the handout.</p><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image8.png" alt="Sort actual time descending" class="rounded-xl zoomable" data-title="Sort Actual Time descending" data-src="image-source/image8.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Use sorting to isolate outliers.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image9.png" alt="Remove top rows" class="rounded-xl zoomable" data-title="Remove the bad top rows after fixing the typo" data-src="image-source/image9.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Fix the typo and remove the remaining extreme values.</figcaption></figure></div></div></div></label>
-          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">6. Standardize Inconsistent Values</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Replace inconsistent abbreviations and missing-value patterns with one standard business format.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700"><ul class="list-disc pl-5 space-y-1 font-semibold"><li><strong>University:</strong> Replace short acronyms with the full school names shown in the handout.</li><li><strong>Job Title:</strong> Standardize inconsistent senior-manager labels into one clean spelling.</li><li><strong>Marital Status:</strong> Replace letters and blanks with full terms such as <code>Married</code>, <code>Single</code>, and <code>Unknown</code>.</li></ul><div class="grid md:grid-cols-1 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image10.png" alt="Replace values" class="rounded-xl zoomable" data-title="Replace inconsistent university and job values" data-src="image-source/image10.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Use replace values to standardize categories.</figcaption></figure></div></div></div></label>
-          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">7. Add Logic Checks with Conditional Columns</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Create text-based validation flags for actual hours and budget comparisons.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-3 font-semibold"><div><strong>Column 1: ActualhoursValid</strong><br>If Actual Time is within the acceptable range, label it <code>Valid</code>. Otherwise label it <code>Invalid</code>.</div><div><strong>Column 2: Above/Below Budget</strong><br>Compare Actual Time against Budgeted Time and label each record as <code>Above Budget</code>, <code>At the Budget</code>, or <code>Below Budget</code>.</div><div class="text-amberContrast-600 font-extrabold">Set these conditional columns to Text.</div><div class="grid md:grid-cols-2 gap-3 mt-2"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image11.png" alt="ActualhoursValid conditional column" class="rounded-xl zoomable" data-title="Column 1: ActualhoursValid" data-src="image-source/image11.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">If Actual Time is within the acceptable range, label it Valid. Otherwise label it Invalid.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image12.png" alt="Conditional columns" class="rounded-xl zoomable" data-title="Create conditional columns for validity and budget status" data-src="image-source/image12.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Build both conditional flags before moving on.</figcaption></figure></div></div></div></label>
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+            <input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)">
+            <div class="w-full">
+              <h3 class="step-title font-bold text-lg text-slate-800 mb-2">1. Open & Profile the Dataset</h3>
+              <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Open the <code>Beans.xlsx</code> file in Power Query. How do you make sure profiling checks the <em>entire</em> dataset rather than just a sample?</div>
+              <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button>
+              <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100">
+                <ul class="list-disc pl-5 text-slate-700 space-y-1 font-semibold">
+                  <li>Open <code>Beans.xlsx</code> and choose <strong>Transform Data</strong>.</li>
+                  <li>At the bottom-left of Power Query Editor, change <strong>Column profiling based on top 1000 rows</strong> to <strong>entire data set</strong>.</li>
+                  <li>Use the profile indicators to review the full workbook before cleaning.</li>
+                </ul>
+                <div class="grid md:grid-cols-2 gap-3 mt-4">
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image1.png" alt="Transform Data" class="rounded-xl zoomable" data-title="Open Beans.xlsx and choose Transform Data" data-src="image-source/image1.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Open the workbook and enter Power Query.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image2.png" alt="Entire dataset profiling" class="rounded-xl zoomable" data-title="Column profiling based on entire dataset" data-src="image-source/image2.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Switch profiling to the full dataset.</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </label>
+          
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+            <input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)">
+            <div class="w-full">
+              <h3 class="step-title font-bold text-lg text-slate-800 mb-2">2. Remove Irrelevant Data</h3>
+              <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Identify fields that do not support the later analysis and remove them before modeling.</div>
+              <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button>
+              <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-slate-700 font-semibold">
+                Remove columns that do not add analytical value for the task. For example, <code>Age</code> is rarely useful as a standalone numeric in this specific analysis context, so remove it from the demographic view before continuing.
+                <div class="grid md:grid-cols-1 gap-3 mt-4">
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image3.png" alt="Remove Age" class="rounded-xl zoomable" data-title="Remove Age from the demographic table" data-src="image-source/image3.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Remove the irrelevant field before continuing.</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </label>
+          
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+            <input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)">
+            <div class="w-full">
+              <h3 class="step-title font-bold text-lg text-slate-800 mb-2">3. Rename Ambiguous Columns</h3>
+              <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Generic names like <code>ID</code> or short abbreviations create confusion in the model. Rename them before relationships are formed.</div>
+              <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button>
+              <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100">
+                <div class="grid md:grid-cols-2 gap-3 text-sm text-slate-700 font-semibold">
+                  <div><strong>CL Table:</strong> <code>ID</code> → <code>Client ID</code></div>
+                  <div><strong>E-Dem Table:</strong> <code>CertList</code> → <code>Certification List</code></div>
+                  <div><strong>Employee Table:</strong> <code>MS</code> → <code>Marital Status</code>, <code>ID</code> → <code>Employee ID</code></div>
+                  <div><strong>Service Table:</strong> <code>ID</code> → <code>Service ID</code>, <code>ID_1</code> → <code>Task ID</code>, <code>Employee</code> → <code>Employee ID</code>, <code>Client</code> → <code>Client ID</code></div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-3 mt-4">
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image4.png" alt="Rename columns" class="rounded-xl zoomable" data-title="Rename ambiguous ID-style columns" data-src="image-source/image4.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Rename business keys clearly.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image5.png" alt="Remove empty columns" class="rounded-xl zoomable" data-title="Remove empty columns from Service" data-src="image-source/image5.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Also remove fully empty columns where shown.</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </label>
+          
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+            <input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)">
+            <div class="w-full">
+              <h3 class="step-title font-bold text-lg text-slate-800 mb-2">4. Split Composite Name Fields</h3>
+              <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Separate combined name fields so the final table has cleaner atomic columns.</div>
+              <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button>
+              <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 font-semibold">
+                In the Employee table, split <code>Name</code> using <strong>Split Column by Delimiter</strong>, then rename the resulting fields to <code>First Name</code> and <code>Last Name</code>.
+                <div class="grid md:grid-cols-2 gap-3 mt-4">
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image6.png" alt="Split by delimiter" class="rounded-xl zoomable" data-title="Split the Name column by delimiter" data-src="image-source/image6.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Split the combined name field.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image7.png" alt="Rename split name columns" class="rounded-xl zoomable" data-title="Rename the split name columns" data-src="image-source/image7.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Finish the name cleanup.</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </label>
+          
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+            <input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)">
+            <div class="w-full">
+              <h3 class="step-title font-bold text-lg text-slate-800 mb-2">5. Hunt Down Outliers</h3>
+              <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Sort and inspect time values so extreme errors are corrected or removed before analysis.</div>
+              <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button>
+              <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 font-semibold space-y-2">
+                <p>Sort <code>Actual Time</code> descending to isolate unrealistic values.</p>
+                <p>Correct the typo where <code>25</code> should become <code>2.5</code>, then remove the obvious bad top rows (extreme values that break logic).</p>
+                <div class="grid md:grid-cols-2 gap-3 mt-4">
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image8.png" alt="Sort actual time descending" class="rounded-xl zoomable" data-title="Sort Actual Time descending" data-src="image-source/image8.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Use sorting to isolate outliers.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image9.png" alt="Remove top rows" class="rounded-xl zoomable" data-title="Remove the bad top rows after fixing the typo" data-src="image-source/image9.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Fix the typo and remove the remaining extreme values.</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </label>
+          
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+            <input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)">
+            <div class="w-full">
+              <h3 class="step-title font-bold text-lg text-slate-800 mb-2">6. Standardize Inconsistent Values</h3>
+              <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Replace inconsistent abbreviations and missing-value patterns with one standard business format.</div>
+              <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button>
+              <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700">
+                <ul class="list-disc pl-5 space-y-1 font-semibold">
+                  <li><strong>University:</strong> Replace short acronyms with their full school names (e.g., standardizing "UW" to "University of Washington").</li>
+                  <li><strong>Job Title:</strong> Standardize inconsistent senior-manager labels into one clean spelling.</li>
+                  <li><strong>Marital Status:</strong> Replace letters and blanks with full terms such as <code>Married</code>, <code>Single</code>, and <code>Unknown</code>.</li>
+                </ul>
+                <div class="grid md:grid-cols-1 gap-3 mt-4">
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image10.png" alt="Replace values" class="rounded-xl zoomable" data-title="Replace inconsistent university and job values" data-src="image-source/image10.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Use replace values to standardize categories.</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </label>
+          
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+            <input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)">
+            <div class="w-full">
+              <h3 class="step-title font-bold text-lg text-slate-800 mb-2">7. Add Logic Checks with Conditional Columns</h3>
+              <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Create text-based validation flags for actual hours and budget comparisons.</div>
+              <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button>
+              <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-3 font-semibold">
+                <div><strong>Column 1: ActualhoursValid</strong><br>If Actual Time is within the acceptable range, label it <code>Valid</code>. Otherwise label it <code>Invalid</code>.</div>
+                <div><strong>Column 2: Above/Below Budget</strong><br>Compare Actual Time against Budgeted Time and label each record as <code>Above Budget</code>, <code>At the Budget</code>, or <code>Below Budget</code>.</div>
+                <div class="text-amberContrast-600 font-extrabold">Set these conditional columns to Text.</div>
+                <div class="grid md:grid-cols-2 gap-3 mt-2">
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image11.png" alt="ActualhoursValid conditional column" class="rounded-xl zoomable" data-title="Column 1: ActualhoursValid" data-src="image-source/image11.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">If Actual Time is within the acceptable range, label it Valid. Otherwise label it Invalid.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image12.png" alt="Conditional columns" class="rounded-xl zoomable" data-title="Create conditional columns for validity and budget status" data-src="image-source/image12.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Build both conditional flags before moving on.</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </label>
         </div>
       </section>
 
       <section id="part2" class="scroll-mt-24">
         <h2 class="text-2xl font-extrabold text-mint-800 mb-4 border-b-2 border-mint-200 pb-2 flex items-center gap-2"><span class="bg-mint-200 text-mint-800 rounded-full w-8 h-8 flex items-center justify-center text-sm">2</span>Table Transformation</h2>
         <div class="flex flex-col gap-4">
-          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">8. Give Queries Clear Names</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Rename the imported queries so the final model uses readable business names.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 font-semibold">Rename the handout’s short query names to clear labels such as <code>Client</code> and <code>Employee Demographic</code> before you start merging or building dimensions.</div></div></label>
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+            <input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)">
+            <div class="w-full">
+              <h3 class="step-title font-bold text-lg text-slate-800 mb-2">8. Give Queries Clear Names</h3>
+              <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Rename the imported queries so the final model uses readable business names.</div>
+              <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button>
+              <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 font-semibold">
+                Rename the short query names to clear labels such as <code>Client</code> and <code>Employee Demographic</code> before you start merging or building dimensions.
+              </div>
+            </div>
+          </label>
         </div>
       </section>
 
       <section id="part3" class="scroll-mt-24">
         <h2 class="text-2xl font-extrabold text-mint-800 mb-4 border-b-2 border-mint-200 pb-2 flex items-center gap-2"><span class="bg-mint-200 text-mint-800 rounded-full w-8 h-8 flex items-center justify-center text-sm">3</span>Data Modeling</h2>
         <div class="flex flex-col gap-4">
-          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">9. Merge Employee Data with Fuzzy Matching</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Employee information is split across tables. Merge them while allowing imperfect name matches.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2 font-semibold"><p>Use <strong>Employee</strong> as the primary table and merge in <strong>Employee Demographic</strong>.</p><p>Turn on <strong>Use fuzzy matching</strong> and set the similarity threshold to <code>0.4</code>.</p><p>Expand only <code>Certification List</code> and <code>University</code>, and uncheck the prefix option.</p><p>Right-click the intermediate demographic query and uncheck <strong>Enable load</strong>.</p><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image13.png" alt="Fuzzy match" class="rounded-xl zoomable" data-title="Merge with fuzzy matching at 0.4" data-src="image-source/image13.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Use fuzzy matching for the merge.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image14.png" alt="Expand merged table" class="rounded-xl zoomable" data-title="Expand the merged table" data-src="image-source/image14.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Open the expand selector after merging.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image15.png" alt="Select merged columns" class="rounded-xl zoomable" data-title="Keep Certificate List and University only" data-src="image-source/image15.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Keep only the two needed fields.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image16.png" alt="Disable load" class="rounded-xl zoomable" data-title="Disable load for the intermediate query" data-src="image-source/image16.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Disable the helper query after combining.</figcaption></figure></div></div></div></label>
-          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">10. Build the Task Dimension</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Extract task attributes from Service into a cleaner dimension table.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2 font-semibold"><p>Duplicate <code>Service</code> and rename the new query <code>Task</code>.</p><p>Keep <code>Task ID</code>, <code>Area</code>, and <code>Task Name</code>, then remove duplicates based on <code>Task ID</code>.</p><p>Return to <code>Service</code> and remove the duplicated descriptive task fields.</p><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image17.png" alt="Create Task" class="rounded-xl zoomable" data-title="Duplicate Service and keep task columns" data-src="image-source/image17.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Build the Task query from Service.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image18.png" alt="Remove duplicates Task ID" class="rounded-xl zoomable" data-title="Remove duplicate Task IDs" data-src="image-source/image18.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Deduplicate the Task dimension.</figcaption></figure></div></div></div></label>
-          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-slate-800 mb-2">11. Build the Certifications Table</h3><div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Convert comma-separated certification lists into one certification per row.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2 font-semibold"><p>Duplicate <code>Employee</code> and rename it <code>Certifications</code>.</p><p>Keep only <code>Employee ID</code> and <code>Certification List</code>.</p><p>Split <code>Certification List</code> by comma, then select <code>Employee ID</code> and choose <strong>Unpivot Other Columns</strong>.</p><p>Delete <code>Attribute</code>, rename <code>Value</code> to <code>Certificate</code>, and use <strong>Trim</strong> to remove stray spaces.</p><p>Finally, remove <code>Certification List</code> from the main <code>Employee</code> table.</p><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image19.png" alt="Start certifications table" class="rounded-xl zoomable" data-title="Keep Employee ID and Certification List" data-src="image-source/image19.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Start the Certifications query.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image20.png" alt="Split certifications" class="rounded-xl zoomable" data-title="Split Certification List by comma" data-src="image-source/image20.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Split the multi-value list.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image21.png" alt="Unpivot other columns" class="rounded-xl zoomable" data-title="Unpivot the split certification columns" data-src="image-source/image21.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Unpivot into one row per certificate.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image24.png" alt="Trim certificate field" class="rounded-xl zoomable" data-title="Trim and finalize the Certificate field" data-src="image-source/image24.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Trim and finish the dimension table.</figcaption></figure></div></div></div></label>
-          <label class="step-card bg-amberContrast-100 p-5 rounded-2xl shadow-sm border border-amberContrast-200 flex items-start gap-4 hover:shadow-md"><input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)"><div class="w-full"><h3 class="step-title font-bold text-lg text-amberContrast-600 mb-2">12. Close & Apply, Then Form Relationships</h3><div class="bg-white/70 p-3 rounded text-sm text-slate-700 mb-3 border-l-2 border-amberContrast-400"><strong>Task:</strong> Load the cleaned tables and connect the date field in the model.</div><button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button><div class="solution-content bg-white p-4 rounded-xl border border-amberContrast-200 text-sm text-slate-700 font-semibold"><p>Choose <strong>Close & Apply</strong>.</p><p>In Model view, connect <code>Date</code> in <code>Service</code> to <code>Date</code> in <code>Calendar</code>. Confirm the main business keys are linked correctly as well.</p><div class="grid md:grid-cols-2 gap-3 mt-4"><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image25.png" alt="Create relationship" class="rounded-xl zoomable" data-title="Create the Date relationship" data-src="image-source/image25.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Link Service Date to Calendar Date.</figcaption></figure><figure class="rounded-2xl border border-slate-200 p-3 bg-white"><img src="image-source/image26.png" alt="Final model view" class="rounded-xl zoomable" data-title="Final relationship and model view" data-src="image-source/image26.png"><figcaption class="text-xs font-bold text-slate-500 mt-2">Review the final model layout.</figcaption></figure></div></div></div></label>
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+            <input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)">
+            <div class="w-full">
+              <h3 class="step-title font-bold text-lg text-slate-800 mb-2">9. Merge Employee Data with Fuzzy Matching</h3>
+              <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Employee information is split across tables. Merge them while allowing imperfect name matches.</div>
+              <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button>
+              <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2 font-semibold">
+                <p>Use <strong>Employee</strong> as the primary table and merge in <strong>Employee Demographic</strong>.</p>
+                <p>Turn on <strong>Use fuzzy matching</strong> and set the similarity threshold to <code>0.4</code>.</p>
+                <p>Expand only <code>Certification List</code> and <code>University</code>, and uncheck the prefix option.</p>
+                <p>Right-click the intermediate demographic query and uncheck <strong>Enable load</strong>.</p>
+                <div class="grid md:grid-cols-2 gap-3 mt-4">
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image13.png" alt="Fuzzy match" class="rounded-xl zoomable" data-title="Merge with fuzzy matching at 0.4" data-src="image-source/image13.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Use fuzzy matching for the merge.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image14.png" alt="Expand merged table" class="rounded-xl zoomable" data-title="Expand the merged table" data-src="image-source/image14.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Open the expand selector after merging.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image15.png" alt="Select merged columns" class="rounded-xl zoomable" data-title="Keep Certificate List and University only" data-src="image-source/image15.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Keep only the two needed fields.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image16.png" alt="Disable load" class="rounded-xl zoomable" data-title="Disable load for the intermediate query" data-src="image-source/image16.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Disable the helper query after combining.</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </label>
+          
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+            <input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)">
+            <div class="w-full">
+              <h3 class="step-title font-bold text-lg text-slate-800 mb-2">10. Build the Task Dimension</h3>
+              <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Extract descriptive task attributes from the Fact table (Service) into a cleaner Dimension table. The Fact table should only keep the ID.</div>
+              <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button>
+              <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2 font-semibold">
+                <p>Duplicate <code>Service</code> and rename the new query <code>Task</code>.</p>
+                <p>Keep <code>Task ID</code>, <code>Area</code>, and <code>Task Name</code>, then remove duplicates based on <code>Task ID</code>.</p>
+                <p>Return to <code>Service</code> and <strong>remove</strong> the duplicated descriptive task fields (Area, Task Name) to strip it down to just the IDs and metrics.</p>
+                <div class="grid md:grid-cols-2 gap-3 mt-4">
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image17.png" alt="Create Task" class="rounded-xl zoomable" data-title="Duplicate Service and keep task columns" data-src="image-source/image17.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Build the Task query from Service.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image18.png" alt="Remove duplicates Task ID" class="rounded-xl zoomable" data-title="Remove duplicate Task IDs" data-src="image-source/image18.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Deduplicate the Task dimension.</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </label>
+          
+          <label class="step-card bg-white p-5 rounded-2xl shadow-sm border border-mint-100 flex items-start gap-4 hover:shadow-md">
+            <input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)">
+            <div class="w-full">
+              <h3 class="step-title font-bold text-lg text-slate-800 mb-2">11. Build the Certifications Table</h3>
+              <div class="bg-slate-50 p-3 rounded text-sm text-slate-600 mb-3 border-l-2 border-slate-300"><strong>Task:</strong> Convert comma-separated certification lists into a normalized table with one certification per row.</div>
+              <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button>
+              <div class="solution-content bg-mint-50 p-4 rounded-xl border border-mint-100 text-sm text-slate-700 space-y-2 font-semibold">
+                <p>Duplicate <code>Employee</code> and rename it <code>Certifications</code>.</p>
+                <p>Keep only <code>Employee ID</code> and <code>Certification List</code>.</p>
+                <p>Split <code>Certification List</code> by comma, then select <code>Employee ID</code> and choose <strong>Unpivot Other Columns</strong>.</p>
+                <p>Delete <code>Attribute</code>, rename <code>Value</code> to <code>Certificate</code>, and use <strong>Trim</strong> to remove stray spaces.</p>
+                <p>Finally, remove <code>Certification List</code> from the main <code>Employee</code> table.</p>
+                <div class="grid md:grid-cols-2 gap-3 mt-4">
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image19.png" alt="Start certifications table" class="rounded-xl zoomable" data-title="Keep Employee ID and Certification List" data-src="image-source/image19.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Start the Certifications query.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image20.png" alt="Split certifications" class="rounded-xl zoomable" data-title="Split Certification List by comma" data-src="image-source/image20.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Split the multi-value list.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image21.png" alt="Unpivot other columns" class="rounded-xl zoomable" data-title="Unpivot the split certification columns" data-src="image-source/image21.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Unpivot into one row per certificate.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image24.png" alt="Trim certificate field" class="rounded-xl zoomable" data-title="Trim and finalize the Certificate field" data-src="image-source/image24.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Trim and finish the dimension table.</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </label>
+          
+          <label class="step-card bg-amberContrast-100 p-5 rounded-2xl shadow-sm border border-amberContrast-200 flex items-start gap-4 hover:shadow-md">
+            <input type="checkbox" class="custom-checkbox" onclick="toggleComplete(this, event)">
+            <div class="w-full">
+              <h3 class="step-title font-bold text-lg text-amberContrast-600 mb-2">12. Close & Apply, Then Form Relationships</h3>
+              <div class="bg-white/70 p-3 rounded text-sm text-slate-700 mb-3 border-l-2 border-amberContrast-400"><strong>Task:</strong> Load the cleaned tables and connect the fact table (Service) to the dimension tables using the foreign keys.</div>
+              <button onclick="toggleReveal(this)" class="text-amberContrast-600 font-bold text-sm hover:underline flex items-center gap-1 mb-2">👁️ Reveal Answer</button>
+              <div class="solution-content bg-white p-4 rounded-xl border border-amberContrast-200 text-sm text-slate-700 font-semibold">
+                <p>Choose <strong>Close & Apply</strong>.</p>
+                <p>In Model view, connect the IDs from your Fact table (<code>Service</code>) to your Dimension tables (<code>Task</code>, <code>Client</code>, <code>Employee</code>). Don't forget to connect <code>Date</code> in <code>Service</code> to <code>Date</code> in <code>Calendar</code>.</p>
+                <div class="grid md:grid-cols-2 gap-3 mt-4">
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image25.png" alt="Create relationship" class="rounded-xl zoomable" data-title="Create the Date relationship" data-src="image-source/image25.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Link Service Date to Calendar Date.</figcaption>
+                  </figure>
+                  <figure class="rounded-2xl border border-slate-200 p-3 bg-white">
+                    <img src="image-source/image26.png" alt="Final model view" class="rounded-xl zoomable" data-title="Final relationship and model view" data-src="image-source/image26.png">
+                    <figcaption class="text-xs font-bold text-slate-500 mt-2">Review the final Star Schema layout.</figcaption>
+                  </figure>
+                </div>
+              </div>
+            </div>
+          </label>
         </div>
       </section>
 
