@@ -134,19 +134,19 @@
                   <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                   Fact Tables (The Events)
                 </h4>
-                <p class="text-sm text-slate-600">The center of the star. These tables record measurable, quantitative events (like logged hours or billed amounts). <strong>Crucially, fact tables should <em>not</em> contain descriptive text.</strong> They should only contain numeric values and <em>Foreign Keys</em> (IDs) that connect back to your dimension tables.</p>
+                <p class="text-sm text-slate-600">The center of the star. These tables record measurable, quantitative events (like logged hours or billed amounts). <strong>Fact tables primarily contain numeric measures and foreign keys to dimension tables, with minimal descriptive attributes.</strong> While they might contain operational flags, timestamps, or degenerate dimensions (like transaction IDs), most descriptive text should live in dimension tables.</p>
               </div>
               <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
                 <h4 class="font-extrabold text-slate-800 mb-2 flex items-center gap-2">
                   <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                   Dimension Tables (The Context)
                 </h4>
-                <p class="text-sm text-slate-600">These tables provide the "who, what, where, and why." They contain descriptive text (like Employee Names, Task Descriptions, or Client Locations). They give meaning and filters to your metrics.</p>
+                <p class="text-sm text-slate-600">These tables provide the "who, what, when, where, and why." They contain descriptive text and time-related fields (like Employee Names, Task Descriptions, Date attributes, or Client Locations). They give meaning and filters to your metrics.</p>
               </div>
             </div>
 
             <p class="mt-4 border-l-4 border-amberContrast-500 pl-4 bg-amberContrast-50 p-3 rounded-r-xl">
-              By isolating descriptions into Dimension tables and keeping only numbers and IDs in the Fact table, you ensure your data model is fast, avoids data duplication, and is incredibly easy to filter and analyze. Keep this architecture in mind as you complete the cleaning steps below.
+              By isolating descriptions into Dimension tables and keeping primarily numbers and IDs in the Fact table, you ensure your data model is fast, avoids data duplication, and is incredibly easy to filter and analyze. Keep this architecture in mind as you complete the cleaning steps below.
             </p>
           </div>
         </div>
