@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Retail Sales Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0f172a',
+            slatebg: '#e2e8f0',
+            panel: '#ffffff',
+            soft: '#f8fafc',
+            line: '#cbd5e1',
+            blue: '#2563eb',
+            teal: '#0f766e',
+            amber: '#d97706',
+            green: '#16a34a'
+          },
+          boxShadow: {
+            game: '5px 5px 0px rgba(15,23,42,1)',
+            gameSm: '3px 3px 0px rgba(15,23,42,1)'
+          },
+          fontFamily: {
+            sans: ['Nunito','system-ui','sans-serif'],
+            mono: ['JetBrains Mono','monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --ink:#0f172a;
+      --line:#cbd5e1;
+      --soft:#f8fafc;
+      --panel:#ffffff;
+      --blue:#2563eb;
+      --teal:#0f766e;
+      --amber:#d97706;
+      --green:#16a34a;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; height:100%; font-family:'Nunito', system-ui, sans-serif; color:var(--ink); background:#cbd5e1; }
+    body {
+      background-image:
+        radial-gradient(#3b82f6 1.2px, transparent 1.2px),
+        radial-gradient(#3b82f6 1.2px, transparent 1.2px);
+      background-size:36px 36px;
+      background-position:0 0, 18px 18px;
+    }
+    .app-shell {
+      width:min(1500px, 96vw);
+      height:min(94vh, 980px);
+      margin:3vh auto;
+      background:#fff;
+      border:3px solid var(--ink);
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow:8px 8px 0 rgba(15,23,42,1);
+      display:flex;
+    }
+    .sidebar {
+      width:310px;
+      min-width:240px;
+      max-width:50vw;
+      resize:horizontal;
+      overflow-x:hidden;
+      overflow-y:auto;
+      background:var(--ink);
+      color:#fff;
+      display:flex;
+      flex-direction:column;
+      border-right:3px solid var(--ink);
+      flex-shrink:0;
+    }
+    .brand {
+      padding:28px 24px 22px;
+      border-bottom:3px solid rgba(255,255,255,.08);
+    }
+    .brand .badge {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:#dbeafe;
+      color:#1e3a8a;
+      border:2px solid var(--ink);
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      padding:6px 12px;
+      margin-bottom:14px;
+    }
+    .brand h1 {
+      margin:0;
+      font-size:28px;
+      line-height:1.05;
+      font-weight:900;
+      letter-spacing:-.03em;
+    }
+    .brand p {
+      margin:10px 0 0;
+      color:#cbd5e1;
+      font-weight:700;
+      line-height:1.45;
+      font-size:14px;
+    }
+    .nav {
+      padding:14px 10px 18px;
+      overflow:auto;
+    }
+    .nav button {
+      width:100%;
+      border:none;
+      background:transparent;
+      color:#cbd5e1;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:13px 14px;
+      border-radius:14px;
+      font-weight:800;
+      font-size:15px;
+      text-align:left;
+      cursor:pointer;
+      transition:all .15s ease;
+      border-left:5px solid transparent;
+    }
+    .nav button:hover {
+      background:rgba(255,255,255,.08);
+      color:#fff;
+    }
+    .nav button.active {
+      background:#8b5cf6;
+      color:#fff;
+      border-left-color:#fff;
+      box-shadow:3px 3px 0 rgba(255,255,255,.18) inset;
+    }
+    .sidebar-footer {
+      margin-top:auto;
+      padding:16px 18px 20px;
+      border-top:3px solid rgba(255,255,255,.08);
+    }
+    .lock-btn {
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 16px;
+      border-radius:14px;
+      border:3px solid var(--ink);
+      background:#facc15;
+      color:var(--ink);
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:3px 3px 0 rgba(255,255,255,.15);
+    }
+    .content {
+      flex:1;
+      min-width:0;
+      overflow:auto;
+      background:#f1f5f9;
+      padding:28px;
+    }
+    .section { display:none; }
+    .section.active { display:block; animation:fade .2s ease; }
+    @keyframes fade {
+      from { opacity:0; transform:translateY(6px); }
+      to { opacity:1; transform:none; }
+    }
+    .hero, .panel {
+      background:var(--panel);
+      border:3px solid var(--ink);
+      border-radius:22px;
+      box-shadow:5px 5px 0 rgba(15,23,42,1);
+    }
+    .hero {
+      padding:26px 28px;
+      margin-bottom:24px;
+    }
+    .eyebrow {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#475569;
+      background:#e2e8f0;
+      padding:7px 12px;
+      border-radius:999px;
+      border:2px solid var(--ink);
+    }
+    .hero h2 {
+      margin:14px 0 8px;
+      font-size:40px;
+      line-height:1.02;
+      letter-spacing:-.04em;
+      color:var(--ink);
+    }
+    .hero p {
+      margin:0;
+      font-size:18px;
+      line-height:1.6;
+      color:#334155;
+      font-weight:700;
+      max-width:900px;
+    }
+    .stack { display:grid; gap:20px; }
+    .panel {
+      padding:20px;
+    }
+    .panel h3 {
+      margin:0 0 10px;
+      color:var(--ink);
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:-.02em;
+    }
+    .panel h4 {
+      margin:0 0 8px;
+      color:var(--ink);
+      font-size:18px;
+      font-weight:900;
+    }
+    .panel p, .panel li {
+      color:#1e293b;
+      font-size:16px;
+      line-height:1.65;
+      font-weight:700;
+    }
+    .softbox {
+      background:#f8fafc;
+      border:2px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+    }
+    .list-clean {
+      margin:0;
+      padding-left:18px;
+      display:grid;
+      gap:10px;
+    }
+    .steps { display:grid; gap:14px; }
+    .step {
+      background:#f8fafc;
+      border:2px solid var(--line);
+      border-radius:18px;
+      padding:16px 16px 16px 18px;
+    }
+    .step-head {
+      display:flex;
+      align-items:flex-start;
+      gap:14px;
+    }
+    .step-num {
+      min-width:36px;
+      height:36px;
+      border-radius:12px;
+      background:#2563eb;
+      color:#fff;
+      border:2px solid var(--ink);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      box-shadow:3px 3px 0 rgba(15,23,42,1);
+      margin-top:2px;
+    }
+    .step p { margin:6px 0 0; }
+    .download-btn {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:var(--blue);
+      color:#fff;
+      border:3px solid var(--ink);
+      border-radius:12px;
+      padding:10px 16px;
+      font-weight:900;
+      text-decoration:none;
+      margin-top:12px;
+      transition:transform 0.1s, box-shadow 0.1s;
+    }
+    .download-btn:hover {
+      transform:translate(-2px,-2px);
+      box-shadow:4px 4px 0 rgba(15,23,42,1);
+    }
+    .shot-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+      gap:16px;
+    }
+    .shot-card {
+      background:#fff;
+      border:2px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+    }
+    .shot-card strong {
+      display:block;
+      color:var(--ink);
+      margin-top:10px;
+      margin-bottom:4px;
+      font-size:15px;
+    }
+    .shot-card span {
+      display:block;
+      color:#475569;
+      font-size:13px;
+      line-height:1.5;
+      font-weight:700;
+    }
+    .native-shot {
+      display:block;
+      width:auto;
+      height:auto;
+      max-width:100%;
+      border:1.5px solid #94a3b8;
+      border-radius:10px;
+      background:#fff;
+      cursor:zoom-in;
+    }
+    .twocol {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:16px;
+    }
+    .gallery-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+      gap:14px;
+    }
+    .gallery-item {
+      border:2px solid var(--line);
+      background:#fff;
+      border-radius:16px;
+      padding:10px;
+    }
+    .gallery-item .caption {
+      margin-top:8px;
+      font-size:12px;
+      font-weight:800;
+      color:#475569;
+      word-break:break-word;
+    }
+    .modal-backdrop {
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.72);
+      backdrop-filter:blur(4px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:999;
+      padding:20px;
+    }
+    .modal-backdrop.open { display:flex; }
+    .modal-card {
+      background:#fff;
+      border:3px solid var(--ink);
+      border-radius:22px;
+      max-width:min(1100px, 96vw);
+      max-height:90vh;
+      overflow:auto;
+      box-shadow:10px 10px 0 rgba(15,23,42,.35);
+      padding:18px;
+    }
+    .modal-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .modal-head h5 {
+      margin:0;
+      font-size:22px;
+      font-weight:900;
+      color:var(--ink);
+    }
+    .icon-btn {
+      border:3px solid var(--ink);
+      background:#e2e8f0;
+      color:var(--ink);
+      border-radius:12px;
+      width:42px;
+      height:42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      font-weight:900;
+    }
+    .modal-card img {
+      display:block;
+      max-width:none;
+      width:auto;
+      height:auto;
+      background:#fff;
+      border:1px solid #94a3b8;
+      border-radius:10px;
+    }
+    .hidden-section-note {
+      background:#fef3c7;
+      color:#78350f;
+      border:2px solid #f59e0b;
+      border-radius:16px;
+      padding:14px 16px;
+      font-weight:800;
+    }
+    .codebox {
+      font-family:'JetBrains Mono',monospace;
+      background:#fff;
+      border:2px solid var(--ink);
+      border-radius:14px;
+      padding:14px 16px;
+      display:grid;
+      gap:8px;
+      font-size:14px;
+      color:#0f172a;
+      font-weight:700;
+    }
+    
+    /* Instructor Notes styling */
+    .success-msg { display:none; margin-top:12px; border-radius:14px; border:2px solid var(--green); background:#d1fae5; color:#065f46; padding:12px; font-weight:900; }
+    .instructor-note { display:none; margin-top:14px; padding:12px 14px; background:#fef3c7; border:2px solid #f59e0b; border-radius:12px; color:#78350f; font-weight:800; font-size:.95rem; align-items:flex-start; gap:10px; }
+    .instructor-note.show { display:flex; }
+    .instructor-note i { flex-shrink:0; margin-top:2px; }
+
+    @media (max-width: 1000px) {
+      .app-shell { flex-direction:column; height:auto; min-height:95vh; }
+      .sidebar { width:100%; max-width:none; resize:none; overflow-y:visible; border-right:none; border-bottom:3px solid var(--ink); }
+      .content { padding:18px; }
+      .hero h2 { font-size:32px; }
+    }
+    @media (max-width: 760px) {
+      .twocol { grid-template-columns:1fr; }
+      .hero h2 { font-size:28px; }
+      .hero p { font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="badge"><i data-lucide="badge-check"></i> Interactive student file</div>
+        <h1>Online Retail<br>Sales Lab</h1>
+        <p>Clean the imported sales data, create Month, Quarter, and Year fields, summarize monthly and quarterly patterns, and answer the lesson questions.</p>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar-footer">
+        <button class="lock-btn" id="openLock"><i data-lucide="lock"></i> Instructor access</button>
+      </div>
+    </aside>
+    <main class="content" id="content"></main>
+  </div>
+
+  <div class="modal-backdrop" id="zoomModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h5 id="zoomTitle">Screenshot</h5>
+        <button class="icon-btn" id="closeZoom" aria-label="Close image"><i data-lucide="x"></i></button>
+      </div>
+      <div id="zoomBody"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="lockModal" aria-hidden="true">
+    <div class="modal-card" style="max-width:520px;">
+      <div class="modal-head">
+        <h5>Instructor access</h5>
+        <button class="icon-btn" id="closeLock" aria-label="Close instructor modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="stack">
+        <p style="margin:0; color:#334155; font-weight:800;">Enter the local password to reveal the instructor-only section in the navigation.</p>
+        <label style="font-weight:900; color:#0f172a;">Password</label>
+        <input id="lockInput" type="password" autocomplete="off" placeholder="Enter password" style="width:100%; padding:14px 16px; border:3px solid #0f172a; border-radius:14px; font-size:16px; font-weight:800; color:#0f172a; background:#fff;" />
+        <button class="lock-btn" id="unlockBtn" style="box-shadow:3px 3px 0 rgba(15,23,42,1);">Unlock</button>
+        <div id="lockMsg" class="hidden-section-note" style="display:none;"></div>
+        <div id="vaultSuccess" class="success-msg">Unlocked. Instructor notes are now visible beneath the relevant instructions, and the Instructor Access section is in the sidebar.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Disable right-click across the entire document
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    const SECTIONS = [
+      {
+        "id": "overview", 
+        "label": "Overview", 
+        "icon": "shopping-cart", 
+        "title": "Summarizing Online Retail Sales", 
+        "intro": "Student guide for importing the online retail sales file, cleaning key fields, organizing dates into quarters, summarizing sales, and exploring monthly and quarterly patterns in Alteryx.", 
+        "cards": [
+          {"type": "callout", "title": "Files to prepare", "items": ["Online Retail Sales.txt", "Summarizing Online Retail Sales - Start.yxmd", "A project folder that will hold your workflow, input file, and output files together"]}, 
+          {"type": "checklist", "title": "What you will practice", "items": ["Importing a delimited text file and correcting the delimiter", "Using Browse to inspect the dataset", "Using DateTime, Formula, Record ID, Select, Summarize, Sort, Filter, and Sample", "Creating Month, Quarter, and Year fields", "Comparing monthly and quarterly sales patterns", "Answering product-type sales questions from grouped outputs"]}, 
+          {"type": "gridshots", "title": "Lesson visuals", "shots": [
+            {"file": "screenshot-001.png", "title": "Lesson opening visual", "desc": "Opening image preserved from the original document."}, 
+            {"file": "screenshot-002.png", "title": "Early workflow visual", "desc": "One of the first setup visuals from the handout."}
+          ]}
+        ]
+      }, 
+      {
+        "id": "setup", 
+        "label": "Setup & Import", 
+        "icon": "folder-open", 
+        "title": "Set up the project and import the file", 
+        "intro": "Start by organizing the project folder, bringing in the CSV, and correcting the delimiter so the data loads properly.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Create a project folder", 
+                "body": "Download and keep the workflow, the Online Retail Sales.txt file, and any outputs in the same lesson folder so paths are easier to manage.",
+                "downloads": [
+                  {"label": "Download Dataset (.txt)", "file": "Online Retail Sales.txt"},
+                  {"label": "Download Starting Workflow (.yxmd)", "file": "Summarizing Online Retail Sales - Start.yxmd"}
+                ]
+              }, 
+              {
+                "title": "Bring in the dataset and attach Browse", 
+                "body": "Add an Input Data tool, connect to the sales file, and attach a Browse tool so you can investigate the incoming fields."
+              }, 
+              {
+                "title": "Correct the delimiter", 
+                "body": "This file does not use a comma delimiter. In the Input Data configuration, change the delimiter to a forward slash / so the columns load correctly.",
+                "instructorNote": "Delimiter should be forward slash /"
+              }, 
+              {
+                "title": "Spend a few minutes investigating the dataset", 
+                "body": "Look at the fields, ask what each record represents, and note any likely cleansing steps before making changes."
+              }
+            ]
+          }, 
+          {"type": "callout", "title": "Findings to notice during the first review", "items": ["Product Type contains some null values", "Only product types with sales appear for a given day; zero-sales categories do not generate a row", "Date is stored as a string and needs conversion", "Dates span 2017 to 2019", "Net Quantity includes at least one value of -1, which signals a return situation"]}, 
+          {"type": "gridshots", "title": "Matched screenshots", "shots": [
+            {"file": "screenshot-003.png", "title": "Input data starting point", "desc": "The first import step in the lesson."}, 
+            {"file": "screenshot-004.png", "title": "Delimiter-related setup view", "desc": "This group of screenshots aligns with fixing the text import settings."}, 
+            {"file": "screenshot-005.png", "title": "Initial browse or data inspection view", "desc": "Early investigation after the file is connected."}, 
+            {"file": "screenshot-006.png", "title": "Another early workflow image", "desc": "Preserved screenshot from the initial cleansing section."}
+          ]}
+        ]
+      }, 
+      {
+        "id": "cleanse", 
+        "label": "Initial Cleansing", 
+        "icon": "brush-cleaning", 
+        "title": "Clean core fields", 
+        "intro": "Standardize the date field, fill null product types, create a row identifier, and correct data types before analysis.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Convert Date with DateTime", 
+                "body": "Use a DateTime tool to convert the string Date field into a proper date type and output it as Order Date.",
+                "instructorNote": "Use DateTime to create Order Date, then remove original Date in Select"
+              }, 
+              {
+                "title": "Replace null Product Type values", 
+                "body": "Use a Formula tool to change null values in Product Type to Other so those rows remain usable in grouped summaries.",
+                "instructorNote": "Null Product Type values can be changed to Other"
+              }, 
+              {
+                "title": "Add a Record ID", 
+                "body": "Because the dataset does not include a built-in unique identifier, add a Record ID tool to create one."
+              }, 
+              {
+                "title": "Use Select to remove and retype fields", 
+                "body": "Remove the original Date field and update data types in Select."
+              }, 
+              {
+                "title": "Use Int16 for Net Quantity", 
+                "body": "Do not use Byte here because the data includes a value of -1. Int16 is safer.",
+                "instructorNote": "Use Int16 instead of Byte for Net Quantity because of the -1 value"
+              }, 
+              {
+                "title": "Format monetary fields clearly", 
+                "body": "For money-related fields, fixed decimal 19.2 is a good display choice.",
+                "instructorNote": "Fixed decimal 19.2 works well for money fields"
+              }
+            ]
+          }, 
+          {"type": "callout", "title": "Suggested data decisions", "items": ["Order Date should be a true date field", "Net Quantity should allow negative values", "Product Type nulls can be grouped as Other", "Monetary fields can use fixed decimal formatting for readability"]}, 
+          {"type": "gridshots", "title": "Matched screenshots", "shots": [
+            {"file": "screenshot-007.png", "title": "DateTime tool for Order Date", "desc": "This screenshot aligns with converting Date into Order Date."}, 
+            {"file": "screenshot-008.png", "title": "Formula tool for Product Type", "desc": "The Formula step that replaces null Product Type values."}, 
+            {"file": "screenshot-009.png", "title": "Record ID tool stage", "desc": "This visual matches the identifier step."}, 
+            {"file": "screenshot-010.png", "title": "Select tool cleanup", "desc": "A Select configuration used to remove and retype fields."}, 
+            {"file": "screenshot-011.png", "title": "Data type review", "desc": "A later cleansing image associated with the Select stage."}
+          ]}
+        ]
+      }, 
+      {
+        "id": "quarters", 
+        "label": "Month, Quarter, Year", 
+        "icon": "calendar-range", 
+        "title": "Create Month, Quarter, and Year", 
+        "intro": "Prepare the dataset for time-based analysis by creating fields that support monthly and quarterly grouping.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Create Month with DateTime", 
+                "body": "Add a DateTime tool connected to the cleaned stream. Turn Order Date into a custom date using Mon, and name the new column Month."
+              }, 
+              {
+                "title": "Create Quarter with Formula", 
+                "body": "Add a Formula tool and create a new text column called Quarter. Use a compound IF statement with Contains to map months into Q1, Q2, Q3, and Q4."
+              }, 
+              {
+                "title": "Create Year with DateTime", 
+                "body": "Add another DateTime tool so the year can be output separately for later grouping."
+              }, 
+              {
+                "title": "Run and verify the new fields", 
+                "body": "After running, confirm that Month, Quarter, and Year appear as expected before you start summarizing."
+              }
+            ]
+          }, 
+          {"type": "formula", "title": "Quarter logic idea", "lines": ["IF Contains(\"Jan Feb Mar\", [Month]) THEN \"Q1\"", "ELSEIF Contains(\"Apr May Jun\", [Month]) THEN \"Q2\"", "ELSEIF Contains(\"Jul Aug Sep\", [Month]) THEN \"Q3\"", "ELSE \"Q4\"", "ENDIF"]}, 
+          {"type": "gridshots", "title": "Matched screenshots", "shots": [
+            {"file": "screenshot-012.svg", "title": "Month creation step", "desc": "DateTime configured to output Month from Order Date."}, 
+            {"file": "screenshot-013.png", "title": "Quarter formula setup", "desc": "The formula logic that assigns quarter labels."}, 
+            {"file": "screenshot-014.png", "title": "Quarter results view", "desc": "A screenshot aligned with the new Quarter field."}, 
+            {"file": "screenshot-015.png", "title": "Year extraction step", "desc": "DateTime used to output the Year field."}
+          ]}
+        ]
+      }, 
+      {
+        "id": "summarize", 
+        "label": "Summarize", 
+        "icon": "table-properties", 
+        "title": "Summarize monthly and quarterly sales", 
+        "intro": "Use Summarize to build grouped outputs for monthly sales and quarterly gross sales statistics.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Start with a monthly summary", 
+                "body": "Attach Summarize to the time-prepared stream. Group by Month first, then also add Quarter and Year so the same month is not merged across different years."
+              }, 
+              {
+                "title": "Add monthly sales totals", 
+                "body": "Add Sum for Net Quantity, Gross Sales, Discount, Returns, and Total Net Sales."
+              }, 
+              {
+                "title": "Clean the output names", 
+                "body": "Rename the output field names so they stay readable and consistent."
+              }, 
+              {
+                "title": "Create a second quarterly summary", 
+                "body": "Add another Summarize tool that groups by Year and Quarter and calculates Sum, Mean, Median, Max, and Min for Gross Sales."
+              }, 
+              {
+                "title": "Interpret the grouped records", 
+                "body": "Each record in the monthly summary should represent one Month-Quarter-Year combination with its aggregated sales values."
+              }
+            ]
+          }, 
+          {"type": "gridshots", "title": "Matched screenshots", "shots": [
+            {"file": "screenshot-016.png", "title": "Summarize tool introduced", "desc": "The lesson turns to grouped monthly analysis here."}, 
+            {"file": "screenshot-017.png", "title": "Summarize actions area", "desc": "Available actions depend on the selected data type."}, 
+            {"file": "screenshot-018.png", "title": "Monthly grouping concept", "desc": "Group By fields for Month, Quarter, and Year."}, 
+            {"file": "screenshot-019.png", "title": "Sales total fields summed", "desc": "The grouped sales metrics used in the monthly output."}, 
+            {"file": "screenshot-020.png", "title": "Quarterly summary statistics", "desc": "A second Summarize tool for quarterly Gross Sales metrics."}
+          ]}
+        ]
+      }, 
+      {
+        "id": "analysis", 
+        "label": "Sort, Filter, Sample", 
+        "icon": "arrow-down-wide-narrow", 
+        "title": "Investigate patterns with Sort, Filter, and Sample", 
+        "intro": "Use sorted outputs, a targeted Q4 2019 filter, and grouped samples to find standout periods.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Sort quarterly Gross Sales descending", 
+                "body": "On the quarterly summary, sort by Sum Gross Sales in descending order to see which quarter generally had the highest sales.",
+                "instructorNote": "Quarter 4 generally has the highest sales and Quarter 3 generally does the worst"
+              }, 
+              {
+                "title": "Investigate Q4 of 2019", 
+                "body": "Start a separate stream from the monthly summary and filter to Quarter = Q4 and Year = 2019. Review the monthly results more closely."
+              }, 
+              {
+                "title": "Sort months by Total Net Sales", 
+                "body": "Use another sort on the monthly summary to look for recurring high- and low-performing months."
+              }, 
+              {
+                "title": "Use Sample for the top month in each quarter-year", 
+                "body": "After sorting descending, use Sample with First N rows = 1 and group by Quarter and Year."
+              }, 
+              {
+                "title": "Use Sample for the bottom month in each quarter-year", 
+                "body": "Because the data is sorted descending, a second Sample using the last row per Quarter-Year group will reveal the lowest month in each group."
+              }
+            ]
+          }, 
+          {"type": "callout", "title": "Insights highlighted in the lesson", "items": ["Quarter 4 generally had the highest sales", "Quarter 3 generally did the worst", "Q4 of 2019 stands out strongly", "November and December of 2019 greatly outperformed October", "November, December, and January tend to be strong months, while October tends to be weak"]}, 
+          {"type": "gridshots", "title": "Matched screenshots", "shots": [
+            {"file": "screenshot-021.png", "title": "Sort tool stage", "desc": "Sorting introduced for ranked quarterly results."}, 
+            {"file": "screenshot-022.png", "title": "Sort configuration detail", "desc": "A closer view of sort settings and order."}, 
+            {"file": "screenshot-023.png", "title": "Filter stream for Q4 2019", "desc": "The monthly summary filtered down to one quarter and year."}, 
+            {"file": "screenshot-024.png", "title": "Sample tool introduction", "desc": "The lesson explains sample methods here."}, 
+            {"file": "screenshot-025.png", "title": "Sample grouped by Quarter and Year", "desc": "Selecting the first or last record after sorting."}
+          ]}
+        ]
+      }, 
+      {
+        "id": "questions", 
+        "label": "Student Questions", 
+        "icon": "help-circle", 
+        "title": "Questions to answer", 
+        "intro": "Use your workflow outputs to answer these product-type and sales pattern questions.", 
+        "cards": [
+          {
+            "type": "callout", 
+            "title": "Questions", 
+            "items": ["What are the highest-selling product types in terms of Total Net Sales?", "What is the highest-selling product type in terms of Net Quantity for each month, without separating by year?", "What product types have the highest Returns?"],
+            "instructorNote": "Highest-selling product types by Total Net Sales: Baskets, Art & Sculpture, Jewelry, and Home Décor. Highest-selling product type by Net Quantity by month: Baskets in 5 months, Art & Sculpture in 2, Jewelry in 2, Kitchen in 2, and Christmas in 1. Highest Returns: similar product groups to the top sellers; comparing returns relative to sales is also useful"
+          }, 
+          {"type": "twocol", "left": {"title": "Suggested paths", "items": ["Question 1: Summarize then Sort", "Question 2: Summarize, Sort, then Sample", "Question 3: Summarize then Sort; also consider returns relative to sales"]}, "right": {"title": "Helpful fields", "items": ["Product Type", "Month", "Total Net Sales", "Net Quantity", "Returns"]}}, 
+          {"type": "gridshots", "title": "Matched screenshots", "shots": [
+            {"file": "screenshot-026.png", "title": "Question section visual", "desc": "The handout transitions from guided workflow to student questions."}, 
+            {"file": "screenshot-027.png", "title": "Question 1 solution snapshot", "desc": "Aligned with highest-selling product types by Total Net Sales."}, 
+            {"file": "screenshot-028.png", "title": "Question 2 solution snapshot", "desc": "Aligned with highest Net Quantity product type by month."}, 
+            {"file": "screenshot-029.png", "title": "Question 3 solution snapshot", "desc": "Aligned with product types showing strong Returns."}
+          ]}
+        ]
+      }, 
+      {
+        "id": "gallery", 
+        "label": "Screenshot Library", 
+        "icon": "images", 
+        "title": "Screenshot Library", 
+        "intro": "Every extracted screenshot from the original document is included here. Click any image to zoom in at full size.", 
+        "cards": [{"type": "gallery"}]
+      }, 
+      {
+        "id": "instructor", 
+        "label": "Instructor Access", 
+        "icon": "lock", 
+        "title": "Instructor-only notes", 
+        "intro": "This section appears only after entering the instructor password in the padlock modal.", 
+        "hidden": true, 
+        "cards": [
+          {"type": "callout", "title": "Instructor quick notes", "items": ["Password for this package: online", "Delimiter should be forward slash /", "Null Product Type values can be changed to Other", "Use DateTime to create Order Date, then remove original Date in Select", "Use Int16 instead of Byte for Net Quantity because of the -1 value", "Fixed decimal 19.2 works well for money fields", "Quarter 4 generally has the highest sales and Quarter 3 generally does the worst"]}, 
+          {"type": "callout", "title": "Talk-track answers to the student questions", "items": ["Highest-selling product types by Total Net Sales: Baskets, Art & Sculpture, Jewelry, and Home D\u00e9cor", "Highest-selling product type by Net Quantity by month: Baskets in 5 months, Art & Sculpture in 2, Jewelry in 2, Kitchen in 2, and Christmas in 1", "Highest Returns: similar product groups to the top sellers; comparing returns relative to sales is also useful"]}
+        ]
+      }
+    ];
+
+    const GALLERY = ["screenshot-001.png", "screenshot-002.png", "screenshot-003.png", "screenshot-004.png", "screenshot-005.png", "screenshot-006.png", "screenshot-007.png", "screenshot-008.png", "screenshot-009.png", "screenshot-010.png", "screenshot-011.png", "screenshot-012.svg", "screenshot-013.png", "screenshot-014.png", "screenshot-015.png", "screenshot-016.png", "screenshot-017.png", "screenshot-018.png", "screenshot-019.png", "screenshot-020.png", "screenshot-021.png", "screenshot-022.png", "screenshot-023.png", "screenshot-024.png", "screenshot-025.png", "screenshot-026.png", "screenshot-027.png", "screenshot-028.png", "screenshot-029.png", "screenshot-030.png", "screenshot-031.png", "screenshot-032.png", "screenshot-033.png", "screenshot-034.png", "screenshot-035.png", "screenshot-036.png", "screenshot-037.png", "screenshot-038.png", "screenshot-039.png", "screenshot-040.png", "screenshot-041.png", "screenshot-042.png", "screenshot-043.png", "screenshot-044.png", "screenshot-045.png", "screenshot-046.png", "screenshot-047.png", "screenshot-048.png", "screenshot-049.png", "screenshot-050.png", "screenshot-051.png", "screenshot-052.png", "screenshot-053.png", "screenshot-054.png", "screenshot-055.png"];
+    
+    const nav = document.getElementById('nav');
+    const content = document.getElementById('content');
+    let activeId = 'overview';
+    let instructorUnlocked = false;
+    
+    function esc(str) {
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+
+    function shotCard(shot) {
+      if(!shot.file) return '';
+      return `
+        <figure class="shot-card">
+          <img src="data/${esc(shot.file)}" alt="${esc(shot.title)}" class="native-shot zoomable" data-title="${esc(shot.title)}" data-src="data/${esc(shot.file)}" loading="lazy">
+          <figcaption>
+            <strong>${esc(shot.title)}</strong>
+            <span>${esc(shot.desc||'')}</span>
+          </figcaption>
+        </figure>
+      `;
+    }
+
+    function renderNav() {
+      nav.innerHTML = '';
+      SECTIONS.filter(s => !s.hidden || instructorUnlocked).forEach(section => {
+        const btn = document.createElement('button');
+        btn.className = section.id === activeId ? 'active' : '';
+        btn.dataset.target = section.id;
+        btn.innerHTML = `<i data-lucide="${section.icon}"></i><span>${esc(section.label)}</span>`;
+        btn.addEventListener('click', () => {
+          activeId = section.id;
+          renderNav();
+          renderContent();
+        });
+        nav.appendChild(btn);
+      });
+      lucide.createIcons();
+    }
+
+    function renderCard(card, idx) {
+      if (card.type === 'callout') {
+        return `
+          <section class="panel">
+            <h3>${esc(card.title)}</h3>
+            <div class="softbox">
+              <ul class="list-clean">${card.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+            </div>
+            ${instructorUnlocked && card.instructorNote ? `
+              <div class="instructor-note show">
+                <i data-lucide="lock"></i>
+                <div><strong>Instructor Note:</strong><br>${esc(card.instructorNote)}</div>
+              </div>
+            ` : (card.instructorNote ? `
+              <div class="instructor-note">
+                <i data-lucide="lock"></i>
+                <div><strong>Instructor Note:</strong><br>${esc(card.instructorNote)}</div>
+              </div>
+            ` : '')}
+          </section>
+        `;
+      }
+      if (card.type === 'checklist') {
+        return `
+          <section class="panel">
+            <h3>${esc(card.title)}</h3>
+            <div class="softbox">
+              <ul class="list-clean">${card.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+            </div>
+          </section>
+        `;
+      }
+      if (card.type === 'steps') {
+        return `
+          <section class="panel">
+            <h3>Step-by-step</h3>
+            <div class="steps">
+              ${card.steps.map((step, i) => `
+                <div class="step">
+                  <div class="step-head">
+                    <div class="step-num">${i+1}</div>
+                    <div style="flex: 1; min-width: 0;">
+                      <h4>${esc(step.title)}</h4>
+                      <p>${esc(step.body)}</p>
+                      
+                      ${step.downloads && step.downloads.length > 0 ? `
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 6px;">
+                          ${step.downloads.map(d => `
+                            <a href="data/${esc(d.file)}" download class="download-btn">
+                              <i data-lucide="download"></i> ${esc(d.label)}
+                            </a>
+                          `).join('')}
+                        </div>
+                      ` : ''}
+                      
+                      ${step.shots && step.shots.length > 0 ? `
+                        <div class="shot-grid" style="margin-top: 16px;">
+                          ${step.shots.map(shot => shotCard(shot)).join('')}
+                        </div>
+                      ` : ''}
+
+                      ${instructorUnlocked && step.instructorNote ? `
+                        <div class="instructor-note show">
+                          <i data-lucide="lock"></i>
+                          <div><strong>Instructor Note:</strong><br>${esc(step.instructorNote)}</div>
+                        </div>
+                      ` : (step.instructorNote ? `
+                        <div class="instructor-note">
+                          <i data-lucide="lock"></i>
+                          <div><strong>Instructor Note:</strong><br>${esc(step.instructorNote)}</div>
+                        </div>
+                      ` : '')}
+                    </div>
+                  </div>
+                </div>`).join('')}
+            </div>
+          </section>
+        `;
+      }
+      if (card.type === 'gridshots') {
+        return `
+          <section class="panel">
+            <h3>${esc(card.title || 'Matched screenshots')}</h3>
+            <div class="shot-grid">
+              ${card.shots.map(shot => shotCard(shot)).join('')}
+            </div>
+          </section>
+        `;
+      }
+      if (card.type === 'twocol') {
+        return `
+          <section class="panel">
+            <div class="twocol">
+              <div class="softbox">
+                <h3>${esc(card.left.title)}</h3>
+                <ul class="list-clean">${card.left.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+              </div>
+              <div class="softbox">
+                <h3>${esc(card.right.title)}</h3>
+                <ul class="list-clean">${card.right.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+              </div>
+            </div>
+          </section>
+        `;
+      }
+      if (card.type === 'gallery') {
+        return `
+          <section class="panel">
+            <div class="gallery-grid">
+              ${GALLERY.map(file => `
+                <figure class="gallery-item">
+                  <img src="data/${esc(file)}" alt="${esc(file)}" class="native-shot zoomable" data-title="${esc(file)}" data-src="data/${esc(file)}" loading="lazy">
+                  <figcaption class="caption">${esc(file)}</figcaption>
+                </figure>
+              `).join('')}
+            </div>
+          </section>
+        `;
+      }
+      if (card.type === 'formula') {
+        return `
+          <section class="panel">
+            <h3>${esc(card.title)}</h3>
+            <div class="codebox">
+              ${card.lines.map(line => `<div>${esc(line)}</div>`).join('')}
+            </div>
+          </section>
+        `;
+      }
+      return '';
+    }
+
+    function renderContent() {
+      const section = SECTIONS.find(s => s.id === activeId) || SECTIONS[0];
+      const hiddenNote = section.hidden ? '<div class="hidden-section-note">Instructor-only section unlocked for this local file.</div>' : '';
+      content.innerHTML = `
+        <section class="section active">
+          <div class="hero">
+            <div class="eyebrow"><i data-lucide="${section.icon}"></i> ${esc(section.label)}</div>
+            <h2>${esc(section.title)}</h2>
+            <p>${esc(section.intro)}</p>
+          </div>
+          ${hiddenNote}
+          <div class="stack">
+            ${section.cards.map(renderCard).join('')}
+          </div>
+        </section>
+      `;
+      lucide.createIcons();
+      attachZoomHandlers();
+    }
+
+    function attachZoomHandlers() {
+      document.querySelectorAll('.zoomable').forEach(img => {
+        img.onclick = () => {
+          document.getElementById('zoomTitle').textContent = img.dataset.title || 'Screenshot';
+          document.getElementById('zoomBody').innerHTML = `<img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}">`;
+          document.getElementById('zoomModal').classList.add('open');
+        };
+      });
+    }
+
+    function closeZoom() {
+      document.getElementById('zoomModal').classList.remove('open');
+      document.getElementById('zoomBody').innerHTML = '';
+    }
+
+    function openLock() {
+      document.getElementById('lockModal').classList.add('open');
+      document.getElementById('lockInput').value = '';
+      document.getElementById('lockMsg').style.display = 'none';
+      document.getElementById('vaultSuccess').style.display = 'none';
+      setTimeout(() => document.getElementById('lockInput').focus(), 30);
+    }
+
+    function closeLock() {
+      document.getElementById('lockModal').classList.remove('open');
+    }
+
+    function unlockInstructor() {
+      const val = document.getElementById('lockInput').value.trim();
+      const msg = document.getElementById('lockMsg');
+      const successMsg = document.getElementById('vaultSuccess');
+      if (val === 'online') {
+        instructorUnlocked = true;
+        msg.style.display = 'none';
+        successMsg.style.display = 'block';
+        
+        // Reveal inline instructor notes immediately
+        document.querySelectorAll('.instructor-note').forEach(el => el.classList.add('show'));
+
+        renderNav();
+        setTimeout(() => {
+          activeId = 'instructor';
+          renderNav();
+          renderContent();
+          closeLock();
+        }, 800);
+      } else {
+        successMsg.style.display = 'none';
+        msg.style.display = 'block';
+        msg.textContent = 'Password not recognized. Try again.';
+      }
+    }
+
+    document.getElementById('openLock').addEventListener('click', openLock);
+    document.getElementById('closeLock').addEventListener('click', closeLock);
+    document.getElementById('unlockBtn').addEventListener('click', unlockInstructor);
+    document.getElementById('lockInput').addEventListener('keydown', e => {
+      if(e.key === 'Enter') unlockInstructor();
+    });
+    document.getElementById('closeZoom').addEventListener('click', closeZoom);
+    document.getElementById('zoomModal').addEventListener('click', e => {
+      if(e.target.id === 'zoomModal') closeZoom();
+    });
+    document.getElementById('lockModal').addEventListener('click', e => {
+      if(e.target.id === 'lockModal') closeLock();
+    });
+    window.addEventListener('keydown', e => {
+      if(e.key === 'Escape') {
+        closeZoom();
+        closeLock();
+      }
+    });
+
+    renderNav();
+    renderContent();
+  </script>
+</body>
+</html>
