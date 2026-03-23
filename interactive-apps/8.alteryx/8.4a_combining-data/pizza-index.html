@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alteryx Designer: Pizza Combining Data</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --ax-blue: #0082ca;
+            --bg: #f6f7fb;
+            --card: #ffffff;
+            --ink: #111827;
+            --muted: #6b7280;
+            --alteryx-blue: #004d8c;
+            --alteryx-light-blue: #00a2df;
+            --tool-green: #209a80;
+            --bg-grey: #f4f7f6;
+            --text-main: #333;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: #f0f4f8; height: 100vh; display: flex; flex-direction: column; overflow: hidden; margin: 0; }
+
+        /* Lesson Plan Guide Overlay */
+        #lesson-plan-overlay { position: absolute; inset: 0; background: var(--bg-grey); z-index: 200; display: flex; font-family: 'Roboto', sans-serif; color: var(--text-main); overflow: hidden; }
+        .sidebar { background-color: #fff; height: 100%; overflow-y: auto; border-right: 1px solid #ddd; padding: 20px; box-shadow: 2px 0 5px rgba(0,0,0,0.05); flex-shrink: 0; position: relative; }
+        .logo-area { text-align: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px solid var(--alteryx-light-blue); }
+        .logo-area h1 { font-family: 'Montserrat', sans-serif; color: var(--alteryx-blue); font-size: 18px; margin: 0; font-weight: 700; }
+        .logo-area span { font-size: 13px; color: #666; font-weight: 500; }
+        .nav-links { list-style: none; padding: 0; }
+        .nav-links li { margin-bottom: 4px; }
+        .nav-links a { display: block; padding: 8px 12px; color: #555; text-decoration: none; border-radius: 5px; transition: all 0.2s; font-weight: 500; font-size: 13px; }
+        .nav-links a:hover, .nav-links a.active { background-color: #e3f2fd; color: var(--alteryx-blue); border-left: 4px solid var(--alteryx-light-blue); }
+        .nav-header { font-size: 12px; font-weight: 700; color: #999; text-transform: uppercase; margin: 15px 0 5px 5px; letter-spacing: 0.5px; }
+        .main-content { flex: 1; padding: 40px 60px; overflow-y: auto; scroll-behavior: smooth; position: relative; }
+        section { background: #fff; padding: 30px; margin-bottom: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); scroll-margin-top: 20px; }
+        h2 { font-family: 'Montserrat', sans-serif; color: var(--alteryx-blue); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; font-size: 20px; font-weight: 700; }
+        p, li { line-height: 1.6; color: #444; margin-bottom: 10px; font-size: 13px; }
+        ul { list-style-type: disc; padding-left: 20px; }
+        .info-box { background-color: #e8f5e9; border-left: 4px solid var(--tool-green); padding: 12px; margin: 15px 0; border-radius: 4px; font-size: 13px; }
+        .preview-btn { background-color: white; border: 1px solid var(--alteryx-blue); color: var(--alteryx-blue); font-size: 11px; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; font-weight: 600; transition: background 0.2s; }
+        .preview-btn:hover { background-color: #e3f2fd; }
+        .start-btn { display: block; width: 100%; max-width: 300px; margin: 40px auto 0; background: var(--alteryx-blue); color: white; border: none; padding: 16px 32px; font-size: 18px; font-weight: bold; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,77,140,0.3); transition: all 0.2s; text-align: center; }
+        .start-btn:hover { background: #003d73; transform: scale(1.02); }
+
+        /* Preview Modal */
+        #mini-preview-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 1000px; background: white; z-index: 300; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); border: 1px solid #ccc; cursor: grab; }
+        #mini-preview-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 299; }
+        .modal-header { padding: 10px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; border-radius: 8px 8px 0 0; cursor: move; }
+        .modal-body { padding: 15px; max-height: 600px; overflow: auto; }
+        .preview-table { width: 100%; border-collapse: collapse; font-size: 11px; font-family: monospace; border: 1px solid #ddd; }
+        .preview-table th, .preview-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        .preview-table th { background: #eee; position: sticky; top: 0; font-weight: bold; color: #444; z-index: 10; }
+
+        /* Simulator Canvas Elements */
+        .canvas-bg { background-color: white; background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; position: relative; overflow: auto; flex-shrink: 0; height: 500px; }
+        #canvas-content-wrapper { min-width: 1400px; min-height: 800px; position: relative; }
+        .tool-node { width: 60px; height: 60px; position: absolute; cursor: move; z-index: 10; user-select: none; }
+        .tool-node:hover { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); }
+        .tool-node.active { filter: drop-shadow(0 0 0 4px rgba(0, 130, 202, 0.4)); }
+        .tool-icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: transparent; }
+        .tool-icon img { width: 100%; height: 100%; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); pointer-events: none; }
+        .tool-label { position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 600; color: #475569; white-space: nowrap; background: rgba(255,255,255,0.95); padding: 2px 4px; border-radius: 4px; pointer-events: none; border: 1px solid #ddd; z-index: 12;}
+        .container-box { position: absolute; border: 2px dashed #94a3b8; background: rgba(248, 250, 252, 0.4); border-radius: 8px; pointer-events: none; z-index: 5; }
+        .container-lbl { position: absolute; top: 6px; left: 10px; font-size: 11px; font-weight: bold; color: #64748b; }
+
+        /* Tool Anchors */
+        .sim-anchor { position: absolute; width: 0; height: 0; cursor: pointer; z-index: 20; border-top: 5px solid transparent; border-bottom: 5px solid transparent; transition: transform 0.1s; }
+        .sim-anchor:hover { transform: scale(1.3); }
+        .sim-anchor.active-anchor { border-left-color: #0082ca; border-right-color: #0082ca; }
+        .sim-anchor-in { top: 50%; left: -6px; transform: translateY(-50%); border-left: 6px solid #22c55e; }
+        .sim-anchor-out { top: 50%; right: -6px; transform: translateY(-50%); border-left: 6px solid #22c55e; }
+        
+        .sim-anchor-L-in { top: 25%; left: -6px; transform: translateY(-50%); border-left: 6px solid #22c55e; }
+        .sim-anchor-R-in { top: 75%; left: -6px; transform: translateY(-50%); border-left: 6px solid #22c55e; }
+        
+        .sim-anchor-L-out { top: 20%; right: -6px; transform: translateY(-50%); border-left: 6px solid #22c55e; }
+        .sim-anchor-J-out { top: 50%; right: -6px; transform: translateY(-50%); border-left: 6px solid #22c55e; }
+        .sim-anchor-R-out { top: 80%; right: -6px; transform: translateY(-50%); border-left: 6px solid #22c55e; }
+
+        .anchor-lbl { position: absolute; font-size: 8px; font-weight: bold; color: #666; pointer-events: none; transform: translateY(-50%); }
+        .lbl-L-in { left: -14px; top: 25%; } .lbl-R-in { left: -14px; top: 75%; }
+        .lbl-L-out { right: -14px; top: 20%; } .lbl-J-out { right: -14px; top: 50%; } .lbl-R-out { right: -14px; top: 80%; }
+
+        #connections-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        
+        /* Resizers */
+        .resizer { width: 6px; cursor: col-resize; background-color: #cbd5e1; display: flex; align-items: center; justify-content: center; z-index: 20; flex-shrink: 0; }
+        .h-resizer { height: 6px; cursor: row-resize; background-color: #cbd5e1; display: flex; align-items: center; justify-content: center; z-index: 20; flex-shrink: 0; width: 100%; }
+        .resizer:hover, .h-resizer:hover { background-color: #94a3b8; }
+        .resizer i, .h-resizer i { font-size: 10px; color: white; }
+
+        /* Dropdown Styles */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content { display: none; position: absolute; background-color: white; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1; border-radius: 4px; right: 0; top: 100%; margin-top: 4px;}
+        .dropdown-content a { color: #333; padding: 12px 16px; text-decoration: none; display: block; font-size: 12px; }
+        .dropdown-content a:hover { background-color: #f1f5f9; }
+        .dropdown:hover .dropdown-content { display: block; }
+    </style>
+</head>
+<body>
+
+    <!-- PREVIEW MODAL -->
+    <div id="mini-preview-backdrop" onclick="closePreview()"></div>
+    <div id="mini-preview-modal">
+        <div class="modal-header" id="modal-drag-handle">
+            <span class="font-bold text-sm text-slate-700 flex items-center gap-2"><i class="fa-solid fa-table text-blue-600"></i> Expected Checkpoint Result</span>
+            <button onclick="closePreview()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" id="preview-content"></div>
+    </div>
+
+    <!-- LESSON PLAN OVERLAY -->
+    <div id="lesson-plan-overlay">
+        <!-- Sidebar -->
+        <div class="sidebar" style="width: 380px;">
+            <div class="logo-area">
+                <h1>Alteryx Designer</h1>
+                <span>Case Study: Pizza Data</span>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-header">Workflow Sections</li>
+                <li><a href="#step0">0. Overview & Goals</a></li>
+                <li><a href="#step1">1. Inputs (CSVs)</a></li>
+                <li><a href="#step2">2. Join #1 - Fact Table</a></li>
+                <li><a href="#step3">3. Join #2 - Dim Table</a></li>
+                <li><a href="#step4">4. Join #3 - Master File</a></li>
+                <li><a href="#step5">5. Formula - Pizza Sales</a></li>
+                <li><a href="#step6">6. Format & Summarize</a></li>
+                <li><a href="#step7">7. Join & Append Fields</a></li>
+                <li><a href="#step8">8. Final % Formulas</a></li>
+                <li><a href="#step9">9. Output to Excel</a></li>
+            </ul>
+        </div>
+        <div class="resizer" onmousedown="initLpResize(event)"><i class="fa-solid fa-grip-lines-vertical"></i></div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content" id="lp-content">
+            <section id="step0">
+                <h2>0. Workflow Overview & Goals</h2>
+                <div class="info-box"><strong>Dataset Source:</strong> Maven Analytics Pizza Sales Playground.</div>
+                <p><strong>Business Goals:</strong></p>
+                <ol>
+                    <li>Find each pizza type's sales as a <strong>% of total sales</strong> across all pizzas.</li>
+                    <li>Find each pizza type's sales as a <strong>% of total sales within its category</strong>.</li>
+                </ol>
+                <p>We will construct a Master Pizza dataset, summarize sales in three different ways, and combine them back together to calculate the percentages.</p>
+            </section>
+
+            <section id="step1">
+                <h2>1. Inputs</h2>
+                <p>We start by connecting to 4 distinct CSV files.</p>
+                <ul>
+                    <li><strong>Fact side:</strong> <code>order_details.csv</code> (qty, pizza id) and <code>orders.csv</code> (date, time).</li>
+                    <li><strong>Dimension side:</strong> <code>pizzas.csv</code> (price, size) and <code>pizza_types.csv</code> (name, category).</li>
+                </ul>
+                <button class="preview-btn" onclick="showLessonPreview(1)"><i class="fa-solid fa-eye"></i> View Input Data Streams</button>
+            </section>
+
+            <section id="step2">
+                <h2>2. Join #1 — Fact Table</h2>
+                <p><strong>Goal:</strong> Add date and time to order details.</p>
+                <p>We use a <strong>Join</strong> tool to match <code>order_details</code> and <code>orders</code> on <strong>order_id</strong>.</p>
+                <div class="info-box"><strong>Checkpoint:</strong> Why join these first? Because order_details tells us <em>what</em> was bought, but orders tells us <em>when</em>.</div>
+                <button class="preview-btn" onclick="showLessonPreview(2)"><i class="fa-solid fa-eye"></i> View Fact Join Output (J)</button>
+            </section>
+
+            <section id="step3">
+                <h2>3. Join #2 — Dimension Table</h2>
+                <p><strong>Goal:</strong> Merge pizza attributes.</p>
+                <p>Join <code>pizza_types</code> and <code>pizzas</code> on <strong>pizza_type_id</strong>. This acts as our primary lookup table.</p>
+                <button class="preview-btn" onclick="showLessonPreview(3)"><i class="fa-solid fa-eye"></i> View Dim Join Output (J)</button>
+            </section>
+
+            <section id="step4">
+                <h2>4. Join #3 — Master Pizza File</h2>
+                <p><strong>Goal:</strong> Combine Fact (sales events) with Dimension (pizza attributes).</p>
+                <p>Join the outputs of Join 1 and Join 2 together on <strong>pizza_id</strong>.</p>
+                <button class="preview-btn" onclick="showLessonPreview(4)"><i class="fa-solid fa-eye"></i> View Master Dataset</button>
+            </section>
+
+            <section id="step5">
+                <h2>5. Formula — Calculate Pizza Sales</h2>
+                <p>Add a Formula tool to calculate revenue line-by-line.</p>
+                <p><strong>Expression:</strong> <code>Pizza Sales = [quantity] * [price]</code></p>
+                <button class="preview-btn" onclick="showLessonPreview(5)"><i class="fa-solid fa-eye"></i> View Dataset with Sales Column</button>
+            </section>
+
+            <section id="step6">
+                <h2>6. Data Format & Preparation (Summarize)</h2>
+                <p>Branch the Master data into <strong>three Summarize tools</strong> to get different aggregation levels:</p>
+                <ol>
+                    <li><strong>Summarize A:</strong> Group by <code>name</code> and <code>category</code>. Sum Pizza Sales -> <em>Total Sales per Pizza Type</em>.</li>
+                    <li><strong>Summarize B:</strong> Group by <code>category</code>. Sum Pizza Sales -> <em>Total Sales per Category</em>.</li>
+                    <li><strong>Summarize C:</strong> NO grouping. Sum Pizza Sales -> <em>Total Sales</em> (produces a 1-row table).</li>
+                </ol>
+                <button class="preview-btn" onclick="showLessonPreview(6)"><i class="fa-solid fa-eye"></i> View the 3 Summaries</button>
+            </section>
+
+            <section id="step7">
+                <h2>7. Combine Totals (Join & Append)</h2>
+                <p>Bring the aggregations back together.</p>
+                <ul>
+                    <li><strong>Join:</strong> Connect Sum A and Sum B on <code>category</code>. Now each pizza row knows its category total.</li>
+                    <li><strong>Append Fields:</strong> Connect the Join output (T) and Sum C (S). This attaches the single overall Total Sales value to every single row.</li>
+                </ul>
+                <div class="info-box"><strong>Checkpoint:</strong> Why Append Fields instead of Join? Because the grand total has no key field to match on—it must be broadcast to everything via Cartesian join.</div>
+                <button class="preview-btn" onclick="showLessonPreview(7)"><i class="fa-solid fa-eye"></i> View Combined Output</button>
+            </section>
+
+            <section id="step8">
+                <h2>8. Final Formula — % Metrics</h2>
+                <p>Use a final Formula tool to calculate the business requirements:</p>
+                <ul>
+                    <li><code>% of Total Sales</code> = ([Total Sales per Pizza Type] / [Total Sales]) * 100</li>
+                    <li><code>% of Category Sales</code> = ([Total Sales per Pizza Type] / [Total Sales per Category]) * 100</li>
+                </ul>
+                <button class="preview-btn" onclick="showLessonPreview(8)"><i class="fa-solid fa-eye"></i> View Final Metrics</button>
+            </section>
+
+            <section id="step9">
+                <h2>9. Desired Output</h2>
+                <p>Connect an Output Data tool to write the final polished dataset to <code>pizza_output.xlsx</code> (Sheet1).</p>
+            </section>
+
+            <button onclick="closeLessonPlan()" class="start-btn mb-10">Launch Simulator <i class="fa-solid fa-rocket ml-2"></i></button>
+        </div>
+    </div>
+
+    <!-- SIMULATOR UI -->
+    <header class="bg-slate-800 text-white p-3 flex justify-between items-center shadow-md z-50 shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 w-8 h-8 rounded flex items-center justify-center font-bold text-lg"><i class="fa-solid fa-pizza-slice"></i></div>
+            <div>
+                <h1 class="font-bold text-lg leading-none">Designer Simulator</h1>
+                <p class="text-xs text-slate-400">Class 4: Pizza Combining Data Workflow</p>
+            </div>
+        </div>
+        <div class="flex gap-2 items-center">
+            <div class="dropdown">
+                <button class="bg-green-600 hover:bg-green-700 text-white font-bold text-sm px-4 py-1.5 rounded-full shadow-lg transition flex items-center gap-2 border border-green-400">
+                    <i class="fa-solid fa-download"></i> Download Data <i class="fa-solid fa-caret-down ml-1"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="data/order_details.csv" download>order_details.csv</a>
+                    <a href="data/orders.csv" download>orders.csv</a>
+                    <a href="data/pizza_types.csv" download>pizza_types.csv</a>
+                    <a href="data/pizzas.csv" download>pizzas.csv</a>
+                </div>
+            </div>
+            <div class="h-6 w-px bg-slate-600 mx-1"></div>
+            <button onclick="runWorkflow()" id="btn-global-run" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-4 py-1.5 rounded-full shadow-lg transition flex items-center gap-2 border border-blue-400">
+                <i class="fa-solid fa-play"></i> Run
+            </button>
+            <div class="h-6 w-px bg-slate-600 mx-1"></div>
+            <button onclick="showLessonPlan()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded shadow transition"><i class="fa-solid fa-book"></i> Lesson Guide</button>
+        </div>
+    </header>
+
+    <div class="canvas-bg border-b border-slate-300 shadow-inner" id="canvas-container" onmousemove="drag(event)" onmouseup="endDrag()">
+        <div id="canvas-content-wrapper">
+            <svg id="connections-layer"></svg>
+
+            <!-- Container Boxes to match screenshot logical groupings -->
+            <div class="container-box" style="left: 20px; top: 20px; width: 280px; height: 380px;"><div class="container-lbl">Joins</div></div>
+            <div class="container-box" style="left: 310px; top: 20px; width: 330px; height: 380px;"><div class="container-lbl">Data Format and Prep</div></div>
+            <div class="container-box" style="left: 650px; top: 20px; width: 440px; height: 380px;"><div class="container-lbl">Combine & Output</div></div>
+
+            <!-- 1. Inputs -->
+            <div class="tool-node" id="node-0" style="left: 40px; top: 50px;" onmousedown="startDrag(event, 0)" onclick="activateStep(0)">
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 0, 'out')" title="Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></div>
+                <div class="tool-label">order_details</div>
+            </div>
+            <div class="tool-node" id="node-1" style="left: 40px; top: 130px;" onmousedown="startDrag(event, 1)" onclick="activateStep(1)">
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 1, 'out')" title="Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></div>
+                <div class="tool-label">orders</div>
+            </div>
+            <div class="tool-node" id="node-2" style="left: 40px; top: 230px;" onmousedown="startDrag(event, 2)" onclick="activateStep(2)">
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 2, 'out')" title="Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></div>
+                <div class="tool-label">pizza_types</div>
+            </div>
+            <div class="tool-node" id="node-3" style="left: 40px; top: 310px;" onmousedown="startDrag(event, 3)" onclick="activateStep(3)">
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 3, 'out')" title="Output"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></div>
+                <div class="tool-label">pizzas</div>
+            </div>
+
+            <!-- 2. Joins -->
+            <div class="tool-node" id="node-4" style="left: 140px; top: 90px;" onmousedown="startDrag(event, 4)" onclick="activateStep(4)">
+                <div class="sim-anchor sim-anchor-L-in" onclick="viewAnchor(event, 4, 'L-in')"></div><div class="anchor-lbl lbl-L-in">L</div>
+                <div class="sim-anchor sim-anchor-R-in" onclick="viewAnchor(event, 4, 'R-in')"></div><div class="anchor-lbl lbl-R-in">R</div>
+                <div class="sim-anchor sim-anchor-L-out" onclick="viewAnchor(event, 4, 'L')"></div><div class="anchor-lbl lbl-L-out">L</div>
+                <div class="sim-anchor sim-anchor-J-out" onclick="viewAnchor(event, 4, 'J')"></div><div class="anchor-lbl lbl-J-out">J</div>
+                <div class="sim-anchor sim-anchor-R-out" onclick="viewAnchor(event, 4, 'R')"></div><div class="anchor-lbl lbl-R-out">R</div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/MolecularJoin2_71x71.png" alt="Join"></div>
+                <div class="tool-label">Fact Table</div>
+            </div>
+            <div class="tool-node" id="node-5" style="left: 140px; top: 270px;" onmousedown="startDrag(event, 5)" onclick="activateStep(5)">
+                <div class="sim-anchor sim-anchor-L-in" onclick="viewAnchor(event, 5, 'L-in')"></div><div class="anchor-lbl lbl-L-in">L</div>
+                <div class="sim-anchor sim-anchor-R-in" onclick="viewAnchor(event, 5, 'R-in')"></div><div class="anchor-lbl lbl-R-in">R</div>
+                <div class="sim-anchor sim-anchor-L-out" onclick="viewAnchor(event, 5, 'L')"></div><div class="anchor-lbl lbl-L-out">L</div>
+                <div class="sim-anchor sim-anchor-J-out" onclick="viewAnchor(event, 5, 'J')"></div><div class="anchor-lbl lbl-J-out">J</div>
+                <div class="sim-anchor sim-anchor-R-out" onclick="viewAnchor(event, 5, 'R')"></div><div class="anchor-lbl lbl-R-out">R</div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/MolecularJoin2_71x71.png" alt="Join"></div>
+                <div class="tool-label">Dim Table</div>
+            </div>
+            <div class="tool-node" id="node-6" style="left: 230px; top: 180px;" onmousedown="startDrag(event, 6)" onclick="activateStep(6)">
+                <div class="sim-anchor sim-anchor-L-in" onclick="viewAnchor(event, 6, 'L-in')"></div><div class="anchor-lbl lbl-L-in">L</div>
+                <div class="sim-anchor sim-anchor-R-in" onclick="viewAnchor(event, 6, 'R-in')"></div><div class="anchor-lbl lbl-R-in">R</div>
+                <div class="sim-anchor sim-anchor-L-out" onclick="viewAnchor(event, 6, 'L')"></div><div class="anchor-lbl lbl-L-out">L</div>
+                <div class="sim-anchor sim-anchor-J-out" onclick="viewAnchor(event, 6, 'J')"></div><div class="anchor-lbl lbl-J-out">J</div>
+                <div class="sim-anchor sim-anchor-R-out" onclick="viewAnchor(event, 6, 'R')"></div><div class="anchor-lbl lbl-R-out">R</div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/MolecularJoin2_71x71.png" alt="Join"></div>
+                <div class="tool-label">Master File</div>
+            </div>
+
+            <!-- 3. Prep / Formula -->
+            <div class="tool-node" id="node-7" style="left: 330px; top: 180px;" onmousedown="startDrag(event, 7)" onclick="activateStep(7)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 7, 'in')"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 7, 'out')"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Formula_71x71.png" alt="Formula"></div>
+                <div class="tool-label">Pizza Sales</div>
+            </div>
+
+            <!-- 4. Summarizes -->
+            <div class="tool-node" id="node-8" style="left: 440px; top: 80px;" onmousedown="startDrag(event, 8)" onclick="activateStep(8)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 8, 'in')"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 8, 'out')"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Summarize_71x71.png" alt="Sum"></div>
+                <div class="tool-label">Sum per Pizza</div>
+            </div>
+            <div class="tool-node" id="node-9" style="left: 440px; top: 180px;" onmousedown="startDrag(event, 9)" onclick="activateStep(9)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 9, 'in')"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 9, 'out')"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Summarize_71x71.png" alt="Sum"></div>
+                <div class="tool-label">Sum per Cat</div>
+            </div>
+            <div class="tool-node" id="node-10" style="left: 440px; top: 280px;" onmousedown="startDrag(event, 10)" onclick="activateStep(10)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 10, 'in')"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 10, 'out')"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Summarize_71x71.png" alt="Sum"></div>
+                <div class="tool-label">Sum Overall</div>
+            </div>
+
+            <!-- 5. Combine & Append -->
+            <div class="tool-node" id="node-11" style="left: 670px; top: 130px;" onmousedown="startDrag(event, 11)" onclick="activateStep(11)">
+                <div class="sim-anchor sim-anchor-L-in" onclick="viewAnchor(event, 11, 'L-in')"></div><div class="anchor-lbl lbl-L-in">L</div>
+                <div class="sim-anchor sim-anchor-R-in" onclick="viewAnchor(event, 11, 'R-in')"></div><div class="anchor-lbl lbl-R-in">R</div>
+                <div class="sim-anchor sim-anchor-L-out" onclick="viewAnchor(event, 11, 'L')"></div><div class="anchor-lbl lbl-L-out">L</div>
+                <div class="sim-anchor sim-anchor-J-out" onclick="viewAnchor(event, 11, 'J')"></div><div class="anchor-lbl lbl-J-out">J</div>
+                <div class="sim-anchor sim-anchor-R-out" onclick="viewAnchor(event, 11, 'R')"></div><div class="anchor-lbl lbl-R-out">R</div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/MolecularJoin2_71x71.png" alt="Join"></div>
+                <div class="tool-label">Cat Join</div>
+            </div>
+            <div class="tool-node" id="node-12" style="left: 770px; top: 180px;" onmousedown="startDrag(event, 12)" onclick="activateStep(12)">
+                <div class="sim-anchor sim-anchor-L-in" onclick="viewAnchor(event, 12, 'T-in')"></div><div class="anchor-lbl lbl-L-in">T</div>
+                <div class="sim-anchor sim-anchor-R-in" onclick="viewAnchor(event, 12, 'S-in')"></div><div class="anchor-lbl lbl-R-in">S</div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 12, 'out')"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/AppendFields_71x71.png" alt="Append"></div>
+                <div class="tool-label">Append Tot</div>
+            </div>
+
+            <!-- 6. Final Formula & Output -->
+            <div class="tool-node" id="node-13" style="left: 880px; top: 180px;" onmousedown="startDrag(event, 13)" onclick="activateStep(13)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 13, 'in')"></div>
+                <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 13, 'out')"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Formula_71x71.png" alt="Formula"></div>
+                <div class="tool-label">Calc %</div>
+            </div>
+            <div class="tool-node" id="node-14" style="left: 980px; top: 180px;" onmousedown="startDrag(event, 14)" onclick="activateStep(14)">
+                <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 14, 'in')"></div>
+                <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Output2_71x71.png" alt="Output"></div>
+                <div class="tool-label">pizza_output</div>
+            </div>
+
+        </div>
+    </div>
+    
+    <div class="h-resizer" id="h-resizer" onmousedown="initHResize(event)"><i class="fa-solid fa-grip-lines text-slate-500"></i></div>
+
+    <!-- Workspace -->
+    <div class="flex flex-1 overflow-hidden" id="workspace-container">
+        <div class="w-1/3 min-w-[320px] bg-slate-50 border-r border-slate-200 flex flex-col" id="config-pane">
+            <div class="bg-white border-b px-4 py-2 font-bold text-slate-700 flex justify-between items-center select-none">
+                <span><i class="fa-solid fa-gear text-slate-400 mr-2"></i>Configuration</span>
+                <span id="step-badge" class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">--</span>
+            </div>
+            <div id="config-panel" class="p-0 overflow-y-auto flex-1 text-sm text-slate-600 h-full bg-[#f0f0f0]"></div>
+        </div>
+        <div class="resizer" id="resizer" onmousedown="initResize(event)"><i class="fa-solid fa-grip-lines-vertical text-slate-400"></i></div>
+        <div class="flex-1 bg-white flex flex-col min-w-0" id="results-pane">
+            <div class="border-b px-4 py-2 font-bold text-slate-700 flex justify-between items-center text-xs bg-slate-50 select-none">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-table text-blue-600"></i>
+                    <span>Results - <span id="tool-name-display">Select an anchor</span></span>
+                </div>
+                <div class="text-slate-400"><span id="record-count">0</span> records</div>
+            </div>
+            <div class="flex-1 overflow-auto relative">
+                <table class="w-full text-left border-collapse data-table text-xs font-mono" id="data-grid">
+                    <thead id="grid-head"></thead>
+                    <tbody id="grid-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBAL STATE & RESIZERS ---
+        let hasRun = false; let activeToolIndex = 0; let viewingAnchor = null; 
+        
+        function closeLessonPlan() { document.getElementById('lesson-plan-overlay').style.display = 'none'; activateStep(0); }
+        function showLessonPlan() { document.getElementById('lesson-plan-overlay').style.display = 'flex'; }
+        function closePreview() { document.getElementById('mini-preview-modal').style.display = 'none'; document.getElementById('mini-preview-backdrop').style.display = 'none'; }
+
+        // Sidebar Navigation
+        const navLinks = document.querySelectorAll('.nav-links a');
+        const sections = document.querySelectorAll('.main-content section');
+        const mainContent = document.getElementById('lp-content');
+        mainContent.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => { if (mainContent.scrollTop >= section.offsetTop - 100) current = section.getAttribute('id'); });
+            navLinks.forEach(link => { link.classList.remove('active'); if (link.getAttribute('href').includes(current)) link.classList.add('active'); });
+        });
+        navLinks.forEach(link => { link.addEventListener('click', function() { navLinks.forEach(l => l.classList.remove('active')); this.classList.add('active'); }); });
+
+        // --- TOOL CONFIGURATIONS ---
+        const steps = [
+            { id: 0, title: "order_details", configHTML: `<div class="p-4"><label class="font-bold text-xs">File Path:</label><input class="w-full border p-1 mt-1 bg-white" value="order_details.csv" readonly></div>` },
+            { id: 1, title: "orders", configHTML: `<div class="p-4"><label class="font-bold text-xs">File Path:</label><input class="w-full border p-1 mt-1 bg-white" value="orders.csv" readonly></div>` },
+            { id: 2, title: "pizza_types", configHTML: `<div class="p-4"><label class="font-bold text-xs">File Path:</label><input class="w-full border p-1 mt-1 bg-white" value="pizza_types.csv" readonly></div>` },
+            { id: 3, title: "pizzas", configHTML: `<div class="p-4"><label class="font-bold text-xs">File Path:</label><input class="w-full border p-1 mt-1 bg-white" value="pizzas.csv" readonly></div>` },
+            
+            { id: 4, title: "Fact Table Join", configHTML: `
+                <div class="bg-[#f0f0f0] text-[12px] h-full flex flex-col p-2 border border-gray-300">
+                    <div class="flex gap-4 mb-4 border-b border-gray-300 pb-2"><label class="flex items-center gap-1 cursor-pointer font-bold text-blue-700"><input type="radio" checked> Join by Specific Fields</label></div>
+                    <div class="flex gap-2">
+                        <div class="flex-1 bg-white border border-gray-400 p-2"><div class="font-bold text-center border-b mb-2 pb-1">Left (details)</div><select class="w-full border p-1 text-[11px]"><option>order_id</option></select></div>
+                        <div class="flex items-center font-bold text-gray-400">=</div>
+                        <div class="flex-1 bg-white border border-gray-400 p-2"><div class="font-bold text-center border-b mb-2 pb-1">Right (orders)</div><select class="w-full border p-1 text-[11px]"><option>order_id</option></select></div>
+                    </div>
+                </div>` },
+            { id: 5, title: "Dim Table Join", configHTML: `
+                <div class="bg-[#f0f0f0] text-[12px] h-full flex flex-col p-2 border border-gray-300">
+                    <div class="flex gap-4 mb-4 border-b border-gray-300 pb-2"><label class="flex items-center gap-1 cursor-pointer font-bold text-blue-700"><input type="radio" checked> Join by Specific Fields</label></div>
+                    <div class="flex gap-2">
+                        <div class="flex-1 bg-white border border-gray-400 p-2"><div class="font-bold text-center border-b mb-2 pb-1">Left (types)</div><select class="w-full border p-1 text-[11px]"><option>pizza_type_id</option></select></div>
+                        <div class="flex items-center font-bold text-gray-400">=</div>
+                        <div class="flex-1 bg-white border border-gray-400 p-2"><div class="font-bold text-center border-b mb-2 pb-1">Right (pizzas)</div><select class="w-full border p-1 text-[11px]"><option>pizza_type_id</option></select></div>
+                    </div>
+                </div>` },
+            { id: 6, title: "Master File Join", configHTML: `
+                <div class="bg-[#f0f0f0] text-[12px] h-full flex flex-col p-2 border border-gray-300">
+                    <div class="flex gap-4 mb-4 border-b border-gray-300 pb-2"><label class="flex items-center gap-1 cursor-pointer font-bold text-blue-700"><input type="radio" checked> Join by Specific Fields</label></div>
+                    <div class="flex gap-2">
+                        <div class="flex-1 bg-white border border-gray-400 p-2"><div class="font-bold text-center border-b mb-2 pb-1">Left (Fact J)</div><select class="w-full border p-1 text-[11px]"><option>pizza_id</option></select></div>
+                        <div class="flex items-center font-bold text-gray-400">=</div>
+                        <div class="flex-1 bg-white border border-gray-400 p-2"><div class="font-bold text-center border-b mb-2 pb-1">Right (Dim J)</div><select class="w-full border p-1 text-[11px]"><option>pizza_id</option></select></div>
+                    </div>
+                </div>` },
+
+            { id: 7, title: "Pizza Sales Formula", configHTML: `
+                <div class="bg-[#f0f0f0] text-[12px] h-full p-2 border border-gray-300">
+                    <div class="bg-white border border-gray-400 p-2">
+                        <div class="flex gap-2 mb-2">
+                            <div class="flex-1"><label class="block text-[10px] font-bold text-slate-500 mb-1">Output Column</label><select class="border w-full p-1"><option>+ Add Column</option></select><input type="text" value="Pizza Sales" class="w-full border p-1 mt-1 font-bold"></div>
+                            <div class="w-1/3"><label class="block text-[10px] font-bold text-slate-500 mb-1">Data Type</label><select class="border w-full p-1"><option>Double</option></select></div>
+                        </div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Expression</label>
+                        <textarea class="w-full border p-2 font-mono text-blue-800 text-[11px] h-20" spellcheck="false">[quantity] * [price]</textarea>
+                    </div>
+                </div>` },
+
+            { id: 8, title: "Sum per Pizza Type", configHTML: `
+                <div class="bg-[#f0f0f0] text-[12px] h-full flex gap-2 p-2">
+                    <div class="w-1/3 flex flex-col bg-white border border-gray-400"><div class="p-1 px-2 border-b bg-gray-50 text-[11px]">Fields</div><div class="overflow-y-auto flex-1 p-0"><div class="p-1 px-2 text-blue-500 text-[10px]">Str name</div><div class="p-1 px-2 text-blue-500 text-[10px]">Str category</div><div class="p-1 px-2 text-green-600 text-[10px]"># Pizza Sales</div></div></div>
+                    <div class="flex-1 flex flex-col bg-white border border-gray-400"><div class="p-1 px-2 border-b bg-gray-50 text-[11px]">Actions</div>
+                        <table class="w-full text-left text-[11px] border-collapse">
+                            <thead class="bg-gray-50 border-b"><tr><th class="p-1 border-r">Field</th><th class="p-1 border-r">Action</th><th class="p-1">Output Field Name</th></tr></thead>
+                            <tbody>
+                                <tr class="border-b"><td class="p-1 border-r">name</td><td class="p-1 border-r">Group By</td><td class="p-1">name</td></tr>
+                                <tr class="border-b"><td class="p-1 border-r">category</td><td class="p-1 border-r">Group By</td><td class="p-1">category</td></tr>
+                                <tr class="border-b"><td class="p-1 border-r">Pizza Sales</td><td class="p-1 border-r font-bold">Sum</td><td class="p-1 bg-yellow-50 border border-yellow-200">Total Sales per Pizza Type</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>` },
+            { id: 9, title: "Sum per Category", configHTML: `
+                <div class="bg-[#f0f0f0] text-[12px] h-full flex gap-2 p-2">
+                    <div class="w-1/3 flex flex-col bg-white border border-gray-400"><div class="p-1 px-2 border-b bg-gray-50 text-[11px]">Fields</div><div class="p-1 px-2 text-blue-500 text-[10px]">Str category</div><div class="p-1 px-2 text-green-600 text-[10px]"># Pizza Sales</div></div>
+                    <div class="flex-1 flex flex-col bg-white border border-gray-400"><div class="p-1 px-2 border-b bg-gray-50 text-[11px]">Actions</div>
+                        <table class="w-full text-left text-[11px] border-collapse"><thead class="bg-gray-50 border-b"><tr><th class="p-1 border-r">Field</th><th class="p-1 border-r">Action</th><th class="p-1">Output Field Name</th></tr></thead>
+                            <tbody>
+                                <tr class="border-b"><td class="p-1 border-r">category</td><td class="p-1 border-r">Group By</td><td class="p-1">category</td></tr>
+                                <tr class="border-b"><td class="p-1 border-r">Pizza Sales</td><td class="p-1 border-r font-bold">Sum</td><td class="p-1 bg-yellow-50 border border-yellow-200">Total Sales per Category</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>` },
+            { id: 10, title: "Sum Overall", configHTML: `
+                <div class="bg-[#f0f0f0] text-[12px] h-full flex gap-2 p-2">
+                    <div class="w-1/3 flex flex-col bg-white border border-gray-400"><div class="p-1 px-2 border-b bg-gray-50 text-[11px]">Fields</div><div class="p-1 px-2 text-green-600 text-[10px]"># Pizza Sales</div></div>
+                    <div class="flex-1 flex flex-col bg-white border border-gray-400"><div class="p-1 px-2 border-b bg-gray-50 text-[11px]">Actions</div>
+                        <table class="w-full text-left text-[11px] border-collapse"><thead class="bg-gray-50 border-b"><tr><th class="p-1 border-r">Field</th><th class="p-1 border-r">Action</th><th class="p-1">Output Field Name</th></tr></thead>
+                            <tbody><tr class="border-b"><td class="p-1 border-r">Pizza Sales</td><td class="p-1 border-r font-bold">Sum</td><td class="p-1 bg-yellow-50 border border-yellow-200">Total Sales</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>` },
+
+            { id: 11, title: "Category Join", configHTML: `
+                <div class="bg-[#f0f0f0] text-[12px] h-full flex flex-col p-2 border border-gray-300">
+                    <div class="flex gap-4 mb-4 border-b border-gray-300 pb-2"><label class="flex items-center gap-1 cursor-pointer font-bold text-blue-700"><input type="radio" checked> Join by Specific Fields</label></div>
+                    <div class="flex gap-2">
+                        <div class="flex-1 bg-white border border-gray-400 p-2"><div class="font-bold text-center border-b mb-2 pb-1">Left (Sum A)</div><select class="w-full border p-1 text-[11px]"><option>category</option></select></div>
+                        <div class="flex items-center font-bold text-gray-400">=</div>
+                        <div class="flex-1 bg-white border border-gray-400 p-2"><div class="font-bold text-center border-b mb-2 pb-1">Right (Sum B)</div><select class="w-full border p-1 text-[11px]"><option>category</option></select></div>
+                    </div>
+                </div>` },
+
+            { id: 12, title: "Append Fields", configHTML: `
+                <div class="bg-[#f0f0f0] text-[12px] h-full flex flex-col p-2 border border-gray-300">
+                    <div class="mb-2 font-bold">Append Fields Settings</div>
+                    <div class="bg-white border border-gray-400 p-2 mb-4"><label class="flex items-center gap-2"><input type="checkbox"> Warn/Error on Too Many Records Generated</label></div>
+                    <div class="p-3 bg-blue-50 border border-blue-200 text-blue-800 text-center"><div class="text-[11px] mb-1">Applying S (Total Sales) to every row in T</div></div>
+                </div>` },
+
+            { id: 13, title: "Calculate % Formula", configHTML: `
+                <div class="bg-[#f0f0f0] text-[12px] h-full flex flex-col gap-2 p-2 border border-gray-300 overflow-y-auto">
+                    <div class="bg-white border border-gray-400 p-2">
+                        <div class="flex gap-2 mb-2"><div class="flex-1"><label class="block text-[10px] font-bold text-slate-500 mb-1">Output Column</label><input type="text" value="% of Total Sales" class="w-full border p-1 font-bold"></div></div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Expression</label>
+                        <textarea class="w-full border p-2 font-mono text-blue-800 text-[11px] h-14" spellcheck="false">([Total Sales per Pizza Type] / [Total Sales]) * 100</textarea>
+                    </div>
+                    <div class="bg-white border border-gray-400 p-2">
+                        <div class="flex gap-2 mb-2"><div class="flex-1"><label class="block text-[10px] font-bold text-slate-500 mb-1">Output Column</label><input type="text" value="% of Category Sales" class="w-full border p-1 font-bold"></div></div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Expression</label>
+                        <textarea class="w-full border p-2 font-mono text-blue-800 text-[11px] h-14" spellcheck="false">([Total Sales per Pizza Type] / [Total Sales per Category]) * 100</textarea>
+                    </div>
+                </div>` },
+
+            { id: 14, title: "Output Data", configHTML: `
+                <div class="bg-[#f0f0f0] text-[12px] h-full p-2 border border-gray-300">
+                    <div class="bg-white border border-gray-400 p-3">
+                        <label class="font-bold mb-1 block">Write to File or Database</label>
+                        <input class="w-full border p-1 mb-3" value="pizza_output.xlsx|||Sheet1" readonly>
+                        <label class="font-bold mb-1 block">Output Options</label>
+                        <select class="w-full border p-1"><option>Overwrite Sheet (Drop)</option></select>
+                    </div>
+                </div>` }
+        ];
+
+        // --- DATA PROCESSING ENGINE ---
+        // Robust mock data testing the math exactly
+        const M_ORD = [
+            {order_id: 1, date: "2015-01-01", time: "11:38:00"}, 
+            {order_id: 2, date: "2015-01-01", time: "11:57:00"},
+            {order_id: 3, date: "2015-01-01", time: "12:12:00"},
+            {order_id: 4, date: "2015-01-01", time: "12:16:00"},
+            {order_id: 5, date: "2015-01-01", time: "12:21:00"}
+        ];
+        
+        const M_DTL = [
+            {order_id: 1, pizza_id: "hawaiian_m", quantity: 2}, 
+            {order_id: 2, pizza_id: "hawaiian_s", quantity: 1}, 
+            {order_id: 2, pizza_id: "bbq_ckn_l", quantity: 1},
+            {order_id: 3, pizza_id: "thai_ckn_l", quantity: 1},
+            {order_id: 4, pizza_id: "classic_dlx_m", quantity: 2},
+            {order_id: 5, pizza_id: "hawaiian_l", quantity: 1}
+        ];
+        
+        const M_PTYP = [
+            {pizza_type_id: "hawaiian", name: "The Hawaiian Pizza", category: "Classic"}, 
+            {pizza_type_id: "bbq_ckn", name: "The Barbecue Chicken Pizza", category: "Chicken"},
+            {pizza_type_id: "thai_ckn", name: "The Thai Chicken Pizza", category: "Chicken"},
+            {pizza_type_id: "classic_dlx", name: "The Classic Deluxe Pizza", category: "Classic"}
+        ];
+        
+        const M_PIZ = [
+            {pizza_id: "hawaiian_s", pizza_type_id: "hawaiian", size: "S", price: 10.5}, 
+            {pizza_id: "hawaiian_m", pizza_type_id: "hawaiian", size: "M", price: 13.25}, 
+            {pizza_id: "hawaiian_l", pizza_type_id: "hawaiian", size: "L", price: 16.5}, 
+            {pizza_id: "bbq_ckn_l", pizza_type_id: "bbq_ckn", size: "L", price: 20.75},
+            {pizza_id: "thai_ckn_l", pizza_type_id: "thai_ckn", size: "L", price: 20.75},
+            {pizza_id: "classic_dlx_m", pizza_type_id: "classic_dlx", size: "M", price: 16.0}
+        ];
+
+        function getStepData(stepIndex, type = 'out') {
+            if(stepIndex === 0) return M_DTL;
+            if(stepIndex === 1) return M_ORD;
+            if(stepIndex === 2) return M_PTYP;
+            if(stepIndex === 3) return M_PIZ;
+
+            // Join 1 Fact
+            if(stepIndex === 4) {
+                let res = [];
+                M_DTL.forEach(d => {
+                    let ord = M_ORD.find(o => o.order_id === d.order_id);
+                    if(ord) res.push({...d, date: ord.date, time: ord.time});
+                });
+                return type === 'J' || type === 'out' ? res : [];
+            }
+            // Join 2 Dim
+            if(stepIndex === 5) {
+                let res = [];
+                M_PTYP.forEach(pt => {
+                    let piz = M_PIZ.filter(p => p.pizza_type_id === pt.pizza_type_id);
+                    piz.forEach(p => res.push({pizza_id: p.pizza_id, pizza_type_id: pt.pizza_type_id, size: p.size, price: p.price, name: pt.name, category: pt.category}));
+                });
+                return type === 'J' || type === 'out' ? res : [];
+            }
+            // Join 3 Master
+            if(stepIndex === 6) {
+                let fact = getStepData(4, 'J'), dim = getStepData(5, 'J'), res = [];
+                fact.forEach(f => {
+                    let d = dim.find(dimRow => dimRow.pizza_id === f.pizza_id);
+                    if(d) res.push({...f, ...d});
+                });
+                return type === 'J' || type === 'out' ? res : [];
+            }
+            // Formula 1 (Pizza Sales)
+            if(stepIndex === 7) {
+                let master = getStepData(6, 'J');
+                return master.map(r => ({...r, 'Pizza Sales': r.quantity * r.price}));
+            }
+            // Sum A (Pizza Type)
+            if(stepIndex === 8) {
+                let data = getStepData(7), grp = {};
+                data.forEach(r => {
+                    let k = r.name + '|' + r.category;
+                    if(!grp[k]) grp[k] = {name: r.name, category: r.category, 'Total Sales per Pizza Type': 0};
+                    grp[k]['Total Sales per Pizza Type'] += r['Pizza Sales'];
+                });
+                return Object.values(grp);
+            }
+            // Sum B (Category)
+            if(stepIndex === 9) {
+                let data = getStepData(7), grp = {};
+                data.forEach(r => {
+                    if(!grp[r.category]) grp[r.category] = {category: r.category, 'Total Sales per Category': 0};
+                    grp[r.category]['Total Sales per Category'] += r['Pizza Sales'];
+                });
+                return Object.values(grp);
+            }
+            // Sum C (Overall)
+            if(stepIndex === 10) {
+                let data = getStepData(7), tot = 0;
+                data.forEach(r => tot += r['Pizza Sales']);
+                return [{'Total Sales': tot}];
+            }
+            // Join 4 (Cat Totals)
+            if(stepIndex === 11) {
+                let a = getStepData(8), b = getStepData(9), res = [];
+                a.forEach(rA => {
+                    let rB = b.find(row => row.category === rA.category);
+                    if(rB) res.push({...rA, 'Total Sales per Category': rB['Total Sales per Category']});
+                });
+                return type === 'J' || type === 'out' ? res : [];
+            }
+            // Append
+            if(stepIndex === 12) {
+                let t = getStepData(11, 'J'), s = getStepData(10), res = [];
+                let tot = s[0]['Total Sales'];
+                t.forEach(r => res.push({...r, 'Total Sales': tot}));
+                return res;
+            }
+            // Formula 2 / Output
+            if(stepIndex === 13 || stepIndex === 14) {
+                let data = getStepData(12);
+                return data.map(r => {
+                    let pt = r['Total Sales per Pizza Type'], tot = r['Total Sales'], cat = r['Total Sales per Category'];
+                    return {
+                        ...r, 
+                        '% of Total Sales': parseFloat(((pt / tot) * 100).toFixed(2)) + '%',
+                        '% of Category Sales': parseFloat(((pt / cat) * 100).toFixed(2)) + '%'
+                    };
+                });
+            }
+            return [];
+        }
+
+        // --- PREVIEW LOGIC ---
+        function showLessonPreview(slide) {
+            const content = document.getElementById('preview-content');
+            let html = ``;
+            if(slide===1) { html += renderTableHTML(M_DTL, "order_details.csv (Fact)") + renderTableHTML(M_ORD, "orders.csv (Fact)") + renderTableHTML(M_PTYP, "pizza_types.csv (Dim)") + renderTableHTML(M_PIZ, "pizzas.csv (Dim)"); }
+            if(slide===2) { html += renderTableHTML(getStepData(4,'J'), "Join 1 Output (order_details + orders)"); }
+            if(slide===3) { html += renderTableHTML(getStepData(5,'J'), "Join 2 Output (pizza_types + pizzas)"); }
+            if(slide===4) { html += renderTableHTML(getStepData(6,'J'), "Join 3 Output (Master Pizza Dataset)"); }
+            if(slide===5) { html += renderTableHTML(getStepData(7), "Master Dataset + [Pizza Sales] Calc"); }
+            if(slide===6) { html += `<div class="grid grid-cols-2 gap-4"><div>${renderTableHTML(getStepData(8), "Sum A (Per Pizza)")}</div><div>${renderTableHTML(getStepData(9), "Sum B (Per Cat)")}<br>${renderTableHTML(getStepData(10), "Sum C (Overall)")}</div></div>`; }
+            if(slide===7) { html += renderTableHTML(getStepData(12), "Combined Totals Output (After Join & Append)"); }
+            if(slide===8) { html += renderTableHTML(getStepData(13), "Final Required Metrics", true); }
+            
+            content.innerHTML = html;
+            document.getElementById('mini-preview-modal').style.display = 'block'; document.getElementById('mini-preview-backdrop').style.display = 'block';
+        }
+
+        function renderTableHTML(data, title, highlightEnds = false) {
+            if (!data || data.length === 0) return '';
+            const headers = Object.keys(data[0]);
+            let html = `<div class="mb-4"><h5 class="font-bold text-xs text-slate-600 mb-1">${title}</h5><table class="preview-table"><thead><tr>`;
+            headers.forEach(h => html += `<th>${h}</th>`);
+            html += '</tr></thead><tbody>';
+            data.forEach(row => {
+                html += '<tr>';
+                headers.forEach(h => {
+                    let val = row[h];
+                    let cls = (highlightEnds && h.includes('%')) ? "bg-green-50 font-bold text-green-700" : "";
+                    html += `<td class="${cls}">${val}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            return html;
+        }
+
+        // --- RUN & CANVAS LOGIC ---
+        function activateStep(index) {
+            document.querySelectorAll('.tool-node').forEach((el) => el.classList.remove('active')); activeToolIndex = index;
+            let nodeElem = document.querySelector(`#node-${index}`); if(nodeElem) nodeElem.classList.add('active');
+            document.getElementById('config-panel').innerHTML = steps[index].configHTML;
+            document.getElementById('step-badge').innerText = steps[index].title;
+            document.getElementById('tool-name-display').innerText = "Select an Anchor";
+            document.getElementById('grid-head').innerHTML = ''; document.getElementById('grid-body').innerHTML = `<tr><td class="p-8 text-center text-slate-400 italic">Select an Input/Output anchor to view data.</td></tr>`;
+            document.querySelectorAll('.sim-anchor').forEach(el => el.classList.remove('active-anchor'));
+        }
+
+        function viewAnchor(e, toolId, type) {
+            e.stopPropagation(); document.querySelectorAll('.sim-anchor').forEach(el => el.classList.remove('active-anchor')); e.target.classList.add('active-anchor'); viewingAnchor = { toolId, type };
+            if (!hasRun) { document.getElementById('grid-body').innerHTML = `<tr><td class="p-8 text-center text-slate-400 italic text-red-400"><i class="fa-solid fa-triangle-exclamation mb-2"></i><br>Workflow not run.<br>Press <strong>Run</strong> (top right).</td></tr>`; document.getElementById('tool-name-display').innerText = `${type} Anchor`; return; }
+            const data = getStepData(toolId, type); renderGrid(data); document.getElementById('tool-name-display').innerText = `${type} - ${steps[toolId].title}`;
+        }
+
+        function renderGrid(data) {
+            const gridHead = document.getElementById('grid-head'); const gridBody = document.getElementById('grid-body');
+            gridHead.innerHTML = ''; gridBody.innerHTML = '';
+            if (data.length === 0) { gridBody.innerHTML = `<tr><td class="p-8 text-center text-slate-400 italic">0 Records.</td></tr>`; document.getElementById('record-count').innerText = 0; return; }
+            const headers = Object.keys(data[0]); let headHTML = '<tr>';
+            headers.forEach(h => { headHTML += `<th class="p-2 border-b border-r border-slate-200 min-w-[80px]"><span>${h}</span></th>`; });
+            gridHead.innerHTML = headHTML + '</tr>';
+            data.forEach(row => {
+                let tr = document.createElement('tr');
+                headers.forEach(h => { let td = document.createElement('td'); td.className = "p-2 border-b border-r border-slate-100 text-slate-600 truncate max-w-[150px]"; td.textContent = row[h]; tr.appendChild(td); });
+                gridBody.appendChild(tr);
+            });
+            document.getElementById('record-count').innerText = data.length;
+        }
+
+        function runWorkflow() {
+            hasRun = true; const btn = document.getElementById('btn-global-run'); btn.innerHTML = '<i class="fa-solid fa-check"></i> Running...';
+            setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-play"></i> Run'; if (viewingAnchor) viewAnchor({stopPropagation:()=>{}, target:{classList:{add:()=>{}}}}, viewingAnchor.toolId, viewingAnchor.type); }, 500);
+        }
+
+        let draggedNode = null, dragOffsetX = 0, dragOffsetY = 0;
+        function startDrag(e, nodeId) { draggedNode = document.getElementById(`node-${nodeId}`); const rect = draggedNode.getBoundingClientRect(); dragOffsetX = e.clientX - rect.left; dragOffsetY = e.clientY - rect.top; draggedNode.classList.add('active'); }
+        function drag(e) { if (!draggedNode) return; e.preventDefault(); const bg = document.getElementById('canvas-container'); let x = e.clientX - bg.getBoundingClientRect().left + bg.scrollLeft - dragOffsetX; let y = e.clientY - bg.getBoundingClientRect().top + bg.scrollTop - dragOffsetY; draggedNode.style.left = `${Math.max(0, x)}px`; draggedNode.style.top = `${Math.max(0, y)}px`; drawConnections(); }
+        function endDrag() { draggedNode = null; }
+
+        let modal = document.getElementById('mini-preview-modal'), modalHandle = document.getElementById('modal-drag-handle'), isDraggingModal = false, modalOffsetX, modalOffsetY;
+        modalHandle.addEventListener('mousedown', (e) => { isDraggingModal = true; const rect = modal.getBoundingClientRect(); modalOffsetX = e.clientX - rect.left; modalOffsetY = e.clientY - rect.top; modalHandle.style.cursor = 'grabbing'; });
+        document.addEventListener('mousemove', (e) => { if (isDraggingModal) { e.preventDefault(); let x = e.clientX - modalOffsetX; let y = e.clientY - modalOffsetY; x = Math.max(-modal.offsetWidth + 50, Math.min(x, window.innerWidth - 50)); y = Math.max(0, Math.min(y, window.innerHeight - 50)); modal.style.left = `${x}px`; modal.style.top = `${y}px`; modal.style.transform = 'none'; } });
+        document.addEventListener('mouseup', () => { isDraggingModal = false; modalHandle.style.cursor = 'move'; });
+
+        function drawConnections() {
+            const svg = document.getElementById('connections-layer'); svg.innerHTML = ''; 
+            const links = [ [0,4], [1,4], [2,5], [3,5], [4,6], [5,6], [6,7], [7,8], [7,9], [7,10], [8,11], [9,11], [11,12], [10,12], [12,13], [13,14] ];
+            links.forEach(([srcId, tgtId]) => {
+                const src = document.getElementById(`node-${srcId}`); const tgt = document.getElementById(`node-${tgtId}`); if(!src || !tgt) return;
+                const x1 = parseInt(src.style.left) + 60, y1 = parseInt(src.style.top) + 30; const x2 = parseInt(tgt.style.left), y2 = parseInt(tgt.style.top) + 30; 
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                let c1x = (x1+x2)/2, c1y = y1, c2x = (x1+x2)/2, c2y = y2;
+                if(Math.abs(y2 - y1) > 20) { c1x = x1 + 25; c2x = x2 - 25; }
+                path.setAttribute('d', `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`);
+                path.setAttribute('stroke', '#94a3b8'); path.setAttribute('stroke-width', '2'); path.setAttribute('fill', 'none'); svg.appendChild(path);
+            });
+        }
+
+        // Resizers
+        let isResizing = false, isLpResizing = false, isHResizing = false;
+        function initResize(e) { isResizing = true; document.body.style.userSelect = 'none'; document.addEventListener('mousemove', doResize); document.addEventListener('mouseup', stopResize); }
+        function doResize(e) { if(!isResizing) return; const container = document.getElementById('workspace-container'); const configPane = document.getElementById('config-pane'); let newWidth = e.clientX - container.getBoundingClientRect().left; configPane.style.width = `${Math.max(200, Math.min(newWidth, container.offsetWidth - 200))}px`; }
+        function stopResize() { isResizing = false; document.body.style.userSelect = ''; document.removeEventListener('mousemove', doResize); document.removeEventListener('mouseup', stopResize); }
+
+        function initLpResize(e) { isLpResizing = true; document.body.style.userSelect = 'none'; document.addEventListener('mousemove', doLpResize); document.addEventListener('mouseup', stopLpResize); }
+        function doLpResize(e) { if(!isLpResizing) return; const sidebar = document.querySelector('#lesson-plan-overlay .sidebar'); let newWidth = e.clientX; sidebar.style.width = `${Math.max(200, Math.min(newWidth, window.innerWidth - 200))}px`; }
+        function stopLpResize() { isLpResizing = false; document.body.style.userSelect = ''; document.removeEventListener('mousemove', doLpResize); document.removeEventListener('mouseup', stopLpResize); }
+
+        function initHResize(e) { isHResizing = true; document.body.style.userSelect = 'none'; document.addEventListener('mousemove', doHResize); document.addEventListener('mouseup', stopHResize); }
+        function doHResize(e) { if(!isHResizing) return; const container = document.getElementById('canvas-container'); const topOffset = container.getBoundingClientRect().top; let newHeight = e.clientY - topOffset; container.style.height = `${Math.max(150, Math.min(newHeight, window.innerHeight - 150))}px`; }
+        function stopHResize() { isHResizing = false; document.body.style.userSelect = ''; document.removeEventListener('mousemove', doHResize); document.removeEventListener('mouseup', stopHResize); }
+
+        window.addEventListener('load', () => { drawConnections(); activateStep(0); });
+    </script>
+</body>
+</html>
