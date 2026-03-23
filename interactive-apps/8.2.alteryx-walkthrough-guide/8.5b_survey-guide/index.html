@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Employee Survey Analysis Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0f172a', slatebg: '#e2e8f0', panel: '#ffffff', soft: '#f8fafc', line: '#cbd5e1',
+            blue: '#2563eb', teal: '#0f766e', amber: '#d97706', green: '#16a34a'
+          },
+          boxShadow: {
+            game: '5px 5px 0px rgba(15,23,42,1)', gameSm: '3px 3px 0px rgba(15,23,42,1)'
+          },
+          fontFamily: { sans: ['Nunito','system-ui','sans-serif'], mono: ['JetBrains Mono','monospace'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root { --ink:#0f172a; --line:#cbd5e1; --soft:#f8fafc; --panel:#ffffff; --blue:#2563eb; --teal:#0f766e; --amber:#d97706; --green:#16a34a; }
+    * { box-sizing:border-box; }
+    html, body { margin:0; height:100%; font-family:'Nunito', system-ui, sans-serif; color:var(--ink); background:#cbd5e1; }
+    body {
+      background-image: radial-gradient(#3b82f6 1.2px, transparent 1.2px), radial-gradient(#3b82f6 1.2px, transparent 1.2px);
+      background-size:36px 36px; background-position:0 0, 18px 18px;
+    }
+    .app-shell { width:min(1500px, 96vw); height:min(94vh, 980px); margin:3vh auto; background:#fff; border:3px solid var(--ink); border-radius:24px; overflow:hidden; box-shadow:8px 8px 0 rgba(15,23,42,1); display:flex; }
+    .sidebar { width:310px; min-width:240px; max-width:50vw; resize:horizontal; overflow-x:hidden; overflow-y:auto; background:var(--ink); color:#fff; display:flex; flex-direction:column; border-right:3px solid var(--ink); flex-shrink:0; }
+    .brand { padding:28px 24px 22px; border-bottom:3px solid rgba(255,255,255,.08); }
+    .brand .badge { display:inline-flex; align-items:center; gap:8px; background:#dbeafe; color:#1e3a8a; border:2px solid var(--ink); border-radius:999px; font-size:12px; font-weight:900; padding:6px 12px; margin-bottom:14px; }
+    .brand h1 { margin:0; font-size:28px; line-height:1.05; font-weight:900; letter-spacing:-.03em; }
+    .brand p { margin:10px 0 0; color:#cbd5e1; font-weight:700; line-height:1.45; font-size:14px; }
+    .nav { padding:14px 10px 18px; overflow:auto; }
+    .nav button { width:100%; border:none; background:transparent; color:#cbd5e1; display:flex; align-items:center; gap:12px; padding:13px 14px; border-radius:14px; font-weight:800; font-size:15px; text-align:left; cursor:pointer; transition:all .15s ease; border-left:5px solid transparent; }
+    .nav button:hover { background:rgba(255,255,255,.08); color:#fff; }
+    .nav button.active { background:#8b5cf6; color:#fff; border-left-color:#fff; box-shadow:3px 3px 0 rgba(255,255,255,.18) inset; }
+    .sidebar-footer { margin-top:auto; padding:16px 18px 20px; border-top:3px solid rgba(255,255,255,.08); }
+    .lock-btn { width:100%; display:flex; align-items:center; justify-content:center; gap:10px; padding:12px 16px; border-radius:14px; border:3px solid var(--ink); background:#facc15; color:var(--ink); font-weight:900; cursor:pointer; box-shadow:3px 3px 0 rgba(255,255,255,.15); }
+    .content { flex:1; min-width:0; overflow:auto; background:#f1f5f9; padding:28px; }
+    .section { display:none; } .section.active { display:block; animation:fade .2s ease; }
+    @keyframes fade { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+    .hero, .panel { background:var(--panel); border:3px solid var(--ink); border-radius:22px; box-shadow:5px 5px 0 rgba(15,23,42,1); }
+    .hero { padding:26px 28px; margin-bottom:24px; }
+    .eyebrow { display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; color:#475569; background:#e2e8f0; padding:7px 12px; border-radius:999px; border:2px solid var(--ink); }
+    .hero h2 { margin:14px 0 8px; font-size:40px; line-height:1.02; letter-spacing:-.04em; color:var(--ink); }
+    .hero p { margin:0; font-size:18px; line-height:1.6; color:#334155; font-weight:700; max-width:900px; }
+    .stack { display:grid; gap:20px; }
+    .panel { padding:20px; }
+    .panel h3 { margin:0 0 10px; color:var(--ink); font-size:22px; font-weight:900; letter-spacing:-.02em; }
+    .panel h4 { margin:0 0 8px; color:var(--ink); font-size:18px; font-weight:900; }
+    .panel p, .panel li { color:#1e293b; font-size:16px; line-height:1.65; font-weight:700; }
+    .softbox { background:#f8fafc; border:2px solid var(--line); border-radius:18px; padding:16px; }
+    .list-clean { margin:0; padding-left:18px; display:grid; gap:10px; }
+    .steps { display:grid; gap:14px; }
+    .step { background:#f8fafc; border:2px solid var(--line); border-radius:18px; padding:16px 16px 16px 18px; }
+    .step-head { display:flex; align-items:flex-start; gap:14px; }
+    .step-num { min-width:36px; height:36px; border-radius:12px; background:#2563eb; color:#fff; border:2px solid var(--ink); display:flex; align-items:center; justify-content:center; font-weight:900; box-shadow:3px 3px 0 rgba(15,23,42,1); margin-top:2px; }
+    .step p { margin:6px 0 0; }
+    .download-btn { display:inline-flex; align-items:center; gap:8px; background:var(--blue); color:#fff; border:3px solid var(--ink); border-radius:12px; padding:10px 16px; font-weight:900; text-decoration:none; margin-top:12px; transition:transform 0.1s, box-shadow 0.1s; }
+    .download-btn:hover { transform:translate(-2px,-2px); box-shadow:4px 4px 0 rgba(15,23,42,1); }
+    .shot-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-top:14px; }
+    .shot-card { background:#fff; border:2px solid var(--line); border-radius:18px; padding:12px; }
+    .shot-card strong { display:block; color:var(--ink); margin-top:10px; margin-bottom:4px; font-size:15px; }
+    .shot-card span { display:block; color:#475569; font-size:13px; line-height:1.5; font-weight:700; }
+    .native-shot { display:block; width:auto; height:auto; max-width:100%; border:1.5px solid #94a3b8; border-radius:10px; background:#fff; cursor:zoom-in; }
+    .twocol { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .modal-backdrop { position:fixed; inset:0; background:rgba(15,23,42,.72); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:999; padding:20px; }
+    .modal-backdrop.open { display:flex; }
+    .modal-card { background:#fff; border:3px solid var(--ink); border-radius:22px; max-width:min(1100px, 96vw); max-height:90vh; overflow:auto; box-shadow:10px 10px 0 rgba(15,23,42,.35); padding:18px; }
+    .modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .modal-head h5 { margin:0; font-size:22px; font-weight:900; color:var(--ink); }
+    .icon-btn { border:3px solid var(--ink); background:#e2e8f0; color:var(--ink); border-radius:12px; width:42px; height:42px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:900; }
+    .modal-card img { display:block; max-width:none; width:auto; height:auto; background:#fff; border:1px solid #94a3b8; border-radius:10px; }
+    .hidden-section-note { background:#fef3c7; color:#78350f; border:2px solid #f59e0b; border-radius:16px; padding:14px 16px; font-weight:800; }
+    .success-msg { display:none; margin-top:12px; border-radius:14px; border:2px solid var(--green); background:#d1fae5; color:#065f46; padding:12px; font-weight:900; }
+    .instructor-note { display:none; margin-top:14px; padding:12px 14px; background:#fef3c7; border:2px solid #f59e0b; border-radius:12px; color:#78350f; font-weight:800; font-size:.95rem; align-items:flex-start; gap:10px; }
+    .instructor-note.show { display:flex; }
+    .instructor-note i { flex-shrink:0; margin-top:2px; }
+    @media (max-width: 1000px) { .app-shell { flex-direction:column; height:auto; min-height:95vh; } .sidebar { width:100%; max-width:none; resize:none; overflow-y:visible; border-right:none; border-bottom:3px solid var(--ink); } .content { padding:18px; } .hero h2 { font-size:32px; } }
+    @media (max-width: 760px) { .twocol { grid-template-columns:1fr; } .hero h2 { font-size:28px; } .hero p { font-size:16px; } }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="badge"><i data-lucide="badge-check"></i> Interactive student file</div>
+        <h1>Employee Survey<br>Analysis Lab</h1>
+        <p>Reshape a flipped survey file, clean the fields, join category information, and build an average-by-department summary matrix.</p>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar-footer">
+        <button class="lock-btn" id="openLock"><i data-lucide="lock"></i> Instructor access</button>
+      </div>
+    </aside>
+    <main class="content" id="content"></main>
+  </div>
+
+  <div class="modal-backdrop" id="zoomModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h5 id="zoomTitle">Screenshot</h5>
+        <button class="icon-btn" id="closeZoom" aria-label="Close image"><i data-lucide="x"></i></button>
+      </div>
+      <div id="zoomBody"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="lockModal" aria-hidden="true">
+    <div class="modal-card" style="max-width:520px;">
+      <div class="modal-head">
+        <h5>Instructor access</h5>
+        <button class="icon-btn" id="closeLock" aria-label="Close instructor modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="stack">
+        <p style="margin:0; color:#334155; font-weight:800;">Enter the local password to reveal the instructor-only section in the navigation.</p>
+        <label style="font-weight:900; color:#0f172a;">Password</label>
+        <input id="lockInput" type="password" autocomplete="off" placeholder="Enter password" style="width:100%; padding:14px 16px; border:3px solid #0f172a; border-radius:14px; font-size:16px; font-weight:800; color:#0f172a; background:#fff;" />
+        <button class="lock-btn" id="unlockBtn" style="box-shadow:3px 3px 0 rgba(15,23,42,1);">Unlock</button>
+        <div id="lockMsg" class="hidden-section-note" style="display:none;"></div>
+        <div id="vaultSuccess" class="success-msg">Unlocked. Instructor notes are now visible beneath the relevant instructions, and the Instructor Access section is in the sidebar.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    const SECTIONS = [{"id": "overview", "label": "Overview", "icon": "clipboard-list", "title": "Employee Survey Analysis", "intro": "Reshape the survey data into a clean respondent-level table, join in category information, and build a department-by-category average matrix.", "cards": [{"type": "callout", "title": "Files in the local data folder", "items": ["Employee Survey Analysis - Start.yxzp", "Survey Response Data.xlsx", "Category Lookup Table.csv"]}, {"type": "checklist", "title": "What you will practice", "items": ["Reviewing an unusually structured spreadsheet before building the workflow", "Using Record ID, Filter, Formula, Transpose, Join, Sort, Cross Tab, Select, and Dynamic Rename", "Reshaping question rows and answer rows into one clean table", "Joining a lookup table to add question categories", "Calculating average survey scores by department and category"]}, {"type": "steps", "title": "Before you begin", "steps": [{"title": "Open the packaged workflow and inspect the files", "body": "Start from the packaged workflow. The packaged file already contains the needed inputs, so you can focus on understanding the survey structure and building the analysis workflow. Review the survey spreadsheet and the category lookup so you understand what each file contributes.", "shots": ["screenshot-003.png"]}, {"title": "Think about the desired end state", "body": "The current survey layout is flipped. Each respondent should eventually become one row, and each survey question should become its own column. Later, you will reshape the cleaned table again so you can average scores by department and category.", "shots": ["screenshot-033.png"], "instructorNote": "A strong framing question is: what should one row represent? For the clean table, one row should represent one respondent."}]}]}, {"id": "investigate", "label": "Initial Investigation", "icon": "search", "title": "Understand the survey layout first", "intro": "Before transforming anything, inspect the structure so the next steps make sense.", "cards": [{"type": "steps", "title": "Step-by-step", "steps": [{"title": "Notice how the survey is stored", "body": "Each respondent is stored as a separate column, with the question text appearing in one row and the corresponding response appearing in the next row. Employees also answer different numbers of questions, so blanks should not automatically be treated as zeros.", "shots": ["screenshot-006.png", "screenshot-007.png"], "instructorNote": "Remind students that missing values here do not mean a score of 0. They often mean the respondent was not asked that question."}, {"title": "Identify special cases before cleaning", "body": "Watch for identifying questions at the start, manager-only questions, and open-response follow-up questions such as Q6B and Q24B. Those details matter later when you choose fields to average and fields to keep as text.", "shots": ["screenshot-018.png"], "instructorNote": "Useful discussion points: there are 45 respondents, three departments, and some questions only apply to managers."}]}]}, {"id": "align", "label": "Align Questions & Answers", "icon": "git-branch", "title": "Separate and realign the question rows and answer rows", "intro": "The first transformation goal is to line up each question with its matching answer for the same respondent.", "cards": [{"type": "steps", "title": "Step-by-step", "steps": [{"title": "Add a Record ID tool", "body": "Create a Record ID so you can track which rows belong together. Because the pattern is consistent, row 1 pairs with row 2, row 3 pairs with row 4, and so on.", "shots": ["screenshot-001.png"], "instructorNote": "Students should see that the alternating row structure is what makes the rest of the workflow possible."}, {"title": "Split the data with a Filter tool", "body": "Use a filter based on IsInteger([RecordID]/2). Even-numbered rows represent one stream and odd-numbered rows represent the other, letting you separate answers from questions.", "shots": ["screenshot-002.png", "screenshot-003.png"], "instructorNote": "This is a good place to ask which anchor contains questions and which contains answers after the split."}, {"title": "Shift the question stream forward by one row", "body": "On the question stream, use a Formula tool to add 1 to [RecordID]. This makes each question row share the same Record ID as its matching answer row.", "shots": ["screenshot-004.png", "screenshot-005.png"], "instructorNote": "After this step, Name should align at Record ID 2 in both streams, Department at 4, and so forth."}, {"title": "Pause and verify the alignment", "body": "Before moving on, confirm that corresponding question and answer records now carry the same Record ID values. This check makes the later join much easier to trust.", "shots": ["screenshot-019.png"]}]}]}, {"id": "transposejoin", "label": "Transpose & Join", "icon": "columns-2", "title": "Transpose both streams and join them back together", "intro": "Once the rows are aligned, reshape both streams so there is one question or one answer per respondent per row.", "cards": [{"type": "steps", "title": "Step-by-step", "steps": [{"title": "Transpose the question stream and the answer stream", "body": "Add a Transpose tool to each stream. Keep [RecordID] as the key column and let the respondent columns pivot into a narrow structure. This changes many respondent columns into a [Name] field and a [Value] field.", "shots": ["screenshot-008.png", "screenshot-009.png"], "instructorNote": "The target logic is one question for one respondent on one row, and likewise one answer for one respondent on one row."}, {"title": "Inspect the transpose outputs", "body": "After transposing, the data should be much taller and narrower. The combination of [RecordID] and [Name] should now uniquely identify a question or answer for a given respondent.", "shots": ["screenshot-010.png", "screenshot-011.png"], "instructorNote": "The expected total is 1,485 rows because 45 respondents times up to 33 question positions gives 1,485."}, {"title": "Join the two transposed streams", "body": "Use a Join tool and match on both [RecordID] and [Name]. This reconnects each question with the correct answer for the same respondent. Keep the field that contains the question text and drop duplicate join fields you do not need.", "shots": ["screenshot-012.png", "screenshot-013.png", "screenshot-015.png"], "instructorNote": "A clean result should show all rows matching, with no leftovers in the L or R outputs."}]}]}, {"id": "pivotclean", "label": "Pivot Back & Clean", "icon": "table2", "title": "Pivot back to a respondent-level table and clean the fields", "intro": "Now that questions and answers are paired, pivot the data back into a clean tabular format where each respondent occupies one row.", "cards": [{"type": "steps", "title": "Step-by-step", "steps": [{"title": "Sort the question field before pivoting", "body": "Sort [Right_Value] in ascending order so the question columns will appear in a sensible order after the pivot.", "shots": ["screenshot-016.png"], "instructorNote": "Sorting first helps keep Q1, Q2, Q3, and the remaining question columns in order when the table becomes wide again."}, {"title": "Use Cross Tab to create one row per respondent", "body": "Connect a Cross Tab tool. Group by [Name], use [Right_Value] as the new column headers, and use [Value] for the new column values. Because each respondent-question combination appears once, any aggregation choice will work here.", "shots": ["screenshot-017.png", "screenshot-018.png", "screenshot-022.png"], "instructorNote": "This is where students should see the table become recognizable again, with one row per respondent."}, {"title": "Clean field names and data types with Select", "body": "Remove unneeded columns such as [Name] and [Null]. Rename Q1 to Q4 into clearer identifiers like respondent name, department, years with company, and manager status. Convert the scored survey question fields to a numeric type such as Int16, while leaving open-response fields as text.", "shots": ["screenshot-020.png"], "instructorNote": "Q6B and Q24B should stay as text because they are open-ended follow-up responses."}, {"title": "Trim the long question headers with Dynamic Rename", "body": "Use Dynamic Rename in Formula mode so only the question number remains in each question field name. The expression Left([_CurrentField_], (FindString([_CurrentField_], \"_\"))) removes everything after the first underscore.", "shots": ["screenshot-021.png", "screenshot-022.png", "screenshot-023.png"], "instructorNote": "Students can rename manually, but Dynamic Rename is faster and creates field names that match the lookup table later."}]}]}, {"id": "analysisprep", "label": "Prepare the Analysis Table", "icon": "refresh-cw", "title": "Transpose again so category information can be added", "intro": "For the category-level analysis, reshape the clean table into a long format that carries Department, Question, and Score together.", "cards": [{"type": "steps", "title": "Step-by-step", "steps": [{"title": "Transpose the cleaned respondent-level table", "body": "Add another Transpose tool to the cleaned table. Keep only [Department] as the key column. Uncheck fields you do not need for the averaging task, including respondent identity fields and the open-text response fields. The scored questions should become a long list of question numbers and numeric values.", "shots": ["screenshot-024.png", "screenshot-025.png"], "instructorNote": "For this analysis, the only things that matter are department, question number, and numeric score."}, {"title": "Verify the long analysis table", "body": "Confirm that the reshaped table now shows one department-question-score combination per row. This is the structure you need before joining in category names.", "shots": ["screenshot-031.png"], "instructorNote": "This is a helpful checkpoint before the lookup join. Students should be able to read the long table comfortably at this stage."}]}]}, {"id": "lookup", "label": "Join the Lookup Table", "icon": "link", "title": "Add category labels from the lookup table", "intro": "Once the question numbers appear in the data itself, the category lookup can be joined in cleanly.", "cards": [{"type": "steps", "title": "Step-by-step", "steps": [{"title": "Bring in the category lookup and add a Join tool", "body": "Connect the reshaped survey stream to the left side of a Join tool and the category lookup table to the right side. Join using the survey question field on the left and the lookup question field on the right. Make sure the score field is numeric.", "shots": ["screenshot-026.png", "screenshot-027.png", "screenshot-028.png"], "instructorNote": "A Find Replace tool could also work here, but Join is straightforward and makes the matching logic visible."}, {"title": "Check the enriched result", "body": "After the join, each record should now include Department, Question, Score, and Category. This is the completed analysis-ready table.", "shots": ["screenshot-032.png"]}]}]}, {"id": "finalanalysis", "label": "Average by Department & Category", "icon": "bar-chart-3", "title": "Create the average score matrix", "intro": "Use the enriched long table to produce a final matrix showing average survey score by department and category.", "cards": [{"type": "steps", "title": "Step-by-step", "steps": [{"title": "Use Cross Tab to calculate averages and pivot at the same time", "body": "Connect a Cross Tab tool to the joined data. Group by [Department], use [Category] as the new column headers, use [Value] as the new column values, and choose Average as the aggregation method. This produces the final department-by-category summary table in one step.", "shots": ["screenshot-030.png"], "instructorNote": "A Summarize followed by Cross Tab would also work, but Cross Tab can do both the averaging and the pivot in one step."}, {"title": "If you had used Summarize first, this is what that setup would have looked like", "body": "This visual shows the alternative path where Summarize is used before the final pivot. It is not required for the main workflow, but it helps explain the other way students could have reached the same department-by-category average result.", "shots": ["screenshot-029.png"]}, {"title": "Review the final matrix output", "body": "Check the completed department-by-category average table and compare the departments across the major survey categories before drawing conclusions.", "shots": ["screenshot-032.png", "screenshot-033.png"]}, {"title": "Interpret the findings carefully", "body": "Look for patterns rather than jumping to conclusions from one statistic. Average scores suggest that Sales Support is strongest across several categories, while Communication and Management Performance are weaker for Sales, and Work Life Balance is lower across departments, especially for Sales Engineering.", "shots": [], "instructorNote": "Good follow-up ideas include reading the open-ended responses, comparing managers to associates, and exploring whether newer and longer-tenured employees respond differently."}]}, {"type": "callout", "title": "Possible findings to discuss", "items": ["Accountability, Compensation, Management on Associates, and Culture tend to score relatively well overall.", "Communication and Management Performance are notably weaker for Sales.", "Work Life Balance is low across departments and especially low for Sales Engineering.", "Sales Support appears to be the most satisfied group overall."]}]}, {"id": "instructor", "label": "Instructor Access", "icon": "lock", "title": "Instructor-only notes", "intro": "This section appears only after the local password is entered.", "hidden": true, "cards": [{"type": "callout", "title": "Quick teaching notes", "items": ["Keep emphasizing that blanks are not zeros in this survey.", "The first major reshape goal is one respondent per row.", "The second major reshape goal is one department-question-score record per row for analysis.", "Expected transpose size after the first reshape is 1,485 rows.", "Q6B and Q24B should remain text and should not be averaged.", "Cross Tab is used twice for different purposes: first to rebuild the respondent table, then to compute the department-category average matrix."]}, {"type": "callout", "title": "Follow-up discussion prompts", "items": ["Which department appears strongest overall, and why might that be?", "What might explain weak communication scores in Sales?", "What additional insight could the open-ended responses provide?", "How might you compare managers versus non-managers or newer versus longer-tenured employees?"]}]}];
+    const nav = document.getElementById('nav');
+    const content = document.getElementById('content');
+    let activeId = 'overview';
+    let instructorUnlocked = false;
+    function esc(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function shotCard(file) {
+      return `<figure class="shot-card"><img src="img/${esc(file)}" alt="${esc(file)}" class="native-shot zoomable" data-title="${esc(file)}" data-src="img/${esc(file)}" loading="lazy"><figcaption><strong>${esc(file)}</strong><span>Click to zoom.</span></figcaption></figure>`;
+    }
+    function renderNav() {
+      nav.innerHTML = '';
+      SECTIONS.filter(s => !s.hidden || instructorUnlocked).forEach(section => {
+        const btn = document.createElement('button');
+        btn.className = section.id === activeId ? 'active' : '';
+        btn.dataset.target = section.id;
+        btn.innerHTML = `<i data-lucide="${section.icon}"></i><span>${esc(section.label)}</span>`;
+        btn.addEventListener('click', () => { activeId = section.id; renderNav(); renderContent(); });
+        nav.appendChild(btn);
+      });
+      lucide.createIcons();
+    }
+    function renderCard(card) {
+      if (card.type === 'callout') {
+        return `<section class="panel"><h3>${esc(card.title)}</h3><div class="softbox"><ul class="list-clean">${card.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul></div>${instructorUnlocked && card.instructorNote ? `<div class="instructor-note show"><i data-lucide="lock"></i><div><strong>Instructor Note:</strong><br>${esc(card.instructorNote)}</div></div>` : (card.instructorNote ? `<div class="instructor-note"><i data-lucide="lock"></i><div><strong>Instructor Note:</strong><br>${esc(card.instructorNote)}</div></div>` : '')}</section>`;
+      }
+      if (card.type === 'checklist') {
+        return `<section class="panel"><h3>${esc(card.title)}</h3><div class="softbox"><ul class="list-clean">${card.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul></div></section>`;
+      }
+      if (card.type === 'steps') {
+        return `<section class="panel"><h3>${esc(card.title || 'Step-by-step')}</h3><div class="steps">${card.steps.map((step, i) => `<div class="step"><div class="step-head"><div class="step-num">${i+1}</div><div style="flex:1; min-width:0;"><h4>${esc(step.title)}</h4><p>${esc(step.body)}</p>${step.downloads && step.downloads.length ? `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 6px;">${step.downloads.map(d => `<a href="data/${esc(d.file)}" download class="download-btn"><i data-lucide="download"></i> ${esc(d.label)}</a>`).join('')}</div>` : ''}${step.shots && step.shots.length ? `<div class="shot-grid">${step.shots.map(shotCard).join('')}</div>` : ''}${instructorUnlocked && step.instructorNote ? `<div class="instructor-note show"><i data-lucide="lock"></i><div><strong>Instructor Note:</strong><br>${esc(step.instructorNote)}</div></div>` : (step.instructorNote ? `<div class="instructor-note"><i data-lucide="lock"></i><div><strong>Instructor Note:</strong><br>${esc(step.instructorNote)}</div></div>` : '')}</div></div></div>`).join('')}</div></section>`;
+      }
+      return '';
+    }
+    function renderContent() {
+      const section = SECTIONS.find(s => s.id === activeId) || SECTIONS[0];
+      const hiddenNote = section.hidden ? '<div class="hidden-section-note">Instructor-only section unlocked for this local file.</div>' : '';
+      content.innerHTML = `<section class="section active"><div class="hero"><div class="eyebrow"><i data-lucide="${section.icon}"></i> ${esc(section.label)}</div><h2>${esc(section.title)}</h2><p>${esc(section.intro)}</p></div>${hiddenNote}<div class="stack">${section.cards.map(renderCard).join('')}</div></section>`;
+      lucide.createIcons(); attachZoomHandlers();
+    }
+    function attachZoomHandlers() {
+      document.querySelectorAll('.zoomable').forEach(img => {
+        img.onclick = () => {
+          document.getElementById('zoomTitle').textContent = img.dataset.title || 'Screenshot';
+          document.getElementById('zoomBody').innerHTML = `<img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}">`;
+          document.getElementById('zoomModal').classList.add('open');
+        };
+      });
+    }
+    function closeZoom() { document.getElementById('zoomModal').classList.remove('open'); document.getElementById('zoomBody').innerHTML = ''; }
+    function openLock() { document.getElementById('lockModal').classList.add('open'); document.getElementById('lockInput').value = ''; document.getElementById('lockMsg').style.display = 'none'; document.getElementById('vaultSuccess').style.display = 'none'; setTimeout(() => document.getElementById('lockInput').focus(), 30); }
+    function closeLock() { document.getElementById('lockModal').classList.remove('open'); }
+    function unlockInstructor() {
+      const val = document.getElementById('lockInput').value.trim();
+      const msg = document.getElementById('lockMsg');
+      const successMsg = document.getElementById('vaultSuccess');
+      if (val === 'survey') {
+        instructorUnlocked = true; msg.style.display = 'none'; successMsg.style.display = 'block';
+        document.querySelectorAll('.instructor-note').forEach(el => el.classList.add('show'));
+        renderNav();
+        setTimeout(() => { activeId = 'instructor'; renderNav(); renderContent(); closeLock(); }, 800);
+      } else {
+        successMsg.style.display = 'none'; msg.style.display = 'block'; msg.textContent = 'Password not recognized. Try again.';
+      }
+    }
+    document.getElementById('openLock').addEventListener('click', openLock);
+    document.getElementById('closeLock').addEventListener('click', closeLock);
+    document.getElementById('unlockBtn').addEventListener('click', unlockInstructor);
+    document.getElementById('lockInput').addEventListener('keydown', e => { if(e.key === 'Enter') unlockInstructor(); });
+    document.getElementById('closeZoom').addEventListener('click', closeZoom);
+    document.getElementById('zoomModal').addEventListener('click', e => { if(e.target.id === 'zoomModal') closeZoom(); });
+    document.getElementById('lockModal').addEventListener('click', e => { if(e.target.id === 'lockModal') closeLock(); });
+    window.addEventListener('keydown', e => { if(e.key === 'Escape') { closeZoom(); closeLock(); } });
+    renderNav(); renderContent();
+  </script>
+</body>
+</html>
