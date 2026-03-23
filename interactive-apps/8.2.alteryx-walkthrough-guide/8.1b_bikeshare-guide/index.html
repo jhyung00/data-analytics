@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bikeshare Data Cleansing Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0f172a',
+            slatebg: '#e2e8f0',
+            panel: '#ffffff',
+            soft: '#f8fafc',
+            line: '#cbd5e1',
+            blue: '#2563eb',
+            teal: '#0f766e',
+            amber: '#d97706',
+            green: '#16a34a'
+          },
+          boxShadow: {
+            game: '5px 5px 0px rgba(15,23,42,1)',
+            gameSm: '3px 3px 0px rgba(15,23,42,1)'
+          },
+          fontFamily: {
+            sans: ['Nunito','system-ui','sans-serif'],
+            mono: ['JetBrains Mono','monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --ink:#0f172a;
+      --line:#cbd5e1;
+      --soft:#f8fafc;
+      --panel:#ffffff;
+      --blue:#2563eb;
+      --teal:#0f766e;
+      --amber:#d97706;
+      --green:#16a34a;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; height:100%; font-family:'Nunito', system-ui, sans-serif; color:var(--ink); background:#cbd5e1; }
+    body {
+      background-image:
+        radial-gradient(#3b82f6 1.2px, transparent 1.2px),
+        radial-gradient(#3b82f6 1.2px, transparent 1.2px);
+      background-size:36px 36px;
+      background-position:0 0, 18px 18px;
+    }
+    .app-shell {
+      width:min(1500px, 96vw);
+      height:min(94vh, 980px);
+      margin:3vh auto;
+      background:#fff;
+      border:3px solid var(--ink);
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow:8px 8px 0 rgba(15,23,42,1);
+      display:flex;
+    }
+    .sidebar {
+      width:310px;
+      min-width:240px;
+      max-width:50vw;
+      resize:horizontal;
+      overflow-x:hidden;
+      overflow-y:auto;
+      background:var(--ink);
+      color:#fff;
+      display:flex;
+      flex-direction:column;
+      border-right:3px solid var(--ink);
+      flex-shrink:0;
+    }
+    .brand {
+      padding:28px 24px 22px;
+      border-bottom:3px solid rgba(255,255,255,.08);
+    }
+    .brand .badge {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:#dbeafe;
+      color:#1e3a8a;
+      border:2px solid var(--ink);
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      padding:6px 12px;
+      margin-bottom:14px;
+    }
+    .brand h1 {
+      margin:0;
+      font-size:28px;
+      line-height:1.05;
+      font-weight:900;
+      letter-spacing:-.03em;
+    }
+    .brand p {
+      margin:10px 0 0;
+      color:#cbd5e1;
+      font-weight:700;
+      line-height:1.45;
+      font-size:14px;
+    }
+    .nav {
+      padding:14px 10px 18px;
+      overflow:auto;
+    }
+    .nav button {
+      width:100%;
+      border:none;
+      background:transparent;
+      color:#cbd5e1;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:13px 14px;
+      border-radius:14px;
+      font-weight:800;
+      font-size:15px;
+      text-align:left;
+      cursor:pointer;
+      transition:all .15s ease;
+      border-left:5px solid transparent;
+    }
+    .nav button:hover {
+      background:rgba(255,255,255,.08);
+      color:#fff;
+    }
+    .nav button.active {
+      background:#8b5cf6;
+      color:#fff;
+      border-left-color:#fff;
+      box-shadow:3px 3px 0 rgba(255,255,255,.18) inset;
+    }
+    .sidebar-footer {
+      margin-top:auto;
+      padding:16px 18px 20px;
+      border-top:3px solid rgba(255,255,255,.08);
+    }
+    .lock-btn {
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 16px;
+      border-radius:14px;
+      border:3px solid var(--ink);
+      background:#facc15;
+      color:var(--ink);
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:3px 3px 0 rgba(255,255,255,.15);
+    }
+    .content {
+      flex:1;
+      min-width:0;
+      overflow:auto;
+      background:#f1f5f9;
+      padding:28px;
+    }
+    .section { display:none; }
+    .section.active { display:block; animation:fade .2s ease; }
+    @keyframes fade {
+      from { opacity:0; transform:translateY(6px); }
+      to { opacity:1; transform:none; }
+    }
+    .hero, .panel {
+      background:var(--panel);
+      border:3px solid var(--ink);
+      border-radius:22px;
+      box-shadow:5px 5px 0 rgba(15,23,42,1);
+    }
+    .hero {
+      padding:26px 28px;
+      margin-bottom:24px;
+    }
+    .eyebrow {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#475569;
+      background:#e2e8f0;
+      padding:7px 12px;
+      border-radius:999px;
+      border:2px solid var(--ink);
+    }
+    .hero h2 {
+      margin:14px 0 8px;
+      font-size:40px;
+      line-height:1.02;
+      letter-spacing:-.04em;
+      color:var(--ink);
+    }
+    .hero p {
+      margin:0;
+      font-size:18px;
+      line-height:1.6;
+      color:#334155;
+      font-weight:700;
+      max-width:900px;
+    }
+    .stack { display:grid; gap:20px; }
+    .panel {
+      padding:20px;
+    }
+    .panel h3 {
+      margin:0 0 10px;
+      color:var(--ink);
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:-.02em;
+    }
+    .panel h4 {
+      margin:0 0 8px;
+      color:var(--ink);
+      font-size:18px;
+      font-weight:900;
+    }
+    .panel p, .panel li {
+      color:#1e293b;
+      font-size:16px;
+      line-height:1.65;
+      font-weight:700;
+    }
+    .softbox {
+      background:#f8fafc;
+      border:2px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+    }
+    .list-clean {
+      margin:0;
+      padding-left:18px;
+      display:grid;
+      gap:10px;
+    }
+    .steps { display:grid; gap:14px; }
+    .step {
+      background:#f8fafc;
+      border:2px solid var(--line);
+      border-radius:18px;
+      padding:16px 16px 16px 18px;
+    }
+    .step-head {
+      display:flex;
+      align-items:flex-start;
+      gap:14px;
+    }
+    .step-num {
+      min-width:36px;
+      height:36px;
+      border-radius:12px;
+      background:#2563eb;
+      color:#fff;
+      border:2px solid var(--ink);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      box-shadow:3px 3px 0 rgba(15,23,42,1);
+      margin-top:2px;
+    }
+    .step p { margin:6px 0 0; }
+    .download-btn {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:var(--blue);
+      color:#fff;
+      border:3px solid var(--ink);
+      border-radius:12px;
+      padding:10px 16px;
+      font-weight:900;
+      text-decoration:none;
+      margin-top:12px;
+      transition:transform 0.1s, box-shadow 0.1s;
+    }
+    .download-btn:hover {
+      transform:translate(-2px,-2px);
+      box-shadow:4px 4px 0 rgba(15,23,42,1);
+    }
+    .shot-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+      gap:16px;
+    }
+    .shot-card {
+      background:#fff;
+      border:2px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+    }
+    .shot-card strong {
+      display:block;
+      color:var(--ink);
+      margin-top:10px;
+      margin-bottom:4px;
+      font-size:15px;
+    }
+    .shot-card span {
+      display:block;
+      color:#475569;
+      font-size:13px;
+      line-height:1.5;
+      font-weight:700;
+    }
+    .native-shot {
+      display:block;
+      width:auto;
+      height:auto;
+      max-width:100%;
+      border:1.5px solid #94a3b8;
+      border-radius:10px;
+      background:#fff;
+      cursor:zoom-in;
+    }
+    .twocol {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:16px;
+    }
+    .gallery-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+      gap:14px;
+    }
+    .gallery-item {
+      border:2px solid var(--line);
+      background:#fff;
+      border-radius:16px;
+      padding:10px;
+    }
+    .gallery-item .caption {
+      margin-top:8px;
+      font-size:12px;
+      font-weight:800;
+      color:#475569;
+      word-break:break-word;
+    }
+    .modal-backdrop {
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.72);
+      backdrop-filter:blur(4px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:999;
+      padding:20px;
+    }
+    .modal-backdrop.open { display:flex; }
+    .modal-card {
+      background:#fff;
+      border:3px solid var(--ink);
+      border-radius:22px;
+      max-width:min(1100px, 96vw);
+      max-height:90vh;
+      overflow:auto;
+      box-shadow:10px 10px 0 rgba(15,23,42,.35);
+      padding:18px;
+    }
+    .modal-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .modal-head h5 {
+      margin:0;
+      font-size:22px;
+      font-weight:900;
+      color:var(--ink);
+    }
+    .icon-btn {
+      border:3px solid var(--ink);
+      background:#e2e8f0;
+      color:var(--ink);
+      border-radius:12px;
+      width:42px;
+      height:42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      font-weight:900;
+    }
+    .modal-card img {
+      display:block;
+      max-width:none;
+      width:auto;
+      height:auto;
+      background:#fff;
+      border:1px solid #94a3b8;
+      border-radius:10px;
+    }
+    .hidden-section-note {
+      background:#fef3c7;
+      color:#78350f;
+      border:2px solid #f59e0b;
+      border-radius:16px;
+      padding:14px 16px;
+      font-weight:800;
+    }
+    .field {
+      font-family:'JetBrains Mono', monospace;
+      font-size:.92em;
+      background:#e2e8f0;
+      border:2px solid var(--ink);
+      border-radius:8px;
+      padding:2px 7px;
+      white-space:nowrap;
+    }
+    @media (max-width: 1000px) {
+      .app-shell { flex-direction:column; height:auto; min-height:95vh; }
+      .sidebar { width:100%; max-width:none; resize:none; overflow-y:visible; border-right:none; border-bottom:3px solid var(--ink); }
+      .content { padding:18px; }
+      .hero h2 { font-size:32px; }
+    }
+    @media (max-width: 760px) {
+      .twocol { grid-template-columns:1fr; }
+      .hero h2 { font-size:28px; }
+      .hero p { font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="badge"><i data-lucide="bicycle"></i> Interactive student file</div>
+        <h1>Bikeshare<br>Data Lab</h1>
+        <p>Import the daily bikeshare CSV, inspect the structure, clean the fields, document the workflow, and export a finished file.</p>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar-footer">
+        <button class="lock-btn" id="openLock"><i data-lucide="lock"></i> Instructor access</button>
+      </div>
+    </aside>
+    <main class="content" id="content"></main>
+  </div>
+
+  <div class="modal-backdrop" id="zoomModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h5 id="zoomTitle">Screenshot</h5>
+        <button class="icon-btn" id="closeZoom" aria-label="Close image"><i data-lucide="x"></i></button>
+      </div>
+      <div id="zoomBody"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="lockModal" aria-hidden="true">
+    <div class="modal-card" style="max-width:520px;">
+      <div class="modal-head">
+        <h5>Instructor access</h5>
+        <button class="icon-btn" id="closeLock" aria-label="Close instructor modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="stack">
+        <p style="margin:0; color:#334155; font-weight:800;">Enter the local password to reveal the instructor-only section in the navigation.</p>
+        <label style="font-weight:900; color:#0f172a;">Password</label>
+        <input id="lockInput" type="password" autocomplete="off" placeholder="Enter password" style="width:100%; padding:14px 16px; border:3px solid #0f172a; border-radius:14px; font-size:16px; font-weight:800; color:#0f172a; background:#fff;" />
+        <button class="lock-btn" id="unlockBtn" style="box-shadow:3px 3px 0 rgba(15,23,42,1);">Unlock</button>
+        <div id="lockMsg" class="hidden-section-note" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Disable right-click across the entire document
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    const SECTIONS = [
+      {
+        "id": "overview", 
+        "label": "Overview", 
+        "icon": "bike", 
+        "title": "Bikeshare Data Cleansing Lab", 
+        "intro": "Student guide for importing, reviewing, cleaning, documenting, and exporting the daily bikeshare dataset in Alteryx Designer.", 
+        "cards": [
+          {"type": "callout", "title": "Files you should have ready", "items": ["Bikeshare \u2013 day.csv", "Bikeshare \u2013 Data Dictionary.txt", "A project folder where you will save the workflow, input file, and output file together"]}, 
+          {"type": "gridshots", "shots": [
+            {"file": "screenshot-003.png", "title": "Configuration window example", "desc": "A typical tool configuration panel."}, 
+            {"file": "screenshot-057.png", "title": "Sample workflow view", "desc": "Example of a finished workflow layout."}
+          ]}, 
+          {"type": "checklist", "title": "What you will practice", "items": ["Using the Tool Palette, Search Bar, Canvas, Configuration window, and Results window", "Importing a CSV file with Input Data", "Inspecting fields with Browse", "Changing data types, removing fields, reordering fields, and renaming columns with Select", "Adding documentation with annotations, comments, and tool containers", "Writing an output file and changing file paths to relative"]}
+        ]
+      }, 
+      {
+        "id": "setup", 
+        "label": "Workspace Setup", 
+        "icon": "folder-cog", 
+        "title": "Set up your project folder", 
+        "intro": "Organize the project first so your workflow and files stay linked correctly.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Create a class folder and a day-specific subfolder", 
+                "body": "Make one folder for your Alteryx class materials, then create a subfolder for this specific lesson. Keep the workflow, the input data file, and later the output file together in this same project folder."
+              }, 
+              {
+                "title": "Place the two lesson files in the folder", 
+                "body": "Download and put Bikeshare \u2013 day.csv and Bikeshare \u2013 Data Dictionary.txt in the same project folder before you begin building the workflow.",
+                "downloads": [
+                  {"label": "Download Dataset (.csv)", "file": "Bikeshare - day.csv"},
+                  {"label": "Download Dictionary (.txt)", "file": "Bikeshare - Data Dictionary.txt"}
+                ]
+              }, 
+              {
+                "title": "Open Alteryx Designer Desktop", 
+                "body": "Launch Designer and start with a blank workflow on the Canvas.",
+                
+              }
+            ]
+          }
+        ]
+      }, 
+      {
+        "id": "interface", 
+        "label": "Designer Interface", 
+        "icon": "layout-dashboard", 
+        "title": "Learn the main parts of Designer", 
+        "intro": "Before building the workflow, recognize where each major control lives in the interface.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Tool Palette", 
+                "body": "The Tool Palette holds the tools you drag onto the Canvas. Tools are grouped by category and are visually color-coded.",
+                "shots": [
+                  
+                  {"file": "screenshot-016.png", "title": "Add or remove tools menu", "desc": "Tool palette customization menu."}
+                ]
+              }, 
+              {
+                "title": "Search Bar", 
+                "body": "Use the Search Bar to find tools quickly. Search results can also show help materials and community resources.",
+                "shots": [{"file": "screenshot-017.png", "title": "Search result for Browse", "desc": "Search Bar returning matching tools."}]
+              }, 
+              {
+                "title": "Canvas", 
+                "body": "The Canvas is the workspace where you place tools and connect them into a workflow."
+              }, 
+              {
+                "title": "Configuration window", 
+                "body": "Every tool is configured in the Configuration window. The options change depending on the tool you selected.",
+                "shots": [{"file": "screenshot-003.png", "title": "Configuration window panel", "desc": "A tool-specific setup area."}]
+              }, 
+              {
+                "title": "Results window", 
+                "body": "The Results window shows the data moving through the workflow and can also show run logs, warnings, and metadata."
+              }
+            ]
+          }
+        ]
+      }, 
+      {
+        "id": "input", 
+        "label": "Input Data", 
+        "icon": "database", 
+        "title": "Import the bikeshare CSV", 
+        "intro": "Use Input Data to connect the workflow to the external CSV file and inspect the imported table before moving on.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Drag the Input Data tool onto the Canvas", 
+                "body": "Find Input Data under Favorites, Recommended, or In/Out and drag it onto the Canvas.",
+                "shots": [{"file": "image12.png", "title": "Input Data tool on the Canvas", "desc": "Start by dragging Input Data onto the blank Canvas."}]
+              }, 
+              {
+                "title": "Select the tool and find the file connection area", 
+                "body": "Click the Input Data tool on the Canvas. A blue dashed outline should appear around it, and the Configuration window should change so you can connect to a file from your computer.",
+                "shots": [{"file": "image13.png", "title": "Find file from computer", "desc": "Use the Configuration window to start the file connection."}]
+              }, 
+              {
+                "title": "Choose Set Up a Connection, then browse the file options", 
+                "body": "Click Set Up a Connection under Connect a File or Database. Review the Files tab and the Data Sources tab, then choose Files and Select File so you can bring in Bikeshare – day.csv.",
+                "shots": [{"file": "image15.png", "title": "Connection window with Files and Data Sources", "desc": "Browse the file connection options before choosing Select File."}]
+              }, 
+              {
+                "title": "Open Bikeshare – day.csv and review the preview", 
+                "body": "Navigate to the location of Bikeshare – day.csv and open it. The Configuration window will show a preview of the first 100 rows, but the data is not fully in Designer until you click Run.",
+                "shots": [{"file": "image16.png", "title": "Preview in the Configuration window", "desc": "A preview appears after the CSV is selected."}]
+              }, 
+              {
+                "title": "Run the workflow and inspect the imported table", 
+                "body": "Click Run. Then click the Input Data tool again so the imported table appears in the Results window.",
+                "shots": [{"file": "image17.png", "title": "Imported table in the Results window", "desc": "The Results window shows the imported data after you run the workflow."}]
+              }, 
+              {
+                "title": "Click Metadata to inspect the imported fields", 
+                "body": "Use the Metadata button in the Results window to inspect each column. Notice that the fields were brought in as strings, which is why the next steps focus on understanding the data before changing types.",
+                "shots": [{"file": "image19.png", "title": "Metadata view for Input Data", "desc": "Use Metadata to inspect field names, types, sizes, and other details."}]
+              }
+            ]
+          }
+        ]
+      }, 
+      {
+        "id": "data-review", 
+        "label": "Know the Data", 
+        "icon": "table-properties", 
+        "title": "Read the data before cleaning it", 
+        "intro": "Use the data dictionary and the imported table together so you understand what each field means before changing types.", 
+        "cards": [
+          {
+            "type": "callout", 
+            "title": "Questions to answer as you review the data", 
+            "items": ["What does each record represent?", "Which fields look like dates, numeric measures, or Boolean values?", "Which coded values should remain as categories instead of being treated like quantities?", "Are any fields unclear until you read the data dictionary?"],
+            "instructorNote": "Prompt the class: What does each record represent? Which fields should remain categories?"
+          }, 
+          {
+            "type": "twocol", 
+            "left": {"title": "Suggested data type changes", "items": ["[dteday] \u2192 Date", "[holiday] and [workingday] \u2192 Boolean", "[temp], [atemp], [hum], and [windspeed] \u2192 Double", "[casual], [registered], and [cnt] \u2192 Int64"]}, 
+            "right": {"title": "Fields to keep as categories", "items": ["[season]", "[yr]", "[mnth]", "[weekday]", "[weathersit]"]}
+          }, 
+          {
+            "type": "gridshots", 
+            "shots": [
+              {"file": "screenshot-023.png", "title": "Field type menu", "desc": "A field data type dropdown in the Select tool."}, 
+              {"file": "screenshot-025.png", "title": "Data grid with current types", "desc": "Imported bikeshare fields before cleanup."}, 
+              {"file": "screenshot-034.png", "title": "Results window after changes", "desc": "A cleaned view of the table."}
+            ]
+          }
+        ]
+      }, 
+      {
+        "id": "browse", 
+        "label": "Browse Tool", 
+        "icon": "binoculars", 
+        "title": "Inspect fields with Browse", 
+        "intro": "Browse helps you inspect the data flowing through the workflow and also introduces several ways tools can be connected.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Find the Browse tool in In/Out", 
+                "body": "The Browse tool is located in the In/Out category.",
+                "shots": [{"file": "image20.png", "title": "Browse tool", "desc": "Browse is located in the In/Out category."}]
+              }, 
+              {
+                "title": "Connect Browse by dragging it to the right of Input Data", 
+                "body": "You can drag the Browse tool to the right side of Input Data. When a dotted line appears, release it and Designer will connect the tools automatically.",
+                "shots": [{"file": "image21.png", "title": "Automatic connection with Browse", "desc": "A dotted guide line appears before the tools connect."}]
+              }, 
+              {
+                "title": "Connect Browse manually with the anchors", 
+                "body": "You can also place Browse anywhere on the Canvas and manually drag from the output anchor of Input Data to the input anchor of Browse.",
+                "shots": [{"file": "image22.png", "title": "Input and output anchors", "desc": "Use the anchors to connect the tools manually."}]
+              }, 
+              {
+                "title": "Use Add Browse After as another method", 
+                "body": "Right-click the Input Data tool and choose Add Browse After. You can also use Insert After and then choose Browse from the In/Out tools.",
+                "shots": [{"file": "image24.png", "title": "Add Browse After", "desc": "Right-click Input Data to insert Browse after it."}]
+              }, 
+              {
+                "title": "Search for Browse and drag it from the Search Bar", 
+                "body": "A final option is to search for Browse and drag it onto the Canvas directly from the Search Bar.",
+                "shots": [{"file": "image26.png", "title": "Search result for Browse", "desc": "Browse can also be added from the Search Bar."}]
+              }, 
+              {
+                "title": "Run the workflow and inspect the fields", 
+                "body": "Use one of the connection methods above to attach Browse to Input Data. Then click the Browse tool. Notice that the Configuration window does not have normal setup controls. Instead, click different fields to inspect them and use the x at the top to return to the full list. Because the fields are still strings at this point, the summaries are based on text length rather than true numeric meaning.",
+                "shots": [{"file": "image27.png", "title": "Browse field review", "desc": "Click fields in Browse to inspect their summaries and return with the x at the top."}],
+                "instructorNote": "Prompt: Why is Browse less informative before the types are fixed?"
+              }
+            ]
+          }
+        ]
+      }, 
+      {
+        "id": "select", 
+        "label": "Select Tool", 
+        "icon": "check-square", 
+        "title": "Use Select to clean the structure", 
+        "intro": "The Select tool is one of the most commonly used tools because it can change data types, remove fields, reorder fields, rename fields, and add descriptions.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Locate Select and place it between Input Data and Browse", 
+                "body": "Find the Select tool in the Preparation category, then drag it onto the Canvas between Input Data and Browse.",
+                "shots": [
+                  {"file": "image29.png", "title": "Select tool", "desc": "Locate Select in the Preparation category and place it between Input Data and Browse."},
+                  {"file": "image30.png", "title": "Select configuration grid", "desc": "The Select grid shows each field, its data type, and its size."}
+                ],
+                "instructorNote": "Prompt: Why is Select one of the most flexible cleanup tools in Designer?"
+              }, 
+              {
+                "title": "Change [dteday], [holiday], and [workingday] first", 
+                "body": "Change [dteday] to Date. Then change [holiday] and [workingday] to Boolean.",
+                "shots": [
+                  {"file": "image31.png", "title": "Change [dteday] to Date", "desc": "Use the dropdown in the type column to change [dteday] to Date."}
+                ],
+                "instructorNote": "After the Boolean conversion, the output will show True and False instead of 1 and 0."
+              }, 
+              {
+                "title": "Change the weather-related fields to Double", 
+                "body": "Highlight [weathersit], [temp], [atemp], [hum], and [windspeed]. Then go to Options, choose Change Field Type of Highlighted Fields, and set them all to Double.",
+                "shots": [
+                  {"file": "image32.png", "title": "Highlight multiple fields", "desc": "Select the weather-related fields together before changing them."},
+                  {"file": "image33.png", "title": "Change highlighted fields to Double", "desc": "Use Options to change all highlighted fields to Double at the same time."}
+                ]
+              }, 
+              {
+                "title": "Change [casual], [registered], and [cnt] to Int64", 
+                "body": "Finish the type cleanup by changing [casual], [registered], and [cnt] to Int64.",
+                "shots": [
+                  {"file": "image34.png", "title": "Change count fields to Int64", "desc": "Set [casual], [registered], and [cnt] to Int64."}
+                ]
+              }, 
+              {
+                "title": "Compare the input and output anchors after running", 
+                "body": "After you click Run, click the input anchor first and then the output anchor of the Select tool. The input anchor shows the original incoming data, and the output anchor shows the transformed data after the Select configuration is applied.",
+                "shots": [
+                  {"file": "image37.png", "title": "Input anchor", "desc": "Start with the input anchor to see the original incoming data."},
+                  {"file": "image35.png", "title": "Output anchor", "desc": "Then click the output anchor to see the applied changes."},
+                  {"file": "select_metadata_view.png", "title": "Metadata after type changes", "desc": "Metadata confirms that the updated types were applied."}
+                ]
+              }, 
+              {
+                "title": "Remove fields and check the output anchor", 
+                "body": "Remove [instant], [season], [yr], [mnth], [holiday], [weekday], [workingday], [casual], and [registered] by unchecking them. Then click the output anchor of the Select tool. You should now see that columns have been removed and [cnt] has been moved to the left.",
+                "shots": [
+                  {"file": "image40.png", "title": "Remove fields", "desc": "Uncheck the columns that are not needed for the weather-focused version."},
+                  {"file": "image41.png", "title": "Output anchor after the cleanup run", "desc": "The cleaned result shows removed columns and [cnt] moved to the left."}
+                ],
+                "instructorNote": "Suggested fields to remove for a weather-focused analysis: [instant], [season], [yr], [mnth], [holiday], [weekday], [workingday], [casual], [registered]."
+              }, 
+              {
+                "title": "Rename the remaining fields clearly", 
+                "body": "Type clear and consistent replacement names in the Rename area of the Select configuration so the cleaned dataset is easier to interpret later.",
+                "shots": [
+                  {"file": "image43.png", "title": "Rename columns", "desc": "Use the Rename area to update the remaining column names clearly."}
+                ]
+              }
+            ]
+          }
+        ]
+      }, 
+      {
+        "id": "document", 
+        "label": "Documentation", 
+        "icon": "notebook-pen", 
+        "title": "Document your workflow", 
+        "intro": "The talk track ends by showing how to document a workflow clearly so another person can understand it.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Add an annotation to the Select tool", 
+                "body": "Click the Select tool. In the Configuration window, click the tag symbol and enter a short annotation. Type: Rename, reorder, and change data types of fields. Then click a blank area of the Canvas so the annotation appears under the tool.",
+                "shots": [
+                  {"file": "image44.png", "title": "Open the annotation option", "desc": "Click the tag symbol in the Configuration window to enter an annotation."}, 
+                  {"file": "image45.png", "title": "Annotation visible on the Canvas", "desc": "The Select tool now shows the annotation under the icon."}
+                ]
+              }, 
+              {
+                "title": "Add a Comment tool", 
+                "body": "Go to the Documentation palette and drag a Comment tool onto the Canvas. The Comment tool does not process data. It is only used for notes and documentation.",
+                "shots": [
+                  {"file": "image48.png", "title": "Add a Comment tool", "desc": "The Comment tool can be placed anywhere on the Canvas for notes."}
+                ]
+              }, 
+              {
+                "title": "Group tools in a Tool Container", 
+                "body": "Highlight the tools, right-click one of them, and choose Add to New Container. Tool Containers help group workflow steps, and the blue button can disable the whole container so the tools inside do not run. To remove only the container, right-click it and choose Delete Container Only.",
+                "shots": [
+                  {"file": "image46.png", "title": "Add tools to a new container", "desc": "Right-click the selected tools and choose Add to New Container."}, 
+                  {"file": "image47.png", "title": "Workflow inside a Tool Container", "desc": "Tool Containers group related workflow steps together."}, 
+                  {"file": "image48.png", "title": "Delete Container Only", "desc": "Use Delete Container Only to remove just the container while keeping the tools inside."}
+                ]
+              }
+            ]
+          }
+        ]
+      }, 
+      {
+        "id": "output", 
+        "label": "Text Input & Output", 
+        "icon": "file-output", 
+        "title": "Practice Text Input and Output Data", 
+        "intro": "The final practice task uses Text Input for a small manually entered table and Output Data for writing a file.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Add Text Input", 
+                "body": "From the In/Out palette, drag the Text Input tool onto the Canvas. Text Input stores data inside the workflow file rather than linking to an external source.",
+                "shots": [
+                  {"file": "image49.png", "title": "Text Input grid", "desc": "Type headers and rows directly into the Text Input grid."}
+                ]
+              }, 
+              {
+                "title": "Enter a few rows manually", 
+                "body": "Type a few simple records into the Text Input grid so you can practice writing the table out as a file."
+              }, 
+              {
+                "title": "Connect Output Data", 
+                "body": "Attach Output Data after Text Input so the manually entered table can be written to a file.",
+                "shots": [
+                  {"file": "image50.png", "title": "Text Input to Output Data", "desc": "The small workflow connects Text Input to Output Data."}
+                ]
+              }, 
+              {
+                "title": "Set the file type and location", 
+                "body": "Click Set Up a Connection. Choose the file type, name the output, and save it in the same project folder as your workflow and source files.",
+                "shots": [
+                  {"file": "image51.png", "title": "Output Data configuration", "desc": "Use Set Up a Connection to configure the output file."}, 
+                  {"file": "image53.png", "title": "Choose the output file type", "desc": "Select the file type and location from the file connections window."}
+                ]
+              }, 
+              {
+                "title": "Run the workflow to create the file", 
+                "body": "Nothing is created until the workflow runs. After you click Run, the output file is written to the folder you selected."
+              }
+            ]
+          }
+        ]
+      }, 
+      {
+        "id": "relative", 
+        "label": "Relative Paths", 
+        "icon": "route", 
+        "title": "Relative pathway", 
+        "intro": "At the end of the workflow, convert full file paths to relative paths so the workflow can still run on another computer.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Keep the workflow, input file, and output file in the same project folder", 
+                "body": "Before making any path changes, make sure the workflow, the bikeshare CSV, the data dictionary, and the output file are all saved in the same project folder.",
+                "shots": [
+                  {"file": "image54.png", "title": "Workflow, data, and output in one folder", "desc": "The workflow, input file, and related files are stored together in the same project folder."}
+                ]
+              }, 
+              {
+                "title": "Review the current full file path", 
+                "body": "The Input Data and Output Data tools are still using a full pathway. A full pathway specifies the exact location of the file on one specific computer.",
+                "shots": [
+                  {"file": "image55.png", "title": "Full file path in the tool configuration", "desc": "The tool currently shows the full local file path."}
+                ]
+              }, 
+              {
+                "title": "Open Workflow Dependencies", 
+                "body": "Go to Options, then Advanced Options, then Workflow Dependencies.",
+                "shots": [
+                  {"file": "image56.png", "title": "Open Workflow Dependencies", "desc": "Open Workflow Dependencies from the Options menu."}
+                ]
+              }, 
+              {
+                "title": "Full paths in Workflow Dependencies", 
+                "body": "In the Workflow Dependencies window, full paths are initially specified. Click All Relative to convert the full path to a relative pathway.",
+                "shots": [
+                  {"file": "image57.png", "title": "Full paths in Workflow Dependencies", "desc": "Full paths are initially specified in Workflow Dependencies."}
+                ]
+              }, 
+              {
+                "title": "Confirm the shortened relative path", 
+                "body": "After that, the file path should be shortened. This shorter dependency entry is the relative pathway.",
+                "shots": [
+                  {"file": "image58.png", "title": "Shortened relative path", "desc": "The dependency path is now much shorter after switching to relative paths."}
+                ]
+              }, 
+              {
+                "title": "Click OK and confirm the shortened path in the tool", 
+                "body": "Click OK. Then click the Input Data or Output Data tool again and notice that the pathway has shortened significantly in the Configuration window.",
+                "shots": [
+                  {"file": "image59.png", "title": "Shortened path in the tool configuration", "desc": "The tool configuration now shows the shorter relative path."},
+                  {"file": "image60.png", "title": "How to zip the project files", "desc": "Select the workflow and related files together before creating the zip folder."}
+                ]
+              }
+            ]
+          }
+        ]
+      }, 
+      {
+        "id": "sharing", 
+        "label": "Sharing files as zip", 
+        "icon": "archive", 
+        "title": "Sharing files as a zip folder", 
+        "intro": "After confirming that the workflow still runs correctly with relative paths, save the project files together and share them as one zip folder.", 
+        "cards": [
+          {
+            "type": "steps", 
+            "steps": [
+              {
+                "title": "Save, zip, and share the folder", 
+                "body": "Once you confirm the workflow still runs as intended and the file paths are relative, save and close the workflow. From your file system, select the workflow and the data sources you intend to share and zip them together. This zipped folder is what should be shared.",
+                "shots": [
+                  {"file": "image61.png", "title": "Zip folder created", "desc": "The zipped folder is the version that should be shared."}
+                ]
+              }, 
+              {
+                "title": "Unzip before running the workflow", 
+                "body": "When the end user receives the zipped file, they should download it and unzip it in their chosen location before trying to run the workflow. They must unzip it for this to work properly.",
+                "shots": [
+                  {"file": "image62.png", "title": "Unzip the shared folder", "desc": "The receiver must unzip the folder before opening the workflow."},
+                  {"file": "unzip_extract_dialog.png", "title": "Extract the zipped folder", "desc": "Choose the destination and extract the zipped folder before opening the workflow."}
+                ]
+              }
+            ]
+          }
+        ]
+      }, 
+      {
+        "id": "instructor", 
+        "label": "Instructor Access", 
+        "icon": "lock", 
+        "title": "Instructor-only notes", 
+        "intro": "Enter the password in the padlock modal to reveal instructor-only prompts and teaching notes for this local copy.", 
+        "hidden": true, 
+        "cards": [
+          {"type": "callout", "title": "Instructor quick notes", "items": ["Password for this local package: bike", "Suggested prompts: What does each record represent? Which fields should remain categories? Why do relative paths matter before submitting a workflow?", "Suggested focus questions: Which season has the highest rentals? Are rentals different on holidays? Under which weather conditions are rentals most popular? What pattern appears between bike rentals and windspeed?", "Suggested field-removal set for a weather-focused analysis: [instant], [season], [yr], [mnth], [holiday], [weekday], [workingday], [casual], [registered]", "Suggested type changes: [dteday] Date; [holiday]/[workingday] Boolean; [weathersit]/[temp]/[atemp]/[hum]/[windspeed] Double; [casual]/[registered]/[cnt] Int64"]}, 
+          {"type": "callout", "title": "Class discussion prompts", "items": ["Why is Browse less informative before the types are fixed?", "How does the Select tool help with both formatting and analytical focus?", "What would break if you submitted the workflow with full local file paths?", "When would Text Input be more useful than Input Data?"]}
+        ]
+      }
+    ];
+    const GALLERY = [];
+    
+    const nav = document.getElementById('nav');
+    const content = document.getElementById('content');
+    let instructorUnlocked = false;
+    let activeId = 'overview';
+
+    function esc(str) {
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+
+    function renderNav() {
+      nav.innerHTML = '';
+      SECTIONS.filter(s => !s.hidden || instructorUnlocked).forEach(section => {
+        const btn = document.createElement('button');
+        btn.className = section.id === activeId ? 'active' : '';
+        btn.dataset.target = section.id;
+        btn.innerHTML = `<i data-lucide="${section.icon}"></i><span>${esc(section.label)}</span>`;
+        btn.addEventListener('click', () => {
+          activeId = section.id;
+          renderNav();
+          renderContent();
+        });
+        nav.appendChild(btn);
+      });
+      lucide.createIcons();
+    }
+
+    function shotCard(shot) {
+      return `
+        <figure class="shot-card">
+          <img src="data/${esc(shot.file)}" alt="${esc(shot.title)}" class="native-shot zoomable" data-title="${esc(shot.title)}" data-src="data/${esc(shot.file)}" loading="lazy">
+          <figcaption>
+            <strong>${esc(shot.title)}</strong>
+            <span>${esc(shot.desc || '')}</span>
+          </figcaption>
+        </figure>
+      `;
+    }
+
+    function renderCard(card, idx) {
+      if (card.type === 'callout') {
+        return `
+          <section class="panel">
+            <h3>${esc(card.title)}</h3>
+            <div class="softbox">
+              <ul class="list-clean">${card.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+            </div>
+            ${instructorUnlocked && card.instructorNote ? `
+              <div class="hidden-section-note" style="margin-top: 14px; font-size: 14px; display:flex; align-items:flex-start; gap:8px;">
+                <i data-lucide="lock" style="min-width:18px; height:18px; margin-top:2px;"></i>
+                <div><strong>Instructor Note:</strong><br>${esc(card.instructorNote)}</div>
+              </div>
+            ` : ''}
+          </section>
+        `;
+      }
+      if (card.type === 'checklist') {
+        return `
+          <section class="panel">
+            <h3>${esc(card.title)}</h3>
+            <div class="softbox">
+              <ul class="list-clean">${card.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+            </div>
+          </section>
+        `;
+      }
+      if (card.type === 'steps') {
+        return `
+          <section class="panel">
+            <h3>Step-by-step</h3>
+            <div class="steps">
+              ${card.steps.map((step, i) => `
+                <div class="step">
+                  <div class="step-head">
+                    <div class="step-num">${i+1}</div>
+                    <div style="flex: 1; min-width: 0;">
+                      <h4>${esc(step.title)}</h4>
+                      <p>${esc(step.body)}</p>
+                      
+                      ${step.downloads && step.downloads.length > 0 ? `
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 6px;">
+                          ${step.downloads.map(d => `
+                            <a href="data/${esc(d.file)}" download class="download-btn">
+                              <i data-lucide="download"></i> ${esc(d.label)}
+                            </a>
+                          `).join('')}
+                        </div>
+                      ` : ''}
+                      
+                      ${step.shots && step.shots.length > 0 ? `
+                        <div class="shot-grid" style="margin-top: 16px;">
+                          ${step.shots.map(shot => shotCard(shot)).join('')}
+                        </div>
+                      ` : ''}
+
+                      ${instructorUnlocked && step.instructorNote ? `
+                        <div class="hidden-section-note" style="margin-top: 14px; font-size: 14px; display:flex; align-items:flex-start; gap:8px;">
+                          <i data-lucide="lock" style="min-width:18px; height:18px; margin-top:2px;"></i>
+                          <div><strong>Instructor Note:</strong><br>${esc(step.instructorNote)}</div>
+                        </div>
+                      ` : ''}
+                    </div>
+                  </div>
+                </div>`).join('')}
+            </div>
+          </section>
+        `;
+      }
+      if (card.type === 'gridshots') {
+        return `
+          <section class="panel">
+            <h3>Matched screenshots</h3>
+            <div class="shot-grid">
+              ${card.shots.map(shot => shotCard(shot)).join('')}
+            </div>
+          </section>
+        `;
+      }
+      if (card.type === 'twocol') {
+        return `
+          <section class="panel">
+            <div class="twocol">
+              <div class="softbox">
+                <h3>${esc(card.left.title)}</h3>
+                <ul class="list-clean">${card.left.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+              </div>
+              <div class="softbox">
+                <h3>${esc(card.right.title)}</h3>
+                <ul class="list-clean">${card.right.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+              </div>
+            </div>
+          </section>
+        `;
+      }
+      if (card.type === 'gallery') {
+        return `
+          <section class="panel">
+            <div class="gallery-grid">
+              ${GALLERY.map(file => `
+                <figure class="gallery-item">
+                  <img src="data/${esc(file)}" alt="${esc(file)}" class="native-shot zoomable" data-title="${esc(file)}" data-src="data/${esc(file)}" loading="lazy">
+                  <figcaption class="caption">${esc(file)}</figcaption>
+                </figure>
+              `).join('')}
+            </div>
+          </section>
+        `;
+      }
+      return '';
+    }
+
+    function renderContent() {
+      const section = SECTIONS.find(s => s.id === activeId) || SECTIONS[0];
+      const hiddenNote = section.hidden ? '<div class="hidden-section-note">Instructor-only section unlocked for this local file.</div>' : '';
+      content.innerHTML = `
+        <section class="section active">
+          <div class="hero">
+            <div class="eyebrow"><i data-lucide="${section.icon}"></i> ${esc(section.label)}</div>
+            <h2>${esc(section.title)}</h2>
+            <p>${esc(section.intro)}</p>
+          </div>
+          ${hiddenNote}
+          <div class="stack">
+            ${section.cards.map(renderCard).join('')}
+          </div>
+        </section>
+      `;
+      lucide.createIcons();
+      attachZoomHandlers();
+    }
+
+    function attachZoomHandlers() {
+      document.querySelectorAll('.zoomable').forEach(img => {
+        img.addEventListener('click', () => {
+          document.getElementById('zoomTitle').textContent = img.dataset.title || 'Screenshot';
+          document.getElementById('zoomBody').innerHTML = `<img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}">`;
+          document.getElementById('zoomModal').classList.add('open');
+        });
+      });
+    }
+
+    function closeZoom() {
+      document.getElementById('zoomModal').classList.remove('open');
+      document.getElementById('zoomBody').innerHTML = '';
+    }
+
+    function openLock() {
+      document.getElementById('lockModal').classList.add('open');
+      document.getElementById('lockInput').value = '';
+      document.getElementById('lockMsg').style.display = 'none';
+      setTimeout(() => document.getElementById('lockInput').focus(), 30);
+    }
+
+    function closeLock() {
+      document.getElementById('lockModal').classList.remove('open');
+    }
+
+    function unlockInstructor() {
+      const val = document.getElementById('lockInput').value.trim();
+      const msg = document.getElementById('lockMsg');
+      if (val === 'bike') {
+        instructorUnlocked = true;
+        msg.style.display = 'block';
+        msg.textContent = 'Unlocked. Instructor notes are now visible beneath the relevant instructions, and the Instructor Access section is in the sidebar.';
+        renderNav();
+        
+        setTimeout(() => {
+          activeId = 'instructor';
+          renderNav();
+          renderContent();
+          closeLock();
+        }, 800);
+      } else {
+        msg.style.display = 'block';
+        msg.textContent = 'Password not recognized. Try again.';
+      }
+    }
+
+    document.getElementById('openLock').addEventListener('click', openLock);
+    document.getElementById('closeLock').addEventListener('click', closeLock);
+    document.getElementById('unlockBtn').addEventListener('click', unlockInstructor);
+    document.getElementById('lockInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') unlockInstructor();
+    });
+    document.getElementById('closeZoom').addEventListener('click', closeZoom);
+    document.getElementById('zoomModal').addEventListener('click', (e) => {
+      if (e.target.id === 'zoomModal') closeZoom();
+    });
+    document.getElementById('lockModal').addEventListener('click', (e) => {
+      if (e.target.id === 'lockModal') closeLock();
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeZoom();
+        closeLock();
+      }
+    });
+
+    renderNav();
+    renderContent();
+  </script>
+</body>
+</html>
