@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alteryx Designer: Basics & Paths</title>
+    
+    <!-- Scripts & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Theme Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        game: {
+                            dark: '#0f172a',
+                            light: '#f1f5f9',
+                            blue: '#3b82f6',
+                            purple: '#8b5cf6',
+                            green: '#10b981',
+                            red: '#ef4444',
+                            yellow: '#f59e0b'
+                        }
+                    },
+                    boxShadow: {
+                        'game-sm': '2px 2px 0px rgba(15, 23, 42, 1)',
+                        'game': '4px 4px 0px rgba(15, 23, 42, 1)',
+                        'game-lg': '8px 8px 0px rgba(15, 23, 42, 1)',
+                    },
+                    borderWidth: {
+                        '3': '3px',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Gamified Scrollbar */
+        ::-webkit-scrollbar { width: 12px; height: 12px; }
+        ::-webkit-scrollbar-track { background: #cbd5e1; border-left: 3px solid #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border: 3px solid #0f172a; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2563eb; }
+        
+        body {
+            background-color: #cbd5e1;
+            background-image: 
+                radial-gradient(#3b82f6 1.5px, transparent 1.5px),
+                radial-gradient(#3b82f6 1.5px, transparent 1.5px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Animation Classes */
+        @keyframes popIn { 
+            0% { transform: scale(0.9); opacity: 0; } 
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); opacity: 1; } 
+        }
+        @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        .animate-pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-slide-down { animation: slideDown 0.3s ease-out forwards; }
+
+        /* Game Card Base */
+        .game-card {
+            background: white;
+            border: 3px solid #0f172a;
+            border-radius: 16px;
+            box-shadow: 4px 4px 0px rgba(15, 23, 42, 1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        /* Nav Sidebar */
+        .nav-links a.active {
+            background-color: #3b82f6;
+            color: white;
+            border: 2px solid #0f172a;
+            box-shadow: 2px 2px 0px rgba(15, 23, 42, 1);
+            transform: translateX(4px);
+        }
+
+        /* Interactive Select Table */
+        .select-interactive-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; border: 3px solid #0f172a; border-radius: 8px; overflow: hidden; font-weight: 600;}
+        .select-interactive-table th, .select-interactive-table td { padding: 12px; text-align: left; border-bottom: 2px solid #0f172a; }
+        .select-interactive-table th { background-color: #3b82f6; color: white; border-right: 2px solid #0f172a; }
+        .select-interactive-table tr { cursor: pointer; transition: background 0.2s; background: white; }
+        .select-interactive-table tr:hover { background-color: #f1f5f9; }
+        .select-interactive-table .answer { filter: blur(5px); transition: filter 0.3s; user-select: none; }
+        .select-interactive-table tr:hover .answer,
+        .select-interactive-table tr.revealed .answer { filter: blur(0); }
+        .reveal-hint { font-size: 11px; color: #3b82f6; display: block; margin-top: 5px; font-style: italic; font-weight: 800;}
+
+        /* Lecture Mode */
+        .lecture-hide { color: transparent; text-shadow: 0 0 8px rgba(15,23,42,0.6); cursor: pointer; background: #f1f5f9; border: 2px solid #0f172a; border-radius: 6px; padding: 2px 6px; transition: all 0.3s; user-select: none; }
+        .lecture-hide.revealed { color: inherit; text-shadow: none; background: #f59e0b; }
+
+        /* Interface Mockup Gamified */
+        .interface-mockup { border: 3px solid #0f172a; border-radius: 12px; overflow: hidden; margin: 20px 0; background: white; box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); }
+        .interface-header { background: #0f172a; height: 20px; }
+        .interface-toolbar { background: #f1f5f9; padding: 10px; border-bottom: 3px solid #0f172a; display: flex; gap: 10px; font-weight: 800; font-size: 14px;}
+        .interface-body { display: flex; height: 300px; }
+        .config-panel { width: 25%; border-right: 3px solid #0f172a; background: white; padding: 15px; font-size: 13px; font-weight: 700;}
+        .canvas-area { flex: 1; background-image: radial-gradient(#3b82f6 1.5px, transparent 1.5px); background-size: 20px 20px; padding: 40px; position: relative; display: flex; align-items: center; justify-content: center; background-color: #cbd5e1;}
+        
+        /* Flow Diagram */
+        .flow-diagram { display: flex; align-items: center; gap: 20px; }
+        .tool-container { position: relative; display: inline-block; }
+        .anchor-demo { position: absolute; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; }
+        .anchor-in-demo { left: -10px; border-left: 10px solid #0f172a; }
+        .anchor-out-demo { right: -10px; border-left: 10px solid #0f172a; }
+        .mock-connection { height: 4px; width: 30px; background-color: #0f172a; }
+        .svg-tool { display: block; filter: drop-shadow(4px 4px 0px rgba(15,23,42,1)); transition: transform 0.2s; border: 2px solid #0f172a; border-radius: 10px;}
+        .svg-tool:hover { transform: scale(1.05); }
+
+        /* Data Types Table Gamified */
+        .dt-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; font-size: 14px; border: 3px solid #0f172a; border-radius: 8px; overflow: hidden; font-weight: 600; background: white;}
+        .dt-table th { background: #0f172a; text-align: left; padding: 10px; color: white; border-bottom: 2px solid #0f172a; }
+        .dt-table td { padding: 10px; border-bottom: 2px solid #0f172a; }
+        .dt-type { font-family: 'JetBrains Mono', monospace; font-weight: 800; color: #3b82f6; }
+        .dt-recommend { background-color: #f59e0b; border: 2px solid #0f172a; font-weight: 800; color: #0f172a; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-left: 8px; box-shadow: 2px 2px 0px rgba(15, 23, 42, 1);}
+
+        /* --- SIMULATOR CANVAS (Gamified) --- */
+        .canvas-bg { background-color: transparent; min-height: 150px; height: 400px; position: relative; }
+        .tool-node { width: 64px; height: 64px; position: absolute; cursor: move; z-index: 10; user-select: none; transition: transform 0.1s; }
+        .tool-node:hover { transform: translateY(-2px); }
+        .tool-icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .tool-icon img { width: 100%; height: 100%; border-radius: 12px; border: 3px solid #0f172a; box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); pointer-events: none; background: white;}
+        .tool-node.active .tool-icon img { border-color: #f59e0b; box-shadow: 0 0 0 4px #f59e0b, 4px 4px 0px rgba(15, 23, 42, 1); }
+        .tool-label { position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #0f172a; white-space: nowrap; background: white; padding: 2px 8px; border-radius: 6px; border: 2px solid #0f172a; pointer-events: none; box-shadow: 2px 2px 0px rgba(15, 23, 42, 1); }
+
+        /* Sim Anchors */
+        .sim-anchor { position: absolute; top: 50%; transform: translateY(-50%); width: 0; height: 0; cursor: pointer; z-index: 20; border-top: 8px solid transparent; border-bottom: 8px solid transparent; transition: transform 0.1s; filter: drop-shadow(2px 2px 0px rgba(15,23,42,1)); }
+        .sim-anchor:hover { transform: translateY(-50%) scale(1.3); }
+        .sim-anchor-in { left: -12px; border-left: 12px solid #10b981; }
+        .sim-anchor-out { right: -12px; border-left: 12px solid #10b981; }
+        .sim-anchor.active-anchor { border-left-color: #f59e0b; }
+
+        #connections-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        
+        /* Resizers */
+        .resizer { width: 12px; cursor: col-resize; background-color: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 20; flex-shrink: 0; border-left: 2px solid rgba(255,255,255,0.2); border-right: 2px solid rgba(0,0,0,0.5);}
+        .resizer:hover { background-color: #3b82f6; }
+        .resizer-hz { height: 12px; cursor: row-resize; background-color: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 20; flex-shrink: 0; border-top: 2px solid rgba(255,255,255,0.2); border-bottom: 2px solid rgba(0,0,0,0.5);}
+        .resizer-hz:hover { background-color: #3b82f6; }
+
+        .quality-bar { height: 6px; width: 100%; display: flex; margin-top: 4px; border: 1px solid #0f172a; border-radius: 3px; overflow: hidden; background: white;}
+        .q-ok { background-color: #10b981; }
+        .q-null { background-color: #f59e0b; }
+        .q-error { background-color: #ef4444; }
+
+        /* --- STYLES ADAPTED FROM FILE C (Paths Lesson) --- */
+        .code-block { font-family: 'JetBrains Mono', monospace; font-size: 13px; background: #0f172a; color: white; border-radius: 8px; padding: 14px 16px; border: 3px solid rgba(255,255,255,0.1); margin-bottom: 12px; line-height: 1.6; word-break: break-all; box-shadow: 2px 2px 0px rgba(15, 23, 42, 1);}
+        .code-block.light { background: white; color: #0f172a; border: 3px solid #0f172a; }
+        .kbd { font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 2px 6px; border-radius: 6px; background: #f1f5f9; border: 2px solid #0f172a; color: #0f172a; font-weight: 800;}
+
+        /* Explorer UI Gamified */
+        .explorer { border: 3px solid #0f172a; border-radius: 12px; overflow: hidden; background: white; box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); }
+        .explorer-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f1f5f9; border-bottom: 3px solid #0f172a; }
+        .mac-dots { display: flex; gap: 8px; }
+        .mac-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #0f172a;}
+        .mac-dot.r { background: #ef4444; } .mac-dot.y { background: #f59e0b; } .mac-dot.g { background: #10b981; }
+        .address-bar { flex: 1; background: white; border: 2px solid #0f172a; border-radius: 6px; padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #0f172a; }
+        
+        .explorer-body { display: grid; grid-template-columns: 220px 1fr; min-height: 280px; }
+        .sidebar-tree { background: #f1f5f9; border-right: 3px solid #0f172a; padding: 12px 8px; }
+        .tree-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; font-weight: 800; font-size: 14px; color: #0f172a; cursor: pointer; user-select: none; transition: background 0.1s; border: 2px solid transparent;}
+        .tree-item:hover { background: white; border-color: #0f172a; box-shadow: 2px 2px 0px rgba(15, 23, 42, 1); }
+        .tree-item.active { background: #3b82f6; color: white; border-color: #0f172a; box-shadow: 2px 2px 0px rgba(15, 23, 42, 1); }
+        .tree-item svg { width: 18px; height: 18px; fill: currentColor; }
+        .indent { margin-left: 16px; }
+        
+        .list-head { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; padding: 12px 16px; background: #0f172a; font-weight: 800; font-size: 13px; color: white; text-transform: uppercase; border-bottom: 3px solid #0f172a; }
+        .list-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; padding: 12px 16px; border-bottom: 2px solid #0f172a; font-size: 14px; font-weight: 700; align-items: center; }
+        .list-row:last-child { border-bottom: none; }
+        .path-translation { background: #f1f5f9; padding: 16px; border-top: 3px solid #0f172a; }
+
+        /* Flip Cards Gamified */
+        .flip-card { perspective: 1000px; height: 100%; min-height: 260px; }
+        .flip-inner { position: relative; width: 100%; height: 100%; text-align: left; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+        .flip-card.flipped .flip-inner { transform: rotateY(180deg); }
+        .face { position: absolute; inset: 0; backface-visibility: hidden; background: white; border: 3px solid #0f172a; border-radius: 16px; box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); padding: 24px; display: flex; flex-direction: column; }
+        .face.back { transform: rotateY(180deg); background: #f1f5f9; }
+        
+        .opt-btn { text-align: left; padding: 10px 14px; border: 2px solid #0f172a; border-radius: 8px; background: white; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.2s; font-family: 'Nunito', sans-serif; box-shadow: 2px 2px 0px rgba(15, 23, 42, 1); margin-bottom: 8px;}
+        .opt-btn:hover { transform: translateY(-2px); box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); }
+        .opt-btn.correct-pick { background: #10b981; color: white; border-width: 3px; }
+        .opt-btn.wrong-pick { background: #ef4444; color: white; border-width: 3px; }
+
+        /* Map Animation Classes */
+        #abs-card { opacity: 0; transform: translateY(-20px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; }
+        .map-svg.play-abs #abs-card { opacity: 1; transform: translateY(0); }
+        #rel-path-line { stroke-dasharray: 400; stroke-dashoffset: 400; transition: stroke-dashoffset 1.5s ease-in-out; opacity: 0; }
+        .map-svg.play-rel #rel-path-line { stroke-dashoffset: 0; opacity: 1; }
+        #rel-traveler { opacity: 0; }
+        .map-svg.play-rel #rel-traveler { opacity: 1; animation: walkPath 1.5s forwards ease-in-out; }
+        @keyframes walkPath { 0% { transform: translate(90px, 190px); } 40% { transform: translate(90px, 80px); } 100% { transform: translate(310px, 80px); } }
+        
+        /* SVG Icons */
+        .icon-folder { fill: #f59e0b; }
+        .icon-alteryx { fill: #3b82f6; }
+        .icon-excel { fill: #10b981; }
+    </style>
+</head>
+<body class="text-game-dark">
+
+    <!-- Custom Modal -->
+    <div id="custom-alert" class="hidden fixed inset-0 z-[999] bg-game-dark/80 backdrop-blur-sm flex items-center justify-center">
+        <div class="game-card p-8 max-w-sm w-full text-center animate-pop-in mx-4">
+            <h3 id="alert-title" class="text-2xl font-black mb-4 text-game-blue border-b-4 border-game-dark pb-2">Message</h3>
+            <p id="alert-msg" class="mb-6 font-bold text-lg text-game-dark"></p>
+            <button onclick="document.getElementById('custom-alert').classList.add('hidden')" class="bg-game-yellow text-game-dark font-black py-3 px-8 rounded-xl border-3 border-game-dark shadow-game hover:shadow-game-sm hover:translate-y-[2px] transition-all text-lg w-full">Got it!</button>
+        </div>
+    </div>
+
+    <!-- LESSON PLAN OVERLAY -->
+    <div id="lesson-plan-overlay" class="absolute inset-0 z-[200] flex backdrop-blur-sm bg-game-light/60">
+        <!-- Sidebar -->
+        <div class="sidebar w-[280px] bg-white border-r-4 border-game-dark shadow-game h-full overflow-y-auto flex-shrink-0 flex flex-col z-10 relative">
+            <div class="p-6 border-b-4 border-game-dark text-center bg-game-blue text-white">
+                <h1 class="font-black text-2xl tracking-wide">Alteryx Designer</h1>
+                <span class="text-game-yellow text-sm font-black uppercase tracking-wider bg-game-dark px-3 py-1 rounded-full border-2 border-white mt-2 inline-block shadow-game-sm">Master Class</span>
+            </div>
+            <ul class="nav-links p-4 space-y-2 flex-1 font-bold text-[15px]">
+                <li class="text-xs uppercase tracking-wider text-slate-400 font-black mb-2 mt-2">Part 1: Basics</li>
+                <li><a href="#intro" class="active block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-rocket w-6"></i> 1. Introduction</a></li>
+                <li><a href="#skills" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-brain w-6"></i> 2. Top Skills</a></li>
+                <li><a href="#interface" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-desktop w-6"></i> 3. Interface</a></li>
+                <li><a href="#tool-input" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-file-import w-6"></i> 4. Input Data</a></li>
+                <li><a href="#tool-text" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-keyboard w-6"></i> 5. Text Input</a></li>
+                <li><a href="#tool-browse" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-eye w-6"></i> 6. Browse</a></li>
+                <li><a href="#tool-select" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-filter w-6"></i> 7. Select</a></li>
+                <li><a href="#tool-output" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-file-export w-6"></i> 8. Output Data</a></li>
+                <li><a href="#datatypes" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-shapes w-6"></i> 9. Data Types</a></li>
+                <li><a href="#errors" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-triangle-exclamation w-6"></i> 10. Errors</a></li>
+                
+                <li class="text-xs uppercase tracking-wider text-slate-400 font-black mb-2 mt-6 border-t-2 border-slate-200 pt-4">Part 2: Paths</li>
+                <li><a href="#section-explorer" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-folder-tree w-6"></i> 11. Folder Structure</a></li>
+                <li><a href="#section-logic" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-code-branch w-6"></i> 12. Path Logic</a></li>
+                <li><a href="#section-map" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-map-location-dot w-6"></i> 13. Map Analogy</a></li>
+                <li><a href="#section-quiz" class="block p-2 rounded-lg border-2 border-transparent hover:border-game-dark hover:bg-game-light hover:shadow-game-sm transition-all text-slate-600"><i class="fa-solid fa-gamepad w-6"></i> 14. Quick Check</a></li>
+            </ul>
+        </div>
+        
+        <!-- Sidebar Resizer -->
+        <div class="resizer" id="sidebar-resizer" onmousedown="initSidebarResize(event)"><i class="fa-solid fa-grip-lines-vertical text-white"></i></div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content flex-1 p-8 md:p-12 overflow-y-auto scroll-smooth" id="lp-content">
+
+            <!-- --- PART 1: BASICS --- -->
+            <section id="intro" class="game-card p-8 mb-10 animate-slide-down">
+                <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">What is Alteryx Designer?</h2>
+                <p class="font-bold text-lg text-slate-700 mb-6"><strong>Alteryx Designer</strong> is an analytics and automation platform that is easy-to-use, drag-and-drop, and <span class="lecture-hide" onclick="reveal(this)">code-free</span> (though code-friendly).</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-game-green/20 border-l-8 border-game-green p-6 rounded-lg font-bold shadow-game-sm">
+                        <strong class="text-game-dark text-lg block mb-3">Why do I need it?</strong>
+                        <ul class="list-disc pl-5 space-y-2 text-slate-700">
+                            <li><strong>Automate</strong> data prep and analysis.</li>
+                            <li>Build <strong>repeatable workflows</strong> to save time.</li>
+                            <li>Integrate easily with visualization tools.</li>
+                            <li>Handle <strong>billions of records</strong>.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-game-blue/10 border-3 border-game-blue p-6 rounded-lg font-bold shadow-game-sm">
+                        <strong class="text-game-dark text-lg block mb-3">Capabilities:</strong>
+                        <ul class="grid grid-cols-2 gap-2 text-slate-700">
+                            <li><i class="fa-solid fa-check text-game-blue"></i> Build Reports</li>
+                            <li><i class="fa-solid fa-check text-game-blue"></i> Spatial Analysis</li>
+                            <li><i class="fa-solid fa-check text-game-blue"></i> Predictive Models</li>
+                            <li><i class="fa-solid fa-check text-game-blue"></i> Time Series</li>
+                            <li><i class="fa-solid fa-check text-game-blue"></i> Build Macros</li>
+                            <li><i class="fa-solid fa-check text-game-blue"></i> In-Database</li>
+                            <li><i class="fa-solid fa-check text-game-blue"></i> NLP</li>
+                            <li><i class="fa-solid fa-check text-game-blue"></i> Image Analysis</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="skills" class="game-card p-8 mb-10">
+                <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">Top 10 Skills of 2025 (WEF)</h2>
+                <p class="font-bold text-slate-700 mb-6 text-lg">According to the WEF's <em>Future of Jobs Report</em>, Alteryx handles the technical "heavy lifting" so you can focus on <span class="lecture-hide" onclick="reveal(this)">analytical thinking</span>.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="border-3 border-game-dark rounded-xl p-5 bg-game-light shadow-game-sm">
+                        <h3 class="font-black text-game-dark text-lg mb-3 flex items-center"><i class="fa-solid fa-puzzle-piece text-game-purple mr-2 text-xl"></i> Problem Solving</h3>
+                        <ul class="list-disc pl-6 space-y-1 font-bold text-slate-600">
+                            <li>Analytical thinking & innovation</li>
+                            <li>Complex problem-solving</li>
+                            <li>Critical thinking & analysis</li>
+                            <li>Creativity & initiative</li>
+                            <li>Reasoning & ideation</li>
+                        </ul>
+                    </div>
+                    <div class="border-3 border-game-dark rounded-xl p-5 bg-game-light shadow-game-sm">
+                        <h3 class="font-black text-game-dark text-lg mb-3 flex items-center"><i class="fa-solid fa-user-gear text-game-yellow mr-2 text-xl"></i> Self-Management & Tech</h3>
+                        <ul class="list-disc pl-6 space-y-1 font-bold text-slate-600">
+                            <li>Active learning strategies</li>
+                            <li>Resilience & flexibility</li>
+                            <li>Leadership & social influence</li>
+                            <li>Technology use & monitoring</li>
+                            <li class="text-game-dark"><strong>Technology design & programming</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="interface" class="game-card p-8 mb-10">
+                <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">Designer Interface & Workflow</h2>
+                <p class="font-bold text-slate-700 mb-6 text-lg">A workflow is built by dragging tools onto the canvas and connecting them.</p>
+                <div class="interface-mockup">
+                    <div class="interface-header"></div>
+                    <div class="interface-toolbar">
+                        <div class="px-3 py-1">Favorites</div>
+                        <div class="px-3 py-1 text-game-blue border-b-4 border-game-blue">In/Out</div>
+                        <div class="px-3 py-1">Preparation</div>
+                        <div class="px-3 py-1">Join</div>
+                    </div>
+                    <div class="interface-body">
+                        <div class="config-panel">
+                            <strong class="block border-b-3 border-game-dark pb-2 mb-3">Select (Tool #2)</strong>
+                            <div class="text-slate-600">
+                                <p class="mb-2 text-game-dark"><strong>Configuration</strong></p>
+                                <label class="flex items-center gap-2 mb-1 cursor-pointer"><input type="checkbox" checked class="w-4 h-4 accent-game-blue"> Field 1 (ID)</label>
+                                <label class="flex items-center gap-2 mb-1 cursor-pointer"><input type="checkbox" checked class="w-4 h-4 accent-game-blue"> Field 2 (Name)</label>
+                                <label class="flex items-center gap-2 mb-1 cursor-pointer"><input type="checkbox" checked class="w-4 h-4 accent-game-blue"> Field 3 (Sales)</label>
+                                <div class="mt-4 p-2 bg-game-light border-2 border-game-dark rounded-lg text-xs font-mono font-bold text-game-blue shadow-game-sm">Type: V_String<br>Size: 255</div>
+                            </div>
+                        </div>
+                        <div class="canvas-area">
+                            <div class="flow-diagram">
+                                <div class="tool-container">
+                                    <svg width="60" height="60" viewBox="0 0 50 50" class="svg-tool bg-white"><rect x="2" y="2" width="46" height="46" rx="8" fill="#10b981" /><path d="M14 15 L14 35 L25 35 L25 15 Z M25 35 L36 35 L36 15 L25 15" fill="none" stroke="white" stroke-width="3"/><path d="M14 35 Q25 38 36 35" fill="none" stroke="white" stroke-width="3"/></svg>
+                                    <div class="anchor-demo anchor-out-demo"></div>
+                                </div>
+                                <div class="mock-connection"></div>
+                                <div class="tool-container">
+                                    <svg width="60" height="60" viewBox="0 0 50 50" class="svg-tool bg-white"><circle cx="25" cy="25" r="23" fill="#3b82f6" /><path d="M15 25 L22 32 L35 18" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    <div class="anchor-demo anchor-in-demo"></div><div class="anchor-demo anchor-out-demo"></div>
+                                </div>
+                                <div class="mock-connection"></div>
+                                <div class="tool-container">
+                                    <svg width="60" height="60" viewBox="0 0 50 50" class="svg-tool bg-white"><rect x="2" y="2" width="46" height="46" rx="8" fill="#10b981" /><rect x="12" y="12" width="26" height="26" fill="white"/><rect x="15" y="16" width="20" height="3" fill="#10b981"/><rect x="15" y="22" width="20" height="3" fill="#10b981"/><rect x="15" y="28" width="15" height="3" fill="#10b981"/><path d="M30 28 L40 10 L44 14 L34 32 Z" fill="#3b82f6"/></svg>
+                                    <div class="anchor-demo anchor-in-demo"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tool-input" class="game-card p-8 mb-10">
+                <h3 class="text-2xl font-black mb-4 flex items-center text-game-dark"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" width="48" class="mr-4 border-2 border-game-dark rounded-xl shadow-game-sm"> Input Data Tool</h3>
+                <p class="font-bold text-slate-700 mb-6 text-lg">Connects to data files or databases.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <strong class="text-game-dark block mb-2 text-lg">Configuration Options:</strong>
+                        <ul class="list-disc pl-5 font-bold text-slate-600 space-y-2">
+                            <li><strong>Connect a File or Database:</strong> Dropdown to select source.</li>
+                            <li><strong>File Format:</strong> Auto-detected (e.g., .csv, .xlsx).</li>
+                            <li><strong>Record Limit:</strong> Limit rows for testing.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-game-yellow/20 border-l-8 border-game-yellow p-6 rounded-lg font-bold shadow-game-sm">
+                        <strong class="text-game-dark text-lg block mb-2"><i class="fa-solid fa-lock text-game-yellow"></i> Constraints:</strong>
+                        <ol class="list-decimal pl-5 space-y-1 text-slate-700">
+                            <li>File must be <strong>unlocked</strong>.</li>
+                            <li>File must <strong>not be open</strong> in another program.</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tool-text" class="game-card p-8 mb-10">
+                <h3 class="text-2xl font-black mb-4 flex items-center text-game-dark"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/TextInput_71x71.png" width="48" class="mr-4 border-2 border-game-dark rounded-xl shadow-game-sm"> Text Input Tool</h3>
+                <p class="font-bold text-slate-700 text-lg">Allows manual data entry. Data is saved <em>inside</em> the workflow (.yxmd file).</p>
+            </section>
+
+            <section id="tool-browse" class="game-card p-8 mb-10">
+                <h3 class="text-2xl font-black mb-4 flex items-center text-game-dark"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/BrowseV2_71x71.png" width="48" class="mr-4 border-2 border-game-dark rounded-xl shadow-game-sm"> Browse Tool</h3>
+                <p class="font-bold text-slate-700 text-lg mb-6">Used to view all data and profile its quality. This tool requires the workflow to be run.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="border-3 border-game-dark rounded-xl p-5 shadow-game-sm">
+                        <h4 class="font-black text-game-dark text-lg mb-3">Data Profiling (Quality Bar)</h4>
+                        <div class="flex h-6 w-full rounded-md border-2 border-game-dark overflow-hidden mb-4 shadow-game-sm">
+                            <div class="w-[80%] bg-game-green" title="OK"></div>
+                            <div class="w-[5%] bg-game-red" title="Not OK"></div>
+                            <div class="w-[15%] bg-game-yellow" title="Null"></div>
+                        </div>
+                        <ul class="font-bold text-slate-700 space-y-2">
+                            <li><span class="text-game-green text-xl leading-none">■</span> <strong>Green (OK):</strong> Good data.</li>
+                            <li><span class="text-game-red text-xl leading-none">■</span> <strong>Red (Not OK):</strong> Whitespace/errors.</li>
+                            <li><span class="text-game-yellow text-xl leading-none">■</span> <strong>Yellow (Null):</strong> Missing data.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-game-light border-3 border-game-dark rounded-xl p-5 shadow-game-sm">
+                         <h4 class="font-black text-game-dark text-lg mb-3">Statistics Profile</h4>
+                         <p class="font-bold text-slate-600 mb-2">Select a column in Results to see:</p>
+                         <ul class="font-bold text-slate-700 space-y-2">
+                             <li><i class="fa-solid fa-calculator text-game-blue w-5"></i> <strong>Min/Max:</strong> 46.11 - 832.11</li>
+                             <li><i class="fa-solid fa-divide text-game-blue w-5"></i> <strong>Average:</strong> 135.34</li>
+                             <li><i class="fa-solid fa-ban text-game-blue w-5"></i> <strong>Nulls:</strong> 0 (0.00%)</li>
+                             <li><i class="fa-solid fa-fingerprint text-game-blue w-5"></i> <strong>Unique:</strong> 225</li>
+                         </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tool-select" class="game-card p-8 mb-10">
+                <h3 class="text-2xl font-black mb-4 flex items-center text-game-dark"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" width="48" class="mr-4 border-2 border-game-dark rounded-xl shadow-game-sm"> Select Tool</h3>
+                <p class="font-bold text-slate-700 text-lg mb-4">The most versatile tool for shaping your data structure. <span class="text-game-blue italic">Click rows below to reveal details.</span></p>
+                <table class="select-interactive-table">
+                    <tr>
+                        <th style="width: 20%;">Action</th>
+                        <th style="width: 30%;">Configuration</th>
+                        <th>Why use it?</th>
+                    </tr>
+                    <tr onclick="this.classList.toggle('revealed')">
+                        <td><strong>Remove</strong></td>
+                        <td>Uncheck the box next to the field.</td>
+                        <td><span class="answer">Limit data to necessary fields. Improves speed.</span><br><span class="reveal-hint">CLICK TO REVEAL</span></td>
+                    </tr>
+                    <tr onclick="this.classList.toggle('revealed')">
+                        <td><strong>Rename</strong></td>
+                        <td>Type in the "Rename" column.</td>
+                        <td><span class="answer">Make field names human-readable ("CustID" to "Customer ID").</span></td>
+                    </tr>
+                    <tr onclick="this.classList.toggle('revealed')">
+                        <td><strong>Reorder</strong></td>
+                        <td>Select field and use Up/Down arrows.</td>
+                        <td><span class="answer">Organize data logically.</span></td>
+                    </tr>
+                    <tr onclick="this.classList.toggle('revealed')">
+                        <td><strong>Change Type</strong></td>
+                        <td>Dropdown in "Type" column.</td>
+                        <td><span class="answer">Fix data types (e.g., convert "Spend" from String to Double).</span></td>
+                    </tr>
+                </table>
+            </section>
+
+            <section id="tool-output" class="game-card p-8 mb-10">
+                <h3 class="text-2xl font-black mb-4 flex items-center text-game-dark"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Output2_71x71.png" width="48" class="mr-4 border-2 border-game-dark rounded-xl shadow-game-sm"> Output Data Tool</h3>
+                <p class="font-bold text-slate-700 text-lg mb-6">Writes results to a file or database.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <strong class="text-game-dark block mb-2 text-lg">Output Options:</strong>
+                        <ul class="list-disc pl-5 font-bold text-slate-600 space-y-1">
+                            <li>Create New File</li>
+                            <li>Overwrite Existing File</li>
+                            <li>Append to Existing File</li>
+                        </ul>
+                    </div>
+                    <div class="bg-game-light border-3 border-game-dark p-5 rounded-xl shadow-game-sm">
+                        <strong class="text-game-dark block mb-2 text-lg">Supported Types:</strong>
+                        <ul class="list-disc pl-5 font-bold text-slate-600 space-y-1">
+                            <li>Spreadsheets (Excel, CSV)</li>
+                            <li class="text-game-blue">Alteryx Database (.yxdb) - <strong>Fastest!</strong></li>
+                            <li>Tableau (.hyper, .tde)</li>
+                            <li>Databases (SQL, Oracle)</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="datatypes" class="game-card p-8 mb-10">
+                <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">Data Types</h2>
+                <p class="font-bold text-slate-700 text-lg mb-6">Choosing the right data type is critical.</p>
+                
+                <h3 class="text-xl font-black text-game-dark mb-2">Numeric Types</h3>
+                <table class="dt-table mb-8">
+                    <tr><th>Type</th><th>Description</th><th>Best For...</th></tr>
+                    <tr><td class="dt-type">Byte</td><td>Small integer (0-255).</td><td>Small IDs.</td></tr>
+                    <tr><td class="dt-type">Int16 / Int32</td><td>Standard Integers.</td><td>Counts, Years.</td></tr>
+                    <tr><td class="dt-type">Int64</td><td>Large Integers.</td><td>Very large IDs.</td></tr>
+                    <tr><td class="dt-type">Fixed Decimal</td><td>Specific precision.</td><td>Currency.</td></tr>
+                    <tr class="bg-game-blue/10"><td class="dt-type">Double <span class="dt-recommend">DEFAULT</span></td><td>Floating point numbers.</td><td><strong>Default for most numbers.</strong></td></tr>
+                </table>
+
+                <h3 class="text-xl font-black text-game-dark mb-2">String Types</h3>
+                <table class="dt-table">
+                    <tr><th>Type</th><th>Details</th></tr>
+                    <tr><td class="dt-type">String</td><td>Fixed length, ASCII only.</td></tr>
+                    <tr><td class="dt-type">WString</td><td>Fixed length, Unicode.</td></tr>
+                    <tr><td class="dt-type">V_String</td><td>Variable length. Efficient storage.</td></tr>
+                    <tr class="bg-game-blue/10"><td class="dt-type">V_WString <span class="dt-recommend">DEFAULT</span></td><td>Variable length. Any character. <strong>Safest choice.</strong></td></tr>
+                </table>
+            </section>
+
+            <section id="errors" class="game-card p-8 mb-16">
+                <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">Conversion Errors</h2>
+                <p class="font-bold text-slate-700 text-lg mb-6">Occur when converting a field to a specific data type but records don't match.</p>
+                
+                <div class="bg-game-red/10 border-l-8 border-game-red p-6 rounded-xl shadow-game-sm mb-6 font-bold text-slate-700">
+                    <strong class="text-game-red text-xl block mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Example:</strong>
+                    Input Data (String): "1", "2", "3", "4", <strong class="text-game-red border-b-2 border-game-red">"Five"</strong>, "6"<br>
+                    Action: Convert to Integer (Int16)<br>
+                    Result: "Five" is not a number. Alteryx replaces it with <strong class="text-game-red">NULL</strong> and reports a conversion error.
+                </div>
+
+                <div class="bg-game-green/20 border-3 border-game-green p-6 rounded-xl shadow-game-sm font-bold text-slate-700">
+                    <strong class="text-game-dark text-lg block mb-2"><i class="fa-solid fa-star text-game-green"></i> Best Practice:</strong> Check the <strong>Results Window - Messages</strong> tab:
+                    <ul class="mt-3 space-y-2">
+                        <li><span class="bg-game-red text-white px-2 py-1 rounded border-2 border-game-dark">Errors (Red):</span> Workflow failed.</li>
+                        <li><span class="bg-game-yellow text-game-dark px-2 py-1 rounded border-2 border-game-dark">Conv. Errors (Orange):</span> Data loss (Nulls created).</li>
+                        <li><span class="bg-slate-300 text-game-dark px-2 py-1 rounded border-2 border-game-dark">Warnings (Yellow):</span> Something might be wrong.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- --- PART 2: PATHS LESSON INTEGRATION --- -->
+            
+            <div class="flex items-center gap-4 mb-10 mt-10">
+                <div class="h-2 flex-1 bg-game-dark rounded-full"></div>
+                <h1 class="text-3xl font-black uppercase tracking-widest text-game-dark text-center">Part 2: Paths</h1>
+                <div class="h-2 flex-1 bg-game-dark rounded-full"></div>
+            </div>
+
+            <section id="section-explorer" class="game-card p-8 mb-10">
+                <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">11. The Folder Source of Truth</h2>
+                <p class="font-bold text-slate-700 text-lg mb-6">In most professional projects, your <b>Workflow</b> and your <b>Data</b> are kept in separate sub-folders for organization. Click the folders to navigate and see the <b>Path Translation</b> update.</p>
+
+                <div class="explorer">
+                  <div class="explorer-header">
+                    <div class="mac-dots"><div class="mac-dot r"></div><div class="mac-dot y"></div><div class="mac-dot g"></div></div>
+                    <div class="address-bar shadow-inner" id="exp-address">C:\Users\Student\Documents\ProjectFolder</div>
+                  </div>
+                  
+                  <div class="explorer-body">
+                    <div class="sidebar-tree">
+                      <div class="tree-item active" data-target="proj" onclick="navExplorer('proj', this)">
+                        <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                        ProjectFolder
+                      </div>
+                      <div class="tree-item indent" data-target="wf" onclick="navExplorer('wf', this)">
+                        <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                        Workflow
+                      </div>
+                      <div class="tree-item indent" data-target="data" onclick="navExplorer('data', this)">
+                        <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                        Data
+                      </div>
+                    </div>
+                    
+                    <div class="flex flex-col p-0 bg-white">
+                      <div class="list-head shadow-sm"><div>Name</div><div>Type</div><div>Size</div></div>
+                      <div class="flex-1" id="exp-files"></div>
+                      <div class="path-translation" id="exp-translation"></div>
+                    </div>
+                  </div>
+                </div>
+            </section>
+
+            <section id="section-logic" class="game-card p-8 mb-10">
+                <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">12. Core Path Logic</h2>
+                <p class="font-bold text-slate-700 text-lg mb-6">How you write your path directly impacts if your project is shareable.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-game-light border-3 border-game-dark rounded-xl p-6 shadow-game-sm">
+                        <h3 class="font-black text-xl mb-3"><span class="bg-game-yellow text-game-dark px-2 py-1 rounded border-2 border-game-dark text-sm mr-2 shadow-game-sm">Absolute</span> Exact Address</h3>
+                        <p class="font-bold text-slate-600 mb-4">Starts from your computer's root drive (like <span class="kbd">C:\</span>) and follows every folder.</p>
+                        <div class="code-block border-l-8 border-game-yellow">
+                            <span class="text-game-red">C:\Users\Ava\Documents\</span>ProjectFolder\Data\sales.xlsx
+                        </div>
+                        <div class="bg-game-red/10 border-2 border-game-red rounded-lg p-3 mt-4 text-sm font-bold text-game-dark">
+                            <strong>Problem:</strong> If you share this, their computer doesn't have <span class="kbd">C:\Users\Ava</span>. It will error out!
+                        </div>
+                    </div>
+
+                    <div class="bg-game-light border-3 border-game-dark rounded-xl p-6 shadow-game-sm">
+                        <h3 class="font-black text-xl mb-3"><span class="bg-game-green text-white px-2 py-1 rounded border-2 border-game-dark text-sm mr-2 shadow-game-sm">Relative</span> Local Directions</h3>
+                        <p class="font-bold text-slate-600 mb-4">Starts from <b>where your workflow is saved</b>, using special characters to navigate.</p>
+                        <div class="code-block border-l-8 border-game-green">
+                            <span class="text-game-green">..\</span>Data\sales.xlsx
+                        </div>
+                        <div class="bg-game-green/20 border-2 border-game-green rounded-lg p-3 mt-4 text-sm font-bold text-game-dark">
+                            <strong>Solution:</strong> As long as the Workflow and Data folders stay together, the directions work anywhere!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-3 border-game-dark rounded-xl p-6 shadow-game-sm">
+                    <h3 class="font-black text-xl mb-4 text-game-dark"><i class="fa-solid fa-scroll text-game-blue mr-2"></i> Relative Paths Cheat Sheet</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="code-block light">
+                            <div class="font-black text-game-dark mb-2 font-sans">Same Folder</div>
+                            <span class="kbd shadow-game-sm">.\</span>sales.xlsx
+                            <p class="mt-3 font-bold text-xs text-slate-500 font-sans">Look in the exact same folder as the workflow.</p>
+                        </div>
+                        <div class="code-block light bg-game-green/10 border-game-green">
+                            <div class="font-black text-game-green mb-2 font-sans">Up One Folder</div>
+                            <span class="kbd shadow-game-sm">..\</span>Data\sales.xlsx
+                            <p class="mt-3 font-bold text-xs text-game-dark font-sans">Step out of workflow folder, then into Data.</p>
+                        </div>
+                        <div class="code-block light">
+                            <div class="font-black text-game-dark mb-2 font-sans">Up Two Folders</div>
+                            <span class="kbd shadow-game-sm">..\..\</span>sales.xlsx
+                            <p class="mt-3 font-bold text-xs text-slate-500 font-sans">Step out twice. For deeply nested workflows.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-map" class="game-card p-0 mb-10 overflow-hidden flex flex-col">
+                <div class="p-8 pb-4">
+                    <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-4 text-game-blue"><i class="fa-solid fa-map-location-dot text-game-yellow mr-2"></i> 13. Map Analogy: Dropping Pin vs Directions</h2>
+                    <p class="font-bold text-slate-700 text-lg">Think of an <b>Absolute Path</b> as providing an exact, real-world address (like <i>"3523 5th Ave, NY"</i>). A <b>Relative Path</b> is like giving local directions starting from your front door (<i>"Walk North, then turn East"</i>) to reach <b>Le Data Bistro</b>.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 border-t-4 border-game-dark bg-game-light flex-1">
+                    <div class="p-8 border-b-4 md:border-b-0 md:border-r-4 border-game-dark flex flex-col justify-center gap-6 bg-white">
+                        <button class="opt-btn !border-game-yellow border-l-8 text-lg" onclick="playMap('abs')">
+                            <strong>📍 Absolute Address</strong><br>
+                            <span class="text-xs font-bold text-slate-500 mt-1 block">Drop a pin on the exact global address.</span>
+                        </button>
+                        <button class="opt-btn !border-game-green border-l-8 text-lg" onclick="playMap('rel')">
+                            <strong>🚶 Relative Directions</strong><br>
+                            <span class="text-xs font-bold text-slate-500 mt-1 block">Start at home. Walk North, then turn East.</span>
+                        </button>
+                    </div>
+                    <div class="p-6 flex items-center justify-center relative min-h-[250px]">
+                        <svg id="map-svg" class="map-svg w-full max-w-[320px] drop-shadow-md" viewBox="0 0 400 240">
+                            <!-- Background grid/streets -->
+                            <path d="M 90 240 L 90 80 L 400 80" fill="none" stroke="#cbd5e1" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M 90 240 L 90 80 L 400 80" fill="none" stroke="#fff" stroke-width="4" stroke-dasharray="8 8" />
+
+                            <!-- Relative Path Line -->
+                            <path id="rel-path-line" d="M 90 190 L 90 80 L 310 80" fill="none" stroke="#10b981" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+
+                            <!-- Home Node -->
+                            <circle cx="90" cy="190" r="22" fill="#fff" stroke="#3b82f6" stroke-width="4"/>
+                            <text x="90" y="197" font-size="20" text-anchor="middle">🧑</text>
+                            <text x="130" y="185" font-family="'Nunito', sans-serif" font-size="16" font-weight="900" fill="#0f172a">Your Home</text>
+                            <text x="130" y="202" font-family="'Nunito', sans-serif" font-size="12" font-weight="800" fill="#64748b">(.yxmd Workflow)</text>
+
+                            <!-- Restaurant Node -->
+                            <circle cx="310" cy="80" r="22" fill="#fff" stroke="#10b981" stroke-width="4"/>
+                            <text x="310" y="87" font-size="20" text-anchor="middle">🍽️</text>
+                            <text x="310" y="40" font-family="'Nunito', sans-serif" font-size="18" font-weight="900" fill="#0f172a" text-anchor="middle">Le Data Bistro</text>
+
+                            <!-- Relative Traveler -->
+                            <g id="rel-traveler">
+                                <circle cx="0" cy="0" r="16" fill="#fff" stroke="#10b981" stroke-width="3" />
+                                <text x="0" y="6" font-size="16" text-anchor="middle">🚶</text>
+                                <rect x="-45" y="-42" width="90" height="24" rx="6" fill="#10b981" stroke="#0f172a" stroke-width="2"/>
+                                <text x="0" y="-25" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">..\North\East</text>
+                            </g>
+
+                            <!-- Absolute Pin & Address Card -->
+                            <g id="abs-card">
+                                <rect x="65" y="55" width="200" height="46" rx="10" fill="#f59e0b" stroke="#0f172a" stroke-width="3" />
+                                <polygon points="265,70 278,78 265,85" fill="#f59e0b" stroke="#0f172a" stroke-width="3"/>
+                                <!-- cover polygon stroke inside -->
+                                <line x1="264" y1="72" x2="264" y2="83" stroke="#f59e0b" stroke-width="4"/>
+                                <text x="165" y="74" font-family="'Nunito', sans-serif" font-size="14" font-weight="900" fill="#0f172a" text-anchor="middle">3523 5th Ave, NY</text>
+                                <text x="165" y="91" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="bold" fill="#0f172a" text-anchor="middle">C:\NY\5thAve\LeData</text>
+                                <text x="310" y="86" font-size="38" text-anchor="middle" style="filter: drop-shadow(0px 4px 0px rgba(15,23,42,0.5));">📍</text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-quiz" class="game-card p-8 mb-16">
+                <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">14. Quick Knowledge Check</h2>
+                <p class="font-bold text-slate-700 text-lg mb-8">Click an answer to flip the card and test your path logic skills.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Q1 -->
+                    <div class="flip-card" id="card1">
+                        <div class="flip-inner">
+                            <div class="face front">
+                                <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-game-blue text-white flex items-center justify-center font-black border-2 border-game-dark">1</div><h3 class="font-black text-lg m-0">Absolute or Relative?</h3></div>
+                                <p class="text-sm font-bold text-slate-500 mb-2">You see this in an Input tool:</p>
+                                <div class="code-block mb-4 p-2 text-xs">C:\Users\Ava\Data\sales.xlsx</div>
+                                <div class="mt-auto flex flex-col gap-2">
+                                    <button class="opt-btn" onclick="answerQuiz('card1', true)">Absolute Path</button>
+                                    <button class="opt-btn" onclick="answerQuiz('card1', false)">Relative Path</button>
+                                </div>
+                            </div>
+                            <div class="face back">
+                                <div class="flex-1 flex flex-col justify-center" id="card1-res"></div>
+                                <button class="mt-4 text-game-blue font-black border-2 border-game-blue rounded-lg py-1 px-3 hover:bg-game-blue hover:text-white transition-colors" onclick="resetQuiz('card1')">Try Again</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Q2 -->
+                    <div class="flip-card" id="card2">
+                        <div class="flip-inner">
+                            <div class="face front">
+                                <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-game-blue text-white flex items-center justify-center font-black border-2 border-game-dark">2</div><h3 class="font-black text-lg m-0">Meaning of ..\ ?</h3></div>
+                                <p class="text-sm font-bold text-slate-500 mb-2">Your path is: <span class="kbd">..\Data\sales.xlsx</span></p>
+                                <div class="mt-auto flex flex-col gap-2">
+                                    <button class="opt-btn" onclick="answerQuiz('card2', false)">Current folder</button>
+                                    <button class="opt-btn" onclick="answerQuiz('card2', true)">Up one folder, into Data</button>
+                                    <button class="opt-btn" onclick="answerQuiz('card2', false)">Search hard drive</button>
+                                </div>
+                            </div>
+                            <div class="face back">
+                                <div class="flex-1 flex flex-col justify-center" id="card2-res"></div>
+                                <button class="mt-4 text-game-blue font-black border-2 border-game-blue rounded-lg py-1 px-3 hover:bg-game-blue hover:text-white transition-colors" onclick="resetQuiz('card2')">Try Again</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Q3 -->
+                    <div class="flip-card" id="card3">
+                        <div class="flip-inner">
+                            <div class="face front">
+                                <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-game-blue text-white flex items-center justify-center font-black border-2 border-game-dark">3</div><h3 class="font-black text-lg m-0">Deeply Nested</h3></div>
+                                <p class="text-sm font-bold text-slate-500 mb-2">Workflow in <code class="bg-game-light px-1 rounded border border-game-dark text-game-dark">Proj/Docs/WF/</code>. Data in <code class="bg-game-light px-1 rounded border border-game-dark text-game-dark">Proj/Data/</code>. Path?</p>
+                                <div class="mt-auto flex flex-col gap-2">
+                                    <button class="opt-btn" onclick="answerQuiz('card3', false)">..\Data\file.csv</button>
+                                    <button class="opt-btn" onclick="answerQuiz('card3', true)">..\..\Data\file.csv</button>
+                                    <button class="opt-btn" onclick="answerQuiz('card3', false)">.\Data\file.csv</button>
+                                </div>
+                            </div>
+                            <div class="face back">
+                                <div class="flex-1 flex flex-col justify-center" id="card3-res"></div>
+                                <button class="mt-4 text-game-blue font-black border-2 border-game-blue rounded-lg py-1 px-3 hover:bg-game-blue hover:text-white transition-colors" onclick="resetQuiz('card3')">Try Again</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="text-center mt-12 mb-20">
+                <p class="font-black text-xl text-game-dark mb-6">Ready to apply what you've learned?</p>
+                <button onclick="closeLessonPlan()" class="bg-game-blue text-white text-xl font-black py-4 px-12 rounded-2xl border-4 border-game-dark shadow-game hover:shadow-game-sm hover:translate-y-[4px] transition-all"><i class="fa-solid fa-rocket mr-2"></i> Launch Simulator </button>
+            </div>
+            
+        </div>
+    </div>
+
+
+    <!-- SIMULATOR UI -->
+    <header class="bg-game-dark text-white p-4 flex justify-between items-center shadow-game z-50 shrink-0 border-b-4 border-black font-sans">
+        <div class="flex items-center gap-4">
+            <div class="bg-game-blue w-12 h-12 rounded-xl border-2 border-white flex items-center justify-center font-black text-2xl shadow-game-sm"><i class="fa-solid fa-shapes"></i></div>
+            <div>
+                <h1 class="font-black text-2xl leading-none">Designer Basics <span class="text-game-yellow text-sm font-bold border-2 border-game-yellow rounded-full px-2 py-0.5 ml-2">SIMULATOR</span></h1>
+                <p class="text-sm text-slate-300 font-bold mt-1">Expense Audit Workflow (Relative Path config disabled in sim)</p>
+            </div>
+        </div>
+        <div class="flex gap-4 items-center">
+            <button onclick="runWorkflow()" id="btn-global-run" class="bg-game-green text-white font-black text-lg px-6 py-2 rounded-xl shadow-game hover:shadow-game-sm hover:translate-y-[2px] transition-all border-3 border-game-dark flex items-center gap-2">
+                <i class="fa-solid fa-play"></i> Run
+            </button>
+            <div class="h-8 w-1 bg-slate-600 rounded-full mx-2"></div>
+            <button onclick="showLessonPlan()" class="bg-game-light text-game-dark font-black text-sm px-4 py-2 rounded-xl shadow-game-sm hover:translate-y-[2px] transition-all border-2 border-game-dark"><i class="fa-solid fa-book text-game-blue mr-1"></i> Guide</button>
+            <button onclick="downloadRawData()" class="bg-white text-game-green font-black text-sm px-4 py-2 rounded-xl shadow-game-sm hover:translate-y-[2px] transition-all border-2 border-game-dark flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Source File</button>
+        </div>
+    </header>
+
+    <div class="canvas-bg flex-1 overflow-hidden" id="canvas-container" onmousemove="drag(event)" onmouseup="endDrag()">
+        <div class="absolute top-4 left-4 text-game-dark text-sm font-black uppercase tracking-widest bg-white/80 px-3 py-1 border-2 border-game-dark rounded-lg shadow-game-sm select-none z-10">Workflow Canvas</div>
+        <svg id="connections-layer"></svg>
+
+        <!-- Tools with Anchors -->
+        <div class="tool-node" id="node-0" style="left: 80px; top: 120px;" onmousedown="startDrag(event, 0)" onclick="activateStep(0)">
+            <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 0, 'in')"></div>
+            <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></div>
+            <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 0, 'out')"></div>
+            <div class="tool-label">Input Data</div>
+        </div>
+
+        <div class="tool-node" id="node-1" style="left: 80px; top: 20px;" onmousedown="startDrag(event, 1)" onclick="activateStep(1)">
+            <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 1, 'in')"></div>
+            <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/BrowseV2_71x71.png" alt="Browse"></div>
+            <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 1, 'out')"></div>
+            <div class="tool-label">Browse</div>
+        </div>
+
+        <div class="tool-node" id="node-2" style="left: 260px; top: 120px;" onmousedown="startDrag(event, 2)" onclick="activateStep(2)">
+            <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 2, 'in')"></div>
+            <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" alt="Select"></div>
+            <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 2, 'out')"></div>
+            <div class="tool-label">Select</div>
+        </div>
+
+        <div class="tool-node" id="node-3" style="left: 440px; top: 120px;" onmousedown="startDrag(event, 3)" onclick="activateStep(3)">
+            <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 3, 'in')"></div>
+            <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Output2_71x71.png" alt="Output"></div>
+            <div class="tool-label">Output Data</div>
+        </div>
+
+        <div class="absolute bottom-8 left-64 text-sm font-black text-game-dark bg-white/80 px-2 py-1 rounded border-2 border-game-dark shadow-game-sm pointer-events-none z-10">Independent Example:</div>
+        <div class="tool-node" id="node-4" style="left: 180px; top: 280px;" onmousedown="startDrag(event, 4)" onclick="activateStep('textInput')">
+            <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 4, 'out')"></div>
+            <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/TextInput_71x71.png" alt="Text Input"></div>
+            <div class="tool-label">Text Input</div>
+        </div>
+    </div>
+
+    <!-- Canvas Vertical Resizer -->
+    <div class="resizer-hz" id="canvas-resizer" onmousedown="initCanvasResize(event)"><i class="fa-solid fa-grip-lines text-white"></i></div>
+
+    <!-- Workspace -->
+    <div class="flex h-64 overflow-hidden bg-white relative z-20 font-sans" id="workspace-container">
+        <div class="w-1/3 min-w-[320px] bg-game-light border-r-4 border-game-dark flex flex-col" id="config-pane">
+            <div class="bg-white border-b-4 border-game-dark px-4 py-3 font-black text-game-dark text-lg flex justify-between items-center select-none shadow-sm">
+                <span><i class="fa-solid fa-gear text-game-blue mr-2"></i>Configuration</span>
+                <span id="step-badge" class="text-xs bg-game-blue text-white px-3 py-1 rounded-full border-2 border-game-dark shadow-game-sm">--</span>
+            </div>
+            <div id="config-panel" class="p-4 overflow-y-auto flex-1 font-bold text-slate-700"></div>
+        </div>
+        <div class="resizer" id="resizer" onmousedown="initResize(event)"><i class="fa-solid fa-grip-lines-vertical text-white"></i></div>
+        <div class="flex-1 bg-white flex flex-col min-w-0" id="results-pane">
+            <div class="border-b-4 border-game-dark px-4 py-3 font-black text-game-dark flex justify-between items-center text-sm bg-game-light select-none shadow-sm">
+                <div class="flex items-center gap-2 text-lg">
+                    <i class="fa-solid fa-table text-game-green"></i>
+                    <span>Results - <span id="tool-name-display" class="text-game-blue">Select an anchor</span></span>
+                </div>
+                <div class="bg-game-dark text-game-yellow px-3 py-1 rounded-full border-2 border-white shadow-game-sm"><span id="record-count">0</span> records</div>
+            </div>
+            <div class="flex-1 overflow-auto relative p-2 bg-white">
+                <table class="w-full text-left border-separate border-spacing-0 font-mono text-sm font-bold text-game-dark" id="data-grid">
+                    <thead id="grid-head"></thead>
+                    <tbody id="grid-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CUSTOM ALERT LOGIC ---
+        function showCustomAlert(title, message) {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-msg').innerText = message;
+            document.getElementById('custom-alert').classList.remove('hidden');
+        }
+
+        // --- GLOBAL STATE ---
+        let hasRun = false;
+        let activeToolIndex = 0;
+        let viewingAnchor = null; 
+
+        // --- INTERACTION LOGIC (Lesson Plan) ---
+        function toggleAnswer(btn) {
+            const answer = btn.nextElementSibling;
+            if (answer.style.display === "block") { answer.style.display = "none"; btn.innerText = "Show Answer"; }
+            else { answer.style.display = "block"; btn.innerText = "Hide Answer"; }
+        }
+        function reveal(el) { el.classList.add('revealed'); }
+        function closeLessonPlan() { document.getElementById('lesson-plan-overlay').style.display = 'none'; activateStep(0); }
+        function showLessonPlan() { document.getElementById('lesson-plan-overlay').style.display = 'flex'; }
+        
+        // Navigation Highlighting
+        const navLinks = document.querySelectorAll('.nav-links a');
+        const mainContent = document.getElementById('lp-content');
+        const sections = document.querySelectorAll('.main-content section');
+
+        mainContent.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (mainContent.scrollTop >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // --- DATA ENGINE (20 Records) ---
+        const rawData = [
+            { RecordID: 1, Date: "2023-10-01", Department: "Sales", Expense_Type: "Client Dinner", Amount: "150.00", Legacy_Code: "LEG-001" },
+            { RecordID: 2, Date: "2023-10-02", Department: "IT", Expense_Type: "Server Cost", Amount: "2400.50", Legacy_Code: "LEG-002" },
+            { RecordID: 3, Date: "2023-10-05", Department: "HR", Expense_Type: "Recruiting", Amount: "500.00", Legacy_Code: "LEG-003" },
+            { RecordID: 4, Date: "2023-10-06", Department: "Sales", Expense_Type: "Travel", Amount: "1200.00", Legacy_Code: "LEG-004" },
+            { RecordID: 5, Date: "2023-10-10", Department: "Finance", Expense_Type: "Software", Amount: "350.00", Legacy_Code: "LEG-005" },
+            { RecordID: 6, Date: "2023-10-12", Department: "IT", Expense_Type: "Hardware", Amount: "150.00", Legacy_Code: "LEG-006" },
+            { RecordID: 7, Date: "2023-10-15", Department: "Legal", Expense_Type: "Consulting", Amount: "5000.00", Legacy_Code: "LEG-007" },
+            { RecordID: 8, Date: "2023-10-20", Department: "Sales", Expense_Type: "Supplies", Amount: "45.99", Legacy_Code: "LEG-008" },
+            { RecordID: 9, Date: "2023-10-21", Department: "Sales", Expense_Type: "Hotel", Amount: "320.00", Legacy_Code: "LEG-009" },
+            { RecordID: 10, Date: "2023-10-22", Department: "IT", Expense_Type: "Cloud", Amount: "15.00", Legacy_Code: "LEG-010" },
+            { RecordID: 11, Date: "2023-10-23", Department: "HR", Expense_Type: "Training", Amount: "1200.00", Legacy_Code: "LEG-011" },
+            { RecordID: 12, Date: "2023-10-24", Department: "Legal", Expense_Type: "Filing Fee", Amount: "50.00", Legacy_Code: "LEG-012" },
+            { RecordID: 13, Date: "2023-10-25", Department: "Finance", Expense_Type: "Audit", Amount: "5000.00", Legacy_Code: "LEG-013" },
+            { RecordID: 14, Date: "2023-10-26", Department: "Sales", Expense_Type: "Taxi", Amount: "35.50", Legacy_Code: "LEG-014" },
+            { RecordID: 15, Date: "2023-10-27", Department: "IT", Expense_Type: "Mouse", Amount: "25.99", Legacy_Code: "LEG-015" },
+            { RecordID: 16, Date: "2023-10-28", Department: "HR", Expense_Type: "Party", Amount: "200.00", Legacy_Code: "LEG-016" },
+            { RecordID: 17, Date: "2023-10-29", Department: "Legal", Expense_Type: "Books", Amount: "150.00", Legacy_Code: "LEG-017" },
+            { RecordID: 18, Date: "2023-10-30", Department: "Finance", Expense_Type: "Paper", Amount: "45.00", Legacy_Code: "LEG-018" },
+            { RecordID: 19, Date: "2023-10-31", Department: "Sales", Expense_Type: "Lunch", Amount: "60.00", Legacy_Code: "LEG-019" },
+            { RecordID: 20, Date: "2023-11-01", Department: "IT", Expense_Type: "Cable", Amount: "12.00", Legacy_Code: "LEG-020" }
+        ];
+
+        const textInputData = [
+            { Category: "Travel", GL_Code: "6001" },
+            { Category: "Supplies", GL_Code: "6002" },
+            { Category: "Software", GL_Code: "6005" },
+            { Category: "Hardware", GL_Code: "6006" }
+        ];
+
+        let currentState = { amountType: "V_String", removeLegacy: true };
+
+        const steps = [
+            {
+                id: "input", title: "Input Data",
+                configHTML: `<div class="bg-white p-3 rounded-xl border-3 border-game-dark shadow-game-sm mb-4"><label class="block font-black mb-2 text-game-dark">Connect a File</label><div class="flex bg-game-light border-2 border-game-dark p-2 rounded-lg items-center shadow-inner"><input type="text" value="Expenses_Oct2023.csv" class="w-full outline-none bg-transparent font-mono text-game-dark font-bold" readonly></div></div><div class="bg-game-yellow/20 p-3 rounded-xl border-2 border-game-yellow text-game-dark font-black shadow-game-sm"><i class="fa-solid fa-bell text-game-yellow"></i> Data loaded. Check data types in the Select tool.</div>`
+            },
+            {
+                id: "browse", title: "Browse Tool",
+                configHTML: `
+                    <div class="space-y-3 font-sans">
+                        <p class="font-black text-game-dark text-lg border-b-2 border-game-dark pb-1">Data Quality Profiles:</p>
+                        <div class="bg-white p-2 rounded-lg border-2 border-game-dark shadow-game-sm"><div class="flex justify-between font-black text-sm"><span>RecordID</span></div><div class="w-full bg-slate-200 h-2 rounded mt-1 overflow-hidden border border-game-dark"><div class="bg-game-green w-full h-full"></div></div><div class="text-[10px] font-bold text-slate-500 mt-1">OK: 100%</div></div>
+                        <div class="bg-white p-2 rounded-lg border-2 border-game-dark shadow-game-sm"><div class="flex justify-between font-black text-sm"><span>Date</span></div><div class="w-full bg-slate-200 h-2 rounded mt-1 overflow-hidden border border-game-dark"><div class="bg-game-green w-full h-full"></div></div><div class="text-[10px] font-bold text-slate-500 mt-1">OK: 100%</div></div>
+                        <div class="bg-white p-2 rounded-lg border-2 border-game-dark shadow-game-sm"><div class="flex justify-between font-black text-sm"><span>Department</span></div><div class="w-full bg-slate-200 h-2 rounded mt-1 overflow-hidden border border-game-dark"><div class="bg-game-green w-full h-full"></div></div><div class="text-[10px] font-bold text-slate-500 mt-1">OK: 100%</div></div>
+                        <div class="bg-white p-2 rounded-lg border-2 border-game-dark shadow-game-sm"><div class="flex justify-between font-black text-sm"><span>Expense_Type</span></div><div class="w-full bg-slate-200 h-2 rounded mt-1 overflow-hidden border border-game-dark"><div class="bg-game-green w-full h-full"></div></div><div class="text-[10px] font-bold text-slate-500 mt-1">OK: 100%</div></div>
+                        <div class="bg-white p-2 rounded-lg border-2 border-game-dark shadow-game-sm"><div class="flex justify-between font-black text-sm text-game-dark"><span>Amount</span></div><div class="w-full bg-slate-200 h-2 rounded mt-1 overflow-hidden border border-game-dark"><div class="bg-game-green w-full h-full"></div></div><div class="text-[10px] font-bold text-slate-500 mt-1">OK: 100%</div></div>
+                        <div class="bg-white p-2 rounded-lg border-2 border-game-dark shadow-game-sm"><div class="flex justify-between font-black text-sm"><span>Legacy_Code</span></div><div class="w-full bg-slate-200 h-2 rounded mt-1 overflow-hidden border border-game-dark"><div class="bg-game-green w-full h-full"></div></div><div class="text-[10px] font-bold text-slate-500 mt-1">OK: 100%</div></div>
+                    </div>`
+            },
+            {
+                id: "select", title: "Select Tool",
+                configHTML: `<p class="font-black mb-2 text-game-dark">Change types and remove columns:</p><div class="bg-white border-3 border-game-dark rounded-xl shadow-game-sm overflow-hidden"><table class="w-full text-left font-mono text-xs font-bold"><thead class="bg-game-dark text-white border-b-2 border-game-dark"><tr><th class="p-2 w-8 text-center">✓</th><th class="p-2 border-l border-game-dark">Field</th><th class="p-2 border-l border-game-dark">Type</th></tr></thead><tbody>
+                    <tr class="border-b-2 border-game-dark"><td class="p-2 text-center border-r border-game-dark"><input type="checkbox" checked disabled class="accent-game-blue"></td><td class="p-2 border-r border-game-dark">RecordID</td><td class="p-2">Int16</td></tr>
+                    <tr class="border-b-2 border-game-dark"><td class="p-2 text-center border-r border-game-dark"><input type="checkbox" checked disabled class="accent-game-blue"></td><td class="p-2 border-r border-game-dark">Date</td><td class="p-2">Date</td></tr>
+                    <tr class="border-b-2 border-game-dark"><td class="p-2 text-center border-r border-game-dark"><input type="checkbox" checked disabled class="accent-game-blue"></td><td class="p-2 border-r border-game-dark">Department</td><td class="p-2">V_String</td></tr>
+                    <tr class="border-b-2 border-game-dark"><td class="p-2 text-center border-r border-game-dark"><input type="checkbox" checked disabled class="accent-game-blue"></td><td class="p-2 border-r border-game-dark">Expense_Type</td><td class="p-2">V_String</td></tr>
+                    <tr class="border-b-2 border-game-dark bg-game-blue/10"><td class="p-2 text-center border-r border-game-dark"><input type="checkbox" checked disabled class="accent-game-blue"></td><td class="p-2 font-black text-game-blue border-r border-game-dark">Amount</td><td class="p-2"><select id="sel-amount-type" onchange="updateSimState()" class="border-2 border-game-dark rounded p-1 w-full bg-white font-bold font-mono outline-none shadow-sm cursor-pointer"><option value="V_String">V_String</option><option value="Double">Double</option></select></td></tr>
+                    <tr class="bg-game-red/10"><td class="p-2 text-center border-r border-game-dark"><input type="checkbox" id="chk-legacy" onchange="updateSimState()" class="accent-game-red cursor-pointer w-4 h-4"></td><td class="p-2 font-black text-game-red border-r border-game-dark">Legacy_Code</td><td class="p-2">V_String</td></tr>
+                </tbody></table></div><div id="select-feedback" class="font-black p-3 rounded-xl bg-white border-2 border-game-dark text-game-dark mt-4 shadow-game-sm"><i class="fa-solid fa-circle-info text-game-blue"></i> Ensure Amount is Double and Legacy_Code is dropped.</div>`
+            },
+            {
+                id: "output", title: "Output Data",
+                configHTML: `<div class="bg-white p-3 rounded-xl border-3 border-game-dark shadow-game-sm mb-4"><label class="block font-black mb-2 text-game-dark">Output File Destination</label><div class="flex bg-game-light border-2 border-game-dark p-2 rounded-lg items-center shadow-inner"><input type="text" value=".\\Cleaned_Expenses.xlsx" class="w-full outline-none bg-transparent font-mono text-game-dark font-bold" readonly></div></div><button onclick="downloadCleanData()" id="btn-download" class="w-full bg-slate-300 text-slate-500 font-black py-3 px-4 rounded-xl border-3 border-game-dark shadow-game transition-all cursor-not-allowed uppercase tracking-wide" disabled><i class="fa-solid fa-download"></i> Download File</button>`
+            }
+        ];
+
+        const textInputConfig = { title: "Text Input", configHTML: `<p class="font-black text-lg mb-2">Manual Data Entry:</p><div class="bg-white border-3 border-game-dark rounded-xl shadow-game-sm overflow-hidden mt-2"><table class="w-full text-left font-mono font-bold text-sm"><thead class="bg-game-dark text-white border-b-2 border-game-dark"><tr><th class="p-2 border-r border-game-dark">Category</th><th class="p-2">GL_Code</th></tr></thead><tbody><tr class="border-b-2 border-game-dark"><td class="p-2 border-r border-game-dark">Travel</td><td class="p-2">6001</td></tr><tr><td class="p-2 border-r border-game-dark">Supplies</td><td class="p-2">6002</td></tr></tbody></table></div>` };
+
+        // --- CORE FUNCTIONS (Simulator) ---
+
+        function activateStep(index) {
+            document.querySelectorAll('.tool-node').forEach((el) => el.classList.remove('active'));
+            activeToolIndex = index;
+            
+            let config = "", stepBadge = "", title = "";
+
+            if (index === 'textInput') {
+                title = textInputConfig.title; config = textInputConfig.configHTML; stepBadge = "Example";
+                document.querySelector('#node-4').classList.add('active');
+            } else {
+                currentState.stepIndex = index;
+                document.querySelector(`#node-${index}`).classList.add('active');
+                title = steps[index].title; config = steps[index].configHTML; stepBadge = `Step ${index + 1}`;
+                
+                setTimeout(() => {
+                    if(index === 2) {
+                        const sel = document.getElementById('sel-amount-type');
+                        const chk = document.getElementById('chk-legacy');
+                        if(sel) sel.value = currentState.amountType;
+                        if(chk) chk.checked = !currentState.removeLegacy;
+                        updateSelectFeedback();
+                    }
+                    if(index === 3 && hasRun) {
+                        const btn = document.getElementById('btn-download');
+                        btn.disabled = false;
+                        btn.classList.replace('bg-slate-300','bg-game-green');
+                        btn.classList.replace('text-slate-500','text-white');
+                        btn.classList.remove('cursor-not-allowed');
+                        btn.classList.add('hover:-translate-y-1', 'hover:shadow-game-sm', 'cursor-pointer');
+                    }
+                }, 50);
+            }
+
+            document.getElementById('config-panel').innerHTML = config;
+            document.getElementById('step-badge').innerText = stepBadge;
+            document.getElementById('tool-name-display').innerText = "Select an Anchor";
+            
+            document.getElementById('grid-head').innerHTML = '';
+            document.getElementById('grid-body').innerHTML = `<tr><td class="p-8 text-center text-slate-400 font-black text-lg">Select an Input/Output anchor to view data.</td></tr>`;
+            document.querySelectorAll('.sim-anchor').forEach(el => el.classList.remove('active-anchor'));
+        }
+
+        function viewAnchor(e, toolId, type) {
+            e.stopPropagation(); 
+            document.querySelectorAll('.sim-anchor').forEach(el => el.classList.remove('active-anchor'));
+            e.target.classList.add('active-anchor');
+            viewingAnchor = { toolId, type };
+
+            if (!hasRun && toolId !== 4) { 
+                document.getElementById('grid-body').innerHTML = `<tr><td class="p-8 text-center text-game-red font-black text-lg bg-game-red/10 border-b-4 border-game-dark"><i class="fa-solid fa-triangle-exclamation mb-2 text-2xl"></i><br>Workflow not run.<br>Press <span class="bg-game-green text-white px-2 py-1 rounded-md border-2 border-game-dark">Run</span> to process data.</td></tr>`;
+                document.getElementById('tool-name-display').innerText = `${type === 'in' ? 'Input' : 'Output'} Anchor`;
+                return;
+            }
+
+            renderAnchorData(toolId, type);
+        }
+
+        function getCleanedData() {
+            let raw = JSON.parse(JSON.stringify(rawData));
+            return raw.map(row => {
+                let newRow = { ID: row.RecordID, Date: row.Date, Department: row.Department, Expense_Type: row.Expense_Type };
+                newRow.Amount = (currentState.amountType === 'Double') ? parseFloat(row.Amount) : row.Amount;
+                if (!currentState.removeLegacy) newRow.Legacy_Code = row.Legacy_Code;
+                return newRow;
+            });
+        }
+
+        function renderAnchorData(toolId, type) {
+            let data = [];
+            let showBars = false;
+            let displayTitle = "";
+
+            if (toolId === 4) { 
+                data = textInputData; displayTitle = "Text Input - Output";
+            } else {
+                let raw = JSON.parse(JSON.stringify(rawData));
+                let cleaned = getCleanedData();
+
+                if (toolId === 0) {
+                    if (type === 'in') { data = []; displayTitle = "File Source (Expenses.csv)"; }
+                    else { data = raw; displayTitle = "Input Data - Output"; }
+                } else if (toolId === 1) {
+                    data = raw; displayTitle = "Browse - " + (type === 'in' ? "Input" : "Output");
+                    if (type === 'out') showBars = true;
+                } else if (toolId === 2) {
+                    if (type === 'in') { data = raw; displayTitle = "Select - Input"; }
+                    else { data = cleaned; displayTitle = "Select - Output"; }
+                } else if (toolId === 3) {
+                    if (type === 'in') { data = cleaned; displayTitle = "Output Data - Input"; }
+                    else { data = []; displayTitle = "File Written"; }
+                }
+            }
+
+            document.getElementById('tool-name-display').innerText = displayTitle;
+            renderGrid(data, showBars);
+        }
+
+        function renderGrid(data, showBars) {
+            const gridHead = document.getElementById('grid-head');
+            const gridBody = document.getElementById('grid-body');
+            gridHead.innerHTML = ''; gridBody.innerHTML = '';
+
+            if (data.length === 0) {
+                gridBody.innerHTML = `<tr><td class="p-8 text-center text-slate-400 font-black italic">No data available for this view.</td></tr>`;
+                document.getElementById('record-count').innerText = 0;
+                return;
+            }
+
+            const headers = Object.keys(data[0]);
+            let headHTML = '<tr class="bg-game-light">';
+            headers.forEach(h => {
+                let bar = '';
+                if(showBars) {
+                    let color = 'q-ok'; // Removed 'q-error' since purely numeric string data represents valid conversion candidates
+                    bar = `<div class="quality-bar"><div class="${color} w-full"></div></div>`;
+                }
+                headHTML += `<th class="p-2 border-b-2 border-r-2 border-game-dark min-w-[100px] bg-white text-game-dark sticky top-0"><div class="flex flex-col"><span>${h}</span>${bar}</div></th>`;
+            });
+            gridHead.innerHTML = headHTML + '</tr>';
+
+            data.forEach(row => {
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-game-light transition-colors";
+                headers.forEach(h => {
+                    let td = document.createElement('td');
+                    td.className = "p-2 border-b-2 border-r-2 border-game-dark/20 text-slate-700 truncate max-w-[150px]";
+                    let val = row[h];
+                    if(!isNaN(val) && val !== '' && (h==='Amount' || h==='ID')) td.classList.add('text-right', 'text-game-blue', 'font-black');
+                    
+                    if(showBars && h==='Amount') td.innerHTML = `<span>${val}</span>`;
+                    else td.textContent = val;
+                    tr.appendChild(td);
+                });
+                gridBody.appendChild(tr);
+            });
+            document.getElementById('record-count').innerText = data.length;
+        }
+
+        function runWorkflow() {
+            hasRun = true;
+            const btn = document.getElementById('btn-global-run');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Success';
+                btn.classList.replace('bg-game-green', 'bg-game-blue');
+                if (viewingAnchor) renderAnchorData(viewingAnchor.toolId, viewingAnchor.type);
+                if (activeToolIndex === 3) activateStep(3); // refresh output button
+                
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fa-solid fa-play"></i> Run';
+                    btn.classList.replace('bg-game-blue', 'bg-game-green');
+                }, 2000);
+            }, 600);
+        }
+
+        function updateSimState() {
+            const sel = document.getElementById('sel-amount-type');
+            const chk = document.getElementById('chk-legacy');
+            if (sel && chk) {
+                currentState.amountType = sel.value;
+                currentState.removeLegacy = !chk.checked;
+            }
+            updateSelectFeedback();
+            hasRun = false; 
+            document.getElementById('grid-body').innerHTML = `<tr><td class="p-8 text-center text-game-yellow font-black text-lg bg-game-yellow/10 border-b-4 border-game-dark">Configuration Changed.<br>Press <span class="bg-game-green text-white px-2 py-1 rounded border-2 border-game-dark">Run</span> to update results.</td></tr>`;
+        }
+
+        function updateSelectFeedback() {
+            const feedback = document.getElementById('select-feedback');
+            if(!feedback) return;
+            const ok = currentState.amountType === 'Double' && currentState.removeLegacy;
+            feedback.innerHTML = ok ? `<span class="text-game-green font-black"><i class="fa-solid fa-circle-check"></i> Perfect! Data is clean.</span>` : `<i class="fa-solid fa-circle-info text-game-blue"></i> Ensure Amount is Double and Legacy_Code is dropped.`;
+            feedback.className = ok ? "font-black p-3 rounded-xl bg-game-green/20 border-3 border-game-green text-game-dark mt-4 shadow-game-sm" : "font-black p-3 rounded-xl bg-white border-3 border-game-dark text-game-dark mt-4 shadow-game-sm";
+        }
+
+        function downloadCleanData() {
+            if(!hasRun) { showCustomAlert("Action Required", "Please Run the workflow first."); return; }
+            
+            // Generate Real Excel File using SheetJS
+            const ws = XLSX.utils.json_to_sheet(getCleanedData());
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Cleaned");
+            XLSX.writeFile(wb, "Cleaned_Expenses.xlsx");
+
+            showCustomAlert("Success!", "Cleaned_Expenses.xlsx generated and downloaded.");
+        }
+
+        function downloadRawData() {
+            const ws = XLSX.utils.json_to_sheet(rawData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Raw");
+            XLSX.writeFile(wb, "Class1_Exercise.xlsx");
+        }
+
+        // --- DRAG LOGIC (Canvas) ---
+        let draggedNode = null, dragOffsetX = 0, dragOffsetY = 0;
+        function startDrag(e, nodeId) {
+            draggedNode = document.getElementById(`node-${nodeId}`);
+            const rect = draggedNode.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left; dragOffsetY = e.clientY - rect.top;
+            draggedNode.classList.add('active');
+        }
+        function drag(e) {
+            if (!draggedNode) return;
+            e.preventDefault();
+            const container = document.getElementById('canvas-container');
+            let x = e.clientX - container.getBoundingClientRect().left - dragOffsetX;
+            let y = e.clientY - container.getBoundingClientRect().top - dragOffsetY;
+            draggedNode.style.left = `${Math.max(0, x)}px`;
+            draggedNode.style.top = `${Math.max(0, y)}px`;
+            drawConnections();
+        }
+        function endDrag() { draggedNode = null; }
+
+        function drawConnections() {
+            const svg = document.getElementById('connections-layer');
+            svg.innerHTML = ''; 
+            [[0, 1],[0, 2],[2, 3]].forEach(([srcId, tgtId]) => {
+                const src = document.getElementById(`node-${srcId}`);
+                const tgt = document.getElementById(`node-${tgtId}`);
+                const x1 = parseInt(src.style.left) + 64, y1 = parseInt(src.style.top) + 32; 
+                const x2 = parseInt(tgt.style.left), y2 = parseInt(tgt.style.top) + 32; 
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M ${x1} ${y1} C ${(x1+x2)/2} ${y1}, ${(x1+x2)/2} ${y2}, ${x2} ${y2}`);
+                path.setAttribute('stroke', '#0f172a'); path.setAttribute('stroke-width', '4'); path.setAttribute('fill', 'none');
+                svg.appendChild(path);
+            });
+        }
+
+        // --- PANE RESIZING ---
+        let isResizing = false;
+        function initResize(e) { 
+            isResizing = true; 
+            document.body.style.userSelect = 'none'; 
+            document.addEventListener('mousemove', doResize); 
+            document.addEventListener('mouseup', stopResize); 
+        }
+        function doResize(e) {
+            if (!isResizing) return;
+            const container = document.getElementById('workspace-container');
+            const configPane = document.getElementById('config-pane');
+            let newWidth = e.clientX - container.getBoundingClientRect().left;
+            configPane.style.width = `${Math.max(200, Math.min(newWidth, container.offsetWidth - 200))}px`;
+        }
+        function stopResize() { 
+            isResizing = false; 
+            document.body.style.userSelect = ''; 
+            document.removeEventListener('mousemove', doResize); 
+            document.removeEventListener('mouseup', stopResize); 
+        }
+
+        let isResizingSidebar = false;
+        function initSidebarResize(e) {
+            isResizingSidebar = true;
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', doSidebarResize);
+            document.addEventListener('mouseup', stopSidebarResize);
+        }
+        function doSidebarResize(e) {
+            if (!isResizingSidebar) return;
+            const sidebar = document.querySelector('.sidebar');
+            let newWidth = e.clientX;
+            if (newWidth > 200 && newWidth < window.innerWidth - 300) {
+                sidebar.style.width = `${newWidth}px`;
+            }
+        }
+        function stopSidebarResize() {
+            isResizingSidebar = false;
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', doSidebarResize);
+            document.removeEventListener('mouseup', stopSidebarResize);
+        }
+
+        let isResizingCanvas = false;
+        function initCanvasResize(e) {
+            isResizingCanvas = true;
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', doCanvasResize);
+            document.addEventListener('mouseup', stopCanvasResize);
+        }
+        function doCanvasResize(e) {
+            if (!isResizingCanvas) return;
+            const canvasContainer = document.getElementById('canvas-container');
+            const headerHeight = document.querySelector('header').offsetHeight;
+            let newHeight = e.clientY - headerHeight;
+            if (newHeight > 100 && newHeight < window.innerHeight - 150) {
+                canvasContainer.style.height = `${newHeight}px`;
+                drawConnections(); 
+            }
+        }
+        function stopCanvasResize() {
+            isResizingCanvas = false;
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', doCanvasResize);
+            document.removeEventListener('mouseup', stopCanvasResize);
+        }
+
+        // --- PATHS LESSON LOGIC (Explorer, Map, Quiz) ---
+        
+        const svgFolder = `<svg viewBox="0 0 24 24" class="icon-folder"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
+        const svgAlteryx = `<svg viewBox="0 0 24 24" class="icon-alteryx"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`;
+        const svgExcel = `<svg viewBox="0 0 24 24" class="icon-excel"><path d="M21.17 3.25q.33 0 .59.25.24.24.24.58v15.84q0 .34-.24.58-.26.25-.59.25H2.83q-.33 0-.59-.25-.24-.24-.24-.58V4.08q0-.34.24-.58.26-.25.59-.25zM7.5 16.29L9.43 12 7.5 7.71h1.96L10.5 10.6l1.04-2.89h1.96L11.57 12l1.93 4.29h-1.96l-1.04-2.96-1.04 2.96zM15 16.29v-1.63h3.63v-1.16H15v-1.54h4v-1.17h-4V9.25h4.13V8.08H13.63v8.21z"/></svg>`;
+
+        const explorerData = {
+            proj: {
+                path: "C:\\Users\\Student\\Documents\\ProjectFolder",
+                files: [
+                    { name: "Workflow", type: "File Folder", size: "--", icon: svgFolder },
+                    { name: "Data", type: "File Folder", size: "--", icon: svgFolder },
+                    { name: "Instructions.pdf", type: "PDF Document", size: "45 KB", icon: svgAlteryx }
+                ],
+                translation: `<h4 class="font-black text-game-dark uppercase tracking-wide mb-2">Context: Project Root</h4><p class="font-bold text-slate-700">This is the main project folder. If your workflow was saved directly here, the relative path to Data is <span class="kbd bg-white">.\\Data</span>.</p>`
+            },
+            wf: {
+                path: "C:\\Users\\Student\\Documents\\ProjectFolder\\Workflow",
+                files: [
+                    { name: "01_Sales_Analysis.yxmd", type: "Alteryx Workflow", size: "128 KB", icon: svgAlteryx },
+                    { name: "02_Data_Prep.yxmd", type: "Alteryx Workflow", size: "84 KB", icon: svgAlteryx }
+                ],
+                translation: `<h4 class="font-black text-game-dark uppercase tracking-wide mb-2">Start Point: Workflow Folder</h4><p class="font-bold text-slate-700">Alteryx starts here. To get to data, it steps <b>UP</b> using <span class="kbd bg-white">..\\</span>, and then goes into <b>Data</b>.</p>`
+            },
+            data: {
+                path: "C:\\Users\\Student\\Documents\\ProjectFolder\\Data",
+                files: [
+                    { name: "2024_Sales.xlsx", type: "Excel Workbook", size: "1.2 MB", icon: svgExcel },
+                    { name: "Customers.csv", type: "CSV File", size: "340 KB", icon: svgExcel }
+                ],
+                translation: `<h4 class="font-black text-game-dark uppercase tracking-wide mb-2">Target: Data Folder</h4><p class="font-bold text-slate-700">If your workflow is in Workflow, the relative path is:<br><span class="kbd bg-white inline-block mt-2">..\\Data\\2024_Sales.xlsx</span></p>`
+            }
+        };
+
+        function navExplorer(key, element) {
+            document.querySelectorAll('.tree-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            const data = explorerData[key];
+            document.getElementById('exp-address').textContent = data.path;
+            document.getElementById('exp-translation').innerHTML = data.translation;
+            const fileHtml = data.files.map(f => `
+                <div class="list-row hover:bg-game-light transition-colors">
+                    <div class="flex items-center gap-3 font-bold text-game-dark">${f.icon} ${f.name}</div>
+                    <div class="font-bold text-slate-500">${f.type}</div>
+                    <div class="font-bold text-slate-500">${f.size}</div>
+                </div>
+            `).join('');
+            document.getElementById('exp-files').innerHTML = fileHtml;
+        }
+
+        function playMap(type) {
+            const svg = document.getElementById('map-svg');
+            svg.classList.remove('play-abs', 'play-rel');
+            void svg.offsetWidth; // Reflow
+            svg.classList.add(type === 'abs' ? 'play-abs' : 'play-rel');
+        }
+
+        const quizAnswers = {
+            card1: { isCorrect: true, text: "C:\\ drives are the absolute root of a Windows computer. It's the exact GPS coordinate of the file." },
+            card2: { isCorrect: true, text: "The two dots <b>..</b> specifically tell Alteryx (and Windows) to navigate UP one directory level." },
+            card3: { isCorrect: true, text: "You must go up out of WF (<b>..\\</b>), up out of Docs (<b>..\\</b>) to reach Proj, then into <b>Data\\</b>." }
+        };
+
+        function answerQuiz(cardId, isCorrectPick) {
+            const card = document.getElementById(cardId);
+            if(card.classList.contains('flipped')) return; 
+
+            const eventBtn = event.currentTarget;
+            eventBtn.classList.add(isCorrectPick ? 'correct-pick' : 'wrong-pick');
+
+            const backContent = card.querySelector('.back-content');
+            const answerData = quizAnswers[cardId];
+            
+            let icon, title;
+            if (isCorrectPick) {
+                icon = `<div class="w-12 h-12 bg-game-green text-white rounded-full flex items-center justify-center border-3 border-game-dark shadow-game-sm mx-auto mb-4"><i class="fa-solid fa-check text-xl"></i></div>`;
+                title = `<h4 class="text-2xl font-black text-game-green text-center">Correct!</h4>`;
+            } else {
+                icon = `<div class="w-12 h-12 bg-game-red text-white rounded-full flex items-center justify-center border-3 border-game-dark shadow-game-sm mx-auto mb-4"><i class="fa-solid fa-xmark text-xl"></i></div>`;
+                title = `<h4 class="text-2xl font-black text-game-red text-center">Not quite</h4>`;
+            }
+
+            backContent.innerHTML = `
+                ${icon}
+                ${title}
+                <p class="font-bold text-slate-700 text-center mt-3">${answerData.text}</p>
+            `;
+
+            setTimeout(() => { card.classList.add('flipped'); }, 400);
+        }
+
+        function resetQuiz(cardId) {
+            const card = document.getElementById(cardId);
+            card.classList.remove('flipped');
+            setTimeout(() => {
+                card.querySelectorAll('.opt-btn').forEach(btn => {
+                    btn.classList.remove('correct-pick', 'wrong-pick');
+                });
+            }, 400);
+        }
+
+        // --- INIT ---
+        window.addEventListener('load', () => { 
+            drawConnections(); 
+            navExplorer('proj', document.querySelector('[data-target="proj"]'));
+        });
+
+    </script>
+</body>
+</html>
