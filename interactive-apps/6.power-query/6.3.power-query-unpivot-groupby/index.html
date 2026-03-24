@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Query: Interactive Tutorial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .pq-ui-font { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        .hide-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+        .hide-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+        .hide-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        
+        /* PQ Table Styling */
+        .pq-grid { width: 100%; border-collapse: collapse; border-spacing: 0; background: white; }
+        .pq-grid th {
+            background-color: #f3f4f6; color: #374151; font-weight: 600;
+            font-size: 0.75rem; padding: 0.5rem 1rem; border: 1px solid #d1d5db; 
+            white-space: nowrap; cursor: pointer; user-select: none;
+            transition: all 0.2s;
+        }
+        .pq-grid th:hover { background-color: #e5e7eb; }
+        .pq-grid td {
+            padding: 0.5rem 1rem; border: 1px solid #e5e7eb; white-space: nowrap; color: #4b5563;
+            font-size: 0.875rem; transition: all 0.2s;
+        }
+        
+        /* Selection Highlight */
+        th.pq-col-selected { 
+            background-color: #fed7aa !important; border-color: #ea580c !important; 
+            color: #7c2d12 !important; box-shadow: inset 0 0 0 1px #ea580c; 
+        }
+        td.pq-col-selected { background-color: #ffedd5 !important; }
+
+        /* Step Animations */
+        .fade-in { animation: fadeIn 0.4s ease-in forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .new-col { animation: highlightCol 2s ease-out forwards; }
+        @keyframes highlightCol {
+            0% { background-color: #ffedd5; }
+            100% { background-color: transparent; }
+        }
+
+        .hidden-step { display: none; }
+        
+        /* Modal Backdrop & Draggable */
+        .modal-backdrop { background-color: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); }
+        .modal-header { cursor: move; }
+
+        /* Demo Animation Classes */
+        .cell-highlight { background-color: #fed7aa !important; color: #9a3412 !important; font-weight: bold; transition: all 0.3s ease; }
+        
+        /* Smooth scrolling for main container */
+        html { scroll-behavior: smooth; }
+        #main-scroll { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased selection:bg-orange-200 selection:text-orange-900 flex h-screen overflow-hidden">
+
+    <!-- ==========================================
+         RESIZABLE SIDEBAR & TOC
+         ========================================== -->
+    <aside id="sidebar" class="w-64 flex-shrink-0 bg-white border-r border-slate-200 relative flex flex-col z-20 shadow-lg">
+        <div class="p-5 border-b border-slate-200 bg-orange-50">
+            <h2 class="font-bold text-orange-900 flex items-center gap-2 text-lg">
+                <i data-lucide="book-open" class="text-orange-600 w-5 h-5"></i> Contents
+            </h2>
+        </div>
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1 text-sm font-medium text-slate-600 hide-scrollbar">
+            <a href="#lesson-intro" class="block p-2.5 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors flex items-center gap-2"><i data-lucide="play-circle" class="w-4 h-4"></i> Core Concepts</a>
+            <div class="my-2 border-t border-slate-100"></div>
+            <p class="px-2.5 py-1 text-xs font-bold text-slate-400 uppercase tracking-wider">Simulators</p>
+            <a href="#case1" class="block p-2.5 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors flex items-center gap-2"><i data-lucide="store" class="w-4 h-4"></i> Case 1: Expense Report</a>
+            <a href="#case2" class="block p-2.5 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors flex items-center gap-2"><i data-lucide="truck" class="w-4 h-4"></i> Case 2: Logistics Report</a>
+            <a href="#case3" class="block p-2.5 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors flex items-center gap-2"><i data-lucide="shopping-bag" class="w-4 h-4"></i> Case 3: Hardware POS</a>
+            <a href="#case4" class="block p-2.5 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors flex items-center gap-2"><i data-lucide="coffee" class="w-4 h-4"></i> Case 4: River City Roasters</a>
+        </nav>
+        <!-- Resizer Handle -->
+        <div id="resizer" class="w-1.5 cursor-col-resize hover:bg-orange-500 absolute right-0 top-0 bottom-0 bg-slate-200 transition-colors z-30"></div>
+    </aside>
+
+    <!-- ==========================================
+         MAIN SCROLLABLE CONTENT
+         ========================================== -->
+    <div class="flex-1 overflow-y-auto h-screen relative bg-[#f8fafc]" id="main-scroll">
+        
+        <header class="bg-gradient-to-br from-orange-600 via-amber-500 to-yellow-500 text-white py-12 md:py-16 px-4 md:px-8 shadow-xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
+            <div class="max-w-4xl mx-auto relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
+                <div class="p-4 bg-white/10 backdrop-blur-md rounded-2xl shadow-inner border border-white/20">
+                    <i data-lucide="line-chart" class="w-10 h-10 md:w-12 md:h-12 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-orange-100">
+                        Power Query Masterclass
+                    </h1>
+                    <p class="text-orange-100 text-lg md:text-xl max-w-2xl font-medium">
+                        Learn by watching, then master by doing.
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-5xl mx-auto px-4 md:px-8 py-10 space-y-20 pb-32">
+
+            <!-- ==========================================
+                 MINI LESSON: DYNAMIC CONCEPTS
+                 ========================================== -->
+            <section id="lesson-intro" class="space-y-6">
+                <div class="flex items-center gap-3 border-b-2 border-slate-200 pb-4">
+                    <div class="p-2 bg-indigo-100 text-indigo-700 rounded-lg"><i data-lucide="play-circle" class="w-6 h-6"></i></div>
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Core Concepts Visualized</h2>
+                </div>
+                <p class="text-slate-600 text-lg max-w-3xl">Before you touch the simulators, click "Play Demo" on each card below to see exactly how data moves and transforms.</p>
+
+                <div class="grid grid-cols-1 gap-8">
+                    
+                    <!-- Concept 1: Unpivot -->
+                    <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+                        <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="move-horizontal" class="w-5 h-5 text-orange-600"></i> Unpivot Columns</h3>
+                            <button id="btn-demo-unpivot" onclick="playUnpivotDemo()" class="bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold px-4 py-1.5 rounded-lg text-sm transition flex items-center gap-2">
+                                <i data-lucide="play" class="w-4 h-4"></i> Play Demo
+                            </button>
+                        </div>
+                        <div class="p-5 flex flex-col md:flex-row items-center gap-6 bg-slate-50/50">
+                            <!-- Input -->
+                            <div class="flex-1 bg-white p-3 rounded border border-slate-200 w-full overflow-x-auto">
+                                <p class="text-xs font-bold text-slate-400 mb-2 uppercase text-center">Wide Data (Input)</p>
+                                <table class="pq-grid text-xs" id="demo-unpivot-in">
+                                    <thead><tr><th>Product</th><th id="u-in-h1">Jan</th><th id="u-in-h2">Feb</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>Apple</td><td id="u-in-1-1">10</td><td id="u-in-1-2">15</td></tr>
+                                        <tr><td>Pear</td><td id="u-in-2-1">20</td><td id="u-in-2-2">25</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <i data-lucide="arrow-right" class="w-8 h-8 text-slate-300 hidden md:block"></i>
+                            <!-- Output -->
+                            <div class="flex-1 bg-white p-3 rounded border border-slate-200 w-full overflow-x-auto min-h-[140px]">
+                                <p class="text-xs font-bold text-slate-400 mb-2 uppercase text-center">Tall Data (Output)</p>
+                                <table class="pq-grid text-xs" id="demo-unpivot-out">
+                                    <thead><tr><th>Product</th><th>Attribute</th><th>Value</th></tr></thead>
+                                    <tbody id="demo-unpivot-out-body">
+                                        <!-- Animated Rows go here -->
+                                        <tr><td colspan="3" class="text-center text-slate-400 italic border-none py-4">Click play to watch data move...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Concept 2: Pivot -->
+                    <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+                        <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="arrow-up-to-line" class="w-5 h-5 text-indigo-600"></i> Pivot Column</h3>
+                            <button id="btn-demo-pivot" onclick="playPivotDemo()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold px-4 py-1.5 rounded-lg text-sm transition flex items-center gap-2">
+                                <i data-lucide="play" class="w-4 h-4"></i> Play Demo
+                            </button>
+                        </div>
+                        <div class="p-5 flex flex-col md:flex-row items-center gap-6 bg-slate-50/50">
+                            <!-- Input -->
+                            <div class="flex-1 bg-white p-3 rounded border border-slate-200 w-full overflow-x-auto">
+                                <p class="text-xs font-bold text-slate-400 mb-2 uppercase text-center">Tall Data (Input)</p>
+                                <table class="pq-grid text-xs" id="demo-pivot-in">
+                                    <thead><tr><th>Store</th><th>Metric</th><th>Value</th></tr></thead>
+                                    <tbody>
+                                        <tr id="p-in-1"><td>A</td><td class="font-semibold text-indigo-600">Sales</td><td>$50</td></tr>
+                                        <tr id="p-in-2"><td>A</td><td class="font-semibold text-indigo-600">Costs</td><td>$20</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <i data-lucide="arrow-right" class="w-8 h-8 text-slate-300 hidden md:block"></i>
+                            <!-- Output -->
+                            <div class="flex-1 bg-white p-3 rounded border border-slate-200 w-full overflow-x-auto min-h-[140px]">
+                                <p class="text-xs font-bold text-slate-400 mb-2 uppercase text-center">Wide Data (Output)</p>
+                                <table class="pq-grid text-xs" id="demo-pivot-out">
+                                    <thead>
+                                        <tr><th>Store</th><th id="p-out-h1" class="text-slate-300">...</th><th id="p-out-h2" class="text-slate-300">...</th></tr>
+                                    </thead>
+                                    <tbody id="demo-pivot-out-body">
+                                        <tr><td colspan="3" class="text-center text-slate-400 italic border-none py-2">Click play to reshape...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Concept 3: Group By -->
+                    <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+                        <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="layers" class="w-5 h-5 text-emerald-600"></i> Group By (Summarize)</h3>
+                            <button id="btn-demo-group" onclick="playGroupDemo()" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold px-4 py-1.5 rounded-lg text-sm transition flex items-center gap-2">
+                                <i data-lucide="play" class="w-4 h-4"></i> Play Demo
+                            </button>
+                        </div>
+                        <div class="p-5 flex flex-col md:flex-row items-center gap-6 bg-slate-50/50">
+                            <!-- Input -->
+                            <div class="flex-1 bg-white p-3 rounded border border-slate-200 w-full overflow-x-auto">
+                                <p class="text-xs font-bold text-slate-400 mb-2 uppercase text-center">Detailed Data (Input)</p>
+                                <table class="pq-grid text-xs" id="demo-group-in">
+                                    <thead><tr><th>Region</th><th>Amount</th></tr></thead>
+                                    <tbody>
+                                        <tr id="g-in-1"><td class="font-semibold text-emerald-700">North</td><td>100</td></tr>
+                                        <tr id="g-in-2"><td class="font-semibold text-emerald-700">North</td><td>50</td></tr>
+                                        <tr id="g-in-3"><td class="font-semibold text-emerald-700">North</td><td>200</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <i data-lucide="arrow-right" class="w-8 h-8 text-slate-300 hidden md:block"></i>
+                            <!-- Output -->
+                            <div class="flex-1 bg-white p-3 rounded border border-slate-200 w-full overflow-x-auto min-h-[140px] flex items-center justify-center">
+                                <table class="pq-grid text-xs w-full" id="demo-group-out">
+                                    <thead><tr><th>Region</th><th>Total (Sum)</th></tr></thead>
+                                    <tbody id="demo-group-out-body">
+                                        <tr><td colspan="2" class="text-center text-slate-400 italic border-none py-4">Click play to aggregate...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <hr class="border-2 border-slate-200 border-dashed rounded-full my-12">
+
+            <!-- ==========================================
+                 CASE STUDY 1: Basic Unpivot
+                 ========================================== -->
+            <div id="case1" class="space-y-6 pt-6">
+                <div class="flex items-center gap-3 border-b-2 border-slate-200 pb-4">
+                    <div class="p-2 bg-orange-100 text-orange-700 rounded-lg"><i data-lucide="store" class="w-6 h-6"></i></div>
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Case 1: The Expense Report</h2>
+                </div>
+                
+                <div class="bg-white border-l-4 border-l-orange-500 rounded-r-xl shadow-sm p-6 flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-orange-800 font-bold flex items-center gap-2 mb-2">
+                            <i data-lucide="target" class="w-5 h-5"></i> The Analytical Goal
+                        </h3>
+                        <p class="text-slate-600 text-sm md:text-base">
+                            You need to build a PivotTable to sum up "Total Q1 Expenses" by Store Location. 
+                        </p>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-rose-800 font-bold flex items-center gap-2 mb-2">
+                            <i data-lucide="alert-circle" class="w-5 h-5"></i> The Data Problem
+                        </h3>
+                        <p class="text-slate-600 text-sm md:text-base">
+                            "Month" is not a column you can filter by; the months are spread horizontally as headers. You must <strong>Unpivot</strong> the data, then <strong>Group By</strong> store.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-xl border border-slate-300 overflow-hidden flex flex-col pq-ui-font">
+                    <div class="bg-orange-50 border-b border-orange-100 p-4 flex items-start gap-3">
+                        <i data-lucide="info" class="w-6 h-6 text-orange-500 animate-pulse mt-0.5 shrink-0"></i>
+                        <p id="sim1-instruction" class="text-orange-900 font-medium font-sans text-sm md:text-base"></p>
+                    </div>
+
+                    <!-- Simulator 1 Ribbon -->
+                    <div class="bg-[#f3f2f1] border-b border-[#e1dfdd] px-2 py-1 flex gap-4 overflow-x-auto hide-scrollbar select-none">
+                        <div class="flex items-center gap-1 border-r border-[#e1dfdd] pr-4">
+                            <button class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-20 opacity-50 cursor-not-allowed" disabled>
+                                <i data-lucide="split-square-horizontal" class="w-6 h-6 text-slate-500 mb-1"></i> Split Column
+                            </button>
+                            <button onclick="checkAction(1, 'Group')" class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-20">
+                                <i data-lucide="layers" class="w-6 h-6 text-emerald-600 mb-1"></i> Group By
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="checkAction(1, 'Unpivot')" class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-24">
+                                <i data-lucide="columns" class="w-6 h-6 text-orange-600 mb-1"></i> Unpivot Columns
+                            </button>
+                            <button onclick="checkAction(1, 'UnpivotOther')" class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-28">
+                                <i data-lucide="move-horizontal" class="w-6 h-6 text-orange-600 mb-1"></i> Unpivot Other Cols
+                            </button>
+                        </div>
+                        <div class="flex-1"></div>
+                        <div class="flex items-center gap-1 border-l border-[#e1dfdd] pl-4">
+                            <button onclick="undoStep(1)" class="flex items-center gap-1 p-2 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] font-semibold hidden" id="sim1-undo">
+                                <i data-lucide="undo-2" class="w-4 h-4 text-blue-600"></i> Go Back
+                            </button>
+                            <button onclick="resetSim(1)" class="flex items-center gap-1 p-2 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] font-semibold hidden" id="sim1-reset">
+                                <i data-lucide="refresh-cw" class="w-4 h-4 text-rose-600"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row min-h-[300px]">
+                        <div class="flex-1 overflow-auto hide-scrollbar p-2 bg-white relative">
+                            <div id="sim1-toast" class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg text-sm hidden z-10 font-sans text-center max-w-[90%] w-max"></div>
+                            
+                            <table id="sim1-tbl-0" class="pq-grid">
+                                <thead>
+                                    <tr>
+                                        <th onclick="toggleCol(this, 1, 'Store Location')">Store Location</th>
+                                        <th onclick="toggleCol(this, 1, 'Account Name')">Account Name</th>
+                                        <th onclick="toggleCol(this, 1, 'Jan')">Jan 2026</th>
+                                        <th onclick="toggleCol(this, 1, 'Feb')">Feb 2026</th>
+                                        <th onclick="toggleCol(this, 1, 'Mar')">Mar 2026</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Spokane</td><td>Rent</td><td>$5,000</td><td>$5,000</td><td>$5,000</td></tr>
+                                    <tr><td>Spokane</td><td>Payroll</td><td>$12,400</td><td>$12,100</td><td>$12,800</td></tr>
+                                    <tr><td>Seattle</td><td>Rent</td><td>$8,500</td><td>$8,500</td><td>$8,500</td></tr>
+                                    <tr><td>Seattle</td><td>Payroll</td><td>$18,200</td><td>$18,400</td><td>$19,100</td></tr>
+                                </tbody>
+                            </table>
+
+                            <table id="sim1-tbl-1" class="pq-grid hidden-step">
+                                <thead>
+                                    <tr>
+                                        <th>Store Location</th>
+                                        <th>Account Name</th>
+                                        <th class="new-col font-bold">Attribute (Month)</th>
+                                        <th class="new-col font-bold">Value (Amount)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Spokane</td><td>Rent</td><td class="new-col">Jan 2026</td><td class="new-col">$5,000</td></tr>
+                                    <tr><td>Spokane</td><td>Rent</td><td class="new-col">Feb 2026</td><td class="new-col">$5,000</td></tr>
+                                    <tr><td>Spokane</td><td>Rent</td><td class="new-col">Mar 2026</td><td class="new-col">$5,000</td></tr>
+                                    <tr><td>Spokane</td><td>Payroll</td><td class="new-col">Jan 2026</td><td class="new-col">$12,400</td></tr>
+                                    <tr><td class="text-slate-400 text-center" colspan="4">...</td></tr>
+                                </tbody>
+                            </table>
+
+                            <table id="sim1-tbl-2" class="pq-grid hidden-step">
+                                <thead>
+                                    <tr>
+                                        <th>Store Location</th>
+                                        <th class="new-col font-bold">Total Q1 Expenses</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Spokane</td><td class="new-col font-bold text-emerald-700">$52,300</td></tr>
+                                    <tr><td>Seattle</td><td class="new-col font-bold text-emerald-700">$81,200</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="w-full md:w-64 bg-white border-t md:border-t-0 md:border-l border-[#e1dfdd] flex flex-col">
+                            <div class="bg-[#f3f2f1] px-3 py-2 text-xs font-semibold text-[#323130] uppercase border-b border-[#e1dfdd]">Query Settings</div>
+                            <div class="p-3">
+                                <h4 class="text-xs font-semibold text-[#605e5c] mb-2">APPLIED STEPS</h4>
+                                <ul class="space-y-1" id="sim1-steps"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 CASE STUDY 2: Advanced Clean & Group
+                 ========================================== -->
+            <div id="case2" class="space-y-6 pt-6">
+                <div class="flex items-center gap-3 border-b-2 border-slate-200 pb-4">
+                    <div class="p-2 bg-rose-100 text-rose-700 rounded-lg"><i data-lucide="truck" class="w-6 h-6"></i></div>
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Case 2: Logistics Report</h2>
+                </div>
+                
+                 <div class="bg-white border-l-4 border-l-rose-500 rounded-r-xl shadow-sm p-6 flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-orange-800 font-bold flex items-center gap-2 mb-2">
+                            <i data-lucide="target" class="w-5 h-5"></i> The Analytical Goal
+                        </h3>
+                        <p class="text-slate-600 text-sm md:text-base">
+                            Calculate exact fleet costs grouped by <strong>Location</strong> AND <strong>Vehicle Type</strong>.
+                        </p>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-rose-800 font-bold flex items-center gap-2 mb-2">
+                            <i data-lucide="alert-circle" class="w-5 h-5"></i> The Data Problem
+                        </h3>
+                        <p class="text-slate-600 text-sm md:text-base">
+                            The Location and Vehicle are mashed together into one string. You must <strong>Split</strong> the column first, <strong>Unpivot</strong>, and do an Advanced <strong>Group By</strong>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-xl border border-slate-300 overflow-hidden flex flex-col pq-ui-font">
+                    <div class="bg-orange-50 border-b border-orange-100 p-4 flex items-start gap-3">
+                        <i data-lucide="info" class="w-6 h-6 text-orange-500 animate-pulse mt-0.5 shrink-0"></i>
+                        <p id="sim2-instruction" class="text-orange-900 font-medium font-sans text-sm md:text-base"></p>
+                    </div>
+
+                    <!-- Simulator 2 Ribbon -->
+                    <div class="bg-[#f3f2f1] border-b border-[#e1dfdd] px-2 py-1 flex gap-4 overflow-x-auto hide-scrollbar select-none">
+                        <div class="flex items-center gap-1 border-r border-[#e1dfdd] pr-4">
+                            <button onclick="checkAction(2, 'Split')" class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-20">
+                                <i data-lucide="split-square-horizontal" class="w-6 h-6 text-rose-600 mb-1"></i> Split Column
+                            </button>
+                            <button onclick="checkAction(2, 'Group')" class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-20">
+                                <i data-lucide="layers" class="w-6 h-6 text-emerald-600 mb-1"></i> Group By
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="checkAction(2, 'Unpivot')" class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-24">
+                                <i data-lucide="columns" class="w-6 h-6 text-orange-600 mb-1"></i> Unpivot Columns
+                            </button>
+                            <button onclick="checkAction(2, 'UnpivotOther')" class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-28">
+                                <i data-lucide="move-horizontal" class="w-6 h-6 text-orange-600 mb-1"></i> Unpivot Other Cols
+                            </button>
+                        </div>
+                        <div class="flex-1"></div>
+                        <div class="flex items-center gap-1 border-l border-[#e1dfdd] pl-4">
+                            <button onclick="undoStep(2)" class="flex items-center gap-1 p-2 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] font-semibold hidden" id="sim2-undo">
+                                <i data-lucide="undo-2" class="w-4 h-4 text-blue-600"></i> Go Back
+                            </button>
+                            <button onclick="resetSim(2)" class="flex items-center gap-1 p-2 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] font-semibold hidden" id="sim2-reset">
+                                <i data-lucide="refresh-cw" class="w-4 h-4 text-rose-600"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row min-h-[300px]">
+                        <div class="flex-1 overflow-auto hide-scrollbar p-2 bg-white relative">
+                            <div id="sim2-toast" class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg text-sm hidden z-10 font-sans text-center max-w-[90%] w-max"></div>
+                            
+                            <table id="sim2-tbl-0" class="pq-grid">
+                                <thead>
+                                    <tr>
+                                        <th onclick="toggleCol(this, 2, 'Loc_Vehicle')">Loc_Vehicle</th>
+                                        <th onclick="toggleCol(this, 2, 'Jan')">Jan 2026</th>
+                                        <th onclick="toggleCol(this, 2, 'Feb')">Feb 2026</th>
+                                        <th onclick="toggleCol(this, 2, 'Mar')">Mar 2026</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Spokane_Forklift</td><td>$1,200</td><td>$1,400</td><td>$1,300</td></tr>
+                                    <tr><td>Spokane_DeliveryVan</td><td>$2,500</td><td>$2,200</td><td>$2,600</td></tr>
+                                    <tr><td>Seattle_Forklift</td><td>$1,800</td><td>$1,900</td><td>$1,700</td></tr>
+                                </tbody>
+                            </table>
+
+                            <table id="sim2-tbl-1" class="pq-grid hidden-step">
+                                <thead>
+                                    <tr>
+                                        <th class="new-col font-bold" onclick="toggleCol(this, 2, 'Location')">Location</th>
+                                        <th class="new-col font-bold" onclick="toggleCol(this, 2, 'Vehicle')">Vehicle</th>
+                                        <th onclick="toggleCol(this, 2, 'Jan')">Jan 2026</th>
+                                        <th onclick="toggleCol(this, 2, 'Feb')">Feb 2026</th>
+                                        <th onclick="toggleCol(this, 2, 'Mar')">Mar 2026</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="new-col">Spokane</td><td class="new-col">Forklift</td><td>$1,200</td><td>$1,400</td><td>$1,300</td></tr>
+                                    <tr><td class="new-col">Spokane</td><td class="new-col">DeliveryVan</td><td>$2,500</td><td>$2,200</td><td>$2,600</td></tr>
+                                    <tr><td class="new-col">Seattle</td><td class="new-col">Forklift</td><td>$1,800</td><td>$1,900</td><td>$1,700</td></tr>
+                                </tbody>
+                            </table>
+
+                            <table id="sim2-tbl-2" class="pq-grid hidden-step">
+                                <thead>
+                                    <tr>
+                                        <th>Location</th>
+                                        <th>Vehicle</th>
+                                        <th class="new-col font-bold">Attribute</th>
+                                        <th class="new-col font-bold">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Spokane</td><td>Forklift</td><td class="new-col">Jan 2026</td><td class="new-col">$1,200</td></tr>
+                                    <tr><td>Spokane</td><td>Forklift</td><td class="new-col">Feb 2026</td><td class="new-col">$1,400</td></tr>
+                                    <tr><td class="text-slate-400 text-center" colspan="4">...</td></tr>
+                                </tbody>
+                            </table>
+
+                            <table id="sim2-tbl-3" class="pq-grid hidden-step">
+                                <thead>
+                                    <tr>
+                                        <th>Location</th>
+                                        <th>Vehicle</th>
+                                        <th class="new-col font-bold">Total Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Spokane</td><td>Forklift</td><td class="new-col font-bold text-emerald-700">$3,900</td></tr>
+                                    <tr><td>Spokane</td><td>DeliveryVan</td><td class="new-col font-bold text-emerald-700">$7,300</td></tr>
+                                    <tr><td>Seattle</td><td>Forklift</td><td class="new-col font-bold text-emerald-700">$5,400</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="w-full md:w-64 bg-white border-t md:border-t-0 md:border-l border-[#e1dfdd] flex flex-col">
+                            <div class="bg-[#f3f2f1] px-3 py-2 text-xs font-semibold text-[#323130] uppercase border-b border-[#e1dfdd]">Query Settings</div>
+                            <div class="p-3">
+                                <h4 class="text-xs font-semibold text-[#605e5c] mb-2">APPLIED STEPS</h4>
+                                <ul class="space-y-1" id="sim2-steps"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 CASE STUDY 3: Composite Cells & Row Counts
+                 ========================================== -->
+            <div id="case3" class="space-y-6 pt-6">
+                <div class="flex items-center gap-3 border-b-2 border-slate-200 pb-4">
+                    <div class="p-2 bg-purple-100 text-purple-700 rounded-lg"><i data-lucide="shopping-bag" class="w-6 h-6"></i></div>
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Case 3: Spokane Hardware POS</h2>
+                </div>
+                
+                 <div class="bg-white border-l-4 border-l-purple-500 rounded-r-xl shadow-sm p-6 flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-orange-800 font-bold flex items-center gap-2 mb-2">
+                            <i data-lucide="target" class="w-5 h-5"></i> The Analytical Goal
+                        </h3>
+                        <p class="text-slate-600 text-sm md:text-base">
+                            Find out exactly which products are selling the most by counting the total number of times each unique item was purchased today.
+                        </p>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-rose-800 font-bold flex items-center gap-2 mb-2">
+                            <i data-lucide="alert-circle" class="w-5 h-5"></i> The Data Problem
+                        </h3>
+                        <p class="text-slate-600 text-sm md:text-base">
+                            The Point of Sale system lumps all items from a single receipt into one comma-separated cell. You must <strong>Split</strong> the text, <strong>Unpivot</strong> the resulting columns, and group them to <strong>Count Rows</strong>.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-xl border border-slate-300 overflow-hidden flex flex-col pq-ui-font">
+                    <div class="bg-orange-50 border-b border-orange-100 p-4 flex items-start gap-3">
+                        <i data-lucide="info" class="w-6 h-6 text-orange-500 animate-pulse mt-0.5 shrink-0"></i>
+                        <p id="sim3-instruction" class="text-orange-900 font-medium font-sans text-sm md:text-base"></p>
+                    </div>
+
+                    <!-- Simulator 3 Ribbon -->
+                    <div class="bg-[#f3f2f1] border-b border-[#e1dfdd] px-2 py-1 flex gap-4 overflow-x-auto hide-scrollbar select-none">
+                        <div class="flex items-center gap-1 border-r border-[#e1dfdd] pr-4">
+                            <button onclick="checkAction(3, 'Split')" class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-20">
+                                <i data-lucide="split-square-horizontal" class="w-6 h-6 text-rose-600 mb-1"></i> Split Column
+                            </button>
+                            <button onclick="checkAction(3, 'Group')" class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-20">
+                                <i data-lucide="layers" class="w-6 h-6 text-emerald-600 mb-1"></i> Group By
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="checkAction(3, 'Unpivot')" class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-24">
+                                <i data-lucide="columns" class="w-6 h-6 text-orange-600 mb-1"></i> Unpivot Columns
+                            </button>
+                            <button onclick="checkAction(3, 'UnpivotOther')" class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-28">
+                                <i data-lucide="move-horizontal" class="w-6 h-6 text-orange-600 mb-1"></i> Unpivot Other Cols
+                            </button>
+                        </div>
+                        <div class="flex-1"></div>
+                        <div class="flex items-center gap-1 border-l border-[#e1dfdd] pl-4">
+                            <button onclick="undoStep(3)" class="flex items-center gap-1 p-2 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] font-semibold hidden" id="sim3-undo">
+                                <i data-lucide="undo-2" class="w-4 h-4 text-blue-600"></i> Go Back
+                            </button>
+                            <button onclick="resetSim(3)" class="flex items-center gap-1 p-2 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] font-semibold hidden" id="sim3-reset">
+                                <i data-lucide="refresh-cw" class="w-4 h-4 text-rose-600"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row min-h-[300px]">
+                        <div class="flex-1 overflow-auto hide-scrollbar p-2 bg-white relative">
+                            <div id="sim3-toast" class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg text-sm hidden z-10 font-sans text-center max-w-[90%] w-max"></div>
+                            
+                            <table id="sim3-tbl-0" class="pq-grid">
+                                <thead>
+                                    <tr>
+                                        <th onclick="toggleCol(this, 3, 'Receipt ID')">Receipt ID</th>
+                                        <th onclick="toggleCol(this, 3, 'Items')">Items</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>1001</td><td>Hammer, Nails</td></tr>
+                                    <tr><td>1002</td><td>Wrench</td></tr>
+                                    <tr><td>1003</td><td>Paint, Brushes, Tape</td></tr>
+                                    <tr><td>1004</td><td>Nails, Tape</td></tr>
+                                </tbody>
+                            </table>
+
+                            <table id="sim3-tbl-1" class="pq-grid hidden-step">
+                                <thead>
+                                    <tr>
+                                        <th onclick="toggleCol(this, 3, 'Receipt ID')">Receipt ID</th>
+                                        <th class="new-col font-bold" onclick="toggleCol(this, 3, 'Items.1')">Items.1</th>
+                                        <th class="new-col font-bold" onclick="toggleCol(this, 3, 'Items.2')">Items.2</th>
+                                        <th class="new-col font-bold" onclick="toggleCol(this, 3, 'Items.3')">Items.3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>1001</td><td class="new-col">Hammer</td><td class="new-col">Nails</td><td class="new-col text-slate-400 italic bg-slate-50">null</td></tr>
+                                    <tr><td>1002</td><td class="new-col">Wrench</td><td class="new-col text-slate-400 italic bg-slate-50">null</td><td class="new-col text-slate-400 italic bg-slate-50">null</td></tr>
+                                    <tr><td>1003</td><td class="new-col">Paint</td><td class="new-col">Brushes</td><td class="new-col">Tape</td></tr>
+                                    <tr><td>1004</td><td class="new-col">Nails</td><td class="new-col">Tape</td><td class="new-col text-slate-400 italic bg-slate-50">null</td></tr>
+                                </tbody>
+                            </table>
+
+                            <table id="sim3-tbl-2" class="pq-grid hidden-step">
+                                <thead>
+                                    <tr>
+                                        <th>Receipt ID</th>
+                                        <th class="new-col font-bold">Attribute</th>
+                                        <th class="new-col font-bold" onclick="toggleCol(this, 3, 'Value')">Value (Product)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>1001</td><td class="new-col">Items.1</td><td class="new-col">Hammer</td></tr>
+                                    <tr><td>1001</td><td class="new-col">Items.2</td><td class="new-col">Nails</td></tr>
+                                    <tr><td>1002</td><td class="new-col">Items.1</td><td class="new-col">Wrench</td></tr>
+                                    <tr><td>1003</td><td class="new-col">Items.1</td><td class="new-col">Paint</td></tr>
+                                    <tr><td class="text-slate-400 text-center" colspan="3">... remaining items below</td></tr>
+                                </tbody>
+                            </table>
+
+                            <table id="sim3-tbl-3" class="pq-grid hidden-step">
+                                <thead>
+                                    <tr>
+                                        <th>Value (Product)</th>
+                                        <th class="new-col font-bold">Total Sales Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Hammer</td><td class="new-col font-bold text-emerald-700">1</td></tr>
+                                    <tr><td>Nails</td><td class="new-col font-bold text-emerald-700">2</td></tr>
+                                    <tr><td>Wrench</td><td class="new-col font-bold text-emerald-700">1</td></tr>
+                                    <tr><td>Paint</td><td class="new-col font-bold text-emerald-700">1</td></tr>
+                                    <tr><td>Brushes</td><td class="new-col font-bold text-emerald-700">1</td></tr>
+                                    <tr><td>Tape</td><td class="new-col font-bold text-emerald-700">2</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="w-full md:w-64 bg-white border-t md:border-t-0 md:border-l border-[#e1dfdd] flex flex-col">
+                            <div class="bg-[#f3f2f1] px-3 py-2 text-xs font-semibold text-[#323130] uppercase border-b border-[#e1dfdd]">Query Settings</div>
+                            <div class="p-3">
+                                <h4 class="text-xs font-semibold text-[#605e5c] mb-2">APPLIED STEPS</h4>
+                                <ul class="space-y-1" id="sim3-steps"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 CASE STUDY 4: Pivot Column
+                 ========================================== -->
+            <div id="case4" class="space-y-6 pt-6">
+                <div class="flex items-center gap-3 border-b-2 border-slate-200 pb-4">
+                    <div class="p-2 bg-indigo-100 text-indigo-700 rounded-lg"><i data-lucide="coffee" class="w-6 h-6"></i></div>
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900">Case 4: River City Roasters</h2>
+                </div>
+                
+                 <div class="bg-white border-l-4 border-l-indigo-500 rounded-r-xl shadow-sm p-6 flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h3 class="text-orange-800 font-bold flex items-center gap-2 mb-2">
+                            <i data-lucide="target" class="w-5 h-5"></i> The Analytical Goal
+                        </h3>
+                        <p class="text-slate-600 text-sm md:text-base">
+                            You want a clean summary table with one row per store and separate columns for each inventory item to quickly compare stock levels across the chain.
+                        </p>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-rose-800 font-bold flex items-center gap-2 mb-2">
+                            <i data-lucide="alert-circle" class="w-5 h-5"></i> The Data Problem
+                        </h3>
+                        <p class="text-slate-600 text-sm md:text-base">
+                            The inventory system exports data in a 'tall' attribute-value structure. You need to <strong>Pivot</strong> the 'Metric' column to turn its contents into wide column headers.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-xl border border-slate-300 overflow-hidden flex flex-col pq-ui-font">
+                    <div class="bg-orange-50 border-b border-orange-100 p-4 flex items-start gap-3">
+                        <i data-lucide="info" class="w-6 h-6 text-orange-500 animate-pulse mt-0.5 shrink-0"></i>
+                        <p id="sim4-instruction" class="text-orange-900 font-medium font-sans text-sm md:text-base"></p>
+                    </div>
+
+                    <!-- Simulator 4 Ribbon -->
+                    <div class="bg-[#f3f2f1] border-b border-[#e1dfdd] px-2 py-1 flex gap-4 overflow-x-auto hide-scrollbar select-none">
+                        <div class="flex items-center gap-1 border-r border-[#e1dfdd] pr-4">
+                            <button onclick="checkAction(4, 'Pivot')" class="flex flex-col items-center justify-center p-1.5 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] w-24">
+                                <i data-lucide="arrow-up-to-line" class="w-6 h-6 text-indigo-600 mb-1"></i> Pivot Column
+                            </button>
+                        </div>
+                        <div class="flex-1"></div>
+                        <div class="flex items-center gap-1 border-l border-[#e1dfdd] pl-4">
+                            <button onclick="undoStep(4)" class="flex items-center gap-1 p-2 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] font-semibold hidden" id="sim4-undo">
+                                <i data-lucide="undo-2" class="w-4 h-4 text-blue-600"></i> Go Back
+                            </button>
+                            <button onclick="resetSim(4)" class="flex items-center gap-1 p-2 hover:bg-[#e1dfdd] rounded text-xs text-[#323130] font-semibold hidden" id="sim4-reset">
+                                <i data-lucide="refresh-cw" class="w-4 h-4 text-rose-600"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row min-h-[300px]">
+                        <div class="flex-1 overflow-auto hide-scrollbar p-2 bg-white relative">
+                            <div id="sim4-toast" class="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded shadow-lg text-sm hidden z-10 font-sans text-center max-w-[90%] w-max"></div>
+                            
+                            <table id="sim4-tbl-0" class="pq-grid">
+                                <thead>
+                                    <tr>
+                                        <th onclick="toggleCol(this, 4, 'Store')">Store</th>
+                                        <th onclick="toggleCol(this, 4, 'Metric')">Metric</th>
+                                        <th onclick="toggleCol(this, 4, 'Value')">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Downtown</td><td>Coffee Beans (lbs)</td><td>50</td></tr>
+                                    <tr><td>Downtown</td><td>Milk (gal)</td><td>20</td></tr>
+                                    <tr><td>Valley</td><td>Coffee Beans (lbs)</td><td>45</td></tr>
+                                    <tr><td>Valley</td><td>Milk (gal)</td><td>18</td></tr>
+                                </tbody>
+                            </table>
+
+                            <table id="sim4-tbl-1" class="pq-grid hidden-step">
+                                <thead>
+                                    <tr>
+                                        <th>Store</th>
+                                        <th class="new-col font-bold">Coffee Beans (lbs)</th>
+                                        <th class="new-col font-bold">Milk (gal)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Downtown</td><td class="new-col font-bold text-indigo-700">50</td><td class="new-col font-bold text-indigo-700">20</td></tr>
+                                    <tr><td>Valley</td><td class="new-col font-bold text-indigo-700">45</td><td class="new-col font-bold text-indigo-700">18</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="w-full md:w-64 bg-white border-t md:border-t-0 md:border-l border-[#e1dfdd] flex flex-col">
+                            <div class="bg-[#f3f2f1] px-3 py-2 text-xs font-semibold text-[#323130] uppercase border-b border-[#e1dfdd]">Query Settings</div>
+                            <div class="p-3">
+                                <h4 class="text-xs font-semibold text-[#605e5c] mb-2">APPLIED STEPS</h4>
+                                <ul class="space-y-1" id="sim4-steps"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ==========================================
+         MODALS (Power Query Configuration Dialogs)
+         ========================================== -->
+    <!-- Dim Background -->
+    <div id="modal-backdrop" class="fixed inset-0 modal-backdrop hidden z-40"></div>
+         
+    <!-- Group By Modal -->
+    <div id="modal-groupby" class="fixed hidden z-50 pq-ui-font bg-white shadow-2xl border border-slate-300 w-[500px] max-w-[95vw] flex-col" style="top: 15%; left: calc(50% - 250px);">
+        <div class="modal-header bg-[#f3f2f1] px-4 py-3 flex justify-between items-center border-b border-[#e1dfdd]">
+            <div class="flex items-center gap-2 font-semibold text-[#323130] text-sm">
+                <i data-lucide="layers" class="w-4 h-4 text-emerald-600"></i> Group By
+            </div>
+            <button onclick="closeModal('modal-groupby')" class="text-slate-400 hover:text-slate-800"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        
+        <div class="p-5 text-sm text-[#323130] space-y-4">
+            <div class="flex gap-4 mb-2 border-b border-slate-200 pb-2">
+                <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="gbradio" checked id="gb-basic" onchange="toggleGbMode()"> Basic</label>
+                <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="gbradio" id="gb-adv" onchange="toggleGbMode()"> Advanced</label>
+            </div>
+            
+            <div id="gb-columns-container" class="space-y-2">
+                <label class="block font-semibold">Group by</label>
+                <select id="gb-col-1-select" class="w-full border border-slate-400 hover:border-slate-800 p-1.5 rounded focus:border-orange-500 outline-none bg-white cursor-pointer"></select>
+                
+                <div id="gb-adv-container" class="hidden space-y-2 pt-2">
+                    <select id="gb-col-2-select" class="w-full border border-slate-400 hover:border-slate-800 p-1.5 rounded focus:border-orange-500 outline-none bg-white cursor-pointer"></select>
+                    <button class="text-orange-600 hover:text-orange-800 flex items-center gap-1 text-xs font-semibold mt-1">
+                        <i data-lucide="plus" class="w-3 h-3"></i> Add grouping
+                    </button>
+                </div>
+            </div>
+            
+            <hr class="border-[#e1dfdd]">
+            
+            <div class="space-y-1">
+                <label class="block font-semibold">New column name</label>
+                <input type="text" value="Total Count" id="gb-new-col" class="w-full border border-slate-400 p-1.5 rounded focus:border-orange-500 outline-none">
+            </div>
+            
+            <div class="flex gap-4">
+                <div class="flex-1 space-y-1">
+                    <label class="block font-semibold">Operation</label>
+                    <select id="gb-operation" class="w-full border border-slate-400 p-1.5 rounded outline-none cursor-pointer">
+                        <option value="sum">Sum</option>
+                        <option value="count">Count Rows</option>
+                    </select>
+                </div>
+                <div class="flex-1 space-y-1">
+                    <label id="gb-target-label" class="block font-semibold">Column</label>
+                    <select id="gb-target-col-select" class="w-full border border-slate-400 p-1.5 rounded outline-none cursor-pointer disabled:bg-slate-100 disabled:text-slate-400"></select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-[#f3f2f1] px-4 py-3 flex justify-end gap-2 border-t border-[#e1dfdd]">
+            <button onclick="confirmAction()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-1 rounded text-sm transition-colors">OK</button>
+            <button onclick="closeModal('modal-groupby')" class="bg-white border border-[#8a8886] hover:bg-[#f3f2f1] text-[#323130] px-4 py-1 rounded text-sm transition-colors">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Split Column Modal -->
+    <div id="modal-split" class="fixed hidden z-50 pq-ui-font bg-white shadow-2xl border border-slate-300 w-[450px] max-w-[95vw] flex-col" style="top: 20%; left: calc(50% - 225px);">
+        <div class="modal-header bg-[#f3f2f1] px-4 py-3 flex justify-between items-center border-b border-[#e1dfdd]">
+            <div class="flex items-center gap-2 font-semibold text-[#323130] text-sm">
+                <i data-lucide="split-square-horizontal" class="w-4 h-4 text-rose-600"></i> Split Column by Delimiter
+            </div>
+            <button onclick="closeModal('modal-split')" class="text-slate-400 hover:text-slate-800"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        
+        <div class="p-5 text-sm text-[#323130] space-y-4">
+            <div class="space-y-1">
+                <label class="block font-semibold">Select or enter delimiter</label>
+                <select id="split-delim-select" class="w-full border border-slate-400 p-1.5 rounded outline-none cursor-pointer">
+                    <option value="comma">Comma</option>
+                    <option value="space">Space</option>
+                    <option value="custom">-- Custom --</option>
+                </select>
+                <input type="text" id="split-custom-input" placeholder="Type delimiter here" class="w-full border border-slate-400 p-1.5 rounded focus:border-orange-500 outline-none mt-2 hidden">
+            </div>
+        </div>
+        
+        <div class="bg-[#f3f2f1] px-4 py-3 flex justify-end gap-2 border-t border-[#e1dfdd]">
+            <button onclick="confirmAction()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-1 rounded text-sm transition-colors">OK</button>
+            <button onclick="closeModal('modal-split')" class="bg-white border border-[#8a8886] hover:bg-[#f3f2f1] text-[#323130] px-4 py-1 rounded text-sm transition-colors">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Pivot Column Modal -->
+    <div id="modal-pivot" class="fixed hidden z-50 pq-ui-font bg-white shadow-2xl border border-slate-300 w-[450px] max-w-[95vw] flex-col" style="top: 20%; left: calc(50% - 225px);">
+        <div class="modal-header bg-[#f3f2f1] px-4 py-3 flex justify-between items-center border-b border-[#e1dfdd]">
+            <div class="flex items-center gap-2 font-semibold text-[#323130] text-sm">
+                <i data-lucide="arrow-up-to-line" class="w-4 h-4 text-indigo-600"></i> Pivot Column
+            </div>
+            <button onclick="closeModal('modal-pivot')" class="text-slate-400 hover:text-slate-800"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        
+        <div class="p-5 text-sm text-[#323130] space-y-4">
+            <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                Use the names in column "Metric" to create new columns.
+            </p>
+            <div class="space-y-1">
+                <label class="block font-semibold">Values Column</label>
+                <select id="pivot-values-select" class="w-full border border-slate-400 hover:border-slate-800 p-1.5 rounded outline-none cursor-pointer focus:border-orange-500">
+                    <option value="Value">Value</option>
+                    <option value="Store">Store</option>
+                </select>
+            </div>
+
+            <div class="pt-4 border-t border-slate-200 mt-4">
+                <button class="flex items-center gap-1 text-[#0078d4] font-semibold mb-2">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i> Advanced options
+                </button>
+                <div class="space-y-1 pl-5">
+                    <label class="block font-semibold">Aggregate Value Function</label>
+                    <select id="pivot-aggregate-select" class="w-full border border-slate-400 hover:border-slate-800 p-1.5 rounded outline-none cursor-pointer focus:border-orange-500">
+                        <option value="Sum">Sum</option>
+                        <option value="Minimum">Minimum</option>
+                        <option value="Maximum">Maximum</option>
+                        <option value="Median">Median</option>
+                        <option value="Average">Average</option>
+                        <option value="Count">Count (All)</option>
+                        <option value="DontAggregate">Don't Aggregate</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-[#f3f2f1] px-4 py-3 flex justify-end gap-2 border-t border-[#e1dfdd]">
+            <button onclick="confirmAction()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-1 rounded text-sm transition-colors">OK</button>
+            <button onclick="closeModal('modal-pivot')" class="bg-white border border-[#8a8886] hover:bg-[#f3f2f1] text-[#323130] px-4 py-1 rounded text-sm transition-colors">Cancel</button>
+        </div>
+    </div>
+
+
+    <script>
+        lucide.createIcons();
+
+        // --- Resizable Sidebar Logic ---
+        const sidebar = document.getElementById('sidebar');
+        const resizer = document.getElementById('resizer');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            // Disable text selection globally while resizing
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            let newWidth = e.clientX;
+            if (newWidth < 200) newWidth = 200; // min width
+            if (newWidth > 400) newWidth = 400; // max width
+            sidebar.style.width = newWidth + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        });
+
+        // --- Draggable Modals Logic ---
+        function makeDraggable(modalId) {
+            const modal = document.getElementById(modalId);
+            const header = modal.querySelector('.modal-header');
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                // Grab precise location from the screen
+                const rect = modal.getBoundingClientRect();
+                initialLeft = rect.left;
+                initialTop = rect.top;
+                
+                // Switch to absolute positioning with exact pixel coords
+                modal.style.left = initialLeft + 'px';
+                modal.style.top = initialTop + 'px';
+                document.body.style.userSelect = 'none';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                modal.style.left = (initialLeft + dx) + 'px';
+                modal.style.top = (initialTop + dy) + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                document.body.style.userSelect = '';
+            });
+        }
+
+        makeDraggable('modal-groupby');
+        makeDraggable('modal-split');
+        makeDraggable('modal-pivot');
+
+        // --- Demo Animations (Mini Lesson) ---
+        const delay = ms => new Promise(res => setTimeout(res, ms));
+
+        async function playUnpivotDemo() {
+            const btn = document.getElementById('btn-demo-unpivot');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Playing...';
+            lucide.createIcons();
+
+            const tbody = document.getElementById('demo-unpivot-out-body');
+            tbody.innerHTML = '';
+
+            // Step 1: Jan column
+            document.getElementById('u-in-h1').classList.add('cell-highlight');
+            document.getElementById('u-in-1-1').classList.add('cell-highlight');
+            await delay(600);
+            tbody.innerHTML += `<tr class="bg-orange-100 transition-colors duration-1000" id="u-o-1"><td>Apple</td><td>Jan</td><td>10</td></tr>`;
+            await delay(400);
+            document.getElementById('u-in-1-1').classList.remove('cell-highlight');
+            document.getElementById('u-in-2-1').classList.add('cell-highlight');
+            await delay(600);
+            tbody.innerHTML += `<tr class="bg-orange-100 transition-colors duration-1000" id="u-o-2"><td>Pear</td><td>Jan</td><td>20</td></tr>`;
+            await delay(400);
+            document.getElementById('u-in-2-1').classList.remove('cell-highlight');
+            document.getElementById('u-in-h1').classList.remove('cell-highlight');
+
+            // Step 2: Feb column
+            document.getElementById('u-in-h2').classList.add('cell-highlight');
+            document.getElementById('u-in-1-2').classList.add('cell-highlight');
+            await delay(600);
+            tbody.innerHTML += `<tr class="bg-orange-100 transition-colors duration-1000" id="u-o-3"><td>Apple</td><td>Feb</td><td>15</td></tr>`;
+            await delay(400);
+            document.getElementById('u-in-1-2').classList.remove('cell-highlight');
+            document.getElementById('u-in-2-2').classList.add('cell-highlight');
+            await delay(600);
+            tbody.innerHTML += `<tr class="bg-orange-100 transition-colors duration-1000" id="u-o-4"><td>Pear</td><td>Feb</td><td>25</td></tr>`;
+            await delay(400);
+            document.getElementById('u-in-2-2').classList.remove('cell-highlight');
+            document.getElementById('u-in-h2').classList.remove('cell-highlight');
+
+            // Cleanup bg colors
+            for(let i=1; i<=4; i++) {
+                setTimeout(() => document.getElementById('u-o-'+i).classList.remove('bg-orange-100'), 500);
+            }
+            
+            btn.innerHTML = '<i data-lucide="rotate-ccw" class="w-4 h-4"></i> Replay';
+            btn.disabled = false;
+            lucide.createIcons();
+        }
+
+        async function playPivotDemo() {
+            const btn = document.getElementById('btn-demo-pivot');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Playing...';
+            lucide.createIcons();
+
+            const tbody = document.getElementById('demo-pivot-out-body');
+            tbody.innerHTML = '';
+            document.getElementById('p-out-h1').innerText = "...";
+            document.getElementById('p-out-h2').innerText = "...";
+            document.getElementById('p-out-h1').classList.add('text-slate-300');
+            document.getElementById('p-out-h2').classList.add('text-slate-300');
+
+            await delay(500);
+            // Move Sales
+            document.getElementById('p-in-1').classList.add('cell-highlight');
+            await delay(600);
+            document.getElementById('p-out-h1').innerText = "Sales";
+            document.getElementById('p-out-h1').classList.remove('text-slate-300');
+            document.getElementById('p-out-h1').classList.add('cell-highlight');
+            tbody.innerHTML = `<tr id="p-o-1"><td>A</td><td class="bg-indigo-100 transition-colors duration-1000">$50</td><td class="text-slate-300">...</td></tr>`;
+            await delay(600);
+            document.getElementById('p-in-1').classList.remove('cell-highlight');
+            document.getElementById('p-out-h1').classList.remove('cell-highlight');
+
+            // Move Costs
+            document.getElementById('p-in-2').classList.add('cell-highlight');
+            await delay(600);
+            document.getElementById('p-out-h2').innerText = "Costs";
+            document.getElementById('p-out-h2').classList.remove('text-slate-300');
+            document.getElementById('p-out-h2').classList.add('cell-highlight');
+            document.getElementById('p-o-1').innerHTML = `<td>A</td><td>$50</td><td class="bg-indigo-100 transition-colors duration-1000">$20</td>`;
+            await delay(600);
+            document.getElementById('p-in-2').classList.remove('cell-highlight');
+            document.getElementById('p-out-h2').classList.remove('cell-highlight');
+
+            setTimeout(() => {
+                document.getElementById('p-o-1').children[1].classList.remove('bg-indigo-100');
+                document.getElementById('p-o-1').children[2].classList.remove('bg-indigo-100');
+            }, 500);
+
+            btn.innerHTML = '<i data-lucide="rotate-ccw" class="w-4 h-4"></i> Replay';
+            btn.disabled = false;
+            lucide.createIcons();
+        }
+
+        async function playGroupDemo() {
+            const btn = document.getElementById('btn-demo-group');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Playing...';
+            lucide.createIcons();
+
+            const tbody = document.getElementById('demo-group-out-body');
+            tbody.innerHTML = '';
+
+            await delay(500);
+            document.getElementById('g-in-1').classList.add('cell-highlight');
+            document.getElementById('g-in-2').classList.add('cell-highlight');
+            document.getElementById('g-in-3').classList.add('cell-highlight');
+            
+            await delay(800);
+            tbody.innerHTML = `<tr class="bg-emerald-100 transition-colors duration-1000" id="g-o-1"><td class="font-bold">North</td><td class="font-bold text-emerald-800">350</td></tr>`;
+            
+            await delay(800);
+            document.getElementById('g-in-1').classList.remove('cell-highlight');
+            document.getElementById('g-in-2').classList.remove('cell-highlight');
+            document.getElementById('g-in-3').classList.remove('cell-highlight');
+            
+            setTimeout(() => document.getElementById('g-o-1').classList.remove('bg-emerald-100'), 500);
+
+            btn.innerHTML = '<i data-lucide="rotate-ccw" class="w-4 h-4"></i> Replay';
+            btn.disabled = false;
+            lucide.createIcons();
+        }
+
+        // --- Simulator Logic ---
+        document.getElementById('gb-operation').addEventListener('change', function(e) {
+            const isCount = e.target.value === 'count';
+            document.getElementById('gb-target-col-select').disabled = isCount;
+            document.getElementById('gb-target-label').classList.toggle('opacity-50', isCount);
+        });
+
+        const simData = {
+            1: {
+                step: 0, selections: [],
+                stepsInfo: [
+                    { inst: "<strong>Step 1:</strong> Select the <strong>Jan</strong>, <strong>Feb</strong>, and <strong>Mar</strong> columns and click <strong>Unpivot Columns</strong>.<br><br><span class='inline-block mt-2 text-sm text-orange-800 bg-orange-100 border border-orange-200 px-3 py-1.5 rounded-lg'><i data-lucide='lightbulb' class='w-4 h-4 inline -mt-0.5 mr-1'></i><strong>Pro Tip:</strong> Alternatively, select the fixed columns (<strong>Store Location</strong> and <strong>Account Name</strong>) and click <strong>Unpivot Other Columns</strong>. Both work!</span>", appliedName: "Source" },
+                    { inst: "<strong>Step 2:</strong> Great! Now click <strong>Group By</strong> on the ribbon. In the popup, use the dropdown to group by <strong>Store Location</strong>.", appliedName: "Unpivoted Columns", icon: "move-horizontal" },
+                    { inst: "<i data-lucide='party-popper' class='w-5 h-5 inline-block text-purple-500 mr-1'></i> <strong>Workflow Complete!</strong> You achieved the analytical goal and built an automated query.", appliedName: "Grouped Rows", icon: "layers" }
+                ]
+            },
+            2: {
+                step: 0, selections: [],
+                stepsInfo: [
+                    { inst: "<strong>Step 1:</strong> Select the messy <strong>Loc_Vehicle</strong> column, then click <strong>Split Column</strong> on the ribbon to separate them.", appliedName: "Source" },
+                    { inst: "<strong>Step 2:</strong> Cleaned! Now, select the 3 Month columns and click <strong>Unpivot Columns</strong>.<br><br><span class='inline-block mt-2 text-sm text-orange-800 bg-orange-100 border border-orange-200 px-3 py-1.5 rounded-lg'><i data-lucide='lightbulb' class='w-4 h-4 inline -mt-0.5 mr-1'></i><strong>Pro Tip:</strong> Alternatively, select <strong>Location</strong> and <strong>Vehicle</strong> and click <strong>Unpivot Other Columns</strong>. Both generate the same result!</span>", appliedName: "Split Column by Delimiter", icon: "split-square-horizontal" },
+                    { inst: "<strong>Step 3:</strong> Click <strong>Group By</strong>. Switch to <strong>Advanced</strong> so you can group by BOTH Location and Vehicle.", appliedName: "Unpivoted Columns", icon: "move-horizontal" },
+                    { inst: "<i data-lucide='party-popper' class='w-5 h-5 inline-block text-purple-500 mr-1'></i> <strong>Workflow Complete!</strong> You generated a complex cross-tabulated summary.", appliedName: "Grouped Rows", icon: "layers" }
+                ]
+            },
+            3: {
+                step: 0, selections: [],
+                stepsInfo: [
+                    { inst: "<strong>Step 1:</strong> Select the <strong>Items</strong> column, then click <strong>Split Column</strong> to break the list by the Comma delimiter.", appliedName: "Source" },
+                    { inst: "<strong>Step 2:</strong> Select all 3 new columns (Items.1, Items.2, Items.3) and click <strong>Unpivot Columns</strong>.<br><br><span class='inline-block mt-2 text-sm text-orange-800 bg-orange-100 border border-orange-200 px-3 py-1.5 rounded-lg'><i data-lucide='lightbulb' class='w-4 h-4 inline -mt-0.5 mr-1'></i><strong>Pro Tip:</strong> Alternatively, select the fixed <strong>Receipt ID</strong> column and click <strong>Unpivot Other Columns</strong>. Both work!</span>", appliedName: "Split Column by Delimiter", icon: "split-square-horizontal" },
+                    { inst: "<strong>Step 3:</strong> Click <strong>Group By</strong>. Set the grouping to <strong>Value (Product)</strong>, and change the Operation to <strong>Count Rows</strong>.", appliedName: "Unpivoted Columns", icon: "move-horizontal" },
+                    { inst: "<i data-lucide='party-popper' class='w-5 h-5 inline-block text-purple-500 mr-1'></i> <strong>Workflow Complete!</strong> You perfectly counted items from messy composite cells.", appliedName: "Grouped Rows", icon: "layers" }
+                ]
+            },
+            4: {
+                step: 0, selections: [],
+                stepsInfo: [
+                    { inst: "<strong>Step 1:</strong> Select the <strong>Metric</strong> column, which contains the names you want to turn into new headers. Then click <strong>Pivot Column</strong> on the ribbon.", appliedName: "Source" },
+                    { inst: "<i data-lucide='party-popper' class='w-5 h-5 inline-block text-purple-500 mr-1'></i> <strong>Workflow Complete!</strong> You reshaped tall data into a wide, readable format.", appliedName: "Pivoted Column", icon: "arrow-up-to-line" }
+                ]
+            }
+        };
+        
+        let pendingAction = null;
+
+        renderState(1);
+        renderState(2);
+        renderState(3);
+        renderState(4);
+
+        function renderState(simId) {
+            const data = simData[simId];
+            const currentStep = data.step;
+
+            document.getElementById(`sim${simId}-instruction`).innerHTML = data.stepsInfo[currentStep].inst;
+            
+            const stepsUl = document.getElementById(`sim${simId}-steps`);
+            stepsUl.innerHTML = '';
+            for(let i = 0; i <= currentStep; i++) {
+                const li = document.createElement('li');
+                const isCurrent = (i === currentStep);
+                li.className = `text-xs px-2 py-1.5 border border-[#e1dfdd] flex items-center gap-2 fade-in font-semibold shadow-sm transition-colors ${isCurrent ? 'bg-white border-l-4 border-l-orange-500 text-[#323130]' : 'bg-[#f3f2f1] text-[#605e5c]'}`;
+                
+                const icon = i === 0 ? "table" : data.stepsInfo[i].icon;
+                li.innerHTML = `<i data-lucide="${icon}" class="w-3 h-3 ${isCurrent ? 'text-orange-600' : 'text-slate-400'}"></i> ${data.stepsInfo[i].appliedName}`;
+                stepsUl.appendChild(li);
+            }
+
+            for(let i = 0; i < data.stepsInfo.length; i++) {
+                const tbl = document.getElementById(`sim${simId}-tbl-${i}`);
+                if (tbl) {
+                    if (i === currentStep) {
+                        tbl.classList.remove('hidden-step');
+                        void tbl.offsetWidth; 
+                        tbl.classList.add('fade-in');
+                    } else {
+                        tbl.classList.add('hidden-step');
+                    }
+                }
+            }
+
+            document.getElementById(`sim${simId}-undo`).classList.toggle('hidden', currentStep === 0);
+            document.getElementById(`sim${simId}-reset`).classList.toggle('hidden', currentStep === 0);
+
+            data.selections = [];
+            document.querySelectorAll(`#sim${simId}-tbl-${currentStep} th.pq-col-selected, #sim${simId}-tbl-${currentStep} td.pq-col-selected`).forEach(el => el.classList.remove('pq-col-selected'));
+
+            lucide.createIcons();
+        }
+
+        function undoStep(simId) {
+            if (simData[simId].step > 0) {
+                simData[simId].step--;
+                renderState(simId);
+            }
+        }
+
+        function resetSim(simId) {
+            simData[simId].step = 0;
+            renderState(simId);
+        }
+
+        function toggleCol(th, simId, colName) {
+            const table = th.closest('table');
+            const colIndex = Array.from(th.parentNode.children).indexOf(th);
+            const selArray = simData[simId].selections;
+            const indexInArray = selArray.indexOf(colName);
+            
+            if (indexInArray > -1) {
+                selArray.splice(indexInArray, 1);
+                table.querySelectorAll(`tr`).forEach(row => {
+                    if(row.children[colIndex]) row.children[colIndex].classList.remove('pq-col-selected');
+                });
+            } else {
+                selArray.push(colName);
+                table.querySelectorAll(`tr`).forEach(row => {
+                    if(row.children[colIndex]) row.children[colIndex].classList.add('pq-col-selected');
+                });
+            }
+        }
+
+        function showToast(simId, message) {
+            const toast = document.getElementById(`sim${simId}-toast`);
+            toast.innerText = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 4000);
+        }
+
+        function checkAction(simId, actionType) {
+            const step = simData[simId].step;
+            const sels = simData[simId].selections;
+
+            if(actionType === 'Unpivot') simData[simId].stepsInfo[step + 1].appliedName = "Unpivoted Columns";
+            if(actionType === 'UnpivotOther') simData[simId].stepsInfo[step + 1].appliedName = "Unpivoted Other Columns";
+
+            if (simId === 1) {
+                if (step === 0) {
+                    if (actionType === 'Unpivot') {
+                        if (sels.includes('Jan') && sels.includes('Feb') && sels.includes('Mar') && sels.length === 3) {
+                            simData[1].step++; renderState(1);
+                        } else { showToast(1, "Error: To 'Unpivot Columns', explicitly select the Jan, Feb, and Mar columns."); }
+                    } else if (actionType === 'UnpivotOther') {
+                        if (sels.includes('Store Location') && sels.includes('Account Name') && sels.length === 2) {
+                            simData[1].step++; renderState(1);
+                        } else { showToast(1, "Error: To 'Unpivot Other Columns', select the 'Store Location' and 'Account Name' fixed attributes."); }
+                    }
+                } 
+                else if (step === 1 && actionType === 'Group') { openGroupModal(1); }
+                else { showToast(1, "That action doesn't belong in this step of the workflow."); }
+            }
+            
+            else if (simId === 2) {
+                if (step === 0 && actionType === 'Split') {
+                    if (sels.includes('Loc_Vehicle') && sels.length === 1) { openSplitModal(2); } 
+                    else { showToast(2, "Error: Select the 'Loc_Vehicle' column first."); }
+                }
+                else if (step === 1) {
+                    if (actionType === 'Unpivot') {
+                        if (sels.includes('Jan') && sels.includes('Feb') && sels.includes('Mar') && sels.length === 3) {
+                            simData[2].step++; renderState(2);
+                        } else { showToast(2, "Error: To 'Unpivot Columns', select the Jan, Feb, and Mar columns."); }
+                    } else if (actionType === 'UnpivotOther') {
+                        if (sels.includes('Location') && sels.includes('Vehicle') && sels.length === 2) {
+                            simData[2].step++; renderState(2);
+                        } else { showToast(2, "Error: To 'Unpivot Other Columns', select BOTH 'Location' and 'Vehicle' columns."); }
+                    }
+                }
+                else if (step === 2 && actionType === 'Group') { openGroupModal(2); }
+                else { showToast(2, "Follow the instructions for the current step."); }
+            }
+
+            else if (simId === 3) {
+                if (step === 0 && actionType === 'Split') {
+                    if (sels.includes('Items') && sels.length === 1) { openSplitModal(3); } 
+                    else { showToast(3, "Error: Select the 'Items' column first."); }
+                }
+                else if (step === 1) {
+                    if (actionType === 'Unpivot') {
+                        if (sels.includes('Items.1') && sels.includes('Items.2') && sels.includes('Items.3') && sels.length === 3) {
+                            simData[3].step++; renderState(3);
+                        } else { showToast(3, "Error: To 'Unpivot Columns', select all three item columns (Items.1, Items.2, Items.3)."); }
+                    } else if (actionType === 'UnpivotOther') {
+                        if (sels.includes('Receipt ID') && sels.length === 1) {
+                            simData[3].step++; renderState(3);
+                        } else { showToast(3, "Error: To 'Unpivot Other Columns', select the 'Receipt ID' column."); }
+                    }
+                }
+                else if (step === 2 && actionType === 'Group') { openGroupModal(3); }
+                else { showToast(3, "Follow the instructions for the current step."); }
+            }
+
+            else if (simId === 4) {
+                if (step === 0 && actionType === 'Pivot') {
+                    if (sels.includes('Metric') && sels.length === 1) {
+                        openPivotModal();
+                    } else { showToast(4, "Error: Select the 'Metric' column first (the names you want to turn into headers)."); }
+                }
+            }
+        }
+
+        // --- Modals UI ---
+        document.getElementById('split-delim-select').addEventListener('change', (e) => {
+            const customInput = document.getElementById('split-custom-input');
+            if(e.target.value === 'custom') {
+                customInput.classList.remove('hidden');
+            } else {
+                customInput.classList.add('hidden');
+            }
+        });
+
+        function showBackdrop() {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function openSplitModal(simId) {
+            pendingAction = { simId: simId, type: 'split' };
+            document.getElementById('split-delim-select').value = 'comma';
+            document.getElementById('split-custom-input').classList.add('hidden');
+            document.getElementById('split-custom-input').value = '';
+            showBackdrop();
+            const modal = document.getElementById('modal-split');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function populateModalDropdowns(simId) {
+            const ths = document.querySelectorAll(`#sim${simId}-tbl-${simData[simId].step} th`);
+            const colOptionsHTML = Array.from(ths).map(th => `<option value="${th.innerText.split(' ')[0]}">${th.innerText}</option>`).join('');
+            
+            document.getElementById('gb-col-1-select').innerHTML = `<option value="">-- Select Column --</option>` + colOptionsHTML;
+            document.getElementById('gb-col-2-select').innerHTML = `<option value="">-- Select Column --</option>` + colOptionsHTML;
+            document.getElementById('gb-target-col-select').innerHTML = `<option value="">-- Select Column --</option>` + colOptionsHTML;
+        }
+
+        function toggleGbMode() {
+            const isAdv = document.getElementById('gb-adv').checked;
+            document.getElementById('gb-adv-container').classList.toggle('hidden', !isAdv);
+        }
+
+        function openGroupModal(simId) {
+            pendingAction = { simId: simId, type: 'group' };
+            populateModalDropdowns(simId);
+            
+            document.getElementById('gb-basic').checked = true;
+            toggleGbMode();
+            document.getElementById('gb-new-col').value = simId === 1 ? "Total Q1 Expenses" : (simId === 2 ? "Total Cost" : "Total Sales Count");
+            document.getElementById('gb-operation').value = simId === 3 ? 'count' : 'sum';
+            
+            document.getElementById('gb-operation').dispatchEvent(new Event('change'));
+            
+            showBackdrop();
+            const modal = document.getElementById('modal-groupby');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function openPivotModal() {
+            pendingAction = { simId: 4, type: 'pivot' };
+            document.getElementById('pivot-values-select').value = 'Value';
+            document.getElementById('pivot-aggregate-select').value = 'Sum';
+            showBackdrop();
+            const modal = document.getElementById('modal-pivot');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
+            document.getElementById('modal-backdrop').classList.add('hidden');
+            document.body.style.overflow = '';
+            pendingAction = null;
+        }
+
+        function confirmAction() {
+            if (!pendingAction) return;
+            const sId = pendingAction.simId;
+            
+            if (pendingAction.type === 'split') {
+                const delimType = document.getElementById('split-delim-select').value;
+                const customVal = document.getElementById('split-custom-input').value;
+                
+                if (sId === 2) {
+                    if (delimType !== 'custom' || customVal !== '_') {
+                        showToast(2, "Incorrect Configuration: We need to split by the underscore. Select 'Custom' and type '_'");
+                        closeModal('modal-split'); return; 
+                    }
+                } else if (sId === 3) {
+                    if (delimType !== 'comma') {
+                        showToast(3, "Incorrect Configuration: The items are separated by commas. Select 'Comma'.");
+                        closeModal('modal-split'); return; 
+                    }
+                }
+                
+                closeModal('modal-split');
+                simData[sId].step++; renderState(sId);
+            } 
+            else if (pendingAction.type === 'group') {
+                const isAdv = document.getElementById('gb-adv').checked;
+                const col1 = document.getElementById('gb-col-1-select').value;
+                const col2 = document.getElementById('gb-col-2-select').value;
+                const targetCol = document.getElementById('gb-target-col-select').value;
+                const op = document.getElementById('gb-operation').value;
+                
+                if (sId === 1) {
+                    if (col1 !== 'Store' || targetCol !== 'Value') {
+                        showToast(1, "Incorrect Configuration: You must Group By 'Store Location' and Sum the 'Value' column.");
+                        closeModal('modal-groupby'); return;
+                    }
+                } else if (sId === 2) {
+                    if (!isAdv || col1 !== 'Location' || col2 !== 'Vehicle' || targetCol !== 'Value') {
+                        showToast(2, "Incorrect Configuration: You must use 'Advanced' mode, select BOTH Location & Vehicle, and sum 'Value'.");
+                        closeModal('modal-groupby'); return;
+                    }
+                } else if (sId === 3) {
+                    if (col1 !== 'Value' || op !== 'count') {
+                        showToast(3, "Incorrect Configuration: You must Group By 'Value (Product)' and set Operation to 'Count Rows'.");
+                        closeModal('modal-groupby'); return;
+                    }
+                }
+
+                closeModal('modal-groupby');
+                simData[sId].step++; renderState(sId);
+            }
+            else if (pendingAction.type === 'pivot') {
+                const valCol = document.getElementById('pivot-values-select').value;
+                const aggFunc = document.getElementById('pivot-aggregate-select').value;
+
+                if (valCol !== 'Value' || aggFunc !== 'Sum') {
+                    showToast(4, "Incorrect Configuration: You must set the Values Column to 'Value' and Aggregate to 'Sum'.");
+                    closeModal('modal-pivot'); return;
+                }
+
+                closeModal('modal-pivot');
+                simData[4].step++; renderState(4);
+            }
+        }
+    </script>
+</body>
+</html>
