@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Confetti for Gamification -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- SheetJS for Excel Generation -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <style>
         body { 
@@ -47,9 +49,10 @@
         .nav-tab {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            padding-bottom: 0.5rem;
         }
         .nav-tab::after {
-            content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
             width: 0; height: 3px; background: #3b82f6; border-radius: 4px; transition: width 0.3s ease;
         }
         .nav-tab.active { color: #3b82f6; font-weight: 800; }
@@ -99,10 +102,8 @@
         .reveal-section.visible { display: block; opacity: 1; }
         .chart-container { position: relative; height: 280px; width: 100%; }
         
-        /* Level Progress Bar */
         .progress-bar { transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        /* Heatmap CSS for Game Theme */
         .heatmap-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
         .heat-cell { height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.2);}
         .bg-base { background-color: #e2e8f0; color: #64748b; text-shadow: none; }
@@ -111,11 +112,26 @@
         .bg-heat-3 { background-color: #ef4444; }
         .bg-heat-alert { background-color: #dc2626; box-shadow: 0 0 15px rgba(220, 38, 38, 0.5); }
         
-        /* Decomp Tree CSS */
         .tree-node { border: 2px solid #e2e8f0; background: #fff; border-radius: 12px; padding: 12px; font-size: 0.85rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); font-weight: 800; }
         .tree-connector { height: 4px; background: #cbd5e1; width: 24px; border-radius: 2px;}
         .node-highlight { border-color: #f43f5e; background: #fff1f2; color: #e11d48; }
         .node-root { border-color: #8b5cf6; background: #f5f3ff; color: #6d28d9; }
+        
+        .blueprint-step { position: relative; padding-left: 2rem; margin-bottom: 1rem; }
+        .blueprint-step::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute; left: 0; top: 0;
+            background: #1e293b; color: #fff; font-weight: 900;
+            width: 1.5rem; height: 1.5rem; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 0.75rem;
+        }
+        .blueprint-list { counter-reset: step-counter; }
+
+        /* Lab MCQ Button Styles */
+        .lab-mcq-btn { transition: all 0.2s ease; }
+        .lab-mcq-btn.correct { border-color: #10b981; background-color: #ecfdf5; color: #047857; }
+        .lab-mcq-btn.incorrect { border-color: #ef4444; background-color: #fef2f2; color: #b91c1c; }
 
     </style>
 </head>
@@ -126,7 +142,7 @@
         <div class="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl p-4 border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center space-x-3">
                 <div class="bg-blue-100 p-3 rounded-xl text-blue-600 text-2xl">
-                    <i class="fas fa-gamepad"></i>
+                    <i class="fas fa-user-secret"></i>
                 </div>
                 <div>
                     <h1 class="text-2xl font-black tracking-tight text-slate-800">Forensic Data <span class="gradient-text">Dojo</span></h1>
@@ -137,10 +153,9 @@
                 </div>
             </div>
             
-            <nav class="flex space-x-6 text-sm font-black text-slate-400">
-                <button onclick="switchTab('tab-theory')" id="nav-theory" class="nav-tab active pb-1 hover:text-slate-700 flex items-center"><i class="fas fa-brain mr-2"></i> Dojo Challenges</button>
-                <button onclick="switchTab('tab-data')" id="nav-data" class="nav-tab pb-1 hover:text-slate-700 flex items-center"><i class="fas fa-box-open mr-2"></i> Data Vault</button>
-                <button onclick="switchTab('tab-pbi')" id="nav-pbi" class="nav-tab pb-1 hover:text-slate-700 flex items-center"><i class="fas fa-hammer mr-2"></i> Build Guide</button>
+            <nav class="flex space-x-8 text-sm font-black text-slate-400 mt-2 md:mt-0">
+                <button onclick="switchTab('tab-theory')" id="nav-theory" class="nav-tab active hover:text-slate-700 flex items-center"><i class="fas fa-brain mr-2"></i> Visual Dojo</button>
+                <button onclick="switchTab('tab-lab')" id="nav-lab" class="nav-tab hover:text-slate-700 flex items-center"><i class="fas fa-flask mr-2"></i> Data Lab</button>
             </nav>
 
             <div class="flex flex-col items-end min-w-[150px]">
@@ -171,150 +186,244 @@
             </div>
         </section>
 
-        <!-- TAB 2: DATA VAULT -->
-        <section id="tab-data" class="space-y-6 hidden">
-            <div class="game-card p-8 border-t-8 border-t-emerald-400">
-                <div class="text-center mb-10">
-                    <div class="inline-block bg-emerald-100 text-emerald-600 p-4 rounded-full text-4xl mb-4">
-                        <i class="fas fa-vault"></i>
-                    </div>
-                    <h2 class="text-4xl font-black text-slate-800 mb-4">The Data Vault</h2>
-                    <p class="text-slate-500 font-semibold max-w-2xl mx-auto">Unlock and download the raw system extracts. These CSV files contain the exact seeded anomalies discussed in the Dojo. You will need them to build your dashboards.</p>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- Loot Crate 1 -->
-                    <div class="bg-white p-6 rounded-2xl border-2 border-slate-100 shadow-sm hover:border-emerald-300 hover:shadow-xl transition-all text-center group">
-                        <div class="h-24 flex items-end justify-center pb-4 text-slate-300 group-hover:text-emerald-400 transition-colors text-6xl">
-                            <i class="fas fa-truck-loading transform group-hover:-translate-y-2 transition-transform duration-300"></i>
+        <!-- TAB 2: DATA LAB & POWER BI BUILD GUIDE -->
+        <section id="tab-lab" class="space-y-6 hidden">
+            
+            <!-- Excel Download Section -->
+            <div class="game-card p-8 border-t-8 border-t-emerald-500 bg-emerald-50/30">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div class="flex-1">
+                        <div class="inline-block bg-emerald-100 text-emerald-600 p-3 rounded-xl text-2xl mb-4">
+                            <i class="fas fa-file-excel"></i>
                         </div>
-                        <h3 class="text-xl font-black mb-2 text-slate-800">Fixed Assets</h3>
-                        <p class="text-sm text-slate-500 font-semibold mb-6 h-10">Capitalization limits & useful life estimates.</p>
-                        <button onclick="downloadDataset('assets')" class="w-full bg-slate-800 hover:bg-emerald-500 text-white font-black py-3 px-4 rounded-xl flex justify-center items-center transition-all shadow-md active:scale-95">
-                            <i class="fas fa-download mr-2"></i> Download CSV
-                        </button>
+                        <h2 class="text-3xl font-black text-slate-800 mb-2">The Midwest Machining Case File</h2>
+                        <p class="text-slate-600 font-semibold mb-4">You have been assigned to investigate Midwest Machining LLC, a heavy industrial manufacturing firm. We have extracted their raw system data into a single, multi-sheet Excel file. It contains seeded anomalies hidden among thousands of normal transactions.</p>
+                        <ul class="text-sm font-bold text-slate-500 flex space-x-6">
+                            <li><i class="fas fa-layer-group text-emerald-400 mr-1"></i> 3 Worksheets</li>
+                            <li><i class="fas fa-hashtag text-emerald-400 mr-1"></i> 2,500+ Rows</li>
+                            <li><i class="fas fa-bug text-emerald-400 mr-1"></i> 4 Critical Anomalies</li>
+                        </ul>
                     </div>
-
-                    <!-- Loot Crate 2 -->
-                    <div class="bg-white p-6 rounded-2xl border-2 border-slate-100 shadow-sm hover:border-emerald-300 hover:shadow-xl transition-all text-center group">
-                        <div class="h-24 flex items-end justify-center pb-4 text-slate-300 group-hover:text-emerald-400 transition-colors text-6xl">
-                            <i class="fas fa-boxes transform group-hover:-translate-y-2 transition-transform duration-300"></i>
-                        </div>
-                        <h3 class="text-xl font-black mb-2 text-slate-800">Inventory Register</h3>
-                        <p class="text-sm text-slate-500 font-semibold mb-6 h-10">SKU-level inventory counts and exact age.</p>
-                        <button onclick="downloadDataset('inventory')" class="w-full bg-slate-800 hover:bg-emerald-500 text-white font-black py-3 px-4 rounded-xl flex justify-center items-center transition-all shadow-md active:scale-95">
-                            <i class="fas fa-download mr-2"></i> Download CSV
-                        </button>
-                    </div>
-
-                    <!-- Loot Crate 3 -->
-                    <div class="bg-white p-6 rounded-2xl border-2 border-slate-100 shadow-sm hover:border-emerald-300 hover:shadow-xl transition-all text-center group">
-                        <div class="h-24 flex items-end justify-center pb-4 text-slate-300 group-hover:text-emerald-400 transition-colors text-6xl">
-                            <i class="fas fa-book-open transform group-hover:-translate-y-2 transition-transform duration-300"></i>
-                        </div>
-                        <h3 class="text-xl font-black mb-2 text-slate-800">General Journal</h3>
-                        <p class="text-sm text-slate-500 font-semibold mb-6 h-10">Timestamped transaction logs and user roles.</p>
-                        <button onclick="downloadDataset('journals')" class="w-full bg-slate-800 hover:bg-emerald-500 text-white font-black py-3 px-4 rounded-xl flex justify-center items-center transition-all shadow-md active:scale-95">
-                            <i class="fas fa-download mr-2"></i> Download CSV
+                    <div class="w-full md:w-auto">
+                        <button onclick="downloadMasterExcel()" class="w-full md:w-auto bg-emerald-500 hover:bg-emerald-600 text-white text-lg font-black py-4 px-8 rounded-2xl flex justify-center items-center transition-all shadow-lg shadow-emerald-200 active:scale-95 group">
+                            <i class="fas fa-download mr-3 group-hover:-translate-y-1 transition-transform"></i> Download Master Data (.xlsx)
                         </button>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <!-- TAB 3: POWER BI BUILD GUIDE -->
-        <section id="tab-pbi" class="space-y-6 hidden">
             <div class="game-card p-8 border-t-8 border-t-purple-500">
                 <div class="text-center mb-10">
                     <div class="inline-block bg-purple-100 text-purple-600 p-4 rounded-full text-4xl mb-4">
-                        <i class="fas fa-magic"></i>
+                        <i class="fas fa-flask"></i>
                     </div>
-                    <h2 class="text-4xl font-black text-slate-800 mb-4">Power BI Build Guide</h2>
-                    <p class="text-slate-500 font-semibold max-w-2xl mx-auto">Import the data you looted from the vault. Follow these pro-level blueprints to construct irrefutable visual evidence.</p>
+                    <h2 class="text-4xl font-black text-slate-800 mb-4">Power BI Build Lab</h2>
+                    <p class="text-slate-500 font-semibold max-w-2xl mx-auto">Once you have downloaded the Excel file, open Power BI Desktop. Click <strong>Get Data -> Excel Workbook</strong>, select your downloaded file, and check all three sheets to load them. Complete the missions below to uncover the truth.</p>
                 </div>
 
                 <div class="space-y-8">
-                    <!-- Guide 1 -->
+                    <!-- Blueprint 1 -->
                     <div class="bg-white border-2 border-slate-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-blue-100 text-blue-600 font-black text-xs px-3 py-1 rounded-bl-xl">Blueprint 01</div>
+                        <div class="absolute top-0 right-0 bg-blue-100 text-blue-600 font-black text-xs px-3 py-1 rounded-bl-xl">Mission 01</div>
                         <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center"><i class="fas fa-chart-line text-blue-500 mr-3 text-2xl"></i> Useful Life Manipulation</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="text-sm text-slate-600 font-semibold space-y-3">
-                                <p><strong class="text-slate-800 bg-slate-100 px-2 py-1 rounded">Target Data:</strong> Fixed_Assets.csv</p>
-                                <ul class="list-disc pl-5 space-y-2">
-                                    <li>Add a <strong>Line and Clustered Column Chart</strong> to the canvas.</li>
-                                    <li>Drag <code>Acquisition_Date</code> to the X-axis (Set to Year hierarchy).</li>
-                                    <li>Drag <code>Asset_ID</code> to Column Y-axis (Set to Count).</li>
-                                    <li>Drag <code>Useful_Life_Months</code> to Line Y-axis (Set to Average).</li>
-                                    <li class="bg-blue-50 p-2 rounded-lg text-blue-700 border border-blue-100"><i class="fas fa-lightbulb mr-1"></i> <strong>Pro Tip:</strong> Use the On-Object Format Pane to thicken the line stroke to 4px, ensuring the "Useful Life" trend dominates the visual hierarchy.</li>
-                                </ul>
+                        
+                        <div class="bg-indigo-50 border border-indigo-100 p-5 rounded-xl mb-4">
+                            <h4 class="font-black text-indigo-800 mb-2"><i class="fas fa-bullseye mr-2 text-indigo-500"></i> Your Objective</h4>
+                            <p class="text-sm font-semibold text-indigo-900 leading-relaxed">Visualize the relationship between the <strong>Acquisition Date</strong> of heavy machinery and its assigned <strong>Useful Life</strong>. Your goal is to construct a visual that highlights any sudden, unnatural changes in corporate accounting policies over time.</p>
+                        </div>
+
+                        <!-- Toggle Steps -->
+                        <button onclick="toggleVisibility('steps-1')" class="text-sm font-black text-slate-400 hover:text-blue-500 flex items-center mb-6 transition-colors px-2 py-1 rounded hover:bg-slate-50">
+                            <i class="fas fa-chevron-right mr-2 transition-transform duration-200" id="icon-steps-1"></i> Need a hint? Show Power BI Blueprint
+                        </button>
+
+                        <div id="steps-1" class="hidden mb-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                            <div class="text-sm text-slate-600 font-semibold space-y-2 blueprint-list">
+                                <p class="mb-4"><strong class="text-slate-800 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm"><i class="fas fa-table text-slate-400 mr-1"></i> Target Data: Fixed Assets Sheet</strong></p>
+                                <div class="blueprint-step">Create a <strong>New Page</strong> in your Power BI report and name it 'Blueprint 01'.</div>
+                                <div class="blueprint-step">Click on the canvas and insert a <strong>Line and Clustered Column Chart</strong> visual.</div>
+                                <div class="blueprint-step">In the <strong>Data Pane</strong>, drag <code>Acquisition_Date</code> to the <strong>X-axis</strong> field. Remove Quarter and Day so it only shows Year and Month.</div>
+                                <div class="blueprint-step">Drag <code>Asset_ID</code> to the <strong>Column Y-axis</strong> field. (Ensure it aggregates as 'Count').</div>
+                                <div class="blueprint-step">Drag <code>Useful_Life_Months</code> to the <strong>Line Y-axis</strong> field. Click the drop-down on the field and change the aggregation from 'Sum' to <strong>'Average'</strong>.</div>
+                                <div class="blueprint-step">Open the <strong>Format Pane</strong> (the paint roller icon). Go to <em>Lines -> Stroke Width</em> and increase it to 4px to make the manipulation obvious.</div>
                             </div>
-                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center">
-                                <i class="fas fa-eye text-3xl text-slate-300 mb-3"></i>
-                                <p class="text-slate-500 text-sm font-bold italic">"Watch the line. The average useful life of 'Heavy Machinery' suddenly spikes to 120 months right when profits dipped. You caught them."</p>
+                        </div>
+
+                        <!-- Reveal Findings -->
+                        <div class="border-t border-slate-100 pt-6">
+                            <button onclick="toggleVisibility('findings-1')" class="bg-slate-800 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all active:scale-95 flex items-center">
+                                <i class="fas fa-search mr-3"></i> Reveal Forensic Findings
+                            </button>
+                            
+                            <div id="findings-1" class="hidden mt-6 animate-[fadeIn_0.5s_ease-out]">
+                                <div class="bg-blue-50 p-6 rounded-xl border border-blue-200 flex flex-col items-center justify-center text-center mb-6">
+                                    <i class="fas fa-search-dollar text-4xl text-blue-400 mb-3"></i>
+                                    <p class="text-slate-700 text-sm font-bold italic leading-relaxed">"Watch the line. The average useful life of heavy shop floor machinery suddenly spikes from 60 to 120 months in 2024. They are stretching depreciation to artificially boost their bottom line."</p>
+                                </div>
+
+                                <h4 class="font-black text-slate-700 mb-3"><i class="fas fa-question-circle text-blue-500 mr-2"></i> Interpretation Check</h4>
+                                <p class="text-sm font-semibold text-slate-600 mb-4">What does the sudden spike in the useful life trend line likely indicate?</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <button onclick="checkLabAnswer(this, false)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-blue-300 hover:bg-blue-50">A) The company purchased much higher-quality machinery.</button>
+                                    <button onclick="checkLabAnswer(this, false)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-blue-300 hover:bg-blue-50">B) A widespread data entry error by the IT department.</button>
+                                    <button onclick="checkLabAnswer(this, true)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-blue-300 hover:bg-blue-50">C) Artificial stretching of depreciation to boost short-term reported profits.</button>
+                                    <button onclick="checkLabAnswer(this, false)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-blue-300 hover:bg-blue-50">D) A recent change in federal manufacturing tax laws.</button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Guide 2 -->
+                    <!-- Blueprint 2 -->
                     <div class="bg-white border-2 border-slate-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-pink-100 text-pink-600 font-black text-xs px-3 py-1 rounded-bl-xl">Blueprint 02</div>
-                        <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center"><i class="fas fa-cut text-pink-500 mr-3 text-2xl"></i> Threshold Abuse</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="text-sm text-slate-600 font-semibold space-y-3">
-                                <p><strong class="text-slate-800 bg-slate-100 px-2 py-1 rounded">Target Data:</strong> Fixed_Assets.csv</p>
-                                <ul class="list-disc pl-5 space-y-2">
-                                    <li>Right-click <code>Capitalized_Amount</code> in the data pane -> select <strong>Create Group</strong>. Set Bin size to <strong>$100</strong>.</li>
-                                    <li>Add a <strong>Clustered Column Chart</strong>.</li>
-                                    <li>Place your new <code>Amount (bins)</code> on the X-axis and <code>Asset_ID</code> (Count) on the Y-axis.</li>
-                                    <li class="bg-pink-50 p-2 rounded-lg text-pink-700 border border-pink-100"><i class="fas fa-lightbulb mr-1"></i> <strong>Pro Tip:</strong> Add a vertical Reference Line at exactly $5,000 using the Analytics pane and color it bright red.</li>
-                                </ul>
+                        <div class="absolute top-0 right-0 bg-pink-100 text-pink-600 font-black text-xs px-3 py-1 rounded-bl-xl">Mission 02</div>
+                        <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center"><i class="fas fa-cut text-pink-500 mr-3 text-2xl"></i> Threshold Abuse (Invoice Splitting)</h3>
+                        
+                        <div class="bg-indigo-50 border border-indigo-100 p-5 rounded-xl mb-4">
+                            <h4 class="font-black text-indigo-800 mb-2"><i class="fas fa-bullseye mr-2 text-indigo-500"></i> Your Objective</h4>
+                            <p class="text-sm font-semibold text-indigo-900 leading-relaxed">Midwest's capitalization policy dictates that purchases strictly OVER $5,000 require corporate approval. Using the capitalized amounts, create a visualization that proves plant managers are deliberately splitting invoices to stay under the radar.</p>
+                        </div>
+
+                        <!-- Toggle Steps -->
+                        <button onclick="toggleVisibility('steps-2')" class="text-sm font-black text-slate-400 hover:text-pink-500 flex items-center mb-6 transition-colors px-2 py-1 rounded hover:bg-slate-50">
+                            <i class="fas fa-chevron-right mr-2 transition-transform duration-200" id="icon-steps-2"></i> Need a hint? Show Power BI Blueprint
+                        </button>
+
+                        <div id="steps-2" class="hidden mb-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                            <div class="text-sm text-slate-600 font-semibold space-y-2 blueprint-list">
+                                <p class="mb-4"><strong class="text-slate-800 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm"><i class="fas fa-table text-slate-400 mr-1"></i> Target Data: Fixed Assets Sheet</strong></p>
+                                <div class="blueprint-step">Create a <strong>New Page</strong> in your Power BI report and name it 'Blueprint 02'.</div>
+                                <div class="blueprint-step">In the Data Pane, right-click on the <code>Capitalized_Amount</code> column and select <strong>New Group</strong>.</div>
+                                <div class="blueprint-step">In the grouping window, set the <em>Group Type</em> to <strong>Bin</strong>, and set the <em>Bin Size</em> to <strong>100</strong>. Click OK.</div>
+                                <div class="blueprint-step">Add a <strong>Clustered Column Chart</strong> to the canvas.</div>
+                                <div class="blueprint-step">Drag your newly created <code>Capitalized_Amount (bins)</code> to the <strong>X-axis</strong>.</div>
+                                <div class="blueprint-step">Drag <code>Asset_ID</code> to the <strong>Y-axis</strong> (Set to 'Count').</div>
+                                <div class="blueprint-step">Go to the <strong>Analytics Pane</strong> (magnifying glass icon). Select <em>X-axis Constant Line</em>, click 'Add', set the value to <strong>5000</strong>, and color the line bright red.</div>
                             </div>
-                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center">
-                                <i class="fas fa-eye text-3xl text-slate-300 mb-3"></i>
-                                <p class="text-slate-500 text-sm font-bold italic">"A massive, unnatural cliff forms right before the red $5,000 line. This proves deliberate invoice splitting."</p>
+                        </div>
+
+                        <!-- Reveal Findings -->
+                        <div class="border-t border-slate-100 pt-6">
+                            <button onclick="toggleVisibility('findings-2')" class="bg-slate-800 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all active:scale-95 flex items-center">
+                                <i class="fas fa-search mr-3"></i> Reveal Forensic Findings
+                            </button>
+                            
+                            <div id="findings-2" class="hidden mt-6 animate-[fadeIn_0.5s_ease-out]">
+                                <div class="bg-pink-50 p-6 rounded-xl border border-pink-200 flex flex-col items-center justify-center text-center mb-6">
+                                    <i class="fas fa-balance-scale-right text-4xl text-pink-400 mb-3"></i>
+                                    <p class="text-slate-700 text-sm font-bold italic leading-relaxed">"Notice the massive, unnatural spike in invoice counts right at the $4,900 bin. Statistical averages would show a smooth bell curve, but human behavior overrides statistics. Plant managers are splitting invoices to avoid corporate oversight."</p>
+                                </div>
+
+                                <h4 class="font-black text-slate-700 mb-3"><i class="fas fa-question-circle text-pink-500 mr-2"></i> Interpretation Check</h4>
+                                <p class="text-sm font-semibold text-slate-600 mb-4">Why is there a massive spike in transactions just below the $5,000 mark?</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <button onclick="checkLabAnswer(this, false)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-pink-300 hover:bg-pink-50">A) Heavy machinery naturally costs exactly $4,900.</button>
+                                    <button onclick="checkLabAnswer(this, true)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-pink-300 hover:bg-pink-50">B) Employees are actively circumventing the $5,000 corporate approval threshold.</button>
+                                    <button onclick="checkLabAnswer(this, false)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-pink-300 hover:bg-pink-50">C) A company-wide bulk discount was successfully applied.</button>
+                                    <button onclick="checkLabAnswer(this, false)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-pink-300 hover:bg-pink-50">D) Supply chain inflation caused normal prices to rise slightly.</button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Guide 3 -->
+                    <!-- Blueprint 3 -->
                     <div class="bg-white border-2 border-slate-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-orange-100 text-orange-600 font-black text-xs px-3 py-1 rounded-bl-xl">Blueprint 03</div>
+                        <div class="absolute top-0 right-0 bg-orange-100 text-orange-600 font-black text-xs px-3 py-1 rounded-bl-xl">Mission 03</div>
                         <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center"><i class="fas fa-ghost text-orange-500 mr-3 text-2xl"></i> Ghost Margins</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="text-sm text-slate-600 font-semibold space-y-3">
-                                <p><strong class="text-slate-800 bg-slate-100 px-2 py-1 rounded">Target Data:</strong> Inventory.csv</p>
-                                <ul class="list-disc pl-5 space-y-2">
-                                    <li>Create a new DAX measure:<br><code class="bg-slate-800 text-green-400 px-2 py-1 rounded block mt-1">Total_Value = SUMX('Inventory', 'Inventory'[Quantity_On_Hand] * 'Inventory'[Unit_Cost])</code></li>
-                                    <li>Add a <strong>Scatter Plot</strong>.</li>
-                                    <li>X-Axis: <code>Days_In_Inventory</code>. Y-Axis: <code>Total_Value</code>. Values: <code>SKU</code>.</li>
-                                    <li class="bg-orange-50 p-2 rounded-lg text-orange-700 border border-orange-100"><i class="fas fa-lightbulb mr-1"></i> <strong>Pro Tip:</strong> Enable Modern Visual Tooltips so hovering immediately reveals the specific SKU hiding in the top right.</li>
-                                </ul>
+                        
+                        <div class="bg-indigo-50 border border-indigo-100 p-5 rounded-xl mb-4">
+                            <h4 class="font-black text-indigo-800 mb-2"><i class="fas fa-bullseye mr-2 text-indigo-500"></i> Your Objective</h4>
+                            <p class="text-sm font-semibold text-indigo-900 leading-relaxed">You need to analyze thousands of inventory items at once. Find a way to visually isolate specific parts that are both highly obsolete (very old) AND suspiciously held at a very high total value.</p>
+                        </div>
+
+                        <!-- Toggle Steps -->
+                        <button onclick="toggleVisibility('steps-3')" class="text-sm font-black text-slate-400 hover:text-orange-500 flex items-center mb-6 transition-colors px-2 py-1 rounded hover:bg-slate-50">
+                            <i class="fas fa-chevron-right mr-2 transition-transform duration-200" id="icon-steps-3"></i> Need a hint? Show Power BI Blueprint
+                        </button>
+
+                        <div id="steps-3" class="hidden mb-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                            <div class="text-sm text-slate-600 font-semibold space-y-2 blueprint-list">
+                                <p class="mb-4"><strong class="text-slate-800 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm"><i class="fas fa-table text-slate-400 mr-1"></i> Target Data: Inventory Sheet</strong></p>
+                                <div class="blueprint-step">Create a <strong>New Page</strong> in your Power BI report and name it 'Blueprint 03'.</div>
+                                <div class="blueprint-step">In the Home ribbon, click <strong>New Measure</strong>.</div>
+                                <div class="blueprint-step">Type this exactly into the formula bar to calculate the total financial value of each item on hand:<br><code class="bg-slate-800 text-green-400 px-2 py-1 rounded block mt-2 text-xs font-mono">Total_Value = SUMX('Inventory', 'Inventory'[Quantity_On_Hand] * 'Inventory'[Unit_Cost])</code></div>
+                                <div class="blueprint-step">Add a <strong>Scatter Plot</strong> visual to the canvas.</div>
+                                <div class="blueprint-step">Drag <code>Days_In_Inventory</code> to the <strong>X-Axis</strong>. Drag your new <code>Total_Value</code> measure to the <strong>Y-Axis</strong>.</div>
+                                <div class="blueprint-step">Drag <code>SKU</code> to <strong>Values</strong> to plot individual parts as distinct dots.</div>
                             </div>
-                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center">
-                                <i class="fas fa-eye text-3xl text-slate-300 mb-3"></i>
-                                <p class="text-slate-500 text-sm font-bold italic">"The top-right quadrant isolates the ghosts: Inventory that is extremely old AND highly valued, severely overstating company assets."</p>
+                        </div>
+
+                        <!-- Reveal Findings -->
+                        <div class="border-t border-slate-100 pt-6">
+                            <button onclick="toggleVisibility('findings-3')" class="bg-slate-800 hover:bg-orange-500 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all active:scale-95 flex items-center">
+                                <i class="fas fa-search mr-3"></i> Reveal Forensic Findings
+                            </button>
+                            
+                            <div id="findings-3" class="hidden mt-6 animate-[fadeIn_0.5s_ease-out]">
+                                <div class="bg-orange-50 p-6 rounded-xl border border-orange-200 flex flex-col items-center justify-center text-center mb-6">
+                                    <i class="fas fa-box-open text-4xl text-orange-400 mb-3"></i>
+                                    <p class="text-slate-700 text-sm font-bold italic leading-relaxed">"Look at the data points isolated far into the top-right quadrant. You have heavy machinery parts sitting there for over 800 days, yet valued at hundreds of thousands of dollars. They are obsolete 'Ghost Inventory', but Midwest is refusing to write them off to protect asset values."</p>
+                                </div>
+
+                                <h4 class="font-black text-slate-700 mb-3"><i class="fas fa-question-circle text-orange-500 mr-2"></i> Interpretation Check</h4>
+                                <p class="text-sm font-semibold text-slate-600 mb-4">In this specific scatter plot, what do the data points isolated in the top-right quadrant represent?</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <button onclick="checkLabAnswer(this, false)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-orange-300 hover:bg-orange-50">A) Fast-moving, inexpensive everyday inventory.</button>
+                                    <button onclick="checkLabAnswer(this, false)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-orange-300 hover:bg-orange-50">B) Recently purchased, highly strategic inventory.</button>
+                                    <button onclick="checkLabAnswer(this, true)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-orange-300 hover:bg-orange-50">C) Obsolete inventory that management refuses to write off to protect assets.</button>
+                                    <button onclick="checkLabAnswer(this, false)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-orange-300 hover:bg-orange-50">D) Inventory that is physically missing from the warehouse.</button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Guide 4 -->
+                    <!-- Blueprint 4 -->
                     <div class="bg-white border-2 border-slate-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-red-100 text-red-600 font-black text-xs px-3 py-1 rounded-bl-xl">Blueprint 04</div>
+                        <div class="absolute top-0 right-0 bg-red-100 text-red-600 font-black text-xs px-3 py-1 rounded-bl-xl">Mission 04</div>
                         <h3 class="text-xl font-black text-slate-800 mb-4 flex items-center"><i class="fas fa-clock text-red-500 mr-3 text-2xl"></i> Rogue Entries</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="text-sm text-slate-600 font-semibold space-y-3">
-                                <p><strong class="text-slate-800 bg-slate-100 px-2 py-1 rounded">Target Data:</strong> Journals.csv</p>
-                                <ul class="list-disc pl-5 space-y-2">
-                                    <li>Add a <strong>Matrix Visual</strong> to the canvas.</li>
-                                    <li>Place <code>Day_of_Week</code> on Rows and <code>Hour_of_Day</code> on Columns. Place <code>Entry_Amount</code> in Values.</li>
-                                    <li>Use the Format Pane -> Cell Elements to turn on <strong>Background Color</strong> conditional formatting.</li>
-                                    <li class="bg-red-50 p-2 rounded-lg text-red-700 border border-red-100"><i class="fas fa-lightbulb mr-1"></i> <strong>Pro Tip:</strong> Add an Input Slicer and bind it to <code>User_Role</code>. Type "CFO" to instantly filter the heatmap.</li>
-                                </ul>
+                        
+                        <div class="bg-indigo-50 border border-indigo-100 p-5 rounded-xl mb-4">
+                            <h4 class="font-black text-indigo-800 mb-2"><i class="fas fa-bullseye mr-2 text-indigo-500"></i> Your Objective</h4>
+                            <p class="text-sm font-semibold text-indigo-900 leading-relaxed">Map over 10,000 journal entries across the days of the week and hours of the day. Identify a way to instantly filter the data and highlight unusual, high-dollar posting behaviors by executives.</p>
+                        </div>
+
+                        <!-- Toggle Steps -->
+                        <button onclick="toggleVisibility('steps-4')" class="text-sm font-black text-slate-400 hover:text-red-500 flex items-center mb-6 transition-colors px-2 py-1 rounded hover:bg-slate-50">
+                            <i class="fas fa-chevron-right mr-2 transition-transform duration-200" id="icon-steps-4"></i> Need a hint? Show Power BI Blueprint
+                        </button>
+
+                        <div id="steps-4" class="hidden mb-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                            <div class="text-sm text-slate-600 font-semibold space-y-2 blueprint-list">
+                                <p class="mb-4"><strong class="text-slate-800 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm"><i class="fas fa-table text-slate-400 mr-1"></i> Target Data: Journal Entries Sheet</strong></p>
+                                <div class="blueprint-step">Create a <strong>New Page</strong> in your Power BI report and name it 'Blueprint 04'.</div>
+                                <div class="blueprint-step">Add a <strong>Matrix Visual</strong> to the canvas.</div>
+                                <div class="blueprint-step">Drag <code>Day_of_Week</code> to <strong>Rows</strong>.</div>
+                                <div class="blueprint-step">Drag <code>Hour_of_Day</code> to <strong>Columns</strong>.</div>
+                                <div class="blueprint-step">Drag <code>Entry_Amount</code> to <strong>Values</strong>.</div>
+                                <div class="blueprint-step">Go to <strong>Format your visual</strong>, select <strong>Cell elements</strong>, apply setting to <strong>Sum of Entry_Amount</strong>, turn on <strong>Background color</strong>, and click the <strong>fx</strong> button to apply the color setting (set lowest value to light gray and highest to bright red).</div>
+                                <div class="blueprint-step">Add a <strong>Slicer</strong> visual and drag <code>User_Role</code> into it. Click the "CFO" role to filter the matrix.</div>
                             </div>
-                            <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center">
-                                <i class="fas fa-eye text-3xl text-slate-300 mb-3"></i>
-                                <p class="text-slate-500 text-sm font-bold italic">"The matrix immediately lights up bright red late on a Saturday night. A textbook management override of internal controls."</p>
+                        </div>
+
+                        <!-- Reveal Findings -->
+                        <div class="border-t border-slate-100 pt-6">
+                            <button onclick="toggleVisibility('findings-4')" class="bg-slate-800 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-all active:scale-95 flex items-center">
+                                <i class="fas fa-search mr-3"></i> Reveal Forensic Findings
+                            </button>
+                            
+                            <div id="findings-4" class="hidden mt-6 animate-[fadeIn_0.5s_ease-out]">
+                                <div class="bg-red-50 p-6 rounded-xl border border-red-200 flex flex-col items-center justify-center text-center mb-6">
+                                    <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-3"></i>
+                                    <p class="text-slate-700 text-sm font-bold italic leading-relaxed">"When you filter the matrix by the CFO, the table goes entirely grey—except for a massive bright red cluster late on Saturday nights at the exact end of every quarter. This is a textbook management override of internal controls to manipulate financial reporting."</p>
+                                </div>
+
+                                <h4 class="font-black text-slate-700 mb-3"><i class="fas fa-question-circle text-red-500 mr-2"></i> Interpretation Check</h4>
+                                <p class="text-sm font-semibold text-slate-600 mb-4">What does the bright red cluster of massive journal entries posted by the CFO on a Saturday at 11:00 PM strongly suggest?</p>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <button onclick="checkLabAnswer(this, false)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-red-300 hover:bg-red-50">A) The CFO is working overtime to clear normal backlog.</button>
+                                    <button onclick="checkLabAnswer(this, false)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-red-300 hover:bg-red-50">B) Automated system maintenance batched the entries together.</button>
+                                    <button onclick="checkLabAnswer(this, true)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-red-300 hover:bg-red-50">C) Deliberate management override of internal controls to manipulate quarter-end results.</button>
+                                    <button onclick="checkLabAnswer(this, false)" class="lab-mcq-btn text-left p-3 rounded-lg border-2 border-slate-200 text-sm font-bold text-slate-600 hover:border-red-300 hover:bg-red-50">D) Normal end-of-week factory payroll processing.</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -345,11 +454,11 @@
                 title: "The Accrual Divergence",
                 icon: "fa-chart-line",
                 iconColor: "text-indigo-500",
-                scenario: "Net Income has been rising steadily by 10% each year, but Cash Flow from Operations (CFO) is declining. You need to show the Board that earnings quality is deteriorating due to aggressive accruals.",
+                scenario: "Midwest Machining's Net Income has been rising steadily by 10% each year, but their Cash Flow from Operations (CFO) is actively declining. You need to show the Board that earnings quality is deteriorating due to aggressive accruals.",
                 badData: "Currently shown as a dense data table with 50 rows of cash flow adjustments, making it impossible to spot the macro trend.",
                 options: ["100% Stacked Bar Chart", "Line and Clustered Column Combo Chart", "Pie Chart", "Scatter Plot"],
                 correctIndex: 1,
-                reasoning: "A Combo Chart lets you side-by-side compare absolute dollar values of Net Income vs CFO (columns), while plotting the 'Accruals Ratio' as a trend line. The divergence becomes visually inescapable.",
+                reasoning: "A Combo Chart lets you side-by-side compare absolute dollar values of Net Income vs CFO (columns), while plotting the 'Accruals Gap' as a trend line. The divergence becomes visually inescapable.",
                 chartFunc: (ctx) => {
                     new Chart(ctx, {
                         type: 'bar',
@@ -370,7 +479,7 @@
                 title: "Explaining the 'Big Bath'",
                 icon: "fa-water",
                 iconColor: "text-sky-500",
-                scenario: "The company took a massive $50M loss this year to clear the balance sheet. You need to explain how a $20M Gross Profit turned into a $50M Net Loss by showing the sequential impact of massive write-offs.",
+                scenario: "Midwest Machining took a massive $50M loss this year to clear their books. You need to explain to the auditors how a $20M Gross Profit turned into a $50M Net Loss by showing the sequential impact of massive machine write-offs.",
                 badData: "Currently shown as a standard pie chart of expenses, which completely fails to show how expenses dragged the positive profit down below zero.",
                 options: ["Waterfall Chart", "Donut Chart", "Multiple Line Charts", "Radar Chart"],
                 correctIndex: 0,
@@ -396,7 +505,7 @@
                 title: "Hunting Threshold Abuse",
                 icon: "fa-cut",
                 iconColor: "text-pink-500",
-                scenario: "Capitalization policy dictates that purchases strictly OVER $5,000 are assets. Purchases $5,000 and below are immediate expenses. You suspect managers are splitting invoices to sit just below $5k to game the budget.",
+                scenario: "Midwest's capitalization policy dictates that purchases strictly OVER $5,000 are assets. Purchases $5,000 and below are immediate expenses. You suspect shop managers are splitting tooling invoices to sit just below $5k to game the budget.",
                 badData: "Currently looking at a line chart of 'Average Invoice Size over Time', which mathematically smooths out and hides individual transaction behavior.",
                 options: ["Area Chart", "Scatter Plot", "Histogram (Binned Column Chart)", "Decomposition Tree"],
                 correctIndex: 2,
@@ -417,7 +526,7 @@
                 title: "Locating Ghost Margins",
                 icon: "fa-ghost",
                 iconColor: "text-orange-500",
-                scenario: "You have 15,000 inventory SKUs. You need to identify 'Ghost Inventory'—items that are extremely old (obsolete) but are still being held at a very high financial value to inflate assets.",
+                scenario: "Midwest has 15,000 inventory SKUs in their warehouse. You need to identify 'Ghost Inventory'—parts that are extremely old (obsolete) but are still being held at a very high financial value to inflate assets.",
                 badData: "Currently presented as a Top 10 list of 'Most Valuable SKUs', which tells you what is expensive but completely ignores how old it is.",
                 options: ["100% Stacked Bar Chart", "Scatter Plot", "Treemap", "Gauge Chart"],
                 correctIndex: 1,
@@ -427,7 +536,7 @@
                     const ghost = Array.from({length: 5}, () => ({x: 800 + Math.random()*200, y: 150000 + Math.random()*50000}));
                     new Chart(ctx, {
                         type: 'scatter',
-                        data: { datasets: [{ label: 'Normal', data: normal, backgroundColor: palette.sky }, { label: 'Audit Targets', data: ghost, backgroundColor: palette.rose, pointRadius: 8, pointHoverRadius: 10 }] },
+                        data: { datasets: [{ label: 'Normal Parts', data: normal, backgroundColor: palette.sky }, { label: 'Audit Targets', data: ghost, backgroundColor: palette.rose, pointRadius: 8, pointHoverRadius: 10 }] },
                         options: { responsive: true, maintainAspectRatio: false, scales: { x: { title: { display: true, text: 'Age (Days)' } }, y: { title: { display: true, text: 'Book Value ($)' } } } }
                     });
                 }
@@ -437,8 +546,8 @@
                 title: "Structural Expense Shifts",
                 icon: "fa-layer-group",
                 iconColor: "text-lavender-500",
-                scenario: "Management claims rising expenses are normal growth, but you suspect they are quietly shifting massive funds away from R&D and into 'Consulting Fees' to hide executive payouts.",
-                badData: "Currently shown as multiple pie charts (one for each year), requiring the audience to try and memorize slice sizes across pages.",
+                scenario: "Management claims rising expenses are normal plant growth, but you suspect they are quietly shifting massive funds away from Factory Maintenance and into 'Consulting Fees' to hide executive payouts.",
+                badData: "Currently shown as multiple pie charts (one for each year), requiring the user to try and mentally memorize slice sizes across pages.",
                 options: ["100% Stacked Column Chart", "Scatter Plot", "Funnel Chart", "Waterfall Chart"],
                 correctIndex: 0,
                 reasoning: "A 100% Stacked Column normalizes total expenses to 100%. This removes the distraction of absolute dollar growth and highlights structural shifts—making it obvious if the 'Consulting' block expands vertically over time.",
@@ -448,8 +557,8 @@
                         data: {
                             labels: ['2023', '2024', '2025'],
                             datasets: [
-                                { label: 'Payroll', data: [60, 55, 40], backgroundColor: palette.sky, borderRadius: {topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6} },
-                                { label: 'R&D', data: [30, 20, 10], backgroundColor: palette.sage },
+                                { label: 'Plant Payroll', data: [60, 55, 40], backgroundColor: palette.sky, borderRadius: {topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6} },
+                                { label: 'Maintenance', data: [30, 20, 10], backgroundColor: palette.sage },
                                 { label: 'Consulting', data: [10, 25, 50], backgroundColor: palette.rose, borderRadius: {topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0} }
                             ]
                         },
@@ -462,7 +571,7 @@
                 title: "Rogue Entry Timing",
                 icon: "fa-clock",
                 iconColor: "text-red-500",
-                scenario: "You have 10,000 manual journal entries. You want to prove that the CFO is overriding internal controls by posting massive entries late at night on weekends.",
+                scenario: "You have 10,000 manual journal entries. You want to prove that Midwest's CFO is overriding internal controls by posting massive entries late at night on weekends.",
                 badData: "Currently shown as a line chart tracking 'Number of Entries per Day', which completely ignores the hour of the day.",
                 options: ["Donut Chart", "Matrix with Conditional Formatting (Heatmap)", "Waterfall Chart", "Key Influencers"],
                 correctIndex: 1,
@@ -507,11 +616,11 @@
                 title: "Following the Fraud Trail",
                 icon: "fa-sitemap",
                 iconColor: "text-emerald-500",
-                scenario: "You noticed a $5M spike in sales on the last day of the quarter (Channel Stuffing). You need a visual that lets you click the $5M, break it down by Sales Rep, then by Customer, and finally by Payment Terms.",
+                scenario: "You noticed a $5M spike in sales on the last day of the quarter. You need a visual that lets you click the $5M, break it down by Sales Rep, then by Distributor, and finally by Payment Terms.",
                 badData: "Currently using 4 different standalone bar charts, requiring the user to cross-filter manually to follow the path.",
                 options: ["Decomposition Tree", "Scatter Plot", "Line Chart", "Matrix"],
                 correctIndex: 0,
-                reasoning: "The Decomposition Tree dynamically 'drills-down' across different dimensions ad-hoc. You can visually trace the spike directly to one specific Rep, selling to one Customer, using highly unusual 'Net 180' payment terms.",
+                reasoning: "The Decomposition Tree dynamically 'drills-down' across different dimensions ad-hoc. You can visually trace the spike directly to one specific Rep, selling to one Distributor, using highly unusual 'Net 180' payment terms.",
                 customHTML: `
                     <div class="flex h-full items-center justify-center space-x-2 w-full mt-2">
                         <div class="tree-node node-root w-24"><strong>Total Spike</strong><br>$5.0M</div>
@@ -523,7 +632,7 @@
                         </div>
                         <div class="tree-connector mt-12"></div>
                         <div class="flex flex-col space-y-2 mt-12">
-                            <div class="tree-node node-highlight w-24"><strong>Cust_99</strong><br>$4.5M</div>
+                            <div class="tree-node node-highlight w-24"><strong>Distr_99</strong><br>$4.5M</div>
                         </div>
                         <div class="tree-connector mt-12"></div>
                         <div class="flex flex-col space-y-2 mt-12">
@@ -562,6 +671,50 @@
                 origin: { x: x, y: y },
                 colors: ['#3b82f6', '#ec4899', '#10b981', '#8b5cf6']
             });
+        }
+        
+        // Lab Toggle Functions
+        function toggleVisibility(id) {
+            const el = document.getElementById(id);
+            const isSteps = id.startsWith('steps-');
+            let iconId = isSteps ? 'icon-' + id : null;
+            let icon = iconId ? document.getElementById(iconId) : null;
+            
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                if(icon) {
+                    icon.classList.remove('fa-chevron-right');
+                    icon.classList.add('fa-chevron-down');
+                }
+            } else {
+                el.classList.add('hidden');
+                if(icon) {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-right');
+                }
+            }
+        }
+
+        // Lab Assessment Logic
+        function checkLabAnswer(btn, isCorrect) {
+            const container = btn.parentElement;
+            const buttons = container.querySelectorAll('.lab-mcq-btn');
+            
+            // Reset styles in this group
+            buttons.forEach(b => {
+                b.classList.remove('correct', 'incorrect', 'shake-anim');
+            });
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                const rect = btn.getBoundingClientRect();
+                const x = (rect.left + (rect.width / 2)) / window.innerWidth;
+                const y = (rect.top + (rect.height / 2)) / window.innerHeight;
+                triggerConfetti(x, y);
+            } else {
+                btn.classList.add('incorrect', 'shake-anim');
+                setTimeout(() => btn.classList.remove('shake-anim'), 400);
+            }
         }
 
         // UI Setup
@@ -609,8 +762,8 @@
                 
                 <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner mb-6 relative overflow-hidden">
                     <div class="absolute -right-4 -top-4 text-slate-200 text-6xl opacity-50"><i class="fas fa-search"></i></div>
-                    <p class="text-slate-600 mb-4 text-base font-semibold leading-relaxed relative z-10"><strong class="text-slate-800 font-black"><i class="fas fa-play text-blue-500 mr-2"></i>Scenario:</strong> ${q.scenario}</p>
-                    <p class="text-slate-500 text-sm font-semibold bg-red-50 p-4 rounded-xl border border-red-100 relative z-10"><strong class="text-red-500 font-black"><i class="fas fa-times-circle mr-2"></i>Bad Practice:</strong> ${q.badData}</p>
+                    <p class="text-slate-600 mb-4 text-base font-semibold leading-relaxed relative z-10"><strong class="text-slate-800 font-black"><i class="fas fa-play text-blue-500 mr-2"></i> Scenario:</strong> ${q.scenario}</p>
+                    <p class="text-slate-500 text-sm font-semibold bg-red-50 p-4 rounded-xl border border-red-100 relative z-10"><strong class="text-red-500 font-black"><i class="fas fa-times-circle mr-2"></i> Bad Practice:</strong> ${q.badData}</p>
                 </div>
 
                 <div class="mb-6">
@@ -649,7 +802,7 @@
 
         // Tab Switching Logic
         function switchTab(tabId) {
-            ['tab-theory', 'tab-data', 'tab-pbi'].forEach(id => {
+            ['tab-theory', 'tab-lab'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
                 document.getElementById(id).classList.remove('block');
                 document.getElementById('nav-' + id.split('-')[1]).classList.remove('active');
@@ -699,13 +852,11 @@
                 if (isCorrect) {
                     currentScore++;
                     updateScoreboard();
-                    // Get button coordinates for confetti origin
                     const rect = event.target.getBoundingClientRect();
                     const x = (rect.left + (rect.width / 2)) / window.innerWidth;
                     const y = (rect.top + (rect.height / 2)) / window.innerHeight;
                     triggerConfetti(x, y);
                 } else {
-                    // Shake animation for incorrect
                     const card = document.getElementById(`card-${questionId}`);
                     card.classList.add('shake-anim');
                     setTimeout(() => card.classList.remove('shake-anim'), 400);
@@ -713,108 +864,94 @@
                 }
             }
 
-            // Always reveal logic and correct answer
             const revealDiv = document.getElementById(`reveal-${questionId}`);
             const submitBtn = document.getElementById(`submitBtn-${questionId}`);
             
             revealDiv.classList.add('visible');
             submitBtn.classList.add('hidden');
 
-            // Highlight Correct regardless
             const correctBtn = document.getElementById(`btn-${questionId}-${q.correctIndex}`);
             correctBtn.classList.remove('wrong-highlight', 'selected');
             correctBtn.classList.add('correct-highlight');
             const correctIcon = document.getElementById(`icon-${questionId}-${q.correctIndex}`);
             correctIcon.className = 'fas fa-check-circle text-emerald-500 text-2xl';
 
-            // Disable all buttons
             q.options.forEach((_, idx) => {
                 const b = document.getElementById(`btn-${questionId}-${idx}`);
                 b.classList.add('disabled');
                 b.onclick = null;
             });
 
-            // Render Chart
             if (q.chartFunc) {
                 const ctx = document.getElementById(`canvas-${questionId}`).getContext('2d');
                 q.chartFunc(ctx);
             }
         }
 
-        /* --- DATA GENERATION SCRIPTS --- */
+        /* --- EXCEL DATA GENERATION SCRIPT (Using SheetJS) --- */
         function randomDate(start, end) { return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())); }
         function formatDate(date) { return date.toISOString().split('T')[0]; }
-        
-        function downloadCSV(csvContent, fileName) {
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", fileName);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
 
-        // Reduced logic for brevity in data generation
-        function generateAssets() {
-            let csv = "Asset_ID,Asset_Category,Acquisition_Date,Capitalized_Amount,Useful_Life_Months\n";
-            let id = 1000;
-            const categories = ["Office Equipment", "IT Hardware", "Heavy Machinery", "Vehicles"];
+        function downloadMasterExcel() {
+            // Arrays to hold worksheet data
+            const assetsData = [["Asset_ID", "Asset_Category", "Acquisition_Date", "Capitalized_Amount", "Useful_Life_Months"]];
+            const inventoryData = [["SKU", "Product_Category", "Days_In_Inventory", "Quantity_On_Hand", "Unit_Cost"]];
+            const journalData = [["Entry_ID", "Date", "Day_of_Week", "Hour_of_Day", "User_Role", "Entry_Amount"]];
+
+            // 1. Generate Assets Data
+            let assetId = 1000;
+            const assetCategories = ["Office Tools", "IT Hardware", "Heavy Machinery", "Vehicles"];
             for(let i=0; i<600; i++) {
-                let cat = categories[Math.floor(Math.random() * categories.length)];
+                let cat = assetCategories[Math.floor(Math.random() * assetCategories.length)];
                 let date = randomDate(new Date(2021, 0, 1), new Date(2025, 11, 31));
                 let year = date.getFullYear();
                 let amount = Math.floor(Math.random() * 40000) + 1000; 
                 let life = 36;
-                if(cat === "Office Equipment" || cat === "Vehicles") life = 60;
+                if(cat === "Office Tools" || cat === "Vehicles") life = 60;
+                // Anomaly: Spike useful life of Heavy Machinery recently
                 if(cat === "Heavy Machinery") life = year >= 2024 ? (Math.random() > 0.5 ? 96 : 120) : 60;
-                csv += `AST-${id++},${cat},${formatDate(date)},${amount},${life}\n`;
+                assetsData.push([`AST-${assetId++}`, cat, formatDate(date), amount, life]);
             }
+            // Anomaly: Threshold abuse (invoice splitting right under 5000)
             for(let i=0; i<85; i++) {
                 let date = randomDate(new Date(2024, 0, 1), new Date(2025, 11, 31));
-                let amount = Math.floor(Math.random() * 50) + 4950; // Threshold abuse
-                csv += `AST-${id++},IT Hardware,${formatDate(date)},${amount},36\n`;
+                let amount = Math.floor(Math.random() * 50) + 4950; 
+                assetsData.push([`AST-${assetId++}`, "IT Hardware", formatDate(date), amount, 36]);
             }
-            downloadCSV(csv, "Fixed_Assets.csv");
-        }
 
-        function generateInventory() {
-            let csv = "SKU,Product_Category,Days_In_Inventory,Quantity_On_Hand,Unit_Cost\n";
-            let id = 5000;
-            const categories = ["Raw Materials", "Work In Progress", "Finished Goods - Standard", "Finished Goods - Premium"];
+            // 2. Generate Inventory Data
+            let skuId = 5000;
+            const invCategories = ["Raw Steel", "Work In Progress", "Standard Parts", "Precision Components"];
             for(let i=0; i<400; i++) {
-                let cat = categories[Math.floor(Math.random() * categories.length)];
+                let cat = invCategories[Math.floor(Math.random() * invCategories.length)];
                 let days = Math.floor(Math.random() * 180) + 5; 
                 let qty = Math.floor(Math.random() * 1000) + 10;
-                let cost = (Math.random() * 150 + 10).toFixed(2);
-                csv += `SKU-${id++},${cat},${days},${qty},${cost}\n`;
+                let cost = parseFloat((Math.random() * 150 + 10).toFixed(2));
+                inventoryData.push([`SKU-${skuId++}`, cat, days, qty, cost]);
             }
+            // Anomaly: Ghost Inventory (Old & High Value)
             for(let i=0; i<25; i++) {
                 let days = Math.floor(Math.random() * 300) + 800; 
                 let qty = Math.floor(Math.random() * 5000) + 2000; 
-                let cost = (Math.random() * 300 + 400).toFixed(2); 
-                csv += `SKU-${id++},Finished Goods - Premium,${days},${qty},${cost}\n`;
+                let cost = parseFloat((Math.random() * 300 + 400).toFixed(2)); 
+                inventoryData.push([`SKU-${skuId++}`, "Precision Components", days, qty, cost]);
             }
-            downloadCSV(csv, "Inventory.csv");
-        }
 
-        function generateJournals() {
-            let csv = "Entry_ID,Date,Day_of_Week,Hour_of_Day,User_Role,Entry_Amount\n";
-            let id = 90000;
+            // 3. Generate Journals Data
+            let jeId = 90000;
             const roles = ["Staff Accountant", "AP Clerk", "AR Clerk", "Senior Accountant"];
-            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            const daysArr = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
             for(let i=0; i<1500; i++) {
                 let date = randomDate(new Date(2025, 0, 1), new Date(2025, 11, 31));
                 let dayNum = date.getDay();
                 if(dayNum === 0 || dayNum === 6) if(Math.random() > 0.1) date.setDate(date.getDate() + 1); 
-                let dayName = days[date.getDay()];
+                let dayName = daysArr[date.getDay()];
                 let hour = Math.floor(Math.random() * 10) + 8; 
                 let role = roles[Math.floor(Math.random() * roles.length)];
-                let amount = (Math.random() * 15000 + 100).toFixed(2);
-                csv += `JE-${id++},${formatDate(date)},${dayName},${hour},${role},${amount}\n`;
+                let amount = parseFloat((Math.random() * 15000 + 100).toFixed(2));
+                journalData.push([`JE-${jeId++}`, formatDate(date), dayName, hour, role, amount]);
             }
+            // Anomaly: CFO late night weekend entries
             const endOfQuarters = [new Date(2025, 2, 30), new Date(2025, 5, 29), new Date(2025, 8, 28), new Date(2025, 11, 28)];
             for(let i=0; i<15; i++) {
                 let date = endOfQuarters[Math.floor(Math.random() * endOfQuarters.length)];
@@ -822,15 +959,21 @@
                 let hour = 23; 
                 let role = "CFO";
                 let amount = Math.floor(Math.random() * 5 + 1) * 250000; 
-                csv += `JE-${id++},${formatDate(date)},${dayName},${hour},${role},${amount}.00\n`;
+                journalData.push([`JE-${jeId++}`, formatDate(date), dayName, hour, role, amount]);
             }
-            downloadCSV(csv, "Journals.csv");
-        }
 
-        function downloadDataset(type) {
-            if(type === 'assets') generateAssets();
-            if(type === 'inventory') generateInventory();
-            if(type === 'journals') generateJournals();
+            // Create workbook and add worksheets
+            const wb = XLSX.utils.book_new();
+            const wsAssets = XLSX.utils.aoa_to_sheet(assetsData);
+            const wsInventory = XLSX.utils.aoa_to_sheet(inventoryData);
+            const wsJournals = XLSX.utils.aoa_to_sheet(journalData);
+
+            XLSX.utils.book_append_sheet(wb, wsAssets, "Fixed Assets");
+            XLSX.utils.book_append_sheet(wb, wsInventory, "Inventory");
+            XLSX.utils.book_append_sheet(wb, wsJournals, "Journal Entries");
+
+            // Trigger file download
+            XLSX.writeFile(wb, "Midwest_Machining_Forensic_Case.xlsx");
         }
     </script>
 </body>
