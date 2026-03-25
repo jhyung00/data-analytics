@@ -65,6 +65,9 @@
             -webkit-font-smoothing: antialiased;
             margin: 0;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
 
         /* Animation Classes */
@@ -114,12 +117,18 @@
         .interface-mockup { border: 3px solid #0f172a; border-radius: 12px; overflow: hidden; margin: 20px 0; background: white; box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); }
         .interface-header { background: #0f172a; height: 20px; }
         .interface-toolbar { background: #f1f5f9; padding: 10px; border-bottom: 3px solid #0f172a; display: flex; gap: 10px; font-weight: 800; font-size: 14px;}
-        .interface-body { display: flex; height: 300px; }
-        .config-panel { width: 25%; border-right: 3px solid #0f172a; background: white; padding: 15px; font-size: 13px; font-weight: 700;}
-        .canvas-area { flex: 1; background-image: radial-gradient(#3b82f6 1.5px, transparent 1.5px); background-size: 20px 20px; padding: 40px; position: relative; display: flex; align-items: center; justify-content: center; background-color: #cbd5e1;}
+        .interface-body { display: flex; height: 300px; flex-direction: column; }
+        @media (min-width: 768px) {
+            .interface-body { flex-direction: row; }
+        }
+        .config-panel { width: 100%; border-bottom: 3px solid #0f172a; background: white; padding: 15px; font-size: 13px; font-weight: 700;}
+        @media (min-width: 768px) {
+            .config-panel { width: 25%; border-right: 3px solid #0f172a; border-bottom: none; }
+        }
+        .canvas-area { flex: 1; background-image: radial-gradient(#3b82f6 1.5px, transparent 1.5px); background-size: 20px 20px; padding: 40px; position: relative; display: flex; align-items: center; justify-content: center; background-color: #cbd5e1; overflow-x: auto;}
         
         /* Flow Diagram */
-        .flow-diagram { display: flex; align-items: center; gap: 20px; }
+        .flow-diagram { display: flex; align-items: center; gap: 20px; min-width: 300px;}
         .tool-container { position: relative; display: inline-block; }
         .anchor-demo { position: absolute; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; }
         .anchor-in-demo { left: -10px; border-left: 10px solid #0f172a; }
@@ -136,7 +145,7 @@
         .dt-recommend { background-color: #f59e0b; border: 2px solid #0f172a; font-weight: 800; color: #0f172a; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-left: 8px; box-shadow: 2px 2px 0px rgba(15, 23, 42, 1);}
 
         /* --- SIMULATOR CANVAS (Gamified) --- */
-        .canvas-bg { background-color: transparent; min-height: 150px; height: 400px; position: relative; }
+        .canvas-bg { background-color: transparent; min-height: 150px; position: relative; }
         .tool-node { width: 64px; height: 64px; position: absolute; cursor: move; z-index: 10; user-select: none; transition: transform 0.1s; }
         .tool-node:hover { transform: translateY(-2px); }
         .tool-icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
@@ -171,14 +180,20 @@
 
         /* Explorer UI Gamified */
         .explorer { border: 3px solid #0f172a; border-radius: 12px; overflow: hidden; background: white; box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); }
-        .explorer-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f1f5f9; border-bottom: 3px solid #0f172a; }
+        .explorer-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f1f5f9; border-bottom: 3px solid #0f172a; flex-wrap: wrap; }
         .mac-dots { display: flex; gap: 8px; }
         .mac-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #0f172a;}
         .mac-dot.r { background: #ef4444; } .mac-dot.y { background: #f59e0b; } .mac-dot.g { background: #10b981; }
-        .address-bar { flex: 1; background: white; border: 2px solid #0f172a; border-radius: 6px; padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #0f172a; }
+        .address-bar { flex: 1; min-width: 200px; background: white; border: 2px solid #0f172a; border-radius: 6px; padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: #0f172a; word-break: break-all; }
         
-        .explorer-body { display: grid; grid-template-columns: 220px 1fr; min-height: 280px; }
-        .sidebar-tree { background: #f1f5f9; border-right: 3px solid #0f172a; padding: 12px 8px; }
+        .explorer-body { display: grid; grid-template-columns: 1fr; min-height: 280px; }
+        @media (min-width: 768px) {
+            .explorer-body { grid-template-columns: 220px 1fr; }
+        }
+        .sidebar-tree { background: #f1f5f9; border-bottom: 3px solid #0f172a; padding: 12px 8px; }
+        @media (min-width: 768px) {
+            .sidebar-tree { border-right: 3px solid #0f172a; border-bottom: none; }
+        }
         .tree-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; font-weight: 800; font-size: 14px; color: #0f172a; cursor: pointer; user-select: none; transition: background 0.1s; border: 2px solid transparent;}
         .tree-item:hover { background: white; border-color: #0f172a; box-shadow: 2px 2px 0px rgba(15, 23, 42, 1); }
         .tree-item.active { background: #3b82f6; color: white; border-color: #0f172a; box-shadow: 2px 2px 0px rgba(15, 23, 42, 1); }
@@ -191,7 +206,7 @@
         .path-translation { background: #f1f5f9; padding: 16px; border-top: 3px solid #0f172a; }
 
         /* Flip Cards Gamified */
-        .flip-card { perspective: 1000px; height: 100%; min-height: 260px; }
+        .flip-card { perspective: 1000px; height: 100%; min-height: 380px; }
         .flip-inner { position: relative; width: 100%; height: 100%; text-align: left; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
         .flip-card.flipped .flip-inner { transform: rotateY(180deg); }
         .face { position: absolute; inset: 0; backface-visibility: hidden; background: white; border: 3px solid #0f172a; border-radius: 16px; box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); padding: 24px; display: flex; flex-direction: column; }
@@ -229,12 +244,12 @@
     </div>
 
     <!-- LESSON PLAN OVERLAY -->
-    <div id="lesson-plan-overlay" class="absolute inset-0 z-[200] flex backdrop-blur-sm bg-game-light/60">
+    <div id="lesson-plan-overlay" class="absolute inset-0 z-[200] flex flex-col md:flex-row backdrop-blur-sm bg-game-light/60">
         <!-- Sidebar -->
-        <div class="sidebar w-[280px] bg-white border-r-4 border-game-dark shadow-game h-full overflow-y-auto flex-shrink-0 flex flex-col z-10 relative">
-            <div class="p-6 border-b-4 border-game-dark text-center bg-game-blue text-white">
-                <h1 class="font-black text-2xl tracking-wide">Alteryx Designer</h1>
-                <span class="text-game-yellow text-sm font-black uppercase tracking-wider bg-game-dark px-3 py-1 rounded-full border-2 border-white mt-2 inline-block shadow-game-sm">Master Class</span>
+        <div class="sidebar w-full md:w-[280px] h-auto md:h-full max-h-[35vh] md:max-h-none bg-white border-b-4 md:border-b-0 md:border-r-4 border-game-dark shadow-game overflow-y-auto flex-shrink-0 flex flex-col z-10 relative">
+            <div class="p-4 md:p-6 border-b-4 border-game-dark text-center bg-game-blue text-white">
+                <h1 class="font-black text-xl md:text-2xl tracking-wide">Alteryx Designer</h1>
+                <span class="text-game-yellow text-xs md:text-sm font-black uppercase tracking-wider bg-game-dark px-3 py-1 rounded-full border-2 border-white mt-2 inline-block shadow-game-sm">Master Class</span>
             </div>
             <ul class="nav-links p-4 space-y-2 flex-1 font-bold text-[15px]">
                 <li class="text-xs uppercase tracking-wider text-slate-400 font-black mb-2 mt-2">Part 1: Basics</li>
@@ -258,16 +273,16 @@
         </div>
         
         <!-- Sidebar Resizer -->
-        <div class="resizer" id="sidebar-resizer" onmousedown="initSidebarResize(event)"><i class="fa-solid fa-grip-lines-vertical text-white"></i></div>
+        <div class="resizer hidden md:flex" id="sidebar-resizer" onmousedown="initSidebarResize(event)"><i class="fa-solid fa-grip-lines-vertical text-white"></i></div>
 
         <!-- MAIN CONTENT -->
-        <div class="main-content flex-1 p-8 md:p-12 overflow-y-auto scroll-smooth" id="lp-content">
+        <div class="main-content flex-1 p-4 md:p-12 overflow-y-auto scroll-smooth" id="lp-content">
 
             <!-- --- PART 1: BASICS --- -->
-            <section id="intro" class="game-card p-8 mb-10 animate-slide-down">
+            <section id="intro" class="game-card p-6 md:p-8 mb-10 animate-slide-down">
                 <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">What is Alteryx Designer?</h2>
                 <p class="font-bold text-lg text-slate-700 mb-6"><strong>Alteryx Designer</strong> is an analytics and automation platform that is easy-to-use, drag-and-drop, and <span class="lecture-hide" onclick="reveal(this)">code-free</span> (though code-friendly).</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="bg-game-green/20 border-l-8 border-game-green p-6 rounded-lg font-bold shadow-game-sm">
                         <strong class="text-game-dark text-lg block mb-3">Why do I need it?</strong>
                         <ul class="list-disc pl-5 space-y-2 text-slate-700">
@@ -279,7 +294,7 @@
                     </div>
                     <div class="bg-game-blue/10 border-3 border-game-blue p-6 rounded-lg font-bold shadow-game-sm">
                         <strong class="text-game-dark text-lg block mb-3">Capabilities:</strong>
-                        <ul class="grid grid-cols-2 gap-2 text-slate-700">
+                        <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
                             <li><i class="fa-solid fa-check text-game-blue"></i> Build Reports</li>
                             <li><i class="fa-solid fa-check text-game-blue"></i> Spatial Analysis</li>
                             <li><i class="fa-solid fa-check text-game-blue"></i> Predictive Models</li>
@@ -293,10 +308,10 @@
                 </div>
             </section>
 
-            <section id="skills" class="game-card p-8 mb-10">
+            <section id="skills" class="game-card p-6 md:p-8 mb-10">
                 <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">Top 10 Skills of 2025 (WEF)</h2>
                 <p class="font-bold text-slate-700 mb-6 text-lg">According to the WEF's <em>Future of Jobs Report</em>, Alteryx handles the technical "heavy lifting" so you can focus on <span class="lecture-hide" onclick="reveal(this)">analytical thinking</span>.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="border-3 border-game-dark rounded-xl p-5 bg-game-light shadow-game-sm">
                         <h3 class="font-black text-game-dark text-lg mb-3 flex items-center"><i class="fa-solid fa-puzzle-piece text-game-purple mr-2 text-xl"></i> Problem Solving</h3>
                         <ul class="list-disc pl-6 space-y-1 font-bold text-slate-600">
@@ -320,13 +335,13 @@
                 </div>
             </section>
 
-            <section id="interface" class="game-card p-8 mb-10">
+            <section id="interface" class="game-card p-6 md:p-8 mb-10">
                 <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">Designer Interface & Workflow</h2>
                 <p class="font-bold text-slate-700 mb-6 text-lg">A workflow is built by dragging tools onto the canvas and connecting them.</p>
                 <div class="interface-mockup">
                     <div class="interface-header"></div>
                     <div class="interface-toolbar">
-                        <div class="px-3 py-1">Favorites</div>
+                        <div class="px-3 py-1 hidden sm:block">Favorites</div>
                         <div class="px-3 py-1 text-game-blue border-b-4 border-game-blue">In/Out</div>
                         <div class="px-3 py-1">Preparation</div>
                         <div class="px-3 py-1">Join</div>
@@ -364,10 +379,10 @@
                 </div>
             </section>
 
-            <section id="tool-input" class="game-card p-8 mb-10">
+            <section id="tool-input" class="game-card p-6 md:p-8 mb-10">
                 <h3 class="text-2xl font-black mb-4 flex items-center text-game-dark"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" width="48" class="mr-4 border-2 border-game-dark rounded-xl shadow-game-sm"> Input Data Tool</h3>
                 <p class="font-bold text-slate-700 mb-6 text-lg">Connects to data files or databases.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
                         <strong class="text-game-dark block mb-2 text-lg">Configuration Options:</strong>
                         <ul class="list-disc pl-5 font-bold text-slate-600 space-y-2">
@@ -386,15 +401,15 @@
                 </div>
             </section>
 
-            <section id="tool-text" class="game-card p-8 mb-10">
+            <section id="tool-text" class="game-card p-6 md:p-8 mb-10">
                 <h3 class="text-2xl font-black mb-4 flex items-center text-game-dark"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/TextInput_71x71.png" width="48" class="mr-4 border-2 border-game-dark rounded-xl shadow-game-sm"> Text Input Tool</h3>
                 <p class="font-bold text-slate-700 text-lg">Allows manual data entry. Data is saved <em>inside</em> the workflow (.yxmd file).</p>
             </section>
 
-            <section id="tool-browse" class="game-card p-8 mb-10">
+            <section id="tool-browse" class="game-card p-6 md:p-8 mb-10">
                 <h3 class="text-2xl font-black mb-4 flex items-center text-game-dark"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/BrowseV2_71x71.png" width="48" class="mr-4 border-2 border-game-dark rounded-xl shadow-game-sm"> Browse Tool</h3>
                 <p class="font-bold text-slate-700 text-lg mb-6">Used to view all data and profile its quality. This tool requires the workflow to be run.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="border-3 border-game-dark rounded-xl p-5 shadow-game-sm">
                         <h4 class="font-black text-game-dark text-lg mb-3">Data Profiling (Quality Bar)</h4>
                         <div class="flex h-6 w-full rounded-md border-2 border-game-dark overflow-hidden mb-4 shadow-game-sm">
@@ -421,10 +436,10 @@
                 </div>
             </section>
 
-            <section id="tool-select" class="game-card p-8 mb-10">
+            <section id="tool-select" class="game-card p-6 md:p-8 mb-10 overflow-x-auto">
                 <h3 class="text-2xl font-black mb-4 flex items-center text-game-dark"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" width="48" class="mr-4 border-2 border-game-dark rounded-xl shadow-game-sm"> Select Tool</h3>
                 <p class="font-bold text-slate-700 text-lg mb-4">The most versatile tool for shaping your data structure. <span class="text-game-blue italic">Click rows below to reveal details.</span></p>
-                <table class="select-interactive-table">
+                <table class="select-interactive-table min-w-[500px]">
                     <tr>
                         <th style="width: 20%;">Action</th>
                         <th style="width: 30%;">Configuration</th>
@@ -453,10 +468,10 @@
                 </table>
             </section>
 
-            <section id="tool-output" class="game-card p-8 mb-10">
+            <section id="tool-output" class="game-card p-6 md:p-8 mb-10">
                 <h3 class="text-2xl font-black mb-4 flex items-center text-game-dark"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Output2_71x71.png" width="48" class="mr-4 border-2 border-game-dark rounded-xl shadow-game-sm"> Output Data Tool</h3>
                 <p class="font-bold text-slate-700 text-lg mb-6">Writes results to a file or database.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
                         <strong class="text-game-dark block mb-2 text-lg">Output Options:</strong>
                         <ul class="list-disc pl-5 font-bold text-slate-600 space-y-1">
@@ -477,12 +492,12 @@
                 </div>
             </section>
 
-            <section id="datatypes" class="game-card p-8 mb-10">
+            <section id="datatypes" class="game-card p-6 md:p-8 mb-10 overflow-x-auto">
                 <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">Data Types</h2>
                 <p class="font-bold text-slate-700 text-lg mb-6">Choosing the right data type is critical.</p>
                 
                 <h3 class="text-xl font-black text-game-dark mb-2">Numeric Types</h3>
-                <table class="dt-table mb-8">
+                <table class="dt-table mb-8 min-w-[500px]">
                     <tr><th>Type</th><th>Description</th><th>Best For...</th></tr>
                     <tr><td class="dt-type">Byte</td><td>Small integer (0-255).</td><td>Small IDs.</td></tr>
                     <tr><td class="dt-type">Int16 / Int32</td><td>Standard Integers.</td><td>Counts, Years.</td></tr>
@@ -492,7 +507,7 @@
                 </table>
 
                 <h3 class="text-xl font-black text-game-dark mb-2">String Types</h3>
-                <table class="dt-table">
+                <table class="dt-table min-w-[500px]">
                     <tr><th>Type</th><th>Details</th></tr>
                     <tr><td class="dt-type">String</td><td>Fixed length, ASCII only.</td></tr>
                     <tr><td class="dt-type">WString</td><td>Fixed length, Unicode.</td></tr>
@@ -501,11 +516,11 @@
                 </table>
             </section>
 
-            <section id="errors" class="game-card p-8 mb-16">
+            <section id="errors" class="game-card p-6 md:p-8 mb-16">
                 <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">Conversion Errors</h2>
                 <p class="font-bold text-slate-700 text-lg mb-6">Occur when converting a field to a specific data type but records don't match.</p>
                 
-                <div class="bg-game-red/10 border-l-8 border-game-red p-6 rounded-xl shadow-game-sm mb-6 font-bold text-slate-700">
+                <div class="bg-game-red/10 border-l-8 border-game-red p-6 rounded-xl shadow-game-sm mb-6 font-bold text-slate-700 overflow-x-auto">
                     <strong class="text-game-red text-xl block mb-2"><i class="fa-solid fa-triangle-exclamation"></i> Example:</strong>
                     Input Data (String): "1", "2", "3", "4", <strong class="text-game-red border-b-2 border-game-red">"Five"</strong>, "6"<br>
                     Action: Convert to Integer (Int16)<br>
@@ -526,11 +541,11 @@
             
             <div class="flex items-center gap-4 mb-10 mt-10">
                 <div class="h-2 flex-1 bg-game-dark rounded-full"></div>
-                <h1 class="text-3xl font-black uppercase tracking-widest text-game-dark text-center">Part 2: Paths</h1>
+                <h1 class="text-2xl md:text-3xl font-black uppercase tracking-widest text-game-dark text-center">Part 2: Paths</h1>
                 <div class="h-2 flex-1 bg-game-dark rounded-full"></div>
             </div>
 
-            <section id="section-explorer" class="game-card p-8 mb-10">
+            <section id="section-explorer" class="game-card p-6 md:p-8 mb-10">
                 <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">11. The Folder Source of Truth</h2>
                 <p class="font-bold text-slate-700 text-lg mb-6">In most professional projects, your <b>Workflow</b> and your <b>Data</b> are kept in separate sub-folders for organization. Click the folders to navigate and see the <b>Path Translation</b> update.</p>
 
@@ -556,20 +571,20 @@
                       </div>
                     </div>
                     
-                    <div class="flex flex-col p-0 bg-white">
-                      <div class="list-head shadow-sm"><div>Name</div><div>Type</div><div>Size</div></div>
-                      <div class="flex-1" id="exp-files"></div>
+                    <div class="flex flex-col p-0 bg-white overflow-x-auto">
+                      <div class="list-head shadow-sm min-w-[400px]"><div>Name</div><div>Type</div><div>Size</div></div>
+                      <div class="flex-1 min-w-[400px]" id="exp-files"></div>
                       <div class="path-translation" id="exp-translation"></div>
                     </div>
                   </div>
                 </div>
             </section>
 
-            <section id="section-logic" class="game-card p-8 mb-10">
+            <section id="section-logic" class="game-card p-6 md:p-8 mb-10">
                 <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">12. Core Path Logic</h2>
                 <p class="font-bold text-slate-700 text-lg mb-6">How you write your path directly impacts if your project is shareable.</p>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
                     <div class="bg-game-light border-3 border-game-dark rounded-xl p-6 shadow-game-sm">
                         <h3 class="font-black text-xl mb-3"><span class="bg-game-yellow text-game-dark px-2 py-1 rounded border-2 border-game-dark text-sm mr-2 shadow-game-sm">Absolute</span> Exact Address</h3>
                         <p class="font-bold text-slate-600 mb-4">Starts from your computer's root drive (like <span class="kbd">C:\</span>) and follows every folder.</p>
@@ -616,18 +631,18 @@
             </section>
 
             <section id="section-map" class="game-card p-0 mb-10 overflow-hidden flex flex-col">
-                <div class="p-8 pb-4">
+                <div class="p-6 md:p-8 pb-4">
                     <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-4 text-game-blue"><i class="fa-solid fa-map-location-dot text-game-yellow mr-2"></i> 13. Map Analogy: Dropping Pin vs Directions</h2>
                     <p class="font-bold text-slate-700 text-lg">Think of an <b>Absolute Path</b> as providing an exact, real-world address (like <i>"3523 5th Ave, NY"</i>). A <b>Relative Path</b> is like giving local directions starting from your front door (<i>"Walk North, then turn East"</i>) to reach <b>Le Data Bistro</b>.</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 border-t-4 border-game-dark bg-game-light flex-1">
-                    <div class="p-8 border-b-4 md:border-b-0 md:border-r-4 border-game-dark flex flex-col justify-center gap-6 bg-white">
+                <div class="grid grid-cols-1 lg:grid-cols-2 border-t-4 border-game-dark bg-game-light flex-1">
+                    <div class="p-6 md:p-8 border-b-4 lg:border-b-0 lg:border-r-4 border-game-dark flex flex-col justify-center gap-6 bg-white">
                         <button class="opt-btn !border-game-yellow border-l-8 text-lg" onclick="playMap('abs')">
                             <strong>📍 Absolute Address</strong><br>
                             <span class="text-xs font-bold text-slate-500 mt-1 block">Drop a pin on the exact global address.</span>
                         </button>
                         <button class="opt-btn !border-game-green border-l-8 text-lg" onclick="playMap('rel')">
-                            <strong>🚶 Relative Directions</strong><br>
+                            <strong><i class="fa-solid fa-person-walking"></i> Relative Directions</strong><br>
                             <span class="text-xs font-bold text-slate-500 mt-1 block">Start at home. Walk North, then turn East.</span>
                         </button>
                     </div>
@@ -642,19 +657,19 @@
 
                             <!-- Home Node -->
                             <circle cx="90" cy="190" r="22" fill="#fff" stroke="#3b82f6" stroke-width="4"/>
-                            <text x="90" y="197" font-size="20" text-anchor="middle">🧑</text>
+                            <text x="90" y="197" font-family="'Font Awesome 6 Free'" font-weight="900" font-size="20" fill="#3b82f6" text-anchor="middle">&#xf007;</text>
                             <text x="130" y="185" font-family="'Nunito', sans-serif" font-size="16" font-weight="900" fill="#0f172a">Your Home</text>
                             <text x="130" y="202" font-family="'Nunito', sans-serif" font-size="12" font-weight="800" fill="#64748b">(.yxmd Workflow)</text>
 
                             <!-- Restaurant Node -->
                             <circle cx="310" cy="80" r="22" fill="#fff" stroke="#10b981" stroke-width="4"/>
-                            <text x="310" y="87" font-size="20" text-anchor="middle">🍽️</text>
+                            <text x="310" y="87" font-family="'Font Awesome 6 Free'" font-weight="900" font-size="20" fill="#10b981" text-anchor="middle">&#xf2e7;</text>
                             <text x="310" y="40" font-family="'Nunito', sans-serif" font-size="18" font-weight="900" fill="#0f172a" text-anchor="middle">Le Data Bistro</text>
 
                             <!-- Relative Traveler -->
                             <g id="rel-traveler">
                                 <circle cx="0" cy="0" r="16" fill="#fff" stroke="#10b981" stroke-width="3" />
-                                <text x="0" y="6" font-size="16" text-anchor="middle">🚶</text>
+                                <text x="0" y="6" font-family="'Font Awesome 6 Free'" font-weight="900" font-size="16" fill="#10b981" text-anchor="middle">&#xf554;</text>
                                 <rect x="-45" y="-42" width="90" height="24" rx="6" fill="#10b981" stroke="#0f172a" stroke-width="2"/>
                                 <text x="0" y="-25" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="bold" fill="#fff" text-anchor="middle">..\North\East</text>
                             </g>
@@ -667,18 +682,18 @@
                                 <line x1="264" y1="72" x2="264" y2="83" stroke="#f59e0b" stroke-width="4"/>
                                 <text x="165" y="74" font-family="'Nunito', sans-serif" font-size="14" font-weight="900" fill="#0f172a" text-anchor="middle">3523 5th Ave, NY</text>
                                 <text x="165" y="91" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="bold" fill="#0f172a" text-anchor="middle">C:\NY\5thAve\LeData</text>
-                                <text x="310" y="86" font-size="38" text-anchor="middle" style="filter: drop-shadow(0px 4px 0px rgba(15,23,42,0.5));">📍</text>
+                                <text x="310" y="86" font-family="'Font Awesome 6 Free'" font-weight="900" font-size="38" fill="#ef4444" text-anchor="middle" style="filter: drop-shadow(0px 4px 0px rgba(15,23,42,0.5));">&#xf3c5;</text>
                             </g>
                         </svg>
                     </div>
                 </div>
             </section>
 
-            <section id="section-quiz" class="game-card p-8 mb-16">
+            <section id="section-quiz" class="game-card p-6 md:p-8 mb-16">
                 <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">14. Quick Knowledge Check</h2>
                 <p class="font-bold text-slate-700 text-lg mb-8">Click an answer to flip the card and test your path logic skills.</p>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     <!-- Q1 -->
                     <div class="flip-card" id="card1">
                         <div class="flip-inner">
@@ -738,7 +753,7 @@
 
             <div class="text-center mt-12 mb-20">
                 <p class="font-black text-xl text-game-dark mb-6">Ready to apply what you've learned?</p>
-                <button onclick="closeLessonPlan()" class="bg-game-blue text-white text-xl font-black py-4 px-12 rounded-2xl border-4 border-game-dark shadow-game hover:shadow-game-sm hover:translate-y-[4px] transition-all"><i class="fa-solid fa-rocket mr-2"></i> Launch Simulator </button>
+                <button onclick="closeLessonPlan()" class="bg-game-blue text-white text-xl font-black py-4 px-8 md:px-12 rounded-2xl border-4 border-game-dark shadow-game hover:shadow-game-sm hover:translate-y-[4px] transition-all"><i class="fa-solid fa-rocket mr-2"></i> Launch Simulator </button>
             </div>
             
         </div>
@@ -746,58 +761,58 @@
 
 
     <!-- SIMULATOR UI -->
-    <header class="bg-game-dark text-white p-4 flex justify-between items-center shadow-game z-50 shrink-0 border-b-4 border-black font-sans">
-        <div class="flex items-center gap-4">
-            <div class="bg-game-blue w-12 h-12 rounded-xl border-2 border-white flex items-center justify-center font-black text-2xl shadow-game-sm"><i class="fa-solid fa-shapes"></i></div>
+    <header class="bg-game-dark text-white p-4 flex flex-wrap md:flex-nowrap justify-between items-center shadow-game z-50 shrink-0 border-b-4 border-black font-sans gap-4">
+        <div class="flex items-center gap-4 w-full md:w-auto">
+            <div class="bg-game-blue w-12 h-12 rounded-xl border-2 border-white flex items-center justify-center font-black text-2xl shadow-game-sm flex-shrink-0"><i class="fa-solid fa-shapes"></i></div>
             <div>
-                <h1 class="font-black text-2xl leading-none">Designer Basics <span class="text-game-yellow text-sm font-bold border-2 border-game-yellow rounded-full px-2 py-0.5 ml-2">SIMULATOR</span></h1>
-                <p class="text-sm text-slate-300 font-bold mt-1">Expense Audit Workflow (Relative Path config disabled in sim)</p>
+                <h1 class="font-black text-xl md:text-2xl leading-none">Designer Basics <span class="text-game-yellow text-xs md:text-sm font-bold border-2 border-game-yellow rounded-full px-2 py-0.5 ml-2">SIMULATOR</span></h1>
+                <p class="text-xs md:text-sm text-slate-300 font-bold mt-1">Expense Audit Workflow (Relative Path config disabled in sim)</p>
             </div>
         </div>
-        <div class="flex gap-4 items-center">
-            <button onclick="runWorkflow()" id="btn-global-run" class="bg-game-green text-white font-black text-lg px-6 py-2 rounded-xl shadow-game hover:shadow-game-sm hover:translate-y-[2px] transition-all border-3 border-game-dark flex items-center gap-2">
+        <div class="flex gap-2 md:gap-4 items-center w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+            <button onclick="runWorkflow()" id="btn-global-run" class="bg-game-green text-white font-black text-base md:text-lg px-4 md:px-6 py-2 rounded-xl shadow-game hover:shadow-game-sm hover:translate-y-[2px] transition-all border-3 border-game-dark flex items-center gap-2 whitespace-nowrap">
                 <i class="fa-solid fa-play"></i> Run
             </button>
-            <div class="h-8 w-1 bg-slate-600 rounded-full mx-2"></div>
-            <button onclick="showLessonPlan()" class="bg-game-light text-game-dark font-black text-sm px-4 py-2 rounded-xl shadow-game-sm hover:translate-y-[2px] transition-all border-2 border-game-dark"><i class="fa-solid fa-book text-game-blue mr-1"></i> Guide</button>
-            <button onclick="downloadRawData()" class="bg-white text-game-green font-black text-sm px-4 py-2 rounded-xl shadow-game-sm hover:translate-y-[2px] transition-all border-2 border-game-dark flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Source File</button>
+            <div class="h-8 w-1 bg-slate-600 rounded-full mx-1 md:mx-2 flex-shrink-0"></div>
+            <button onclick="showLessonPlan()" class="bg-game-light text-game-dark font-black text-xs md:text-sm px-3 md:px-4 py-2 rounded-xl shadow-game-sm hover:translate-y-[2px] transition-all border-2 border-game-dark whitespace-nowrap flex-shrink-0"><i class="fa-solid fa-book text-game-blue mr-1"></i> Guide</button>
+            <button onclick="downloadRawData()" class="bg-white text-game-green font-black text-xs md:text-sm px-3 md:px-4 py-2 rounded-xl shadow-game-sm hover:translate-y-[2px] transition-all border-2 border-game-dark flex items-center gap-2 whitespace-nowrap flex-shrink-0"><i class="fa-solid fa-file-excel"></i> Source File</button>
         </div>
     </header>
 
-    <div class="canvas-bg flex-1 overflow-hidden" id="canvas-container" onmousemove="drag(event)" onmouseup="endDrag()">
-        <div class="absolute top-4 left-4 text-game-dark text-sm font-black uppercase tracking-widest bg-white/80 px-3 py-1 border-2 border-game-dark rounded-lg shadow-game-sm select-none z-10">Workflow Canvas</div>
+    <div class="canvas-bg flex-1 overflow-auto" id="canvas-container" onmousemove="drag(event)" onmouseup="endDrag()">
+        <div class="absolute top-4 left-4 text-game-dark text-xs md:text-sm font-black uppercase tracking-widest bg-white/80 px-3 py-1 border-2 border-game-dark rounded-lg shadow-game-sm select-none z-10">Workflow Canvas</div>
         <svg id="connections-layer"></svg>
 
         <!-- Tools with Anchors -->
-        <div class="tool-node" id="node-0" style="left: 80px; top: 120px;" onmousedown="startDrag(event, 0)" onclick="activateStep(0)">
+        <div class="tool-node" id="node-0" style="left: 40px; top: 120px;" onmousedown="startDrag(event, 0)" onclick="activateStep(0)">
             <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 0, 'in')"></div>
             <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></div>
             <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 0, 'out')"></div>
             <div class="tool-label">Input Data</div>
         </div>
 
-        <div class="tool-node" id="node-1" style="left: 80px; top: 20px;" onmousedown="startDrag(event, 1)" onclick="activateStep(1)">
+        <div class="tool-node" id="node-1" style="left: 40px; top: 20px;" onmousedown="startDrag(event, 1)" onclick="activateStep(1)">
             <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 1, 'in')"></div>
             <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/BrowseV2_71x71.png" alt="Browse"></div>
             <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 1, 'out')"></div>
             <div class="tool-label">Browse</div>
         </div>
 
-        <div class="tool-node" id="node-2" style="left: 260px; top: 120px;" onmousedown="startDrag(event, 2)" onclick="activateStep(2)">
+        <div class="tool-node" id="node-2" style="left: 220px; top: 120px;" onmousedown="startDrag(event, 2)" onclick="activateStep(2)">
             <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 2, 'in')"></div>
             <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" alt="Select"></div>
             <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 2, 'out')"></div>
             <div class="tool-label">Select</div>
         </div>
 
-        <div class="tool-node" id="node-3" style="left: 440px; top: 120px;" onmousedown="startDrag(event, 3)" onclick="activateStep(3)">
+        <div class="tool-node" id="node-3" style="left: 400px; top: 120px;" onmousedown="startDrag(event, 3)" onclick="activateStep(3)">
             <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 3, 'in')"></div>
             <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Output2_71x71.png" alt="Output"></div>
             <div class="tool-label">Output Data</div>
         </div>
 
-        <div class="absolute bottom-8 left-64 text-sm font-black text-game-dark bg-white/80 px-2 py-1 rounded border-2 border-game-dark shadow-game-sm pointer-events-none z-10">Independent Example:</div>
-        <div class="tool-node" id="node-4" style="left: 180px; top: 280px;" onmousedown="startDrag(event, 4)" onclick="activateStep('textInput')">
+        <div class="absolute bottom-8 left-4 md:left-64 text-sm font-black text-game-dark bg-white/80 px-2 py-1 rounded border-2 border-game-dark shadow-game-sm pointer-events-none z-10">Independent Example:</div>
+        <div class="tool-node" id="node-4" style="left: 140px; top: 280px;" onmousedown="startDrag(event, 4)" onclick="activateStep('textInput')">
             <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 4, 'out')"></div>
             <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/TextInput_71x71.png" alt="Text Input"></div>
             <div class="tool-label">Text Input</div>
@@ -805,25 +820,25 @@
     </div>
 
     <!-- Canvas Vertical Resizer -->
-    <div class="resizer-hz" id="canvas-resizer" onmousedown="initCanvasResize(event)"><i class="fa-solid fa-grip-lines text-white"></i></div>
+    <div class="resizer-hz flex" id="canvas-resizer" onmousedown="initCanvasResize(event)" ontouchstart="initCanvasResize(event)"><i class="fa-solid fa-grip-lines text-white"></i></div>
 
     <!-- Workspace -->
-    <div class="flex h-64 overflow-hidden bg-white relative z-20 font-sans" id="workspace-container">
-        <div class="w-1/3 min-w-[320px] bg-game-light border-r-4 border-game-dark flex flex-col" id="config-pane">
-            <div class="bg-white border-b-4 border-game-dark px-4 py-3 font-black text-game-dark text-lg flex justify-between items-center select-none shadow-sm">
+    <div class="flex flex-col md:flex-row overflow-hidden bg-white relative z-20 font-sans" id="workspace-container" style="height: 256px;">
+        <div class="w-full md:w-1/3 md:min-w-[320px] bg-game-light border-b-4 md:border-b-0 md:border-r-4 border-game-dark flex flex-col h-1/2 md:h-full" id="config-pane">
+            <div class="bg-white border-b-4 border-game-dark px-4 py-2 md:py-3 font-black text-game-dark text-base md:text-lg flex justify-between items-center select-none shadow-sm flex-shrink-0">
                 <span><i class="fa-solid fa-gear text-game-blue mr-2"></i>Configuration</span>
                 <span id="step-badge" class="text-xs bg-game-blue text-white px-3 py-1 rounded-full border-2 border-game-dark shadow-game-sm">--</span>
             </div>
             <div id="config-panel" class="p-4 overflow-y-auto flex-1 font-bold text-slate-700"></div>
         </div>
-        <div class="resizer" id="resizer" onmousedown="initResize(event)"><i class="fa-solid fa-grip-lines-vertical text-white"></i></div>
-        <div class="flex-1 bg-white flex flex-col min-w-0" id="results-pane">
-            <div class="border-b-4 border-game-dark px-4 py-3 font-black text-game-dark flex justify-between items-center text-sm bg-game-light select-none shadow-sm">
-                <div class="flex items-center gap-2 text-lg">
+        <div class="resizer hidden md:flex" id="resizer" onmousedown="initResize(event)" ontouchstart="initResize(event)"><i class="fa-solid fa-grip-lines-vertical text-white"></i></div>
+        <div class="flex-1 bg-white flex flex-col min-w-0 h-1/2 md:h-full" id="results-pane">
+            <div class="border-b-4 border-game-dark px-4 py-2 md:py-3 font-black text-game-dark flex justify-between items-center text-sm bg-game-light select-none shadow-sm flex-shrink-0">
+                <div class="flex items-center gap-2 text-base md:text-lg truncate mr-2">
                     <i class="fa-solid fa-table text-game-green"></i>
-                    <span>Results - <span id="tool-name-display" class="text-game-blue">Select an anchor</span></span>
+                    <span class="truncate">Results - <span id="tool-name-display" class="text-game-blue">Select an anchor</span></span>
                 </div>
-                <div class="bg-game-dark text-game-yellow px-3 py-1 rounded-full border-2 border-white shadow-game-sm"><span id="record-count">0</span> records</div>
+                <div class="bg-game-dark text-game-yellow px-3 py-1 rounded-full border-2 border-white shadow-game-sm whitespace-nowrap"><span id="record-count">0</span> recs</div>
             </div>
             <div class="flex-1 overflow-auto relative p-2 bg-white">
                 <table class="w-full text-left border-separate border-spacing-0 font-mono text-sm font-bold text-game-dark" id="data-grid">
@@ -914,7 +929,7 @@
         const steps = [
             {
                 id: "input", title: "Input Data",
-                configHTML: `<div class="bg-white p-3 rounded-xl border-3 border-game-dark shadow-game-sm mb-4"><label class="block font-black mb-2 text-game-dark">Connect a File</label><div class="flex bg-game-light border-2 border-game-dark p-2 rounded-lg items-center shadow-inner"><input type="text" value="Expenses_Oct2023.csv" class="w-full outline-none bg-transparent font-mono text-game-dark font-bold" readonly></div></div><div class="bg-game-yellow/20 p-3 rounded-xl border-2 border-game-yellow text-game-dark font-black shadow-game-sm"><i class="fa-solid fa-bell text-game-yellow"></i> Data loaded. Check data types in the Select tool.</div>`
+                configHTML: `<div class="bg-white p-3 rounded-xl border-3 border-game-dark shadow-game-sm mb-4"><label class="block font-black mb-2 text-game-dark">Connect a File</label><div class="flex bg-game-light border-2 border-game-dark p-2 rounded-lg items-center shadow-inner"><input type="text" value="Expenses_Oct2023.csv" class="w-full outline-none bg-transparent font-mono text-game-dark font-bold text-sm" readonly></div></div><div class="bg-game-yellow/20 p-3 rounded-xl border-2 border-game-yellow text-game-dark font-black shadow-game-sm"><i class="fa-solid fa-bell text-game-yellow"></i> Data loaded. Check data types in the Select tool.</div>`
             },
             {
                 id: "browse", title: "Browse Tool",
@@ -931,7 +946,7 @@
             },
             {
                 id: "select", title: "Select Tool",
-                configHTML: `<p class="font-black mb-2 text-game-dark">Change types and remove columns:</p><div class="bg-white border-3 border-game-dark rounded-xl shadow-game-sm overflow-hidden"><table class="w-full text-left font-mono text-xs font-bold"><thead class="bg-game-dark text-white border-b-2 border-game-dark"><tr><th class="p-2 w-8 text-center">✓</th><th class="p-2 border-l border-game-dark">Field</th><th class="p-2 border-l border-game-dark">Type</th></tr></thead><tbody>
+                configHTML: `<p class="font-black mb-2 text-game-dark">Change types and remove columns:</p><div class="bg-white border-3 border-game-dark rounded-xl shadow-game-sm overflow-x-auto"><table class="w-full text-left font-mono text-xs font-bold min-w-[300px]"><thead class="bg-game-dark text-white border-b-2 border-game-dark"><tr><th class="p-2 w-8 text-center">✓</th><th class="p-2 border-l border-game-dark">Field</th><th class="p-2 border-l border-game-dark">Type</th></tr></thead><tbody>
                     <tr class="border-b-2 border-game-dark"><td class="p-2 text-center border-r border-game-dark"><input type="checkbox" checked disabled class="accent-game-blue"></td><td class="p-2 border-r border-game-dark">RecordID</td><td class="p-2">Int16</td></tr>
                     <tr class="border-b-2 border-game-dark"><td class="p-2 text-center border-r border-game-dark"><input type="checkbox" checked disabled class="accent-game-blue"></td><td class="p-2 border-r border-game-dark">Date</td><td class="p-2">Date</td></tr>
                     <tr class="border-b-2 border-game-dark"><td class="p-2 text-center border-r border-game-dark"><input type="checkbox" checked disabled class="accent-game-blue"></td><td class="p-2 border-r border-game-dark">Department</td><td class="p-2">V_String</td></tr>
@@ -942,7 +957,7 @@
             },
             {
                 id: "output", title: "Output Data",
-                configHTML: `<div class="bg-white p-3 rounded-xl border-3 border-game-dark shadow-game-sm mb-4"><label class="block font-black mb-2 text-game-dark">Output File Destination</label><div class="flex bg-game-light border-2 border-game-dark p-2 rounded-lg items-center shadow-inner"><input type="text" value=".\\Cleaned_Expenses.xlsx" class="w-full outline-none bg-transparent font-mono text-game-dark font-bold" readonly></div></div><button onclick="downloadCleanData()" id="btn-download" class="w-full bg-slate-300 text-slate-500 font-black py-3 px-4 rounded-xl border-3 border-game-dark shadow-game transition-all cursor-not-allowed uppercase tracking-wide" disabled><i class="fa-solid fa-download"></i> Download File</button>`
+                configHTML: `<div class="bg-white p-3 rounded-xl border-3 border-game-dark shadow-game-sm mb-4"><label class="block font-black mb-2 text-game-dark">Output File Destination</label><div class="flex bg-game-light border-2 border-game-dark p-2 rounded-lg items-center shadow-inner"><input type="text" value=".\\Cleaned_Expenses.xlsx" class="w-full outline-none bg-transparent font-mono text-game-dark font-bold text-sm" readonly></div></div><button onclick="downloadCleanData()" id="btn-download" class="w-full bg-slate-300 text-slate-500 font-black py-3 px-4 rounded-xl border-3 border-game-dark shadow-game transition-all cursor-not-allowed uppercase tracking-wide text-sm" disabled><i class="fa-solid fa-download"></i> Download File</button>`
             }
         ];
 
@@ -1063,7 +1078,7 @@
             headers.forEach(h => {
                 let bar = '';
                 if(showBars) {
-                    let color = 'q-ok'; // Removed 'q-error' since purely numeric string data represents valid conversion candidates
+                    let color = 'q-ok';
                     bar = `<div class="quality-bar"><div class="${color} w-full"></div></div>`;
                 }
                 headHTML += `<th class="p-2 border-b-2 border-r-2 border-game-dark min-w-[100px] bg-white text-game-dark sticky top-0"><div class="flex flex-col"><span>${h}</span>${bar}</div></th>`;
@@ -1149,20 +1164,31 @@
         function startDrag(e, nodeId) {
             draggedNode = document.getElementById(`node-${nodeId}`);
             const rect = draggedNode.getBoundingClientRect();
-            dragOffsetX = e.clientX - rect.left; dragOffsetY = e.clientY - rect.top;
+            // Handle touch events as well
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            dragOffsetX = clientX - rect.left; dragOffsetY = clientY - rect.top;
             draggedNode.classList.add('active');
         }
         function drag(e) {
             if (!draggedNode) return;
             e.preventDefault();
             const container = document.getElementById('canvas-container');
-            let x = e.clientX - container.getBoundingClientRect().left - dragOffsetX;
-            let y = e.clientY - container.getBoundingClientRect().top - dragOffsetY;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            let x = clientX - container.getBoundingClientRect().left - dragOffsetX + container.scrollLeft;
+            let y = clientY - container.getBoundingClientRect().top - dragOffsetY + container.scrollTop;
             draggedNode.style.left = `${Math.max(0, x)}px`;
             draggedNode.style.top = `${Math.max(0, y)}px`;
             drawConnections();
         }
         function endDrag() { draggedNode = null; }
+
+        // Touch event bindings for drag
+        document.getElementById('canvas-container').addEventListener('touchmove', drag, {passive: false});
+        document.getElementById('canvas-container').addEventListener('touchend', endDrag);
 
         function drawConnections() {
             const svg = document.getElementById('connections-layer');
@@ -1186,12 +1212,15 @@
             document.body.style.userSelect = 'none'; 
             document.addEventListener('mousemove', doResize); 
             document.addEventListener('mouseup', stopResize); 
+            document.addEventListener('touchmove', doResize, {passive: false});
+            document.addEventListener('touchend', stopResize);
         }
         function doResize(e) {
             if (!isResizing) return;
             const container = document.getElementById('workspace-container');
             const configPane = document.getElementById('config-pane');
-            let newWidth = e.clientX - container.getBoundingClientRect().left;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let newWidth = clientX - container.getBoundingClientRect().left;
             configPane.style.width = `${Math.max(200, Math.min(newWidth, container.offsetWidth - 200))}px`;
         }
         function stopResize() { 
@@ -1199,6 +1228,8 @@
             document.body.style.userSelect = ''; 
             document.removeEventListener('mousemove', doResize); 
             document.removeEventListener('mouseup', stopResize); 
+            document.removeEventListener('touchmove', doResize);
+            document.removeEventListener('touchend', stopResize);
         }
 
         let isResizingSidebar = false;
@@ -1207,11 +1238,15 @@
             document.body.style.userSelect = 'none';
             document.addEventListener('mousemove', doSidebarResize);
             document.addEventListener('mouseup', stopSidebarResize);
+            // Touch events for sidebar
+            document.addEventListener('touchmove', doSidebarResize, {passive: false});
+            document.addEventListener('touchend', stopSidebarResize);
         }
         function doSidebarResize(e) {
             if (!isResizingSidebar) return;
             const sidebar = document.querySelector('.sidebar');
-            let newWidth = e.clientX;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let newWidth = clientX;
             if (newWidth > 200 && newWidth < window.innerWidth - 300) {
                 sidebar.style.width = `${newWidth}px`;
             }
@@ -1221,6 +1256,8 @@
             document.body.style.userSelect = '';
             document.removeEventListener('mousemove', doSidebarResize);
             document.removeEventListener('mouseup', stopSidebarResize);
+            document.removeEventListener('touchmove', doSidebarResize);
+            document.removeEventListener('touchend', stopSidebarResize);
         }
 
         let isResizingCanvas = false;
@@ -1229,14 +1266,19 @@
             document.body.style.userSelect = 'none';
             document.addEventListener('mousemove', doCanvasResize);
             document.addEventListener('mouseup', stopCanvasResize);
+            // Touch events for vertical resizer
+            document.addEventListener('touchmove', doCanvasResize, {passive: false});
+            document.addEventListener('touchend', stopCanvasResize);
         }
         function doCanvasResize(e) {
             if (!isResizingCanvas) return;
-            const canvasContainer = document.getElementById('canvas-container');
-            const headerHeight = document.querySelector('header').offsetHeight;
-            let newHeight = e.clientY - headerHeight;
+            const workspaceContainer = document.getElementById('workspace-container');
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            let newHeight = window.innerHeight - clientY;
+            
+            // Adjust boundaries so it doesn't squish out of view
             if (newHeight > 100 && newHeight < window.innerHeight - 150) {
-                canvasContainer.style.height = `${newHeight}px`;
+                workspaceContainer.style.height = `${newHeight}px`;
                 drawConnections(); 
             }
         }
@@ -1245,13 +1287,15 @@
             document.body.style.userSelect = '';
             document.removeEventListener('mousemove', doCanvasResize);
             document.removeEventListener('mouseup', stopCanvasResize);
+            document.removeEventListener('touchmove', doCanvasResize);
+            document.removeEventListener('touchend', stopCanvasResize);
         }
 
         // --- PATHS LESSON LOGIC (Explorer, Map, Quiz) ---
         
-        const svgFolder = `<svg viewBox="0 0 24 24" class="icon-folder"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
-        const svgAlteryx = `<svg viewBox="0 0 24 24" class="icon-alteryx"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`;
-        const svgExcel = `<svg viewBox="0 0 24 24" class="icon-excel"><path d="M21.17 3.25q.33 0 .59.25.24.24.24.58v15.84q0 .34-.24.58-.26.25-.59.25H2.83q-.33 0-.59-.25-.24-.24-.24-.58V4.08q0-.34.24-.58.26-.25.59-.25zM7.5 16.29L9.43 12 7.5 7.71h1.96L10.5 10.6l1.04-2.89h1.96L11.57 12l1.93 4.29h-1.96l-1.04-2.96-1.04 2.96zM15 16.29v-1.63h3.63v-1.16H15v-1.54h4v-1.17h-4V9.25h4.13V8.08H13.63v8.21z"/></svg>`;
+        const svgFolder = `<svg viewBox="0 0 24 24" class="icon-folder w-6 h-6 shrink-0"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>`;
+        const svgAlteryx = `<svg viewBox="0 0 24 24" class="icon-alteryx w-6 h-6 shrink-0"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`;
+        const svgExcel = `<svg viewBox="0 0 24 24" class="icon-excel w-6 h-6 shrink-0"><path d="M21.17 3.25q.33 0 .59.25.24.24.24.58v15.84q0 .34-.24.58-.26.25-.59.25H2.83q-.33 0-.59-.25-.24-.24-.24-.58V4.08q0-.34.24-.58.26-.25.59-.25zM7.5 16.29L9.43 12 7.5 7.71h1.96L10.5 10.6l1.04-2.89h1.96L11.57 12l1.93 4.29h-1.96l-1.04-2.96-1.04 2.96zM15 16.29v-1.63h3.63v-1.16H15v-1.54h4v-1.17h-4V9.25h4.13V8.08H13.63v8.21z"/></svg>`;
 
         const explorerData = {
             proj: {
@@ -1317,7 +1361,7 @@
             const eventBtn = event.currentTarget;
             eventBtn.classList.add(isCorrectPick ? 'correct-pick' : 'wrong-pick');
 
-            const backContent = card.querySelector('.back-content');
+            const backContent = document.getElementById(cardId + '-res');
             const answerData = quizAnswers[cardId];
             
             let icon, title;
