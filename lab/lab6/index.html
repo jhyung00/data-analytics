@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power BI Lab: The Master of Coin's Audit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --got-dark: #080a0e;
+            --got-gold: #c5a059;
+            --got-red: #6b1d1f;
+            --got-steel: #4a5568;
+            --parchment: #fdf6e3;
+            --sidebar-width: 340px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000000; 
+            overflow: hidden; 
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+
+        /* Animated Dynamic Background Layers */
+        .dynamic-bg-layer {
+            position: fixed;
+            top: -5%;
+            left: -5%;
+            width: 110%;
+            height: 110%;
+            z-index: 1; 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            animation: cinematicPan 40s infinite alternate ease-in-out;
+            filter: brightness(0.6) contrast(1.1) sepia(0.3) hue-rotate(-5deg);
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            pointer-events: none;
+        }
+
+        .dynamic-bg-layer.active {
+            opacity: 1;
+        }
+
+        @keyframes cinematicPan {
+            0% { transform: scale(1) translate(0, 0); }
+            100% { transform: scale(1.05) translate(-1.5%, -1.5%); }
+        }
+
+        h1, h2, h3, h4, h5, .medieval-font {
+            font-family: 'Cinzel Decorative', 'Cinzel', serif;
+        }
+
+        .standard-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+            z-index: 10; 
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: rgba(8, 10, 14, 0.75); 
+            backdrop-filter: blur(8px);
+            color: #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+            z-index: 40;
+            border-right: 1px solid rgba(197, 160, 89, 0.3);
+            box-shadow: 5px 0 25px rgba(0,0,0,0.9);
+        }
+
+        .resizer {
+            width: 6px;
+            background-color: transparent;
+            cursor: col-resize;
+            flex-shrink: 0;
+            transition: background-color 0.2s;
+            z-index: 30;
+            border-left: 1px solid rgba(197, 160, 89, 0.1);
+            border-right: 1px solid rgba(197, 160, 89, 0.1);
+        }
+
+        .resizer:hover, .resizer:active {
+            background-color: var(--got-gold);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            background-color: rgba(245, 240, 230, 0.85); 
+            backdrop-filter: blur(6px); 
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            height: 100vh;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.6);
+        }
+
+        /* Sidebar Nav */
+        .nav-item {
+            padding: 0.85rem 1.25rem;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #9ca3af;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(197, 160, 89, 0.15);
+            color: white;
+        }
+
+        .nav-item.active {
+            background-color: rgba(197, 160, 89, 0.3);
+            border-left-color: var(--got-gold);
+            color: var(--got-gold);
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(197, 160, 89, 0.6);
+        }
+
+        .nav-icon {
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Content Styling */
+        .step-container {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .step-container.active {
+            display: block;
+        }
+
+        .objective-box {
+            background-color: var(--parchment);
+            border: 2px solid #d4c4a8;
+            border-radius: 4px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 4px 4px 15px rgba(0,0,0,0.15), inset 0 0 30px rgba(197, 160, 89, 0.05);
+            position: relative;
+        }
+        
+        .objective-box::before {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid rgba(107, 29, 31, 0.25);
+            pointer-events: none;
+        }
+
+        .task-box {
+            background-color: #ffffff;
+            border-left: 4px solid var(--got-steel);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+
+        /* Dragon Animation */
+        .dragon-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform-origin: center;
+        }
+
+        @keyframes dragonFlyHover {
+            0% { transform: translate(var(--startX), var(--startY)) scale(0.5); opacity: 0; animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
+            15% { transform: translate(var(--midX), var(--midY)) scale(var(--targetScale)); opacity: 1; }
+            85% { transform: translate(var(--midX), var(--midY)) scale(var(--targetScale)); opacity: 1; animation-timing-function: cubic-bezier(0.36, 0, 0.66, -0.56); }
+            100% { transform: translate(var(--endX), var(--endY)) scale(0.5); opacity: 0; }
+        }
+        
+        @keyframes dragonFlyPass {
+            0% { transform: translate(var(--startX), var(--startY)) scale(var(--targetScale)); opacity: 0; animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1); }
+            20% { opacity: 1; }
+            50% { transform: translate(var(--midX), var(--midY)) scale(calc(var(--targetScale) + 0.3)); opacity: 1; animation-timing-function: cubic-bezier(0.32, 0, 0.67, 0); }
+            80% { opacity: 1; }
+            100% { transform: translate(var(--endX), var(--endY)) scale(var(--targetScale)); opacity: 0; }
+        }
+
+        .dragon-wrapper {
+            position: relative;
+            color: var(--got-dark);
+            filter: drop-shadow(0 15px 20px rgba(0,0,0,0.7));
+            animation: glideBob 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glideBob {
+            0% { transform: scaleX(var(--flip)) translateY(-15px) rotate(calc(-3deg * var(--flip))); }
+            100% { transform: scaleX(var(--flip)) translateY(15px) rotate(calc(3deg * var(--flip))); }
+        }
+
+        .dragon-rider {
+            position: absolute;
+            top: -25px;
+            left: 35px;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            color: var(--got-gold);
+        }
+        
+        .dragon-icon {
+            font-size: 6rem;
+        }
+
+        .dragon-fire {
+            position: absolute;
+            top: 35px; 
+            left: 80px; 
+            color: #ff4500;
+            font-size: 4rem;
+            transform-origin: left center;
+            opacity: 0;
+            filter: drop-shadow(0 0 20px #ff0000);
+            z-index: -1;
+        }
+
+        @keyframes breathFire {
+            0% { opacity: 0; transform: rotate(15deg) scale(0.2) translateX(0); }
+            30% { opacity: 1; transform: rotate(15deg) scale(1.5) translateX(20px); }
+            80% { opacity: 1; transform: rotate(15deg) scale(2.5) translateX(40px); }
+            100% { opacity: 0; transform: rotate(15deg) scale(0) translateX(60px); }
+        }
+
+        .dragon-quote {
+            background: var(--parchment);
+            border: 2px solid var(--got-gold);
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: var(--got-red);
+            margin-top: 15px;
+            text-align: center;
+            opacity: 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            position: relative;
+            line-height: 1.4;
+            width: 320px;
+        }
+        
+        .dragon-quote::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 0 10px 10px 10px;
+            border-style: solid;
+            border-color: transparent transparent var(--got-gold) transparent;
+        }
+        
+        @keyframes showQuote {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Crown Animation */
+        .crown-container {
+            position: fixed;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            color: var(--got-gold);
+            font-size: 10rem;
+            filter: drop-shadow(0 0 30px rgba(197, 160, 89, 0.8));
+            animation: dropCrown 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            pointer-events: none;
+            text-align: center;
+        }
+        
+        .crown-text {
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 2.5rem;
+            color: white;
+            margin-top: 1rem;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.9);
+            opacity: 0;
+            animation: fadeInText 1s 1.5s forwards;
+        }
+
+        @keyframes dropCrown {
+            0% { top: -200px; transform: translateX(-50%) scale(0.5) rotate(-20deg); opacity: 0; }
+            40% { top: 35%; transform: translateX(-50%) scale(1.2) rotate(10deg); opacity: 1; }
+            60% { top: 35%; transform: translateX(-50%) scale(0.9) rotate(-5deg); }
+            100% { top: 35%; transform: translateX(-50%) scale(1) rotate(0deg); opacity: 1; filter: drop-shadow(0 0 80px rgba(197, 160, 89, 1)); }
+        }
+        
+        @keyframes fadeInText {
+            to { opacity: 1; }
+        }
+
+        /* Mobile specific */
+        .mobile-header {
+            display: none;
+            background-color: rgba(12, 14, 20, 0.95);
+            color: var(--got-gold);
+            padding: 1rem;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--got-gold);
+        }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 35;
+        }
+
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            .mobile-header { display: flex; }
+            .sidebar {
+                position: fixed; top: 0; left: 0;
+                height: 100%; width: 85%; max-width: 320px;
+                transform: translateX(-100%);
+            }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .mobile-overlay.mobile-open { display: block; }
+            .resizer { display: none; }
+            .main-content { height: calc(100vh - 64px); }
+            #bottom-nav-bar { position: sticky; bottom: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #e5e0d8; border-left: 1px solid #d4c4a8; }
+        ::-webkit-scrollbar-thumb { background: var(--got-gold); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--got-red); }
+    </style>
+</head>
+<body>
+
+<!-- The Animated Cinematic Background Layers for smooth crossfade -->
+<div id="bg-layer-1" class="dynamic-bg-layer active"></div>
+<div id="bg-layer-2" class="dynamic-bg-layer"></div>
+
+<div class="app-container">
+    
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-dragon text-2xl"></i>
+            <h1 class="font-bold text-xl medieval-font tracking-wider">Master of Coin</h1>
+        </div>
+        <button id="mobileMenuBtn" class="p-2 focus:outline-none hover:text-white transition">
+            <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="mobile-overlay"></div>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar" id="sidebar">
+        <div class="p-8 border-b border-gray-800 hidden md:block text-center relative overflow-hidden">
+            <i class="fa-solid fa-shield-halved absolute text-8xl text-gray-800 opacity-20 top-4 left-1/2 transform -translate-x-1/2 -z-10"></i>
+            <div class="flex flex-col items-center gap-3 text-white mb-2 z-10">
+                <i class="fa-solid fa-dragon text-[var(--got-gold)] text-5xl drop-shadow-md"></i>
+                <h1 class="text-2xl font-bold tracking-widest text-[var(--got-gold)] uppercase medieval-font">Master of Coin</h1>
+            </div>
+            <p class="text-xs text-gray-400 font-semibold uppercase tracking-widest mt-3 border-t border-gray-700 pt-3 standard-cinzel">The Iron Bank Audit</p>
+        </div>
+        
+        <div class="p-4 border-b border-gray-700 md:hidden flex justify-between items-center bg-gray-900">
+            <span class="font-bold text-[#c5a059] medieval-font tracking-widest">REALM MAP</span>
+            <button id="closeMenuBtn" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+        </div>
+
+        <div class="flex-grow overflow-y-auto py-4" id="nav-container">
+            <!-- Nav Items Injected via JS -->
+        </div>
+
+        <div class="p-4 border-t border-gray-800 text-xs text-gray-500 text-center uppercase tracking-widest bg-black standard-cinzel">
+            Powered by the Iron Bank
+        </div>
+    </div>
+
+    <!-- Resizer -->
+    <div class="resizer" id="dragMe"></div>
+
+    <!-- Main Content Area -->
+    <div class="main-content" id="main-content">
+        <div class="flex-grow overflow-y-auto w-full pb-8">
+            <div class="max-w-4xl mx-auto p-6 md:p-12" id="content-container">
+                <!-- Step Content Injected via JS -->
+            </div>
+        </div>
+        
+        <!-- Navigation Buttons -->
+        <div class="bg-white border-t border-gray-300 p-4 flex justify-between px-6 md:px-12 z-20 shadow-[0_-4px_15px_rgba(0,0,0,0.1)] shrink-0 w-full" id="bottom-nav-bar">
+            <button id="prevBtn" class="px-5 py-2.5 rounded border-2 border-gray-300 text-gray-800 hover:bg-gray-100 hover:border-gray-500 font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition uppercase tracking-wider text-sm standard-cinzel">
+                <i class="fa-solid fa-arrow-left"></i> Retreat
+            </button>
+            <div class="text-sm text-[var(--got-red)] font-bold self-center hidden sm:block medieval-font tracking-widest text-lg" id="step-counter">Scroll 1 of X</div>
+            <button id="nextBtn" class="px-5 py-2.5 rounded bg-[var(--got-red)] text-white hover:bg-[#8b0000] font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors uppercase tracking-wider text-sm shadow-md standard-cinzel">
+                Advance <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Seeded PRNG for Deterministic Data Generation ---
+    function seededRandom(seed) {
+        let m = 0x80000000; 
+        let a = 1103515245;
+        let c = 12345;
+        let state = seed;
+        return function() {
+            state = (a * state + c) % m;
+            return state / (m - 1);
+        }
+    }
+    const rng = seededRandom(42); 
+
+    // Store quotes for non-repeating random selection
+    let availableQuotes = [];
+    const allQuotes = [
+        "Dracarys on these messy datasets!",
+        "I eat badly formatted Excel files for breakfast.",
+        "Your schema is a mess, but I'll help you this once.",
+        "I burned the Iron Bank's interest rates. You're welcome.",
+        "A Lannister always pays his debts, but a Maester always checks data types.",
+        "Are you sure you don't want to just burn the scrolls?",
+        "If only the Night King knew how to merge tables...",
+        "Even Balerion the Black Dread feared a many-to-many relationship.",
+        "I've seen White Walkers move faster than your data model.",
+        "A true dragon rides the winds of optimized DAX.",
+        "Mother of Dragons, Breaker of Chains, and Cleaner of Columns!",
+        "The King in the North remembers... to remove duplicates.",
+        "Chaos isn't a pit. Chaos is a flat table with no dimensions.",
+        "You know nothing, Jon Snow... about Star Schemas.",
+        "Hold the door! And hold your dimensional keys securely!",
+        "Valar Dohaeris: All men must serve... a clean data model.",
+        "Fuzzy matching? Magic exists even in Power Query."
+    ];
+
+    // --- Cinematic Background Images for Each Step ---
+    const bgImages = [
+        "https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=2000&auto=format&fit=crop", // 0: Decree
+        "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=2000&auto=format&fit=crop", // 1: Download
+        "https://images.unsplash.com/photo-1533900298318-6b8da08a523e?q=80&w=2000&auto=format&fit=crop", // 2: Goods
+        "https://images.unsplash.com/photo-1584854583196-03716a4e1d52?q=80&w=2000&auto=format&fit=crop", // 3: Houses
+        "https://images.unsplash.com/photo-1506784365847-bbad939e9335?q=80&w=2000&auto=format&fit=crop", // 4: Date
+        "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?q=80&w=2000&auto=format&fit=crop", // 5: Routes / Map
+        "https://images.unsplash.com/photo-1590297621421-4f11b23835f8?q=80&w=2000&auto=format&fit=crop", // 6: Unpivot Levies (New)
+        "https://images.unsplash.com/photo-1611081109311-66c3fb84cd79?q=80&w=2000&auto=format&fit=crop", // 7: Fact Prep
+        "https://images.unsplash.com/photo-1531214159280-079b95d26139?q=80&w=2000&auto=format&fit=crop", // 8: Fuzzy Merge
+        "https://images.unsplash.com/photo-1535406208535-14edd4a180ff?q=80&w=2000&auto=format&fit=crop", // 9: Normal Merges
+        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=2000&auto=format&fit=crop", // 10: Outliers
+        "https://images.unsplash.com/photo-1590502123902-613d94121703?q=80&w=2000&auto=format&fit=crop", // 11: Cleanup
+        "https://images.unsplash.com/photo-1618588507085-c79565432917?q=80&w=2000&auto=format&fit=crop", // 12: Stamp
+        "https://images.unsplash.com/photo-1549887534-1541e9326642?q=80&w=2000&auto=format&fit=crop", // 13: Close & Apply
+        "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2000&auto=format&fit=crop", // 14: Star Schema
+        "https://images.unsplash.com/photo-1599839619722-39751411ea63?q=80&w=2000&auto=format&fit=crop"  // 15: Complete
+    ];
+
+    // --- Embedded Excel Ledger Generator ---
+    function downloadLedger() {
+        if (typeof XLSX === 'undefined') {
+            alert('Loading ledger generation scrolls... please try again in a moment.');
+            return;
+        }
+        
+        const houses = [
+            { House_ID: 1, House_Region: "Stark - The North" },
+            { House_ID: 2, House_Region: "Lannister - The Westerlands" },
+            { House_ID: 3, House_Region: "Targaryen - Dragonstone" },
+            { House_ID: 4, House_Region: "Baratheon - The Stormlands" },
+            { House_ID: 5, House_Region: "Tyrell - The Reach" },
+            { House_ID: 6, House_Region: "Martell - Dorne" },
+            { House_ID: 7, House_Region: "Greyjoy - The Iron Islands" }
+        ];
+
+        // New Dataset for Unpivot feature
+        const levies = [
+            { House_ID: 1, Infantry: 15000, Cavalry: 3000, Artillery: 0 },
+            { House_ID: 2, Infantry: 35000, Cavalry: 10000, Artillery: 500 },
+            { House_ID: 3, Infantry: 8000, Cavalry: 1000, Artillery: 3 }, 
+            { House_ID: 4, Infantry: 20000, Cavalry: 5000, Artillery: 100 },
+            { House_ID: 5, Infantry: 60000, Cavalry: 20000, Artillery: 200 },
+            { House_ID: 6, Infantry: 25000, Cavalry: 15000, Artillery: 50 },
+            { House_ID: 7, Infantry: 10000, Cavalry: 500, Artillery: 0 }
+        ];
+
+        const goods = [
+            { Item_ID: 101, Item_Name: "ironwood shields", Category: "Military" },
+            { Item_ID: 102, Item_Name: "valyrian steel blades", Category: "Military" },
+            { Item_ID: 102, Item_Name: "valyrian steel swords", Category: "Military" }, 
+            { Item_ID: 103, Item_Name: "dornish wine", Category: "Consumables" },
+            { Item_ID: 104, Item_Name: "dragon eggs", Category: "Mythical" }, 
+            { Item_ID: 105, Item_Name: "dragonglass daggers", Category: "Military" },
+            { Item_ID: 105, Item_Name: "dragonglass", Category: "Military" }, 
+            { Item_ID: 106, Item_Name: "golden cloaks", Category: "Apparel" }
+        ];
+
+        // Clean registry for Fuzzy Matching
+        const guilds = [
+            { Guild_ID: 1, Guild_Name: "Iron Bank" },
+            { Guild_ID: 2, Guild_Name: "Spicers Guild" },
+            { Guild_ID: 3, Guild_Name: "Alchemists Guild" },
+            { Guild_ID: 4, Guild_Name: "Faceless Men" }
+        ];
+
+        const routes = ["Kings Landing to Braavos", "Winterfell to White Harbor", "Sunspear to Volantis", "Lannisport to Pyke"];
+        const weatherOptions = ["Clear Skies", "Heavy Storm", "Winter Snows", "Thick Fog"];
+        const noteOptions = ["Paid in Full", "Delayed by Pirates", "Goods damaged", "Routine trade", "Escorted by Gold Cloaks"];
+
+        const transactions = [];
+        const start = new Date(2023, 0, 1);
+        const end = new Date(2023, 11, 31);
+        
+        // Generate exactly 550 rows using deterministic RNG
+        for(let i=1; i<=550; i++) {
+            let isOutlier = rng() < 0.02;  
+            let isTypo = rng() < 0.6; // High chance of typo for fuzzy match
+            let isNullDate = rng() < 0.04; // Add occasional null dates for the cleansing step
+            
+            // Format dates strictly to English (US) format: M/D/YYYY for the parsing lab
+            let randomDate = new Date(start.getTime() + rng() * (end.getTime() - start.getTime()));
+            let dateStr = isNullDate ? null : `${randomDate.getMonth() + 1}/${randomDate.getDate()}/${randomDate.getFullYear()}`;
+            
+            let item = goods[Math.floor(rng() * goods.length)];
+            let house = houses[Math.floor(rng() * houses.length)];
+            let qty = Math.floor(rng() * 100) + 1;
+            let price = isOutlier ? (Math.floor(rng() * 50000) + 20000) : (Math.floor(rng() * 500) + 10);
+            
+            let route = routes[Math.floor(rng() * routes.length)];
+            let weather = weatherOptions[Math.floor(rng() * weatherOptions.length)];
+            let note = noteOptions[Math.floor(rng() * noteOptions.length)];
+
+            // Messy Guild Names
+            let trueGuild = guilds[Math.floor(rng() * guilds.length)].Guild_Name;
+            let messyGuild = trueGuild;
+            if (isTypo) {
+                if (trueGuild === "Iron Bank") messyGuild = rng() > 0.5 ? "Irn Bank" : "The Iron Bank";
+                if (trueGuild === "Spicers Guild") messyGuild = rng() > 0.5 ? "Spicer Guild" : "Spicr Guild";
+                if (trueGuild === "Alchemists Guild") messyGuild = rng() > 0.5 ? "Alchemist Guild" : "Alkemist";
+                if (trueGuild === "Faceless Men") messyGuild = rng() > 0.5 ? "Faceles Men" : "The Faceless Men";
+            }
+            
+            transactions.push({
+                Transaction_ID: 1000 + i,
+                Transaction_Date: dateStr, // Now contains some nulls
+                Item_ID: item.Item_ID,
+                House_Name: house.House_Region.split(" - ")[0], 
+                Trade_Route: route,
+                Guild_Name: messyGuild,
+                Quantity: qty,
+                Unit_Price: price,
+                Weather_Condition: weather,
+                Merchant_Notes: note
+            });
+        }
+        
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(transactions), "Raw_Transactions");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(houses), "House_Registry");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(goods), "Goods_Catalog");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(guilds), "Guild_Registry");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(levies), "Troop_Levies"); // New table for unpivot
+        
+        XLSX.writeFile(wb, "Westeros_Trade_Ledgers.xlsx");
+    }
+
+    // --- Gamification Logic: The Hint Dragon Flock ---
+    window.revealHint = function(btn) {
+        if (availableQuotes.length === 0) {
+            availableQuotes = [...allQuotes].sort(() => Math.random() - 0.5);
+        }
+        const quote = availableQuotes.pop();
+
+        const numDragons = 2; // Limit to exactly 2 dragons
+
+        for (let i = 0; i < numDragons; i++) {
+            const container = document.createElement('div');
+            container.className = 'dragon-container';
+            
+            const isMainDragon = (i === 0); 
+            
+            const fromLeft = Math.random() > 0.5;
+            const startX = fromLeft ? '-30vw' : '110vw';
+            const endX = fromLeft ? '120vw' : '-40vw';
+            const flip = fromLeft ? 1 : -1;
+
+            if (isMainDragon) {
+                container.style.animation = `dragonFlyHover 4.5s ease-in-out forwards`;
+                container.style.setProperty('--midX', 'calc(50vw - 160px)'); 
+                container.style.setProperty('--midY', '30vh'); 
+                container.style.setProperty('--targetScale', '1.5');
+            } else {
+                const duration = 2.5 + Math.random() * 1.5;
+                const delay = Math.random() * 0.5;
+                container.style.animation = `dragonFlyPass ${duration}s ${delay}s ease-in-out forwards`;
+                container.style.setProperty('--midX', '50vw');
+                container.style.setProperty('--midY', (Math.random() * 40 + 10) + 'vh');
+                container.style.setProperty('--targetScale', (0.5 + Math.random() * 0.8).toString());
+            }
+
+            container.style.setProperty('--startX', startX);
+            container.style.setProperty('--startY', Math.floor(Math.random() * 80) + 'vh');
+            container.style.setProperty('--endX', endX);
+            container.style.setProperty('--endY', Math.floor(Math.random() * 80) + 'vh');
+            container.style.setProperty('--flip', flip);
+
+            const hasRider = Math.random() > 0.4;
+            let riderHtml = '';
+            if (hasRider) {
+                const isFemale = Math.random() > 0.5;
+                // Using standard font-awesome icons, clean aesthetics
+                const riderIcon = isFemale ? 'fa-person-dress' : 'fa-person';
+                riderHtml = `
+                    <div class="dragon-rider">
+                        <i class="fa-solid ${riderIcon}" style="font-size: 2.2rem;"></i>
+                        <i class="fa-solid fa-khanda" style="font-size: 1.2rem; margin-left: -5px; color: #fff;"></i>
+                    </div>`;
+            }
+
+            let innerHtml = `
+                <div class="dragon-wrapper">
+                    ${riderHtml}
+                    <i class="fa-solid fa-dragon dragon-icon"></i>
+                    ${isMainDragon ? '<i class="fa-solid fa-fire dragon-fire" style="animation: breathFire 1.2s 0.8s forwards;"></i>' : ''}
+                </div>
+            `;
+
+            if (isMainDragon) {
+                innerHtml += `<div class="dragon-quote" style="animation: showQuote 0.4s 0.8s forwards;">${quote}</div>`;
+            }
+
+            container.innerHTML = innerHtml;
+            document.body.appendChild(container);
+
+            setTimeout(() => {
+                if (container.parentNode) container.parentNode.removeChild(container);
+            }, 4500);
+        }
+
+        btn.style.display = 'none';
+        const hintBox = btn.nextElementSibling;
+        hintBox.classList.remove('hidden');
+        
+        setTimeout(() => {
+            hintBox.classList.add('active');
+        }, 800);
+    };
+
+    // --- Data: Lab Steps ---
+    const labSteps = [
+        {
+            id: 1,
+            title: "The Iron Bank's Decree",
+            icon: "fa-solid fa-scroll",
+            content: `
+                <h2 class="text-4xl text-[var(--got-dark)] mb-4 border-b-2 border-[var(--got-gold)] pb-2 inline-block medieval-font">Welcome, Master of Coin</h2>
+                <p class="text-lg text-gray-700 mb-6 leading-relaxed font-medium">The Crown is deeply in debt. The Iron Bank of Braavos has demanded a full audit of the Seven Kingdoms' trade logs and military levies. You have exactly 50 minutes to build a robust, error-free data model in Power BI before the King demands your head.</p>
+                
+                <div class="objective-box">
+                    <h3 class="text-2xl font-bold text-[var(--got-red)] mb-3 medieval-font"><i class="fa-solid fa-chess-rook mr-2"></i> Your Critical Mission</h3>
+                    <p class="mb-4 text-gray-800 font-medium">You will receive an Excel workbook holding all recent ledgers. Your task is to transform this raw, messy data into a clean <strong>Star Schema Constellation</strong> consisting of:</p>
+                    <ul class="list-none space-y-3 text-gray-800 mb-4 font-bold">
+                        <li><i class="fa-solid fa-coins text-[var(--got-gold)] w-6 text-center text-xl"></i> <strong>Two Fact Tables:</strong> <span class="text-[#6b1d1f]">Fact_Trades</span> and <span class="text-[#6b1d1f]">Fact_Levies</span>.</li>
+                        <li><i class="fa-solid fa-shield text-[var(--got-steel)] w-6 text-center text-xl"></i> <strong>Five Dimension Tables:</strong> <span class="text-[#c5a059]">Dim_Houses</span>, <span class="text-[#c5a059]">Dim_Goods</span>, <span class="text-[#c5a059]">Dim_Guilds</span>, <span class="text-[#c5a059]">Dim_Routes</span>, and <span class="text-[#c5a059]">Dim_Date</span>.</li>
+                    </ul>
+                </div>
+
+                <div class="task-box border-l-[var(--got-gold)]">
+                    <h4 class="font-bold text-gray-800 mb-2 text-xl medieval-font"><i class="fa-solid fa-clipboard-check text-[var(--got-gold)] mr-2"></i> The Path to Victory</h4>
+                    <p class="text-gray-600 mb-4 text-sm font-medium">Throughout this trial, you will be given objectives. <strong>Think critically before seeking help!</strong> If the Maester's tasks baffle you, you may summon dragons to reveal the clear, step-by-step instructions.</p>
+                    <ul class="list-none space-y-2 text-sm text-gray-700 font-bold">
+                        <li><i class="fa-solid fa-khanda mr-2 text-gray-400"></i> Import multi-sheet ledgers safely.</li>
+                        <li><i class="fa-solid fa-khanda mr-2 text-gray-400"></i> Correctly parse international Dates without causing errors.</li>
+                        <li><i class="fa-solid fa-khanda mr-2 text-gray-400"></i> Unpivot incorrectly formatted columns.</li>
+                        <li><i class="fa-solid fa-khanda mr-2 text-gray-400"></i> Conquer misspelled data using advanced Fuzzy Matching.</li>
+                    </ul>
+                </div>
+            `
+        },
+        {
+            id: 2,
+            title: "Summoning the Ledgers",
+            icon: "fa-solid fa-file-excel",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 1: Unsealing the Ravens</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">The Maesters have compiled all recent transactions into a single Excel file. Download the ledgers below. Then, bring all FIVE sheets into the Power Query Editor. <strong>Do not load raw, messy data directly into the model!</strong></p>
+                    <div class="mt-5 text-center">
+                        <button onclick="downloadLedger()" class="bg-green-700 text-white px-5 py-3 rounded shadow hover:bg-green-600 font-bold transition flex items-center justify-center gap-2 mx-auto uppercase tracking-wider text-sm w-full md:w-auto transform hover:scale-105 standard-cinzel">
+                            <i class="fa-solid fa-download text-lg"></i> Download Westeros_Trade_Ledgers.xlsx
+                        </button>
+                    </div>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>Open Power BI Desktop.</li>
+                        <li>Click <strong>Get Data</strong> -> <strong>Excel Workbook</strong>.</li>
+                        <li>Locate the downloaded file: <code>Westeros_Trade_Ledgers.xlsx</code>.</li>
+                        <li>In the Navigator window, check the boxes next to <strong>all five</strong> sheets.</li>
+                        <li>Click <strong>Transform Data</strong> (Not Load!) to open the Power Query Editor.</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 3,
+            title: "Scouting the Goods",
+            icon: "fa-solid fa-box-open",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 2: Cleanse the Goods Dimension</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">The <code>Goods_Catalog</code> sheet lists every item traded. Traveling merchants have duplicated entries and misspelled items. Your goal is to create a pristine Dimension table named <code>Dim_Goods</code>. You must properly capitalize the item names, remove duplicate records based on the Item's unique ID, and filter out any items categorized as "Mythical" (The Iron Bank does not accept magic as collateral).</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>Rename the query from <code>Goods_Catalog</code> to <code>Dim_Goods</code>.</li>
+                        <li>Select the <strong>Item_Name</strong> column. Go to <strong>Transform</strong> -> <strong>Format</strong> -> <strong>Capitalize Each Word</strong>.</li>
+                        <li>Right-click the <strong>Item_ID</strong> column header and select <strong>Remove Duplicates</strong>. <em class="text-xs text-gray-500 block mt-1">(Always deduplicate by the ID, not the name!)</em></li>
+                        <li>Click the filter arrow on the <strong>Category</strong> column and uncheck "Mythical".</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 4,
+            title: "Forging the Houses",
+            icon: "fa-solid fa-shield-halved",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 3: Organize the Noble Houses</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">The <code>House_Registry</code> query contains information about the noble houses making purchases. The scribes were sloppy: the region and house name are jammed into a single column (e.g., <em>"Stark - The North"</em>). You must rename this query to <code>Dim_Houses</code> and split that text into two clean columns: <strong>House_Name</strong> and <strong>Region</strong>.</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>Rename the query to <code>Dim_Houses</code>.</li>
+                        <li>Right-click the <strong>House_Region</strong> column, choose <strong>Split Column</strong> -> <strong>By Delimiter</strong>.</li>
+                        <li>Choose <strong>Custom</strong>, type in <code> - </code> (space, dash, space), and split at the <em>Left-most delimiter</em>.</li>
+                        <li>Rename the new columns to <strong>House_Name</strong> and <strong>Region</strong>.</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 5,
+            title: "The Maester's Calendar",
+            icon: "fa-regular fa-calendar-days",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 4: Extracting the Date Dimension (Safely)</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">A proper Star Schema requires a dedicated Date Dimension. Create one dynamically by referencing the dates found in the <code>Raw_Transactions</code> table. Keep only the dates and remove duplicates.</p>
+                    <p class="text-gray-800 font-medium mt-3 border-l-4 border-[var(--got-red)] pl-3"><strong>CRITICAL WARNING:</strong> If you just turn it into a date by clicking the date icon, sometimes it might error. The scribes wrote dates in the American format (1/30/2023). You must use the "Locale" method instead.</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>Right-click the <code>Raw_Transactions</code> query in the left pane and select <strong>Duplicate</strong>. Rename to <code>Dim_Date</code>.</li>
+                        <li>Right-click the <strong>Transaction_Date</strong> column and select <strong>Remove Other Columns</strong>.</li>
+                        <li><strong>Remove Empty Scrolls:</strong> Click the filter dropdown on the <strong>Transaction_Date</strong> column and uncheck <em>(null)</em> or <em>(blank)</em>. Make sure the date you gave in the beginning has no null or empty values (right now you have some).</li>
+                        <li>Right-click the header again and select <strong>Remove Duplicates</strong>. Rename the column to <strong>Date</strong>. Ensure its data type is exactly <em>Date</em> safely using this method:</li>
+                        <li class="p-3 bg-red-50 border border-red-200 rounded text-red-800 my-2"><strong>Safely Parse the Date Locale:</strong><br>
+                            a) Open <strong>Transform Data</strong>.<br>
+                            b) Find the date column.<br>
+                            c) In <em>Applied Steps</em>, look for an early <strong>"Changed Type"</strong> step.<br>
+                            d) <strong>Delete that step</strong> if it converted the date column incorrectly.<br>
+                            e) Select the date column. Go to <strong>Transform</strong> -> <strong>Data Type</strong> -> <strong>Using Locale...</strong><br>
+                            f) Set <strong>Data Type</strong> = <code>Date</code> and <strong>Locale</strong> = <code>English (United States)</code> for 1/30/2023 format. Click OK.
+                        </li>
+                        <li>Now that it is a safe, error-free Date format, highlight the column. Go to the <strong>Add Column</strong> ribbon, click the <strong>Date</strong> button, and select <em>Year -> Year</em>.</li>
+                        <li>Click the original <strong>Date</strong> column again, and use the Date button to add <em>Quarter</em> and <em>Month -> Name of Month</em>.</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 6,
+            title: "Forging Routes from Facts",
+            icon: "fa-solid fa-map-location-dot",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 5: Extracting a Dimension & Indexing</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">Our Fact table has repeating text in the <code>Trade_Route</code> column. Storing repeating text in a Fact table wastes memory. You must extract this data into a new Dimension called <code>Dim_Routes</code>, ensure it's a unique list, and generate a numerical Primary Key for it using the <strong>Index Column</strong> feature.<br><br><strong>Important:</strong> Because we will merge this back into the Fact table later, we must <strong>Duplicate</strong> the table rather than Reference it, to avoid a circular dependency error.</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>Right-click <code>Raw_Transactions</code> and select <strong>Duplicate</strong> (this breaks the link so we can merge it back safely later). Rename this new query to <code>Dim_Routes</code>.</li>
+                        <li>Right-click the <strong>Trade_Route</strong> column and select <strong>Remove Other Columns</strong>.</li>
+                        <li>Right-click the <strong>Trade_Route</strong> column header and select <strong>Remove Duplicates</strong>. You should now have a short, unique list of routes.</li>
+                        <li>Go to the <strong>Add Column</strong> ribbon, click <strong>Index Column</strong>, and select <strong>From 1</strong>.</li>
+                        <li>Rename this new Index column to <strong>Route_ID</strong>. This is your new primary key!</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 7,
+            title: "The Master of War's Levies",
+            icon: "fa-solid fa-chess-knight",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 6: Unpivoting the Troop Levies</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">The Master of War has supplied a separate sheet tracking military forces (<code>Troop_Levies</code>). However, it is poorly formatted for analysis. The different unit types (Infantry, Cavalry, Artillery) are spread across multiple columns. To create a clean, secondary Fact Table, you must <strong>Unpivot</strong> these columns into rows.</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>Select the <code>Troop_Levies</code> query. Rename it to <code>Fact_Levies</code>.</li>
+                        <li>Select the <strong>House_ID</strong> column by clicking its header.</li>
+                        <li><strong>Quick Unpivot:</strong> Right-click the <strong>House_ID</strong> column header and select <strong>Unpivot Other Columns</strong>. <em class="text-xs text-gray-500 block mt-1">(This quickly turns the multiple troop columns into rows while keeping the House_ID locked, without changing much else).</em></li>
+                        <li>Double-click the new <strong>Attribute</strong> column header and rename it to <strong>Unit_Type</strong>.</li>
+                        <li>Double-click the new <strong>Value</strong> column header and rename it to <strong>Troop_Count</strong>.</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 8,
+            title: "Preparing the Trade Logs",
+            icon: "fa-solid fa-file-invoice-dollar",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 7: Cleaning the Fact Table Base</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">Now we target the heart of the schema: the main trade transactions. Rename the raw query to <code>Fact_Trades</code>. You must safely parse the Dates using the Locale method again, and ensure numerical values (Quantity, Unit Price) are explicitly cast to proper mathematical data types (Whole Number, Fixed Decimal).</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>Select the <code>Raw_Transactions</code> query. Rename it to <code>Fact_Trades</code>.</li>
+                        <li><strong>Safe Date Parsing:</strong> Just as before, if there's an automatic 'Changed Type' step in your Applied Steps, delete it. Select the <strong>Transaction_Date</strong> column, go to <strong>Transform -> Data Type -> Using Locale...</strong>, and set it to <code>Date</code> and <code>English (United States)</code>.</li>
+                        <li>Click the data type icon on the left of the <strong>Quantity</strong> column header. Change it to <em>Whole Number</em>.</li>
+                        <li>Change the data type of the <strong>Unit_Price</strong> column to <em>Fixed Decimal Number</em> (the Power BI equivalent of currency).</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 9,
+            title: "Drunken Scribes (Fuzzy Match)",
+            icon: "fa-solid fa-spell-check",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 8: The Guild's Fuzzy Merge</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">The <code>Guild_Name</code> column in our Fact table was entered manually by drunken scribes and contains heavy typos (e.g., "Spicr Guild", "Irn Bank"). We need the official <code>Guild_ID</code>. First, merge <code>Dim_Guilds</code> into your Fact table using <strong>Fuzzy Matching</strong> with a similarity threshold of 0.4. If the AI still misses severely butchered names, you must manually <strong>Replace Values</strong> so the final column contains exactly zero nulls!</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>Rename the <code>Guild_Registry</code> query to <code>Dim_Guilds</code>.</li>
+                        <li>Select <code>Fact_Trades</code>. Go to <strong>Home</strong> -> <strong>Merge Queries</strong>.</li>
+                        <li>In the top pane, click the messy <strong>Guild_Name</strong> column.</li>
+                        <li>In the middle dropdown, select <code>Dim_Guilds</code>. Click the <strong>Guild_Name</strong> column in the bottom pane.</li>
+                        <li><strong>Crucial:</strong> Check the box that says <strong>"Use fuzzy matching to perform the merge"</strong>.</li>
+                        <li>Expand the <strong>Fuzzy matching options</strong> section below it, and set the <strong>Similarity threshold</strong> to <code>0.4</code>. Click OK.</li>
+                        <li>Click the expand icon <i class="fa-solid fa-arrows-left-right text-gray-400"></i> on the new column. Uncheck everything except <strong>Guild_ID</strong>.</li>
+                        <li>Click the filter dropdown on the new <strong>Guild_ID</strong> column to observe if any <code>null</code> values remain. If the threshold missed a terrible typo like 'Alkemist', right-click the <code>null</code> cell in the ID column, select <strong>Replace Values</strong>, and manually enter the correct ID (e.g., replace <code>null</code> with <code>3</code>).</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 10,
+            title: "Forging Alliances (Merges)",
+            icon: "fa-solid fa-link",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 9: Standard Key Merges</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">To finalize the Fact table preparation, we must retrieve our remaining Foreign Keys. You need to Merge <code>Fact_Trades</code> with <code>Dim_Houses</code> to get the <code>House_ID</code>, and with the <code>Dim_Routes</code> table you created earlier to get the <code>Route_ID</code>.</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>With <code>Fact_Trades</code> selected, go to <strong>Home</strong> -> <strong>Merge Queries</strong>.</li>
+                        <li>Select <strong>House_Name</strong> in the top. Choose <code>Dim_Houses</code> and select <strong>House_Name</strong>. Click OK.</li>
+                        <li>Click the expand icon <i class="fa-solid fa-arrows-left-right text-gray-400"></i> to extract only <strong>House_ID</strong>.</li>
+                        <li>Repeat the process: Merge <code>Fact_Trades</code> with <code>Dim_Routes</code> matching on the <strong>Trade_Route</strong> column. Expand to get only the <strong>Route_ID</strong>.</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 11,
+            title: "The Mad King's Numbers",
+            icon: "fa-solid fa-magnifying-glass-chart",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 10: Outlier Detection</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">Rumors suggest data sabotage by loyalists to the old regime. We must flag and filter out fraudulent transactions. Calculate the Total Value of every trade. Then, use a Conditional Column to flag trades exceeding 1,000,000 gold pieces as "Review Required". Finally, filter the table so only "Valid" transactions remain in our model.</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>In <code>Fact_Trades</code>, go to <strong>Add Column</strong> -> <strong>Custom Column</strong>.</li>
+                        <li>Name it <code>Total_Trade_Value</code>. Formula: <code>[Quantity] * [Unit_Price]</code>. Click OK.</li>
+                        <li>Go to <strong>Add Column</strong> -> <strong>Conditional Column</strong>. Name it <code>Audit_Flag</code>.</li>
+                        <li>Set logic: If <strong>Total_Trade_Value</strong> is <em>greater than</em> <code>1000000</code>, Output <code>"Review Required"</code>, Else <code>"Valid"</code>.</li>
+                        <li>Filter the <code>Audit_Flag</code> column to keep only <strong>"Valid"</strong> records.</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 12,
+            title: "The Final Fact Cleanup",
+            icon: "fa-solid fa-broom",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 11: Honing the Blade</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">A true Fact table is narrow and numeric. We have retrieved all our IDs and filtered our data. We must now delete unnecessary textual descriptions, notes, and temporary flags from the Fact table. <br><br><strong>Why remove the Audit_Flag?</strong> Because we already used it to filter the rows! The bad rows are gone, so keeping a column that just says "Valid" on every single row wastes memory.</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>Review your <code>Fact_Trades</code> query. Hold <kbd class="px-1 bg-gray-200 border rounded">Ctrl</kbd> and click the following columns: <strong>House_Name, Guild_Name, Trade_Route, Weather_Condition, Merchant_Notes</strong>, and <strong>Audit_Flag</strong>.</li>
+                        <li>Right-click any of the highlighted headers and select <strong>Remove Columns</strong>.</li>
+                        <li>Verify your final Fact table contains ONLY: Transaction_ID, Transaction_Date, Item_ID, Quantity, Unit_Price, Total_Trade_Value, Guild_ID, House_ID, and <strong>Route_ID</strong>.</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 13,
+            title: "The Iron Bank's Stamp",
+            icon: "fa-solid fa-stamp",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 12: Adding the Audit Trail</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">The Iron Bank demands to know exactly when these ledgers were processed. Add a dynamic timestamp column named <code>Last_Refreshed</code> to both the <code>Dim_Houses</code> and <code>Dim_Goods</code> tables, calculating the exact local time the query runs.</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>Select the <code>Dim_Houses</code> query.</li>
+                        <li>Go to <strong>Add Column</strong> -> <strong>Custom Column</strong>. Name it <code>Last_Refreshed</code>.</li>
+                        <li>In the formula box, precisely type: <code>DateTime.LocalNow()</code> <br><span class="text-xs text-gray-500">(Dynamic formulas are strictly case-sensitive)</span></li>
+                        <li>Change the data type of the new column to <strong>Date/Time</strong>.</li>
+                        <li>Repeat this exact process for the <code>Dim_Goods</code> table.</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 14,
+            title: "Close and Apply",
+            icon: "fa-solid fa-door-open",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 13: Committing Transformations</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">Our data is cleansed, verified, unpivoted, and stamped. It is time to leave the Power Query Editor and load the finalized, optimized data into the main Power BI modeling engine.</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>Look at your Queries pane on the left. You should have exactly 7 active queries: <code>Fact_Trades</code>, <code>Fact_Levies</code>, <code>Dim_Houses</code>, <code>Dim_Goods</code>, <code>Dim_Date</code>, <code>Dim_Routes</code>, and <code>Dim_Guilds</code>.</li>
+                        <li>On the <strong>Home</strong> ribbon in the top left, click the top half of the <strong>Close & Apply</strong> button.</li>
+                        <li>Wait for the data loading window to finish.</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 15,
+            title: "Erecting the Star Schema",
+            icon: "fa-solid fa-diagram-project",
+            content: `
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 medieval-font">Step 14: Building the Relationships</h2>
+                
+                <div class="objective-box">
+                    <h3 class="text-xl font-bold text-[var(--got-red)] mb-2 medieval-font"><i class="fa-solid fa-bullseye mr-2"></i> Objective</h3>
+                    <p class="text-gray-800 font-medium">A schema is just a collection of disconnected islands until we build the bridges. Navigate to the model view and construct a physical Star Schema by connecting all 5 Dimension tables to the central <code>Fact_Trades</code> table using 1-to-Many relationships. Then connect <code>Dim_Houses</code> to your secondary <code>Fact_Levies</code> table.</p>
+                </div>
+
+                <button class="bg-[var(--got-gold)] text-[var(--got-dark)] px-6 py-3 rounded shadow hover:bg-yellow-500 font-bold transition flex items-center gap-3 uppercase tracking-wider text-sm standard-cinzel" onclick="revealHint(this)">
+                    <i class="fa-solid fa-dragon text-xl"></i> Summon Dragons for Hint
+                </button>
+
+                <div class="hidden step-container task-box mt-4">
+                    <h4 class="font-bold text-[var(--got-red)] mb-3 border-b pb-2 medieval-font text-lg">Maester's Step-by-Step Guidance:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-800 font-medium">
+                        <li>In Power BI Desktop, navigate to the <strong>Model View</strong> (the relational diagram icon on the far left edge).</li>
+                        <li>Arrange your tables visually: <code>Fact_Trades</code> and <code>Fact_Levies</code> in the center, Dimensions surrounding them.</li>
+                        <li>Click and drag the following fields to create relationships:
+                            <ul class="list-disc pl-5 mt-1 text-sm text-gray-700 font-bold">
+                                <li><strong>House_ID</strong> (Dim_Houses) to <strong>House_ID</strong> (Fact_Trades).</li>
+                                <li><strong>Item_ID</strong> (Dim_Goods) to <strong>Item_ID</strong> (Fact_Trades).</li>
+                                <li><strong>Date</strong> (Dim_Date) to <strong>Transaction_Date</strong> (Fact_Trades).</li>
+                                <li><strong>Route_ID</strong> (Dim_Routes) to <strong>Route_ID</strong> (Fact_Trades).</li>
+                                <li><strong>Guild_ID</strong> (Dim_Guilds) to <strong>Guild_ID</strong> (Fact_Trades).</li>
+                                <li class="text-[var(--got-red)] mt-2 border-t pt-1 border-gray-200"><strong>House_ID</strong> (Dim_Houses) to <strong>House_ID</strong> (Fact_Levies).</li>
+                            </ul>
+                        </li>
+                        <li>Ensure all lines show a <strong>1</strong> on the Dimension side and an <strong>*</strong> on the Fact side.</li>
+                    </ol>
+                </div>
+            `
+        },
+        {
+            id: 16,
+            title: "The Throne is Yours",
+            icon: "fa-solid fa-chess-king",
+            content: `
+                <h2 class="text-5xl font-bold text-[var(--got-gold)] mb-4 medieval-font border-b-2 border-gray-400 pb-2 inline-block">Audit Complete!</h2>
+                <p class="text-xl text-gray-800 mb-6 font-bold">The Gold Cloaks are standing down. The Iron Bank is satisfied. You have successfully structured the messy ledger scrolls into an optimized, enterprise-grade Star Schema Constellation.</p>
+
+                <div class="bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a] p-8 rounded-lg text-white mb-6 border-2 border-[var(--got-gold)] shadow-2xl relative overflow-hidden">
+                    <i class="fa-solid fa-chess-knight absolute text-[10rem] opacity-10 -bottom-8 -right-8 text-yellow-500"></i>
+                    
+                    <h3 class="text-3xl font-bold text-[var(--got-gold)] mb-4 medieval-font tracking-wider"><i class="fa-solid fa-trophy mr-3"></i> Triumphs Earned:</h3>
+                    <ul class="space-y-4 text-gray-200">
+                        <li class="flex items-start"><i class="fa-solid fa-dragon text-green-400 mr-3 mt-1 text-xl"></i> <div><strong class="text-white">Date Parsing Security:</strong> Mastered international locale conversion to prevent strict date errors.</div></li>
+                        <li class="flex items-start"><i class="fa-solid fa-dragon text-green-400 mr-3 mt-1 text-xl"></i> <div><strong class="text-white">Unpivot Mastery:</strong> Successfully flattened wide, messy data columns into a structured Fact table.</div></li>
+                        <li class="flex items-start"><i class="fa-solid fa-dragon text-green-400 mr-3 mt-1 text-xl"></i> <div><strong class="text-white">Fuzzy Match Resolution:</strong> Linked illegible scribe notes to clean Master data using AI text clustering.</div></li>
+                    </ul>
+                </div>
+
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-5 mb-6 shadow-md rounded-r">
+                    <h3 class="text-lg font-bold text-yellow-800 mb-2 medieval-font"><i class="fa-solid fa-book-journal-whills mr-2"></i> Maester's Final Fact:</h3>
+                    <p class="text-gray-800 font-medium">Yes, a model with two or more fact tables and multiple dimensions is still a valid star schema, often referred to as a <strong>multi-fact star schema</strong>, <strong>fact constellation</strong>, or <strong>Galaxy Schema</strong>... then booya!</p>
+                </div>
+
+                <div class="objective-box border-l-4 border-l-[var(--got-red)] mt-6 shadow-md">
+                    <h3 class="text-2xl font-bold text-[var(--got-red)] mb-3 medieval-font"><i class="fa-solid fa-graduation-cap mr-2"></i> Lab Credit & Submission</h3>
+                    <p class="mb-3 text-gray-800 font-bold">To prove your worth to the Iron Bank and receive credit, you must submit the following items:</p>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-900 mb-5 font-bold">
+                        <li>Upload your completed <strong>.pbix</strong> Power BI file.</li>
+                        <li>Upload a <strong>Screenshot</strong> of your completed Data Model (Star Schema) showing the 7 tables connected.</li>
+                    </ol>
+                    <div class="bg-white p-4 rounded border border-gray-300 text-sm shadow-inner">
+                        <strong class="text-gray-800 block border-b pb-1 mb-2 text-base"><i class="fa-solid fa-camera mr-1 text-gray-500"></i> How to take a screenshot:</strong>
+                        <div class="flex items-center mb-2 font-medium">
+                            <i class="fa-brands fa-windows text-blue-600 w-6 text-lg"></i> 
+                            <span><strong>Windows:</strong> Press <kbd class="bg-gray-100 px-2 py-0.5 rounded border border-gray-300 shadow-sm font-mono text-xs">Win</kbd> + <kbd class="bg-gray-100 px-2 py-0.5 rounded border border-gray-300 shadow-sm font-mono text-xs">Shift</kbd> + <kbd class="bg-gray-100 px-2 py-0.5 rounded border border-gray-300 shadow-sm font-mono text-xs">S</kbd></span>
+                        </div>
+                        <div class="flex items-center font-medium">
+                            <i class="fa-brands fa-apple text-gray-600 w-6 text-lg"></i> 
+                            <span><strong>Mac:</strong> Press <kbd class="bg-gray-100 px-2 py-0.5 rounded border border-gray-300 shadow-sm font-mono text-xs">Cmd</kbd> + <kbd class="bg-gray-100 px-2 py-0.5 rounded border border-gray-300 shadow-sm font-mono text-xs">Shift</kbd> + <kbd class="bg-gray-100 px-2 py-0.5 rounded border border-gray-300 shadow-sm font-mono text-xs">4</kbd></span>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-center font-black text-[var(--got-dark)] mt-8 text-2xl medieval-font">Claim the Iron Throne of Analytics!</p>
+            `
+        }
+    ];
+
+    let currentStep = 0;
+    let currentBgLayer = 1;
+
+    // --- DOM Elements ---
+    const navContainer = document.getElementById('nav-container');
+    const contentContainer = document.getElementById('content-container');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const stepCounter = document.getElementById('step-counter');
+    const bgLayer1 = document.getElementById('bg-layer-1');
+    const bgLayer2 = document.getElementById('bg-layer-2');
+    
+    const resizer = document.getElementById('dragMe');
+    const sidebar = document.getElementById('sidebar');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const closeMenuBtn = document.getElementById('closeMenuBtn');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+
+    // --- Initialization ---
+    function init() {
+        renderNavigation();
+        renderContent();
+        showStep(currentStep);
+        setupEventListeners();
+        setupResizer();
+    }
+
+    function renderNavigation() {
+        navContainer.innerHTML = '';
+        labSteps.forEach((step, index) => {
+            const navItem = document.createElement('div');
+            navItem.className = 'nav-item text-sm md:text-base font-medium';
+            navItem.id = `nav-${index}`;
+            navItem.innerHTML = `
+                <div class="nav-icon"><i class="${step.icon}"></i></div>
+                <div class="truncate flex-1">${step.id}. ${step.title}</div>
+            `;
+            navItem.addEventListener('click', () => {
+                showStep(index);
+                if(window.innerWidth <= 768) {
+                    toggleMobileMenu();
+                }
+            });
+            navContainer.appendChild(navItem);
+        });
+    }
+
+    function renderContent() {
+        contentContainer.innerHTML = '';
+        labSteps.forEach((step, index) => {
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'step-container';
+            stepDiv.id = `step-${index}`;
+            stepDiv.innerHTML = step.content;
+            contentContainer.appendChild(stepDiv);
+        });
+    }
+
+    function showStep(index) {
+        document.querySelectorAll('#content-container > .step-container').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`step-${index}`).classList.add('active');
+        document.getElementById(`nav-${index}`).classList.add('active');
+        
+        document.getElementById(`nav-${index}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        document.querySelector('.main-content').scrollTop = 0;
+
+        currentStep = index;
+        updateButtons();
+        
+        // Seamless cinematic crossfade transition using dual layers
+        if (currentBgLayer === 1) {
+            bgLayer2.style.backgroundImage = `url('${bgImages[index]}')`;
+            bgLayer2.classList.add('active');
+            bgLayer1.classList.remove('active');
+            currentBgLayer = 2;
+        } else {
+            bgLayer1.style.backgroundImage = `url('${bgImages[index]}')`;
+            bgLayer1.classList.add('active');
+            bgLayer2.classList.remove('active');
+            currentBgLayer = 1;
+        }
+    }
+
+    function updateButtons() {
+        prevBtn.disabled = currentStep === 0;
+        
+        if (currentStep === labSteps.length - 1) {
+            nextBtn.innerHTML = `Claim Throne <i class="fa-solid fa-crown"></i>`;
+            nextBtn.classList.remove('bg-[var(--got-red)]', 'hover:bg-[#8b0000]', 'text-white');
+            nextBtn.classList.add('bg-[var(--got-gold)]', 'hover:bg-[#a88647]', 'text-black');
+            nextBtn.disabled = false; 
+        } else {
+            nextBtn.innerHTML = `Advance <i class="fa-solid fa-arrow-right"></i>`;
+            nextBtn.classList.add('bg-[var(--got-red)]', 'hover:bg-[#8b0000]', 'text-white');
+            nextBtn.classList.remove('bg-[var(--got-gold)]', 'hover:bg-[#a88647]', 'text-black');
+            nextBtn.disabled = false;
+        }
+
+        stepCounter.innerHTML = `<i class="fa-solid fa-scroll mr-2"></i> Scroll ${currentStep + 1} of ${labSteps.length}`;
+    }
+
+    // --- Crown Animation Logic ---
+    function triggerCrown() {
+        if (document.getElementById('reward-crown')) return; 
+        
+        const crownDiv = document.createElement('div');
+        crownDiv.id = 'reward-crown';
+        crownDiv.className = 'crown-container';
+        crownDiv.innerHTML = `
+            <i class="fa-solid fa-crown"></i>
+            <div class="crown-text">The Realm is Yours!</div>
+        `;
+        document.body.appendChild(crownDiv);
+        
+        setTimeout(() => {
+            if (crownDiv.parentNode) crownDiv.parentNode.removeChild(crownDiv);
+        }, 5000);
+    }
+
+    function setupEventListeners() {
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) showStep(currentStep - 1);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < labSteps.length - 1) {
+                showStep(currentStep + 1);
+            } else if (currentStep === labSteps.length - 1) {
+                triggerCrown(); 
+            }
+        });
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        closeMenuBtn.addEventListener('click', toggleMobileMenu);
+        mobileOverlay.addEventListener('click', toggleMobileMenu);
+    }
+
+    function toggleMobileMenu() {
+        sidebar.classList.toggle('mobile-open');
+        mobileOverlay.classList.toggle('mobile-open');
+    }
+
+    function setupResizer() {
+        let x = 0; let w = 0;
+
+        const mouseDownHandler = function(e) {
+            x = e.clientX;
+            const sidebarRect = sidebar.getBoundingClientRect();
+            w = sidebarRect.width;
+
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+            document.body.style.userSelect = 'none';
+        };
+
+        const mouseMoveHandler = function(e) {
+            const dx = e.clientX - x;
+            let newWidth = w + dx;
+            
+            if (newWidth < 240) newWidth = 240;
+            if (newWidth > 600) newWidth = 600;
+            
+            sidebar.style.width = `${newWidth}px`;
+            document.documentElement.style.setProperty('--sidebar-width', `${newWidth}px`);
+        };
+
+        const mouseUpHandler = function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+            document.body.style.userSelect = '';
+        };
+
+        resizer.addEventListener('mousedown', mouseDownHandler);
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.style.width = ''; 
+            }
+        });
+    }
+
+    init();
+</script>
+</body>
+</html>
