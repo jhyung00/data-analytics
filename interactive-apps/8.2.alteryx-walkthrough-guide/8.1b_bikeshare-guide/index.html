@@ -496,7 +496,7 @@
         "cards": [
           {"type": "callout", "title": "Files you should have ready", "items": ["Bikeshare \u2013 day.csv", "Bikeshare \u2013 Data Dictionary.txt", "A project folder where you will save the workflow, input file, and output file together"]}, 
           {"type": "gridshots", "shots": [
-            {"file": "screenshot-003.png", "title": "Configuration window example", "desc": "A typical tool configuration panel."}, 
+            {"file": "new1.png", "title": "Configuration window example", "desc": "A typical tool configuration panel."}, 
             {"file": "screenshot-057.png", "title": "Sample workflow view", "desc": "Example of a finished workflow layout."}
           ]}, 
           {"type": "checklist", "title": "What you will practice", "items": ["Using the Tool Palette, Search Bar, Canvas, Configuration window, and Results window", "Importing a CSV file with Input Data", "Inspecting fields with Browse", "Changing data types, removing fields, reordering fields, and renaming columns with Select", "Adding documentation with annotations, comments, and tool containers", "Writing an output file and changing file paths to relative"]}
@@ -526,8 +526,7 @@
               }, 
               {
                 "title": "Open Alteryx Designer Desktop", 
-                "body": "Launch Designer and start with a blank workflow on the Canvas.",
-                
+                "body": "Launch Designer and start with a blank workflow on the Canvas."
               }
             ]
           }
@@ -547,23 +546,22 @@
                 "title": "Tool Palette", 
                 "body": "The Tool Palette holds the tools you drag onto the Canvas. Tools are grouped by category and are visually color-coded.",
                 "shots": [
-                  
-                  {"file": "screenshot-016.png", "title": "Add or remove tools menu", "desc": "Tool palette customization menu."}
+                  {"file": "new2.png", "title": "Add or remove tools menu", "desc": "Tool palette customization menu."}
                 ]
               }, 
               {
                 "title": "Search Bar", 
                 "body": "Use the Search Bar to find tools quickly. Search results can also show help materials and community resources.",
-                "shots": [{"file": "screenshot-017.png", "title": "Search result for Browse", "desc": "Search Bar returning matching tools."}]
+                "shots": [{"file": "new3.png", "title": "Search result for Browse", "desc": "Search Bar returning matching tools."}]
               }, 
               {
                 "title": "Canvas", 
-                "body": "The Canvas is the workspace where you place tools and connect them into a workflow."
+                "body": "The Canvas is the workspace where you place tools and connect them into a workflow.",
+                "shots": [{"file": "new1.png", "title": "Designer Workspace", "desc": "This view shows the Canvas, Configuration window, and Results window together."}]
               }, 
               {
                 "title": "Configuration window", 
-                "body": "Every tool is configured in the Configuration window. The options change depending on the tool you selected.",
-                "shots": [{"file": "screenshot-003.png", "title": "Configuration window panel", "desc": "A tool-specific setup area."}]
+                "body": "Every tool is configured in the Configuration window. The options change depending on the tool you selected."
               }, 
               {
                 "title": "Results window", 
@@ -596,7 +594,10 @@
               {
                 "title": "Choose Set Up a Connection, then browse the file options", 
                 "body": "Click Set Up a Connection under Connect a File or Database. Review the Files tab and the Data Sources tab, then choose Files and Select File so you can bring in Bikeshare – day.csv.",
-                "shots": [{"file": "image15.png", "title": "Connection window with Files and Data Sources", "desc": "Browse the file connection options before choosing Select File."}]
+                "shots": [
+                  {"file": "image13.png", "title": "Set Up a Connection", "desc": "Click Set Up a Connection."},
+                  {"file": "image15.png", "title": "Connection window with Files and Data Sources", "desc": "Browse the file connection options before choosing Select File."}
+                ]
               }, 
               {
                 "title": "Open Bikeshare – day.csv and review the preview", 
@@ -634,14 +635,6 @@
             "type": "twocol", 
             "left": {"title": "Suggested data type changes", "items": ["[dteday] \u2192 Date", "[holiday] and [workingday] \u2192 Boolean", "[temp], [atemp], [hum], and [windspeed] \u2192 Double", "[casual], [registered], and [cnt] \u2192 Int64"]}, 
             "right": {"title": "Fields to keep as categories", "items": ["[season]", "[yr]", "[mnth]", "[weekday]", "[weathersit]"]}
-          }, 
-          {
-            "type": "gridshots", 
-            "shots": [
-              {"file": "screenshot-023.png", "title": "Field type menu", "desc": "A field data type dropdown in the Select tool."}, 
-              {"file": "screenshot-025.png", "title": "Data grid with current types", "desc": "Imported bikeshare fields before cleanup."}, 
-              {"file": "screenshot-034.png", "title": "Results window after changes", "desc": "A cleaned view of the table."}
-            ]
           }
         ]
       }, 
@@ -738,7 +731,7 @@
                 "shots": [
                   {"file": "image37.png", "title": "Input anchor", "desc": "Start with the input anchor to see the original incoming data."},
                   {"file": "image35.png", "title": "Output anchor", "desc": "Then click the output anchor to see the applied changes."},
-                  {"file": "select_metadata_view.png", "title": "Metadata after type changes", "desc": "Metadata confirms that the updated types were applied."}
+                  {"file": "new7.png", "title": "Metadata after type changes", "desc": "Metadata confirms that the updated types were applied."}
                 ]
               }, 
               {
@@ -775,7 +768,7 @@
                 "title": "Add an annotation to the Select tool", 
                 "body": "Click the Select tool. In the Configuration window, click the tag symbol and enter a short annotation. Type: Rename, reorder, and change data types of fields. Then click a blank area of the Canvas so the annotation appears under the tool.",
                 "shots": [
-                  {"file": "image44.png", "title": "Open the annotation option", "desc": "Click the tag symbol in the Configuration window to enter an annotation."}, 
+                  {"file": "new9.png", "title": "Open the annotation option", "desc": "Click the tag symbol in the Configuration window to enter an annotation."}, 
                   {"file": "image45.png", "title": "Annotation visible on the Canvas", "desc": "The Select tool now shows the annotation under the icon."}
                 ]
               }, 
@@ -783,7 +776,7 @@
                 "title": "Add a Comment tool", 
                 "body": "Go to the Documentation palette and drag a Comment tool onto the Canvas. The Comment tool does not process data. It is only used for notes and documentation.",
                 "shots": [
-                  {"file": "image48.png", "title": "Add a Comment tool", "desc": "The Comment tool can be placed anywhere on the Canvas for notes."}
+                  {"file": "new8.png", "title": "Add a Comment tool", "desc": "The Comment tool can be placed anywhere on the Canvas for notes."}
                 ]
               }, 
               {
@@ -791,8 +784,7 @@
                 "body": "Highlight the tools, right-click one of them, and choose Add to New Container. Tool Containers help group workflow steps, and the blue button can disable the whole container so the tools inside do not run. To remove only the container, right-click it and choose Delete Container Only.",
                 "shots": [
                   {"file": "image46.png", "title": "Add tools to a new container", "desc": "Right-click the selected tools and choose Add to New Container."}, 
-                  {"file": "image47.png", "title": "Workflow inside a Tool Container", "desc": "Tool Containers group related workflow steps together."}, 
-                  {"file": "image48.png", "title": "Delete Container Only", "desc": "Use Delete Container Only to remove just the container while keeping the tools inside."}
+                  {"file": "image47.png", "title": "Workflow inside a Tool Container", "desc": "Tool Containers group related workflow steps together."}
                 ]
               }
             ]
@@ -813,6 +805,7 @@
                 "title": "Add Text Input", 
                 "body": "From the In/Out palette, drag the Text Input tool onto the Canvas. Text Input stores data inside the workflow file rather than linking to an external source.",
                 "shots": [
+                  {"file": "image48.png", "title": "Text Input Tool", "desc": "Drag the Text Input tool onto the Canvas."},
                   {"file": "image49.png", "title": "Text Input grid", "desc": "Type headers and rows directly into the Text Input grid."}
                 ]
               }, 
