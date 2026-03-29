@@ -26,7 +26,7 @@
     .nav button.active { background:#8b5cf6; color:#fff; border-left-color:#fff; box-shadow:3px 3px 0 rgba(255,255,255,.18) inset; }
     .sidebar-footer { margin-top:auto; padding:16px 18px 20px; border-top:3px solid rgba(255,255,255,.08); }
     .lock-btn { width:100%; display:flex; align-items:center; justify-content:center; gap:10px; padding:12px 16px; border-radius:14px; border:3px solid var(--ink); background:#facc15; color:var(--ink); font-weight:900; cursor:pointer; }
-    .content { flex:1; min-width:0; overflow:auto; background:#f1f5f9; padding:28px; }
+    .content { flex:1; min-width:0; overflow:auto; background:#f1f5f9; padding:28px; transition: flex 0.3s; }
     .hero, .panel { background:var(--panel); border:3px solid var(--ink); border-radius:22px; box-shadow:5px 5px 0 rgba(15,23,42,1); }
     .hero { padding:26px 28px; margin-bottom:24px; }
     .eyebrow { display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; color:#475569; background:#e2e8f0; padding:7px 12px; border-radius:999px; border:2px solid var(--ink); }
@@ -50,6 +50,67 @@
     .shot-card span { display:block; color:#475569; font-size:13px; line-height:1.5; font-weight:700; }
     .native-shot { display:block; max-width:100%; border:1.5px solid #94a3b8; border-radius:10px; background:#fff; cursor:zoom-in; }
     .twocol { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    
+    /* --- New Side Viewer CSS --- */
+    .side-viewer {
+      display: none;
+      width: 45%;
+      min-width: 350px;
+      max-width: 600px;
+      border-left: 3px solid var(--ink);
+      background: #e2e8f0;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .side-viewer.open {
+      display: flex;
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(20px); opacity: 0; }
+      to { transform: none; opacity: 1; }
+    }
+    .side-viewer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: #fff;
+      border-bottom: 3px solid var(--ink);
+    }
+    .side-viewer-head h5 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+    .side-viewer-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .side-viewer-body img {
+      width: 100%;
+      height: auto;
+      border: 3px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 5px 5px 0 rgba(15,23,42,1);
+      background: #fff;
+    }
+    .side-viewer-body .desc {
+      margin-top: 20px;
+      font-weight: 800;
+      color: #334155;
+      font-size: 16px;
+      line-height: 1.6;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 12px;
+      border: 2px solid var(--line);
+    }
+
     .modal-backdrop { position:fixed; inset:0; background:rgba(15,23,42,.72); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:999; padding:20px; }
     .modal-backdrop.open { display:flex; }
     .modal-card { background:#fff; border:3px solid var(--ink); border-radius:22px; max-width:min(1100px,96vw); max-height:90vh; overflow:auto; box-shadow:10px 10px 0 rgba(15,23,42,.35); padding:18px; }
@@ -61,6 +122,10 @@
     .instructor-note.show { display:flex; }
     .student-textarea { width:100%; border:2px solid var(--line); border-radius:12px; padding:12px; margin-top:10px; font-family:inherit; resize:vertical; font-weight:600; color:var(--ink); font-size:15px; outline:none; transition: border-color 0.2s; }
     .student-textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
+    
+    @media (max-width: 1100px) { 
+      .side-viewer { position: fixed; inset: 0; width: 100%; max-width: 100%; height: 100%; z-index: 1000; border: none; }
+    }
     @media (max-width: 1000px) { .app-shell { flex-direction:column; height:auto; min-height:95vh; } .sidebar { width:100%; max-width:none; resize:none; overflow-y:visible; border-right:none; border-bottom:3px solid var(--ink); } .content { padding:18px; } .hero h2 { font-size:32px; } }
     @media (max-width: 760px) { .twocol { grid-template-columns:1fr; } .hero h2 { font-size:28px; } .hero p { font-size:16px; } }
   </style>
@@ -77,8 +142,16 @@
       <div class="sidebar-footer"><button class="lock-btn" id="openLock"><i data-lucide="lock"></i> Instructor access</button></div>
     </aside>
     <main class="content" id="content"></main>
+
+    <aside class="side-viewer" id="sideViewer">
+      <div class="side-viewer-head">
+        <h5 id="sideTitle">Screenshot</h5>
+        <button class="icon-btn" id="closeSide" aria-label="Close pane"><i data-lucide="x"></i></button>
+      </div>
+      <div class="side-viewer-body" id="sideBody"></div>
+    </aside>
   </div>
-  <div class="modal-backdrop" id="zoomModal"><div class="modal-card"><div class="modal-head"><h5 id="zoomTitle">Screenshot</h5><button class="icon-btn" id="closeZoom"><i data-lucide="x"></i></button></div><div id="zoomBody"></div></div></div>
+  
   <div class="modal-backdrop" id="lockModal"><div class="modal-card" style="max-width:520px;"><div class="modal-head"><h5>Instructor access</h5><button class="icon-btn" id="closeLock"><i data-lucide="x"></i></button></div><div class="stack"><p style="margin:0; color:#334155; font-weight:800;">Enter the local password to reveal the instructor-only section in the navigation.</p><label style="font-weight:900; color:#0f172a;">Password</label><input id="lockInput" type="password" autocomplete="off" placeholder="Enter password" style="width:100%; padding:14px 16px; border:3px solid #0f172a; border-radius:14px; font-size:16px; font-weight:800; color:#0f172a; background:#fff;" /><button class="lock-btn" id="unlockBtn">Unlock</button><div id="lockMsg" class="hidden-section-note" style="display:none;"></div><div id="vaultSuccess" class="success-msg">Unlocked. Instructor notes are now visible beneath the relevant instructions, and the Instructor Access section is in the sidebar.</div></div></div></div>
 <script>
 const SECTIONS = [
@@ -581,7 +654,12 @@ function renderNav() {
     const btn = document.createElement('button');
     btn.className = section.id === activeId ? 'active' : '';
     btn.innerHTML = `<i data-lucide="${section.icon}"></i><span>${esc(section.label)}</span>`;
-    btn.onclick = () => { activeId = section.id; renderNav(); renderContent(); };
+    btn.onclick = () => { 
+      activeId = section.id; 
+      document.getElementById('sideViewer').classList.remove('open');
+      renderNav(); 
+      renderContent(); 
+    };
     nav.appendChild(btn);
   });
   lucide.createIcons();
@@ -621,16 +699,26 @@ function renderContent() {
 function attachZoomHandlers() {
   document.querySelectorAll('.zoomable').forEach(img => {
     img.onclick = () => {
-      document.getElementById('zoomTitle').textContent = img.dataset.title || 'Screenshot';
-      document.getElementById('zoomBody').innerHTML = `<img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}">`;
-      document.getElementById('zoomModal').classList.add('open');
+      let desc = '';
+      const figcaption = img.nextElementSibling;
+      if (figcaption) {
+        const span = figcaption.querySelector('span');
+        if (span) desc = span.textContent;
+      }
+
+      document.getElementById('sideTitle').textContent = img.dataset.title || 'Screenshot';
+      document.getElementById('sideBody').innerHTML = `
+        <img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}">
+        ${desc ? `<p class="desc">${esc(desc)}</p>` : ''}
+      `;
+      
+      document.getElementById('sideViewer').classList.add('open');
     };
   });
 }
 
-function closeZoom() {
-  document.getElementById('zoomModal').classList.remove('open');
-  document.getElementById('zoomBody').innerHTML = '';
+function closeSideViewer() {
+  document.getElementById('sideViewer').classList.remove('open');
 }
 
 function openLock() {
@@ -670,10 +758,9 @@ document.getElementById('openLock').onclick = openLock;
 document.getElementById('closeLock').onclick = closeLock;
 document.getElementById('unlockBtn').onclick = unlockInstructor;
 document.getElementById('lockInput').addEventListener('keydown', e => { if (e.key === 'Enter') unlockInstructor(); });
-document.getElementById('closeZoom').onclick = closeZoom;
-document.getElementById('zoomModal').onclick = e => { if (e.target.id === 'zoomModal') closeZoom(); };
+document.getElementById('closeSide').onclick = closeSideViewer;
 document.getElementById('lockModal').onclick = e => { if (e.target.id === 'lockModal') closeLock(); };
-window.addEventListener('keydown', e => { if (e.key === 'Escape') { closeZoom(); closeLock(); } });
+window.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSideViewer(); closeLock(); } });
 
 renderNav();
 renderContent();
