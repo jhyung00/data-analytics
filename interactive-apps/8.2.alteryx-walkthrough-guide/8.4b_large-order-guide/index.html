@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -58,9 +57,9 @@
       background-position:0 0, 18px 18px;
     }
     .app-shell {
-      width:min(1500px, 96vw);
-      height:min(94vh, 980px);
-      margin:3vh auto;
+      width:min(1600px, 98vw);
+      height:min(96vh, 980px);
+      margin:2vh auto;
       background:#fff;
       border:3px solid var(--ink);
       border-radius:24px;
@@ -104,7 +103,7 @@
       border-radius:14px; border:3px solid var(--ink); background:#facc15; color:var(--ink);
       font-weight:900; cursor:pointer; box-shadow:3px 3px 0 rgba(255,255,255,.15);
     }
-    .content { flex:1; min-width:0; overflow:auto; background:#f1f5f9; padding:28px; }
+    .content { flex:1; min-width:0; overflow:auto; background:#f1f5f9; padding:28px; transition: flex 0.3s; }
     .section { display:none; }
     .section.active { display:block; animation:fade .2s ease; }
     @keyframes fade { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
@@ -145,6 +144,68 @@
     .gallery-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:14px; }
     .gallery-item { border:2px solid var(--line); background:#fff; border-radius:16px; padding:10px; }
     .gallery-item .caption { margin-top:8px; font-size:12px; font-weight:800; color:#475569; word-break:break-word; }
+    
+    /* --- New Side Viewer CSS --- */
+    .side-viewer {
+      display: none;
+      width: 45%;
+      min-width: 350px;
+      max-width: 600px;
+      border-left: 3px solid var(--ink);
+      background: #e2e8f0;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .side-viewer.open {
+      display: flex;
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(20px); opacity: 0; }
+      to { transform: none; opacity: 1; }
+    }
+    .side-viewer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: #fff;
+      border-bottom: 3px solid var(--ink);
+    }
+    .side-viewer-head h5 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+    .side-viewer-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .side-viewer-body img {
+      width: 100%;
+      height: auto;
+      border: 3px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 5px 5px 0 rgba(15,23,42,1);
+      background: #fff;
+    }
+    .side-viewer-body .desc {
+      margin-top: 20px;
+      font-weight: 800;
+      color: #334155;
+      font-size: 16px;
+      line-height: 1.6;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 12px;
+      border: 2px solid var(--line);
+    }
+
+    /* Modals (kept for Lock Screen) */
     .modal-backdrop {
       position:fixed; inset:0; background:rgba(15,23,42,.72); backdrop-filter:blur(4px); display:none;
       align-items:center; justify-content:center; z-index:999; padding:20px;
@@ -158,27 +219,34 @@
     .modal-head h5 { margin:0; font-size:22px; font-weight:900; color:var(--ink); }
     .icon-btn {
       border:3px solid var(--ink); background:#e2e8f0; color:var(--ink); border-radius:12px; width:42px; height:42px;
-      display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:900;
+      display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:900; transition: transform 0.1s;
     }
-    .modal-card img { display:block; max-width:none; width:auto; height:auto; background:#fff; border:1px solid #94a3b8; border-radius:10px; }
+    .icon-btn:hover { transform: scale(1.05); background:#cbd5e1; }
+    
     .hidden-section-note { background:#fef3c7; color:#78350f; border:2px solid #f59e0b; border-radius:16px; padding:14px 16px; font-weight:800; }
     .codebox { font-family:'JetBrains Mono',monospace; background:#fff; border:2px solid var(--ink); border-radius:14px; padding:14px 16px; display:grid; gap:8px; font-size:14px; color:#0f172a; font-weight:700; }
     .success-msg { display:none; margin-top:12px; border-radius:14px; border:2px solid var(--green); background:#d1fae5; color:#065f46; padding:12px; font-weight:900; }
     .instructor-note { display:none; margin-top:14px; padding:12px 14px; background:#fef3c7; border:2px solid #f59e0b; border-radius:12px; color:#78350f; font-weight:800; font-size:.95rem; align-items:flex-start; gap:10px; }
     .instructor-note.show { display:flex; }
     .instructor-note i { flex-shrink:0; margin-top:2px; }
-    .pill-row { display:flex; flex-wrap:wrap; gap:10px; }
-    .pill { background:#dcfce7; color:#166534; border:2px solid #14532d; border-radius:999px; padding:8px 12px; font-weight:900; font-size:13px; }
-    @media (max-width: 1000px) {
+    
+    @media (max-width: 1100px) {
+      .side-viewer {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        z-index: 1000;
+        border: none;
+      }
+    }
+    @media (max-width: 800px) {
       .app-shell { flex-direction:column; height:auto; min-height:95vh; }
       .sidebar { width:100%; max-width:none; resize:none; overflow-y:visible; border-right:none; border-bottom:3px solid var(--ink); }
       .content { padding:18px; }
       .hero h2 { font-size:32px; }
-    }
-    @media (max-width: 760px) {
       .twocol { grid-template-columns:1fr; }
-      .hero h2 { font-size:28px; }
-      .hero p { font-size:16px; }
     }
   </style>
 </head>
@@ -195,17 +263,17 @@
         <button class="lock-btn" id="openLock"><i data-lucide="lock"></i> Instructor access</button>
       </div>
     </aside>
+    
     <main class="content" id="content"></main>
-  </div>
 
-  <div class="modal-backdrop" id="zoomModal" aria-hidden="true">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h5 id="zoomTitle">Screenshot</h5>
-        <button class="icon-btn" id="closeZoom" aria-label="Close image"><i data-lucide="x"></i></button>
+    <aside class="side-viewer" id="sideViewer">
+      <div class="side-viewer-head">
+        <h5 id="sideTitle">Screenshot</h5>
+        <button class="icon-btn" id="closeSide" aria-label="Close pane"><i data-lucide="x"></i></button>
       </div>
-      <div id="zoomBody"></div>
-    </div>
+      <div class="side-viewer-body" id="sideBody">
+        </div>
+    </aside>
   </div>
 
   <div class="modal-backdrop" id="lockModal" aria-hidden="true">
@@ -271,7 +339,6 @@
             type: 'gridshots',
             title: 'Lesson visuals',
             shots: [
-              { file: 'screenshot-001.png', title: 'Lesson title visual', desc: 'Opening graphic from the original document.' },
               { file: 'screenshot-008.png', title: 'Completed workflow view', desc: 'High-level view of the full solution path.' },
               { file: 'screenshot-012.png', title: 'Workflow section map', desc: 'Another workflow overview preserved from the source file.' }
             ]
@@ -306,15 +373,6 @@
                 title: 'Inspect the product lookup file',
                 body: 'The product file will later be joined using Product_ID to add Product_Category and Product_Sub-Category to each sales record.'
               }
-            ]
-          },
-          {
-            type: 'gridshots',
-            title: 'Matched screenshots',
-            shots: [
-              { file: 'screenshot-019.png', title: 'Data Cleansing tool setup', desc: 'One of the first source-prep steps in the lesson.' },
-              { file: 'screenshot-020.png', title: 'Formula configuration', desc: 'Used in the early field-calculation stage.' },
-              { file: 'screenshot-021.png', title: 'Union configuration', desc: 'The two yearly sales files are stacked together here.' }
             ]
           }
         ]
@@ -388,8 +446,7 @@
                 title: 'Summarize the data to the order level',
                 body: 'Aggregate the enriched product-level stream so each order has a Total Order Spend value. This is the basis for the large-order test.',
                 shots: [
-                  { file: 'screenshot-002.png', title: 'Summarize to order level', desc: 'The order-level aggregation setup.' },
-                  { file: 'screenshot-003.png', title: 'Summarize result fields', desc: 'Order_ID and Total Order Spend are kept for the next stage.' }
+                  { file: 'screenshot-002.png', title: 'Summarize to order level', desc: 'The order-level aggregation setup.' }
                 ],
                 instructorNote: 'Students will usually build this step in a similar way because it mirrors earlier course work.'
               },
@@ -398,7 +455,7 @@
                 body: 'Use a second Summarize tool on the order-level table to calculate the mean and standard deviation, then Append Fields so each order can compare itself against those benchmarks.',
                 shots: [
                   { file: 'screenshot-014.png', title: 'Average and standard deviation summary', desc: 'The second summarize step for order-spend statistics.' },
-                  { file: 'screenshot-025.png', title: 'Stats appended back to orders', desc: 'The order-level stream after benchmark values are attached.' }
+                  { file: 'screenshot-003.png', title: 'Summarize result fields', desc: 'Order_ID and Total Order Spend are kept for the next stage.' }
                 ]
               },
               {
@@ -446,7 +503,7 @@
                 body: 'Join the detailed enriched stream to the filtered large-order stream on Order_ID so you retain all product-level rows that belong to those large orders.',
                 shots: [
                   { file: 'screenshot-007.png', title: 'Detailed lines for the large orders', desc: 'Product-level lines are restored after the order-level filter.' },
-                  { file: 'screenshot-008.png', title: 'Workflow showing add-back step', desc: 'The large-order branch reconnects to the detailed data here.' }
+                  { file: 'screenshot-009.png', title: 'Detailed large-order table', desc: 'A useful end-of-class review view.' }
                 ],
                 instructorNote: 'This Join is functioning almost like a filter. Students may remove extra columns inside the Join or with a later Select tool.'
               },
@@ -464,6 +521,7 @@
                 body: 'Summarize the large-order detail back to the order level again so you can output the product list, item counts, and total order spend. Then sort Total Order Spend descending.',
                 shots: [
                   { file: 'screenshot-013.png', title: 'Sort by Total Order Spend descending', desc: 'Order Info is ranked by spend.' },
+                  { file: 'new4-2.png', title: 'Output Data configuration', desc: 'Setting up the second output sheet.' },
                   { file: 'screenshot-015.png', title: 'Output Data for Order Info', desc: 'The second Excel sheet is written here.' }
                 ],
                 instructorNote: 'Different summarize actions can be used to recover Total Order Spend because it is repeated across records within the same order.'
@@ -473,7 +531,7 @@
                 body: 'Summarize the large-order detail by category to show prevalence, then sort Count descending before exporting the third sheet.',
                 shots: [
                   { file: 'screenshot-017.png', title: 'Sort categories by count', desc: 'Category prevalence is ranked descending.' },
-                  { file: 'screenshot-018.png', title: 'Output Data for Category Info', desc: 'The third sheet is configured here.' }
+                  { file: 'screenshot-016.png', title: 'Summary field configuration', desc: 'One of the final summarization steps.' }
                 ],
                 instructorNote: 'Some students will overlook sorting the final output values. That is usually a polish issue rather than a logic issue.'
               }
@@ -516,14 +574,6 @@
                 'The product-level detail must be connected earlier so Order_ID can later recover the correct lines'
               ]
             }
-          },
-          {
-            type: 'gridshots',
-            title: 'Closing visuals',
-            shots: [
-              { file: 'screenshot-009.png', title: 'Detailed large-order table', desc: 'A useful end-of-class review view.' },
-              { file: 'screenshot-016.png', title: 'Summary field configuration', desc: 'One of the final summarization steps.' }
-            ]
           }
         ]
       },
@@ -604,6 +654,8 @@
         btn.innerHTML = `<i data-lucide="${section.icon}"></i><span>${esc(section.label)}</span>`;
         btn.addEventListener('click', () => {
           activeId = section.id;
+          // Close the side panel when switching pages
+          document.getElementById('sideViewer').classList.remove('open');
           renderNav();
           renderContent();
         });
@@ -757,16 +809,26 @@
     function attachZoomHandlers() {
       document.querySelectorAll('.zoomable').forEach(img => {
         img.onclick = () => {
-          document.getElementById('zoomTitle').textContent = img.dataset.title || 'Screenshot';
-          document.getElementById('zoomBody').innerHTML = `<img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}">`;
-          document.getElementById('zoomModal').classList.add('open');
+          let desc = '';
+          const figcaption = img.nextElementSibling;
+          if (figcaption) {
+            const span = figcaption.querySelector('span');
+            if (span) desc = span.textContent;
+          }
+
+          document.getElementById('sideTitle').textContent = img.dataset.title || 'Screenshot';
+          document.getElementById('sideBody').innerHTML = `
+            <img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}">
+            ${desc ? `<p class="desc">${esc(desc)}</p>` : ''}
+          `;
+          
+          document.getElementById('sideViewer').classList.add('open');
         };
       });
     }
 
-    function closeZoom() {
-      document.getElementById('zoomModal').classList.remove('open');
-      document.getElementById('zoomBody').innerHTML = '';
+    function closeSideViewer() {
+      document.getElementById('sideViewer').classList.remove('open');
     }
 
     function openLock() {
@@ -819,16 +881,16 @@
     document.getElementById('lockInput').addEventListener('keydown', e => {
       if (e.key === 'Enter') unlockInstructor();
     });
-    document.getElementById('closeZoom').addEventListener('click', closeZoom);
-    document.getElementById('zoomModal').addEventListener('click', e => {
-      if (e.target.id === 'zoomModal') closeZoom();
-    });
+    
+    // Wire up the new close button for the side viewer
+    document.getElementById('closeSide').addEventListener('click', closeSideViewer);
+    
     document.getElementById('lockModal').addEventListener('click', e => {
       if (e.target.id === 'lockModal') closeLock();
     });
     window.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
-        closeZoom();
+        closeSideViewer();
         closeLock();
       }
     });
