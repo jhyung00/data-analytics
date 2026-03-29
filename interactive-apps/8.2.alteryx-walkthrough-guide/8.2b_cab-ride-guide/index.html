@@ -59,6 +59,8 @@
     .success-msg { display:none; margin-top:12px; border-radius:14px; border:2px solid var(--green); background:#d1fae5; color:#065f46; padding:12px; font-weight:900; }
     .instructor-note { display:none; margin-top:14px; padding:12px 14px; background:#fef3c7; border:2px solid #f59e0b; border-radius:12px; color:#78350f; font-weight:800; font-size:.95rem; align-items:flex-start; gap:10px; }
     .instructor-note.show { display:flex; }
+    .student-textarea { width:100%; border:2px solid var(--line); border-radius:12px; padding:12px; margin-top:10px; font-family:inherit; resize:vertical; font-weight:600; color:var(--ink); font-size:15px; outline:none; transition: border-color 0.2s; }
+    .student-textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }
     @media (max-width: 1000px) { .app-shell { flex-direction:column; height:auto; min-height:95vh; } .sidebar { width:100%; max-width:none; resize:none; overflow-y:visible; border-right:none; border-bottom:3px solid var(--ink); } .content { padding:18px; } .hero h2 { font-size:32px; } }
     @media (max-width: 760px) { .twocol { grid-template-columns:1fr; } .hero h2 { font-size:28px; } .hero p { font-size:16px; } }
   </style>
@@ -79,23 +81,602 @@
   <div class="modal-backdrop" id="zoomModal"><div class="modal-card"><div class="modal-head"><h5 id="zoomTitle">Screenshot</h5><button class="icon-btn" id="closeZoom"><i data-lucide="x"></i></button></div><div id="zoomBody"></div></div></div>
   <div class="modal-backdrop" id="lockModal"><div class="modal-card" style="max-width:520px;"><div class="modal-head"><h5>Instructor access</h5><button class="icon-btn" id="closeLock"><i data-lucide="x"></i></button></div><div class="stack"><p style="margin:0; color:#334155; font-weight:800;">Enter the local password to reveal the instructor-only section in the navigation.</p><label style="font-weight:900; color:#0f172a;">Password</label><input id="lockInput" type="password" autocomplete="off" placeholder="Enter password" style="width:100%; padding:14px 16px; border:3px solid #0f172a; border-radius:14px; font-size:16px; font-weight:800; color:#0f172a; background:#fff;" /><button class="lock-btn" id="unlockBtn">Unlock</button><div id="lockMsg" class="hidden-section-note" style="display:none;"></div><div id="vaultSuccess" class="success-msg">Unlocked. Instructor notes are now visible beneath the relevant instructions, and the Instructor Access section is in the sidebar.</div></div></div></div>
 <script>
-const SECTIONS = [{"id": "overview", "label": "Overview", "icon": "clipboard-list", "title": "Cleansing Cab Ride Data", "intro": "Import the workbook, inspect the data quality issues, clean the core fields, and then build a few useful features and filters for analysis.", "cards": [{"type": "steps", "title": "Get started", "steps": [{"title": "Download the file and open it in Designer", "body": "Use the workbook for this activity as your main input file. Bring it into Designer and run the workflow once so you can inspect the fields and records before cleaning anything.", "downloads": [{"label": "Download file here", "file": "Cab Company Data.xlsx"}], "shots": ["screenshot-001.png", "screenshot-002.png"]}]}, {"type": "checklist", "title": "What you will practice", "items": ["Inspecting data quality bars and Browse summaries", "Using Select, Data Cleansing, Imputation, Formula, Record ID, DateTime, and Filter", "Cleaning nulls, whitespace, capitalization, and data types", "Creating a Day of Week feature", "Comparing filtered ride subsets"]}]}, {"id": "inspect", "label": "Inspect the Data", "icon": "search", "title": "Inspect the data", "intro": "Before cleaning, study the table and write down the questions you think this dataset could answer.", "cards": [{"type": "steps", "title": "Inspect the data", "steps": [{"title": "Check the data quality bars and Browse summaries", "body": "Look across the fields for warning colors and use Browse to inspect the problem columns more closely. Notice the red flags in start_point and the null-heavy fields.", "shots": ["screenshot-003.png", "screenshot-004.png"]}, {"title": "Review the raw table and list what needs attention", "body": "Scan the rows and headers carefully. Notice the nulls in Cab Company and Price, the many nulls in rain, the repeated locations, the inconsistent headers, and the fact that many fields are still strings.", "shots": ["screenshot-002.png"]}, {"title": "Write down questions you want to answer with this dataset", "body": "As you inspect the file, make a list of questions the dataset seems capable of answering. Focus on pricing, weather, locations, time patterns, and surge pricing.", "shots": []}]}, {"type": "callout", "title": "Questions you might investigate with this dataset", "items": ["What patterns can you find in ride prices, distance, weather, and surge pricing?", "Which columns look messy or incomplete and need cleaning first?", "What additional questions could you answer after the data is cleaned?"]}, {"type": "twocol", "left": {"title": "Good things to notice", "items": ["The rides occurred in November and December of 2022", "The same 12 locations appear in start_point and destination", "Surge multiplier values are all multiples of 0.25", "The start_point field has not-ok records caused by whitespace"]}, "right": {"title": "What students should do next", "items": ["Decide which fields need better types", "Identify which nulls need action and which may be acceptable", "Think about what might explain higher prices", "Start planning which features could be created later"]}}]}, {"id": "select", "label": "Select Tool", "icon": "sliders-horizontal", "title": "Update headers and data types", "intro": "Use Select first so the table is easier to read and the fields have more useful names and types.", "cards": [{"type": "steps", "title": "Select tool", "steps": [{"title": "Update headers and data types", "body": "Add a Select tool right after Input Data. Clean up the headers, improve descriptions where useful, and change the obvious fields to more appropriate data types. Update the annotation to “Update headers and data types.”", "shots": ["screenshot-005.png", "screenshot-006.png", "screenshot-007.png"]}, {"title": "Keep Time Ride Ordered as a string for now", "body": "Do not convert Time Ride Ordered inside Select yet. Leave it as a string for now.", "shots": ["screenshot-008.png"], "instructorNote": "Your students may try to change the [Time Ride Ordered] column to a date time data type. This will not work because those values are not in the format required of a date time data type. As a result, all of the values become null. We will address how to make this change later in the lesson. Leave [Time Ride Ordered] as a String data type for now."}]}]}, {"id": "cleansing", "label": "Data Cleansing", "icon": "brush-cleaning", "title": "Clean the company and location fields", "intro": "Use Data Cleansing to standardize the company names and remove whitespace problems from Start Point.", "cards": [{"type": "steps", "title": "Data Cleansing", "steps": [{"title": "Standardize Cab Company values", "body": "Start with Cab Company. Fix the capitalization issue and remove the internal whitespace issue so the variants collapse into the true company names.", "shots": ["screenshot-009.png", "screenshot-010.png"]}, {"title": "Remove leading and trailing whitespace in Start Point", "body": "Select [Start Point]. This column does not have any Nulls to replace so you can uncheck the Replace Nulls options. Only check the Leading and Trailing Whitespace from the Remove Unwanted Characters section. Run the workflow and confirm that Start Point is now clean and the leading spaces were removed.", "shots": ["screenshot-011.png", "screenshot-012.png", "screenshot-013.png"], "instructorNote": "You might consider it to be good practice to keep all columns selected when only removing leading and trailing whitespace to ensure you did not miss a record having this issue."}]}]}, {"id": "nulls", "label": "Null Handling", "icon": "database-zap", "title": "Handle the remaining null values", "intro": "Next, address rainfall, price, and cab-company null values with the right tool for each situation.", "cards": [{"type": "steps", "title": "Null handling", "steps": [{"title": "Replace rainfall nulls with zero", "body": "For the Recent Rainfall field, the nulls represent no rainfall rather than missing measurement. Replacing them with 0 makes the values more faithful to the situation.", "shots": ["screenshot-014.png"]}, {"title": "Make the Imputation tool available if needed", "body": "If the Imputation tool is hidden, enable it from the palette settings or search for it so you can use it for the numeric price field.", "shots": ["screenshot-015.png"]}, {"title": "Impute missing Price values", "body": "Use Imputation on Price and replace only Null() values. Choose an imputed value you can justify from the distribution of prices.", "shots": ["screenshot-016.png", "screenshot-017.png"], "instructorNote": "Median is a defensible choice here because only a few records are missing and price distributions can be uneven."}, {"title": "Use Formula to fill null Cab Company values", "body": "Because Cab Company is text, use a Formula tool instead of Imputation. Replace null company values with the more prevalent company name while leaving the non-null values unchanged.", "shots": ["screenshot-018.png", "screenshot-019.png", "screenshot-020.png", "screenshot-021.png"], "instructorNote": "The talk track uses RIDE4ME because it is much more prevalent in the file."}]}]}, {"id": "datetime", "label": "Record ID & DateTime", "icon": "clock-3", "title": "Add a record identifier and parse the ride time", "intro": "Once the nulls are handled, create a simple identifier and convert the ride-order timestamp correctly.", "cards": [{"type": "steps", "title": "Record ID and DateTime", "steps": [{"title": "Add a Ride ID field", "body": "Use a Record ID tool so each observation has a simple identifier. Rename the new field to Ride ID.", "shots": ["screenshot-022.png", "screenshot-023.png"]}, {"title": "Convert Time Ride Ordered with DateTime", "body": "Now use a DateTime tool to convert the original ride-order string into a proper date-time field called Time of Order.", "shots": ["screenshot-024.png", "screenshot-025.png"]}, {"title": "Remove the original string field and reposition the new one", "body": "Add a Select tool after DateTime so the old string field can be removed and Time of Order can be placed in a cleaner location in the table.", "shots": ["screenshot-026.png", "screenshot-027.png"]}]}]}, {"id": "feature", "label": "Feature Engineering", "icon": "wrench", "title": "Create a Day of Week feature", "intro": "Use the cleaned time field to generate a more useful day-based feature for later filtering and comparison.", "cards": [{"type": "steps", "title": "Day of Week", "steps": [{"title": "Create Day of Week with DateTime", "body": "Add a DateTime tool after the cleaned data. Choose Date/Time format to string and select Time of Order as the field to convert. Name the new field Day of Week. Choose Custom and enter day as the format. Run the workflow and confirm the new field shows the weekday for each ride. Then use a Browse tool to check which days appear most often. If you want to investigate weekend rides more closely, use a Filter tool next.", "shots": [{"file": "screenshot-072.png", "title": "Create Day of Week with DateTime", "desc": "Use Date/Time format to string, choose Custom, and enter day."}]}, {"title": "Check which days appear most often", "body": "Run the workflow and use Browse to look at the resulting day values before you start filtering.", "shots": []}, {"title": "Alternative method", "body": "An alternative method can also be used to create the day label. Review the result view below, then use the DateTime function reference link to explore additional date and time syntax options.", "shots": [{"file": "screenshot-036.png", "title": "Alternative method result view 1", "desc": "A result view from the alternative method."}], "link": {"label": "DateTime function reference", "url": "https://help.alteryx.com/current/en/designer/functions/datetime-functions.html#date-time-function-reference"}}]}]}, {"id": "weekend", "label": "Weekend Filter", "icon": "filter", "title": "Filter for weekend rides", "intro": "Build a simple Saturday filter first, then extend it to cover the full weekend.", "cards": [{"type": "steps", "title": "Weekend filter", "steps": [{"title": "Start with a Basic filter for Saturday", "body": "Filter Day of Week to Saturday first so you can see the simplest version of the condition.", "shots": [{"file": "screenshot-032.png", "title": "Start with a Basic filter for Saturday", "desc": "Build the first weekend filter by keeping only Saturday rides."}]}, {"title": "Extend the filter to include Sunday", "body": "Switch to a Custom filter and add an OR condition so the true output includes both Saturday and Sunday rides.", "shots": [{"file": "screenshot-033.png", "title": "Weekend filter including Sunday", "desc": "Extend the Saturday logic with an OR condition for Sunday."}, {"file": "screenshot-034.png", "title": "Workflow after the weekend filter is built", "desc": "The filter is ready for comparison using the true and false anchors."}]}, {"title": "Compare weekend and weekday rides", "body": "Attach Browse tools to both anchors and compare the weekend rides with the non-weekend rides.", "shots": [{"file": "screenshot-035.png", "title": "Compare weekend and weekday rides", "desc": "Use Browse outputs to compare the true and false anchors after filtering."}, {"file": "screenshot-042.png", "title": "Weekend versus weekday comparison view 1", "desc": "One summary view for comparing the split outputs."}, {"file": "screenshot-043.png", "title": "Weekend versus weekday comparison view 2", "desc": "Another view for comparing the filtered outputs."}]}]}]}, {"id": "university", "label": "University Challenge", "icon": "graduation-cap", "title": "University ride challenge", "intro": "Use filtering and Browse tools to compare rides involving universities with other rides in the dataset.", "cards": [{"type": "steps", "title": "University filtering", "steps": [{"title": "Begin with Start Point contains University", "body": "Begin with a Basic filter on Start Point contains University. This gives you a clean first version before you expand the logic.", "shots": [{"file": "screenshot-073.png", "title": "Basic University filter", "desc": "Begin with Start Point contains University in the Filter tool."}]}, {"title": "Expand the logic to include destination", "body": "Switch to a Custom filter and add an OR condition so a ride is kept when University appears in Start Point or Destination.", "shots": [{"file": "screenshot-074.png", "title": "Expand the logic to include destination", "desc": "Use a custom filter so rides are kept when University appears in Start Point or Destination."}, {"file": "screenshot-075.png", "title": "Workflow after the University filter is built", "desc": "The filter can now separate university-related rides from the rest of the dataset."}]}]}, {"type": "callout", "title": "Potential findings challenge", "items": ["Distance: Do cab rides to or from universities travel farther on average compared to rides that do not involve a university? If so, by how much?", "Cost: Is there a difference in the average cost of cab rides involving universities versus those that do not? How much more do university-related rides typically cost?", "Day of the Week Patterns: On which days are cab rides to or from universities most common? How does that compare to the most common days for non-university rides?", "Surge Pricing: Is there a noticeable difference in the average surge multiplier between university-related rides and other rides?"]}]}, {"id": "instructor", "label": "Instructor Access", "icon": "lock", "title": "Instructor-only notes", "intro": "This section appears only after the local password is entered.", "hidden": true, "cards": [{"type": "callout", "title": "Questions students might ask while inspecting the data", "items": ["The weather values repeat frequently. How were they measured? The weather measurements were taken approximately every hour.", "What does the rain field mean? It is the amount of rain in the last hour.", "What are the units on Distance, Price, Surge Multiplier, temp, rain, and wind? Distance is in miles, Price is in dollars, Surge Multiplier is a scalar, temp is in Fahrenheit, rain is in inches, and wind is the highest wind gust in the last hour measured in miles per hour.", "What is a surge multiplier? When demand for cab rides is high relative to the supply of drivers, fees are increased. The surge multiplier is what the base fee is multiplied by to get the final price of the trip shown."]}, {"type": "callout", "title": "Answers to the inspection questions", "items": ["The weather measurements were taken approximately every hour.", "The rain field is the amount of rain in the last hour.", "Distance is in miles, Price is in dollars, Surge Multiplier is a scalar, temp is in Fahrenheit, rain is in inches, and wind is the highest wind gust in the last hour measured in miles per hour.", "A surge multiplier is what the base fare is multiplied by when demand is high relative to driver supply."]}, {"type": "callout", "title": "Likely findings for the university challenge", "items": ["Cab rides to or from universities travel about one mile farther on average than rides that do not involve a university.", "On average, rides to or from the university cost about $3 more than those not traveling to or from a university.", "People tend to use cabs to travel to or from universities most often on Saturdays, Sundays, and Tuesdays. Other rides occur most often on Saturdays, Sundays, and Fridays.", "The average surge multiplier is about the same between university-related rides and other rides."]}]}];
-const GALLERY = ["screenshot-072.png", "screenshot-073.png", "screenshot-074.png", "screenshot-075.png"];
-const nav=document.getElementById('nav'), content=document.getElementById('content'); let activeId='overview', instructorUnlocked=false;
-function esc(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function shotCard(shot){ const file = typeof shot==='string' ? shot : shot.file; const title = typeof shot==='string' ? shot : (shot.title || shot.file); const desc = typeof shot==='string' ? 'Click to zoom.' : (shot.desc || 'Click to zoom.'); return `<figure class="shot-card"><img src="img/${esc(file)}" alt="${esc(title)}" class="native-shot zoomable" data-title="${esc(title)}" data-src="img/${esc(file)}" loading="lazy"><figcaption><strong>${esc(title)}</strong><span>${esc(desc)}</span></figcaption></figure>`; }
-function renderNav(){nav.innerHTML=''; SECTIONS.filter(s=>!s.hidden||instructorUnlocked).forEach(section=>{const btn=document.createElement('button'); btn.className=section.id===activeId?'active':''; btn.innerHTML=`<i data-lucide="${section.icon}"></i><span>${esc(section.label)}</span>`; btn.onclick=()=>{activeId=section.id; renderNav(); renderContent();}; nav.appendChild(btn);}); lucide.createIcons();}
-function renderCard(card){
- if(card.type==='checklist'||card.type==='callout'){return `<section class="panel"><h3>${esc(card.title)}</h3><div class="softbox"><ul class="list-clean">${card.items.map(item=>`<li>${esc(item)}</li>`).join('')}</ul></div>${instructorUnlocked&&card.instructorNote?`<div class="instructor-note show"><div><strong>Instructor Note:</strong><br>${esc(card.instructorNote)}</div></div>`:(card.instructorNote?`<div class="instructor-note"><div><strong>Instructor Note:</strong><br>${esc(card.instructorNote)}</div></div>`:'')}</section>`;}
- if(card.type==='twocol'){return `<section class="panel"><div class="twocol"><div class="softbox"><h3>${esc(card.left.title)}</h3><ul class="list-clean">${card.left.items.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div><div class="softbox"><h3>${esc(card.right.title)}</h3><ul class="list-clean">${card.right.items.map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div></div></section>`;}
- if(card.type==='steps'){return `<section class="panel"><h3>${esc(card.title||'Step-by-step')}</h3><div class="steps">${card.steps.map((step,i)=>`<div class="step"><div class="step-head"><div class="step-num">${i+1}</div><div style="flex:1; min-width:0;"><h4>${esc(step.title)}</h4><p>${esc(step.body)}</p>${step.downloads&&step.downloads.length?`<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">${step.downloads.map(d=>`<a href="data/${esc(d.file)}" download class="download-btn"><i data-lucide="download"></i> ${esc(d.label)}</a>`).join('')}</div>`:''}${step.link?`<div style="margin-top:10px;"><a class="download-btn" href="${esc(step.link.url)}" target="_blank" rel="noopener noreferrer">${esc(step.link.label)}</a></div>`:''}${step.shots&&step.shots.length?`<div class="shot-grid">${step.shots.map(shotCard).join('')}</div>`:''}${instructorUnlocked&&step.instructorNote?`<div class="instructor-note show"><div><strong>Instructor Note:</strong><br>${esc(step.instructorNote)}</div></div>`:(step.instructorNote?`<div class="instructor-note"><div><strong>Instructor Note:</strong><br>${esc(step.instructorNote)}</div></div>`:'')}</div></div></div>`).join('')}</div></section>`;}
- return '';}
-function renderContent(){const section=SECTIONS.find(s=>s.id===activeId)||SECTIONS[0]; const hiddenNote=section.hidden?'<div class="hidden-section-note">Instructor-only section unlocked for this local file.</div>':''; content.innerHTML=`<section><div class="hero"><div class="eyebrow"><i data-lucide="${section.icon}"></i> ${esc(section.label)}</div><h2>${esc(section.title)}</h2><p>${esc(section.intro)}</p></div>${hiddenNote}<div class="stack">${section.cards.map(renderCard).join('')}</div></section>`; lucide.createIcons(); attachZoomHandlers();}
-function attachZoomHandlers(){document.querySelectorAll('.zoomable').forEach(img=>{img.onclick=()=>{document.getElementById('zoomTitle').textContent=img.dataset.title||'Screenshot';document.getElementById('zoomBody').innerHTML=`<img src="${img.dataset.src}" alt="${esc(img.dataset.title||'Screenshot')}">`;document.getElementById('zoomModal').classList.add('open');};});}
-function closeZoom(){document.getElementById('zoomModal').classList.remove('open');document.getElementById('zoomBody').innerHTML='';}
-function openLock(){document.getElementById('lockModal').classList.add('open');document.getElementById('lockInput').value='';document.getElementById('lockMsg').style.display='none';document.getElementById('vaultSuccess').style.display='none';}
-function closeLock(){document.getElementById('lockModal').classList.remove('open');}
-function unlockInstructor(){const val=document.getElementById('lockInput').value.trim();const msg=document.getElementById('lockMsg');const success=document.getElementById('vaultSuccess'); if(val==='cab'){instructorUnlocked=true; msg.style.display='none'; success.style.display='block'; renderNav(); setTimeout(()=>{activeId='instructor'; renderNav(); renderContent(); closeLock();},400);} else {success.style.display='none'; msg.style.display='block'; msg.textContent='Password not recognized. Try again.';}}
-document.getElementById('openLock').onclick=openLock; document.getElementById('closeLock').onclick=closeLock; document.getElementById('unlockBtn').onclick=unlockInstructor; document.getElementById('lockInput').addEventListener('keydown',e=>{if(e.key==='Enter') unlockInstructor();}); document.getElementById('closeZoom').onclick=closeZoom; document.getElementById('zoomModal').onclick=e=>{if(e.target.id==='zoomModal') closeZoom();}; document.getElementById('lockModal').onclick=e=>{if(e.target.id==='lockModal') closeLock();}; window.addEventListener('keydown',e=>{if(e.key==='Escape'){closeZoom(); closeLock();}});
-renderNav(); renderContent();
-</script></body></html>
+const SECTIONS = [
+  {
+    "id": "overview",
+    "label": "Overview",
+    "icon": "clipboard-list",
+    "title": "Cleansing Cab Ride Data",
+    "intro": "Import the workbook, inspect the data quality issues, clean the core fields, and then build a few useful features and filters for analysis.",
+    "cards": [
+      {
+        "type": "steps",
+        "title": "Get started",
+        "steps": [
+          {
+            "title": "Download the file and open it in Designer",
+            "body": "Use the workbook for this activity as your main input file. Bring it into Designer and run the workflow once so you can inspect the fields and records before cleaning anything.",
+            "downloads": [
+              {
+                "label": "Download file here",
+                "file": "Cab Company Data.xlsx"
+              }
+            ],
+            "shots": [
+              "screenshot-001.png",
+              "screenshot-002.png"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "checklist",
+        "title": "What you will practice",
+        "items": [
+          "Inspecting data quality bars and Browse summaries",
+          "Using Select, Data Cleansing, Imputation, Formula, Record ID, DateTime, and Filter",
+          "Cleaning nulls, whitespace, capitalization, and data types",
+          "Creating a Day of Week feature",
+          "Comparing filtered ride subsets"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "inspect",
+    "label": "Inspect the Data",
+    "icon": "search",
+    "title": "Inspect the data",
+    "intro": "Before cleaning, study the table and write down the questions you think this dataset could answer.",
+    "cards": [
+      {
+        "type": "steps",
+        "title": "Inspect the data",
+        "steps": [
+          {
+            "title": "Check the data quality bars and Browse summaries",
+            "body": "Look across the fields for warning colors and use Browse to inspect the problem columns more closely. Notice the red flags in start_point and the null-heavy fields.",
+            "shots": [
+              "screenshot-003.png",
+              "screenshot-004.png"
+            ]
+          },
+          {
+            "title": "Review the raw table and list what needs attention",
+            "body": "Scan the rows and headers carefully. Notice the nulls in Cab Company and Price, the many nulls in rain, the repeated locations, the inconsistent headers, and the fact that many fields are still strings.",
+            "shots": [
+              "screenshot-002.png"
+            ]
+          },
+          {
+            "title": "Write down questions you want to answer with this dataset",
+            "body": "As you inspect the file, make a list of questions the dataset seems capable of answering. Focus on pricing, weather, locations, time patterns, and surge pricing.<br><br><textarea id=\"studentNotesArea\" class=\"student-textarea\" placeholder=\"Write down your questions here...\" rows=\"4\" oninput=\"studentNotes=this.value\"></textarea>",
+            "shots": []
+          }
+        ]
+      },
+      {
+        "type": "callout",
+        "title": "Questions you might investigate with this dataset",
+        "instructorOnly": true,
+        "items": [
+          "What patterns can you find in ride prices, distance, weather, and surge pricing?",
+          "Which columns look messy or incomplete and need cleaning first?",
+          "What additional questions could you answer after the data is cleaned?"
+        ]
+      },
+      {
+        "type": "twocol",
+        "left": {
+          "title": "Good things to notice",
+          "items": [
+            "The rides occurred in November and December of 2022",
+            "The same 12 locations appear in start_point and destination",
+            "Surge multiplier values are all multiples of 0.25. Surge multiplier is what the base fee is multiplied by when demand for cab rides is high relative to driver supply.",
+            "The start_point field has not-ok records caused by whitespace"
+          ]
+        },
+        "right": {
+          "title": "What comes next",
+          "items": [
+            "Decide which fields need better types",
+            "Identify which nulls need action and which may be acceptable",
+            "Think about what might explain higher prices",
+            "Start planning which features could be created later"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "select",
+    "label": "Select Tool",
+    "icon": "sliders-horizontal",
+    "title": "Update headers and data types",
+    "intro": "Use Select first so the table is easier to read and the fields have more useful names and types.",
+    "cards": [
+      {
+        "type": "steps",
+        "title": "Select tool",
+        "steps": [
+          {
+            "title": "Update headers and data types",
+            "body": "Add a Select tool right after Input Data. Clean up the headers, improve descriptions where useful, and change the obvious fields to more appropriate data types. Update the annotation to “Update headers and data types.”",
+            "shots": [
+              "screenshot-005.png",
+              "screenshot-006.png",
+              "screenshot-007.png"
+            ]
+          },
+          {
+            "title": "Keep Time Ride Ordered as a string for now",
+            "body": "Do not convert Time Ride Ordered inside Select yet. Leave it as a string for now. If you order it to date type, Time Ride Ordered will be NULL as shown in the screenshot.",
+            "shots": [
+              "screenshot-008.png"
+            ],
+            "instructorNote": "Your students may try to change the [Time Ride Ordered] column to a date time data type. This will not work because those values are not in the format required of a date time data type. As a result, all of the values become null. We will address how to make this change later in the lesson. Leave [Time Ride Ordered] as a String data type for now."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cleansing",
+    "label": "Data Cleansing",
+    "icon": "brush-cleaning",
+    "title": "Clean the company and location fields",
+    "intro": "Use Data Cleansing to standardize the company names and remove whitespace problems from Start Point.",
+    "cards": [
+      {
+        "type": "steps",
+        "title": "Data Cleansing",
+        "steps": [
+          {
+            "title": "Standardize Cab Company values",
+            "body": "Start with Cab Company. Fix the capitalization issue and remove the internal whitespace issue so the variants collapse into the true company names.",
+            "shots": [
+              "screenshot-009.png",
+              "screenshot-010.png"
+            ]
+          },
+          {
+            "title": "Remove leading and trailing whitespace in Start Point",
+            "body": "Add one more Data Cleansing Tool. Select [Start Point]. This column does not have any Nulls to replace so you can uncheck the Replace Nulls options. Only check the Leading and Trailing Whitespace from the Remove Unwanted Characters section. Run the workflow and confirm that Start Point is now clean and the leading spaces were removed.",
+            "shots": [
+              "screenshot-011.png",
+              "screenshot-012.png"
+            ],
+            "instructorNote": "You might consider it to be good practice to keep all columns selected when only removing leading and trailing whitespace to ensure you did not miss a record having this issue."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "nulls",
+    "label": "Null Handling",
+    "icon": "database-zap",
+    "title": "Handle the remaining null values",
+    "intro": "Next, address rainfall, price, and cab-company null values with the right tool for each situation.",
+    "cards": [
+      {
+        "type": "steps",
+        "title": "Null handling",
+        "steps": [
+          {
+            "title": "Replace rainfall nulls with zero",
+            "body": "For the Recent Rainfall field, the nulls represent no rainfall rather than missing measurement. Replacing them with 0 makes the values more faithful to the situation.",
+            "shots": [
+              "screenshot-013.png",
+              "screenshot-014.png"
+            ]
+          },
+          {
+            "title": "Make the Imputation tool available if needed",
+            "body": "If the Imputation tool is hidden, enable it from the palette settings or search for it so you can use it for the numeric price field.",
+            "shots": [
+              "screenshot-015.png"
+            ]
+          },
+          {
+            "title": "Impute missing Price values",
+            "body": "Use Imputation on Price and replace only Null() values. Choose an imputed value you can justify from the distribution of prices.",
+            "shots": [
+              "screenshot-016.png",
+              "screenshot-017.png"
+            ],
+            "instructorNote": "Median is a defensible choice here because only a few records are missing and price distributions can be uneven."
+          },
+          {
+            "title": "Use Formula to fill null Cab Company values",
+            "body": "Because Cab Company is text, use a Formula tool instead of Imputation, because Imputation works for numeric data. Replace null company values with the more prevalent company name while leaving the non-null values unchanged.",
+            "shots": [
+              "screenshot-018.png",
+              "screenshot-019.png",
+              "screenshot-020.png",
+              "screenshot-021.png"
+            ],
+            "instructorNote": "The talk track uses RIDE4ME because it is much more prevalent in the file."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "datetime",
+    "label": "Record ID & DateTime",
+    "icon": "clock-3",
+    "title": "Add a record identifier and parse the ride time",
+    "intro": "Once the nulls are handled, create a simple identifier and convert the ride-order timestamp correctly.",
+    "cards": [
+      {
+        "type": "steps",
+        "title": "Record ID and DateTime",
+        "steps": [
+          {
+            "title": "Add a Ride ID field",
+            "body": "Use a Record ID tool so each observation has a simple identifier. Rename the new field to Ride ID.",
+            "shots": [
+              "screenshot-023.png",
+              "screenshot-024.png",
+              "screenshot-022.png"
+            ]
+          },
+          {
+            "title": "Convert Time Ride Ordered with DateTime",
+            "body": "Now use a DateTime tool to convert the original ride-order string into a proper date-time field called Time of Order.",
+            "shots": [
+              "screenshot-026.png",
+              "screenshot-025.png"
+            ]
+          },
+          {
+            "title": "Remove the original string field and reposition the new one",
+            "body": "Add a Select tool after DateTime so the old string field can be removed and Time of Order can be placed in a cleaner location in the table.",
+            "shots": [
+              "screenshot-027.png"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "feature",
+    "label": "Feature Engineering",
+    "icon": "wrench",
+    "title": "Feature Engineering",
+    "intro": "Use the cleaned time field to generate a more useful day-based feature for later filtering and comparison.",
+    "cards": [
+      {
+        "type": "steps",
+        "title": "Time Ride Ordered",
+        "steps": [
+          {
+            "title": "Create Time Ride Ordered",
+            "body": "We have a string that we want to convert to a Date/Time format.<br>Choose String to Date/Time format.<br>Choose the [Time Ride Ordered] column within the Select the string field to convert drop-down.<br>Enter Time of Order in the section Specify the new column name.<br>Lastly, we need to tell the tool what the current format is. There is a list of options that you can select from if they meet the current format provided. If not, you can choose the Custom option at the bottom and enter your own. The tool will recognize the same basic abbreviations in the options provided, but you can also utilize date time specifiers if needed.",
+            "shots": [
+              {
+                "file": "screenshot-072.png",
+                "title": "Create Time Ride Ordered",
+                "desc": "Configure the string to Date/Time format conversion."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "steps",
+        "title": "Day of Week",
+        "steps": [
+          {
+            "title": "Create Day of Week with DateTime",
+            "body": "Add a DateTime tool after the cleaned data. Choose Date/Time format to string and select Time of Order as the field to convert. Name the new field Day of Week. Choose Custom and enter day as the format. Run the workflow and confirm the new field shows the weekday for each ride. Then use a Browse tool to check which days appear most often. If you want to investigate weekend rides more closely, use a Filter tool next.",
+            "shots": [
+              {
+                "file": "new.png",
+                "title": "Create Day of Week with DateTime",
+                "desc": "Use Date/Time format to string, choose Custom, and enter day."
+              }
+            ]
+          },
+          {
+            "title": "Check which days appear most often",
+            "body": "Run the workflow and use Browse to look at the resulting day values before you start filtering.",
+            "shots": []
+          },
+          {
+            "title": "Alternative method",
+            "body": "An alternative method can also be used to create the day label. Review the result view below, then use the DateTime function reference link to explore additional date and time syntax options.",
+            "shots": [
+              {
+                "file": "screenshot-036.png",
+                "title": "Alternative method result view 1",
+                "desc": "A result view from the alternative method."
+              }
+            ],
+            "link": {
+              "label": "DateTime function reference",
+              "url": "https://help.alteryx.com/current/en/designer/functions/datetime-functions.html#date-time-function-reference"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "weekend",
+    "label": "Weekend Filter",
+    "icon": "filter",
+    "title": "Filter for weekend rides",
+    "intro": "Build a simple Saturday filter first, then extend it to cover the full weekend.",
+    "cards": [
+      {
+        "type": "steps",
+        "title": "Weekend filter",
+        "steps": [
+          {
+            "title": "Start with a Basic filter for Saturday",
+            "body": "Filter Day of Week to Saturday first so you can see the simplest version of the condition.",
+            "shots": [
+              {
+                "file": "screenshot-032.png",
+                "title": "Start with a Basic filter for Saturday",
+                "desc": "Build the first weekend filter by keeping only Saturday rides."
+              }
+            ]
+          },
+          {
+            "title": "Extend the filter to include Sunday",
+            "body": "Switch to a Custom filter and add an OR condition so the true output includes both Saturday and Sunday rides.",
+            "shots": [
+              {
+                "file": "screenshot-033.png",
+                "title": "Weekend filter including Sunday",
+                "desc": "Extend the Saturday logic with an OR condition for Sunday."
+              },
+              {
+                "file": "screenshot-034.png",
+                "title": "Workflow after the weekend filter is built",
+                "desc": "The filter is ready for comparison using the true and false anchors."
+              }
+            ]
+          },
+          {
+            "title": "Compare weekend and weekday rides",
+            "body": "Attach Browse tools to both anchors and compare the weekend rides with the non-weekend rides.",
+            "shots": [
+              {
+                "file": "screenshot-035.png",
+                "title": "Compare weekend and weekday rides",
+                "desc": "Use Browse outputs to compare the true and false anchors after filtering."
+              },
+              {
+                "file": "screenshot-042.png",
+                "title": "Weekend versus weekday comparison view 1",
+                "desc": "One summary view for comparing the split outputs."
+              },
+              {
+                "file": "screenshot-043.png",
+                "title": "Weekend versus weekday comparison view 2",
+                "desc": "Another view for comparing the filtered outputs."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "university",
+    "label": "University Challenge",
+    "icon": "graduation-cap",
+    "title": "University ride challenge",
+    "intro": "Use filtering and Browse tools to compare rides involving universities with other rides in the dataset.",
+    "cards": [
+      {
+        "type": "steps",
+        "title": "University filtering",
+        "steps": [
+          {
+            "title": "Begin with Start Point contains University",
+            "body": "Begin with a Basic filter on Start Point contains University. This gives you a clean first version before you expand the logic.",
+            "shots": [
+              {
+                "file": "screenshot-073.png",
+                "title": "Basic University filter",
+                "desc": "Begin with Start Point contains University in the Filter tool."
+              }
+            ]
+          },
+          {
+            "title": "Expand the logic to include destination",
+            "body": "Switch to a Custom filter and add an OR condition so a ride is kept when University appears in Start Point or Destination.",
+            "shots": [
+              {
+                "file": "screenshot-074.png",
+                "title": "Expand the logic to include destination",
+                "desc": "Use a custom filter so rides are kept when University appears in Start Point or Destination."
+              },
+              {
+                "file": "screenshot-075.png",
+                "title": "Workflow after the University filter is built",
+                "desc": "The filter can now separate university-related rides from the rest of the dataset."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "callout",
+        "title": "Potential findings challenge",
+        "items": [
+          "Distance: Do cab rides to or from universities travel farther on average compared to rides that do not involve a university? If so, by how much?",
+          "Cost: Is there a difference in the average cost of cab rides involving universities versus those that do not? How much more do university-related rides typically cost?",
+          "Day of the Week Patterns: On which days are cab rides to or from universities most common? How does that compare to the most common days for non-university rides?",
+          "Surge Pricing: Is there a noticeable difference in the average surge multiplier between university-related rides and other rides?"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "instructor",
+    "label": "Instructor Access",
+    "icon": "lock",
+    "title": "Instructor-only notes",
+    "intro": "This section appears only after the local password is entered.",
+    "hidden": true,
+    "cards": [
+      {
+        "type": "callout",
+        "title": "Questions students might ask while inspecting the data",
+        "items": [
+          "The weather values repeat frequently. How were they measured? The weather measurements were taken approximately every hour.",
+          "What does the rain field mean? It is the amount of rain in the last hour.",
+          "What are the units on Distance, Price, Surge Multiplier, temp, rain, and wind? Distance is in miles, Price is in dollars, Surge Multiplier is a scalar, temp is in Fahrenheit, rain is in inches, and wind is the highest wind gust in the last hour measured in miles per hour.",
+          "What is a surge multiplier? When demand for cab rides is high relative to the supply of drivers, fees are increased. The surge multiplier is what the base fee is multiplied by to get the final price of the trip shown."
+        ]
+      },
+      {
+        "type": "callout",
+        "title": "Answers to the inspection questions",
+        "items": [
+          "The weather measurements were taken approximately every hour.",
+          "The rain field is the amount of rain in the last hour.",
+          "Distance is in miles, Price is in dollars, Surge Multiplier is a scalar, temp is in Fahrenheit, rain is in inches, and wind is the highest wind gust in the last hour measured in miles per hour.",
+          "A surge multiplier is what the base fare is multiplied by when demand is high relative to driver supply."
+        ]
+      },
+      {
+        "type": "callout",
+        "title": "Likely findings for the university challenge",
+        "items": [
+          "Cab rides to or from universities travel about one mile farther on average than rides that do not involve a university.",
+          "On average, rides to or from the university cost about $3 more than those not traveling to or from a university.",
+          "People tend to use cabs to travel to or from universities most often on Saturdays, Sundays, and Tuesdays. Other rides occur most often on Saturdays, Sundays, and Fridays.",
+          "The average surge multiplier is about the same between university-related rides and other rides."
+        ]
+      }
+    ]
+  }
+];
+
+const nav = document.getElementById('nav'), content = document.getElementById('content');
+let activeId = 'overview', instructorUnlocked = false, studentNotes = '';
+
+function esc(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function shotCard(shot) {
+  const file = typeof shot === 'string' ? shot : shot.file;
+  const title = typeof shot === 'string' ? '' : (shot.title || '');
+  const desc = typeof shot === 'string' ? 'Click to zoom.' : (shot.desc || 'Click to zoom.');
+  return `<figure class="shot-card"><img src="img/${esc(file)}" alt="${esc(title || 'Screenshot')}" class="native-shot zoomable" data-title="${esc(title || 'Screenshot')}" data-src="img/${esc(file)}" loading="lazy"><figcaption>${title ? `<strong>${esc(title)}</strong>` : ''}<span>${esc(desc)}</span></figcaption></figure>`;
+}
+
+function renderNav() {
+  nav.innerHTML = '';
+  SECTIONS.filter(s => !s.hidden || instructorUnlocked).forEach(section => {
+    const btn = document.createElement('button');
+    btn.className = section.id === activeId ? 'active' : '';
+    btn.innerHTML = `<i data-lucide="${section.icon}"></i><span>${esc(section.label)}</span>`;
+    btn.onclick = () => { activeId = section.id; renderNav(); renderContent(); };
+    nav.appendChild(btn);
+  });
+  lucide.createIcons();
+}
+
+function renderCard(card) {
+  if (card.instructorOnly && !instructorUnlocked) return '';
+
+  if (card.type === 'checklist' || card.type === 'callout') {
+    return `<section class="panel"><h3>${esc(card.title)}</h3><div class="softbox"><ul class="list-clean">${card.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul></div>${instructorUnlocked && card.instructorNote ? `<div class="instructor-note show"><div><strong>Instructor Note:</strong><br>${esc(card.instructorNote)}</div></div>` : (card.instructorNote ? `<div class="instructor-note"><div><strong>Instructor Note:</strong><br>${esc(card.instructorNote)}</div></div>` : '')}</section>`;
+  }
+  
+  if (card.type === 'twocol') {
+    return `<section class="panel"><div class="twocol"><div class="softbox"><h3>${esc(card.left.title)}</h3><ul class="list-clean">${card.left.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></div><div class="softbox"><h3>${esc(card.right.title)}</h3><ul class="list-clean">${card.right.items.map(i => `<li>${esc(i)}</li>`).join('')}</ul></div></div></section>`;
+  }
+  
+  if (card.type === 'steps') {
+    return `<section class="panel"><h3>${esc(card.title || 'Step-by-step')}</h3><div class="steps">${card.steps.map((step, i) => `<div class="step"><div class="step-head"><div class="step-num">${i + 1}</div><div style="flex:1; min-width:0;"><h4>${esc(step.title)}</h4><p>${step.body}</p>${step.downloads && step.downloads.length ? `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">${step.downloads.map(d => `<a href="data/${esc(d.file)}" download class="download-btn"><i data-lucide="download"></i> ${esc(d.label)}</a>`).join('')}</div>` : ''}${step.link ? `<div style="margin-top:10px;"><a class="download-btn" href="${esc(step.link.url)}" target="_blank" rel="noopener noreferrer">${esc(step.link.label)}</a></div>` : ''}${step.shots && step.shots.length ? `<div class="shot-grid">${step.shots.map(shotCard).join('')}</div>` : ''}${instructorUnlocked && step.instructorNote ? `<div class="instructor-note show"><div><strong>Instructor Note:</strong><br>${esc(step.instructorNote)}</div></div>` : (step.instructorNote ? `<div class="instructor-note"><div><strong>Instructor Note:</strong><br>${esc(step.instructorNote)}</div></div>` : '')}</div></div></div>`).join('')}</div></section>`;
+  }
+  return '';
+}
+
+function renderContent() {
+  const section = SECTIONS.find(s => s.id === activeId) || SECTIONS[0];
+  const hiddenNote = section.hidden ? '<div class="hidden-section-note">Instructor-only section unlocked for this local file.</div>' : '';
+  content.innerHTML = `<section><div class="hero"><div class="eyebrow"><i data-lucide="${section.icon}"></i> ${esc(section.label)}</div><h2>${esc(section.title)}</h2><p>${esc(section.intro)}</p></div>${hiddenNote}<div class="stack">${section.cards.map(renderCard).join('')}</div></section>`;
+  lucide.createIcons();
+  attachZoomHandlers();
+  
+  // Restore student notes to the text area if it is currently in the DOM
+  const notesArea = document.getElementById('studentNotesArea');
+  if (notesArea) {
+    notesArea.value = studentNotes;
+  }
+}
+
+function attachZoomHandlers() {
+  document.querySelectorAll('.zoomable').forEach(img => {
+    img.onclick = () => {
+      document.getElementById('zoomTitle').textContent = img.dataset.title || 'Screenshot';
+      document.getElementById('zoomBody').innerHTML = `<img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}">`;
+      document.getElementById('zoomModal').classList.add('open');
+    };
+  });
+}
+
+function closeZoom() {
+  document.getElementById('zoomModal').classList.remove('open');
+  document.getElementById('zoomBody').innerHTML = '';
+}
+
+function openLock() {
+  document.getElementById('lockModal').classList.add('open');
+  document.getElementById('lockInput').value = '';
+  document.getElementById('lockMsg').style.display = 'none';
+  document.getElementById('vaultSuccess').style.display = 'none';
+}
+
+function closeLock() {
+  document.getElementById('lockModal').classList.remove('open');
+}
+
+function unlockInstructor() {
+  const val = document.getElementById('lockInput').value.trim();
+  const msg = document.getElementById('lockMsg');
+  const success = document.getElementById('vaultSuccess');
+  if (val === 'cab') {
+    instructorUnlocked = true;
+    msg.style.display = 'none';
+    success.style.display = 'block';
+    renderNav();
+    setTimeout(() => {
+      activeId = 'instructor';
+      renderNav();
+      renderContent();
+      closeLock();
+    }, 400);
+  } else {
+    success.style.display = 'none';
+    msg.style.display = 'block';
+    msg.textContent = 'Password not recognized. Try again.';
+  }
+}
+
+document.getElementById('openLock').onclick = openLock;
+document.getElementById('closeLock').onclick = closeLock;
+document.getElementById('unlockBtn').onclick = unlockInstructor;
+document.getElementById('lockInput').addEventListener('keydown', e => { if (e.key === 'Enter') unlockInstructor(); });
+document.getElementById('closeZoom').onclick = closeZoom;
+document.getElementById('zoomModal').onclick = e => { if (e.target.id === 'zoomModal') closeZoom(); };
+document.getElementById('lockModal').onclick = e => { if (e.target.id === 'lockModal') closeLock(); };
+window.addEventListener('keydown', e => { if (e.key === 'Escape') { closeZoom(); closeLock(); } });
+
+renderNav();
+renderContent();
+</script>
+</body>
+</html>
