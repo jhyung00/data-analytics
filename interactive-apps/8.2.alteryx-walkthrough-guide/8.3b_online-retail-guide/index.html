@@ -169,6 +169,7 @@
       overflow:auto;
       background:#f1f5f9;
       padding:28px;
+      transition: flex 0.3s;
     }
     .section { display:none; }
     .section.active { display:block; animation:fade .2s ease; }
@@ -353,6 +354,67 @@
       color:#475569;
       word-break:break-word;
     }
+
+    /* --- New Side Viewer CSS --- */
+    .side-viewer {
+      display: none;
+      width: 45%;
+      min-width: 350px;
+      max-width: 600px;
+      border-left: 3px solid var(--ink);
+      background: #e2e8f0;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .side-viewer.open {
+      display: flex;
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(20px); opacity: 0; }
+      to { transform: none; opacity: 1; }
+    }
+    .side-viewer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: #fff;
+      border-bottom: 3px solid var(--ink);
+    }
+    .side-viewer-head h5 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+    .side-viewer-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .side-viewer-body img {
+      width: 100%;
+      height: auto;
+      border: 3px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 5px 5px 0 rgba(15,23,42,1);
+      background: #fff;
+    }
+    .side-viewer-body .desc {
+      margin-top: 20px;
+      font-weight: 800;
+      color: #334155;
+      font-size: 16px;
+      line-height: 1.6;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 12px;
+      border: 2px solid var(--line);
+    }
+
     .modal-backdrop {
       position:fixed;
       inset:0;
@@ -437,6 +499,17 @@
     .instructor-note.show { display:flex; }
     .instructor-note i { flex-shrink:0; margin-top:2px; }
 
+    @media (max-width: 1100px) {
+      .side-viewer {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        z-index: 1000;
+        border: none;
+      }
+    }
     @media (max-width: 1000px) {
       .app-shell { flex-direction:column; height:auto; min-height:95vh; }
       .sidebar { width:100%; max-width:none; resize:none; overflow-y:visible; border-right:none; border-bottom:3px solid var(--ink); }
@@ -464,16 +537,14 @@
       </div>
     </aside>
     <main class="content" id="content"></main>
-  </div>
 
-  <div class="modal-backdrop" id="zoomModal" aria-hidden="true">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h5 id="zoomTitle">Screenshot</h5>
-        <button class="icon-btn" id="closeZoom" aria-label="Close image"><i data-lucide="x"></i></button>
+    <aside class="side-viewer" id="sideViewer">
+      <div class="side-viewer-head">
+        <h5 id="sideTitle">Screenshot</h5>
+        <button class="icon-btn" id="closeSide" aria-label="Close pane"><i data-lucide="x"></i></button>
       </div>
-      <div id="zoomBody"></div>
-    </div>
+      <div class="side-viewer-body" id="sideBody"></div>
+    </aside>
   </div>
 
   <div class="modal-backdrop" id="lockModal" aria-hidden="true">
@@ -821,6 +892,7 @@
         btn.innerHTML = `<i data-lucide="${section.icon}"></i><span>${esc(section.label)}</span>`;
         btn.addEventListener('click', () => {
           activeId = section.id;
+          document.getElementById('sideViewer').classList.remove('open');
           renderNav();
           renderContent();
         });
@@ -991,16 +1063,26 @@
     function attachZoomHandlers() {
       document.querySelectorAll('.zoomable').forEach(img => {
         img.onclick = () => {
-          document.getElementById('zoomTitle').textContent = img.dataset.title || 'Screenshot';
-          document.getElementById('zoomBody').innerHTML = `<img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}">`;
-          document.getElementById('zoomModal').classList.add('open');
+          let desc = '';
+          const figcaption = img.nextElementSibling;
+          if (figcaption) {
+            const span = figcaption.querySelector('span');
+            if (span) desc = span.textContent;
+          }
+
+          document.getElementById('sideTitle').textContent = img.dataset.title || 'Screenshot';
+          document.getElementById('sideBody').innerHTML = `
+            <img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}">
+            ${desc ? `<p class="desc">${esc(desc)}</p>` : ''}
+          `;
+          
+          document.getElementById('sideViewer').classList.add('open');
         };
       });
     }
 
-    function closeZoom() {
-      document.getElementById('zoomModal').classList.remove('open');
-      document.getElementById('zoomBody').innerHTML = '';
+    function closeSideViewer() {
+      document.getElementById('sideViewer').classList.remove('open');
     }
 
     function openLock() {
@@ -1047,16 +1129,16 @@
     document.getElementById('lockInput').addEventListener('keydown', e => {
       if(e.key === 'Enter') unlockInstructor();
     });
-    document.getElementById('closeZoom').addEventListener('click', closeZoom);
-    document.getElementById('zoomModal').addEventListener('click', e => {
-      if(e.target.id === 'zoomModal') closeZoom();
-    });
+    
+    // Wire up the new close button for the side viewer
+    document.getElementById('closeSide').addEventListener('click', closeSideViewer);
+    
     document.getElementById('lockModal').addEventListener('click', e => {
       if(e.target.id === 'lockModal') closeLock();
     });
     window.addEventListener('keydown', e => {
       if(e.key === 'Escape') {
-        closeZoom();
+        closeSideViewer();
         closeLock();
       }
     });
