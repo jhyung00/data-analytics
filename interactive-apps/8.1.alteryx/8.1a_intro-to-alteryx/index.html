@@ -206,7 +206,7 @@
         .path-translation { background: #f1f5f9; padding: 16px; border-top: 3px solid #0f172a; }
 
         /* Flip Cards Gamified */
-        .flip-card { perspective: 1000px; height: 100%; min-height: 380px; }
+        .flip-card { perspective: 1000px; height: 100%; min-height: 480px; }
         .flip-inner { position: relative; width: 100%; height: 100%; text-align: left; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
         .flip-card.flipped .flip-inner { transform: rotateY(180deg); }
         .face { position: absolute; inset: 0; backface-visibility: hidden; background: white; border: 3px solid #0f172a; border-radius: 16px; box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); padding: 24px; display: flex; flex-direction: column; }
@@ -216,6 +216,15 @@
         .opt-btn:hover { transform: translateY(-2px); box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); }
         .opt-btn.correct-pick { background: #10b981; color: white; border-width: 3px; }
         .opt-btn.wrong-pick { background: #ef4444; color: white; border-width: 3px; }
+
+        /* Animated Dashed Lines for SVG paths */
+        .anim-dash {
+            stroke-dasharray: 6 6;
+            animation: moveDash 1.5s linear infinite;
+        }
+        @keyframes moveDash {
+            to { stroke-dashoffset: -12; }
+        }
 
         /* Map Animation Classes */
         #abs-card { opacity: 0; transform: translateY(-20px); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; }
@@ -691,17 +700,35 @@
 
             <section id="section-quiz" class="game-card p-6 md:p-8 mb-16">
                 <h2 class="text-2xl font-black border-b-4 border-game-dark pb-4 mb-6 text-game-blue">14. Quick Knowledge Check</h2>
-                <p class="font-bold text-slate-700 text-lg mb-8">Click an answer to flip the card and test your path logic skills.</p>
+                <p class="font-bold text-slate-700 text-lg mb-8">Follow the visual logic to pick the correct path, then click an answer to flip the card.</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     <!-- Q1 -->
                     <div class="flip-card" id="card1">
                         <div class="flip-inner">
-                            <div class="face front">
-                                <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-game-blue text-white flex items-center justify-center font-black border-2 border-game-dark">1</div><h3 class="font-black text-lg m-0">Absolute or Relative?</h3></div>
-                                <p class="text-sm font-bold text-slate-500 mb-2">You see this in an Input tool:</p>
-                                <div class="code-block mb-4 p-2 text-xs">C:\Users\Ava\Data\sales.xlsx</div>
-                                <div class="mt-auto flex flex-col gap-2">
+                            <div class="face front justify-between">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-game-blue text-white flex items-center justify-center font-black border-2 border-game-dark shrink-0">1</div><h3 class="font-black text-lg m-0 leading-tight">Absolute or Relative?</h3></div>
+                                    
+                                    <!-- Visual Map 1 -->
+                                    <div class="h-28 bg-white rounded-lg mb-4 border-2 border-slate-300 shadow-inner flex items-center justify-center overflow-hidden">
+                                        <svg viewBox="0 0 200 100" class="w-full h-full">
+                                            <!-- C Drive -->
+                                            <rect x="10" y="30" width="40" height="40" rx="4" fill="#64748b" />
+                                            <text x="30" y="55" font-family="'Nunito', sans-serif" font-weight="900" font-size="14" fill="#fff" text-anchor="middle">C:\</text>
+                                            <!-- Target File -->
+                                            <rect x="150" y="30" width="30" height="40" rx="4" fill="#10b981" />
+                                            <text x="165" y="55" font-family="'Nunito', sans-serif" font-weight="900" font-size="10" fill="#fff" text-anchor="middle">.xlsx</text>
+                                            <!-- Path Line Absolute -->
+                                            <path d="M 50 50 L 150 50" fill="none" stroke="#ef4444" stroke-width="3" class="anim-dash" />
+                                            <text x="100" y="40" font-family="'Nunito', sans-serif" font-weight="900" font-size="10" fill="#ef4444" text-anchor="middle">Direct Global Link</text>
+                                        </svg>
+                                    </div>
+
+                                    <p class="text-sm font-bold text-slate-500 mb-2">You see this in an Input tool:</p>
+                                    <div class="code-block mb-4 p-2 text-xs">C:\Users\Ava\Data\sales.xlsx</div>
+                                </div>
+                                <div class="flex flex-col gap-2">
                                     <button class="opt-btn" onclick="answerQuiz('card1', true)">Absolute Path</button>
                                     <button class="opt-btn" onclick="answerQuiz('card1', false)">Relative Path</button>
                                 </div>
@@ -715,10 +742,34 @@
                     <!-- Q2 -->
                     <div class="flip-card" id="card2">
                         <div class="flip-inner">
-                            <div class="face front">
-                                <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-game-blue text-white flex items-center justify-center font-black border-2 border-game-dark">2</div><h3 class="font-black text-lg m-0">Meaning of ..\ ?</h3></div>
-                                <p class="text-sm font-bold text-slate-500 mb-2">Your path is: <span class="kbd">..\Data\sales.xlsx</span></p>
-                                <div class="mt-auto flex flex-col gap-2">
+                            <div class="face front justify-between">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-game-blue text-white flex items-center justify-center font-black border-2 border-game-dark shrink-0">2</div><h3 class="font-black text-lg m-0 leading-tight">Meaning of ..\ ?</h3></div>
+                                    
+                                    <!-- Visual Map 2 -->
+                                    <div class="h-28 bg-white rounded-lg mb-4 border-2 border-slate-300 shadow-inner flex items-center justify-center overflow-hidden">
+                                        <svg viewBox="0 0 200 120" class="w-full h-full pt-2">
+                                            <!-- Project Root -->
+                                            <rect x="70" y="10" width="60" height="20" rx="4" fill="#fcd34d" stroke="#f59e0b" stroke-width="2"/>
+                                            <text x="100" y="24" font-family="'Nunito', sans-serif" font-weight="900" font-size="10" fill="#78350f" text-anchor="middle">Project</text>
+                                            <!-- Lines -->
+                                            <path d="M 50 40 L 150 40 M 50 40 L 50 60 M 150 40 L 150 60 M 100 30 L 100 40" stroke="#cbd5e1" stroke-width="4" fill="none"/>
+                                            <!-- Workflow -->
+                                            <rect x="20" y="60" width="60" height="20" rx="4" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+                                            <text x="50" y="74" font-family="'Nunito', sans-serif" font-weight="900" font-size="10" fill="#1e3a8a" text-anchor="middle">WF (Start)</text>
+                                            <!-- Data -->
+                                            <rect x="120" y="60" width="60" height="20" rx="4" fill="#fcd34d" stroke="#f59e0b" stroke-width="2"/>
+                                            <text x="150" y="74" font-family="'Nunito', sans-serif" font-weight="900" font-size="10" fill="#78350f" text-anchor="middle">Data</text>
+                                            <circle cx="150" cy="100" r="8" fill="#10b981" />
+                                            <path d="M 150 80 L 150 92" stroke="#cbd5e1" stroke-width="2" fill="none"/>
+                                            <!-- Animated Traversal -->
+                                            <path d="M 50 60 L 50 45 L 150 45 L 150 92" fill="none" stroke="#ef4444" stroke-width="3" class="anim-dash" />
+                                        </svg>
+                                    </div>
+
+                                    <p class="text-sm font-bold text-slate-500 mb-2">Based on the diagram, your path is: <span class="kbd shadow-game-sm inline-block">..\Data\sales.xlsx</span></p>
+                                </div>
+                                <div class="flex flex-col gap-2">
                                     <button class="opt-btn" onclick="answerQuiz('card2', false)">Current folder</button>
                                     <button class="opt-btn" onclick="answerQuiz('card2', true)">Up one folder, into Data</button>
                                     <button class="opt-btn" onclick="answerQuiz('card2', false)">Search hard drive</button>
@@ -733,10 +784,47 @@
                     <!-- Q3 -->
                     <div class="flip-card" id="card3">
                         <div class="flip-inner">
-                            <div class="face front">
-                                <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-game-blue text-white flex items-center justify-center font-black border-2 border-game-dark">3</div><h3 class="font-black text-lg m-0">Deeply Nested</h3></div>
-                                <p class="text-sm font-bold text-slate-500 mb-2">Workflow in <code class="bg-game-light px-1 rounded border border-game-dark text-game-dark">Proj/Docs/WF/</code>. Data in <code class="bg-game-light px-1 rounded border border-game-dark text-game-dark">Proj/Data/</code>. Path?</p>
-                                <div class="mt-auto flex flex-col gap-2">
+                            <div class="face front justify-between">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-full bg-game-blue text-white flex items-center justify-center font-black border-2 border-game-dark shrink-0">3</div><h3 class="font-black text-lg m-0 leading-tight">Deeply Nested</h3></div>
+                                    
+                                    <!-- Visual Map 3 -->
+                                    <div class="h-28 bg-white rounded-lg mb-4 border-2 border-slate-300 shadow-inner flex items-center justify-center overflow-hidden">
+                                        <svg viewBox="0 0 200 130" class="w-full h-full pt-1">
+                                            <!-- Proj -->
+                                            <rect x="70" y="5" width="60" height="18" rx="4" fill="#fcd34d" stroke="#f59e0b" stroke-width="2"/>
+                                            <text x="100" y="17" font-family="'Nunito', sans-serif" font-weight="900" font-size="9" fill="#78350f" text-anchor="middle">Proj</text>
+                                            
+                                            <path d="M 100 23 L 100 30 M 50 30 L 150 30 M 50 30 L 50 45 M 150 30 L 150 45" stroke="#cbd5e1" stroke-width="3" fill="none"/>
+
+                                            <!-- Docs -->
+                                            <rect x="20" y="45" width="60" height="18" rx="4" fill="#fcd34d" stroke="#f59e0b" stroke-width="2"/>
+                                            <text x="50" y="57" font-family="'Nunito', sans-serif" font-weight="900" font-size="9" fill="#78350f" text-anchor="middle">Docs</text>
+                                            
+                                            <path d="M 50 63 L 50 85" stroke="#cbd5e1" stroke-width="3" fill="none"/>
+
+                                            <!-- WF (Start) -->
+                                            <rect x="20" y="85" width="60" height="18" rx="4" fill="#bfdbfe" stroke="#3b82f6" stroke-width="2"/>
+                                            <text x="50" y="97" font-family="'Nunito', sans-serif" font-weight="900" font-size="9" fill="#1e3a8a" text-anchor="middle">WF (Start)</text>
+
+                                            <!-- Data -->
+                                            <rect x="120" y="45" width="60" height="18" rx="4" fill="#fcd34d" stroke="#f59e0b" stroke-width="2"/>
+                                            <text x="150" y="57" font-family="'Nunito', sans-serif" font-weight="900" font-size="9" fill="#78350f" text-anchor="middle">Data</text>
+
+                                            <path d="M 150 63 L 150 85" stroke="#cbd5e1" stroke-width="3" fill="none"/>
+
+                                            <!-- file.csv -->
+                                            <circle cx="150" cy="95" r="8" fill="#10b981" />
+                                            <text x="150" y="115" font-family="'Nunito', sans-serif" font-weight="900" font-size="9" fill="#0f172a" text-anchor="middle">file.csv</text>
+
+                                            <!-- Animated Traversal -->
+                                            <path d="M 50 85 L 50 35 L 150 35 L 150 87" fill="none" stroke="#ef4444" stroke-width="3" class="anim-dash" />
+                                        </svg>
+                                    </div>
+
+                                    <p class="text-[13px] font-bold text-slate-500 mb-2 leading-tight">Workflow is in <code class="bg-game-light px-1 rounded border border-game-dark text-game-dark">Proj/Docs/WF/</code>. The target <code class="bg-game-light px-1 rounded border border-game-dark text-game-dark">file.csv</code> is in <code class="bg-game-light px-1 rounded border border-game-dark text-game-dark">Proj/Data/</code>. Path?</p>
+                                </div>
+                                <div class="flex flex-col gap-2 mt-auto">
                                     <button class="opt-btn" onclick="answerQuiz('card3', false)">..\Data\file.csv</button>
                                     <button class="opt-btn" onclick="answerQuiz('card3', true)">..\..\Data\file.csv</button>
                                     <button class="opt-btn" onclick="answerQuiz('card3', false)">.\Data\file.csv</button>
@@ -1349,9 +1437,9 @@
         }
 
         const quizAnswers = {
-            card1: { isCorrect: true, text: "C:\\ drives are the absolute root of a Windows computer. It's the exact GPS coordinate of the file." },
-            card2: { isCorrect: true, text: "The two dots <b>..</b> specifically tell Alteryx (and Windows) to navigate UP one directory level." },
-            card3: { isCorrect: true, text: "You must go up out of WF (<b>..\\</b>), up out of Docs (<b>..\\</b>) to reach Proj, then into <b>Data\\</b>." }
+            card1: { isCorrect: true, text: "C:\\ drives are the absolute root of a Windows computer. It's the exact GPS coordinate of the file, completely ignoring the project's folder layout." },
+            card2: { isCorrect: true, text: "The two dots <b>..\\</b> specifically tell Alteryx (and Windows) to navigate UP one directory level before stepping down into the Data folder." },
+            card3: { isCorrect: true, text: "You must go up out of WF (<b>..\\</b>), up out of Docs (<b>..\\</b>) to reach Proj, and then step down into <b>Data\\</b> to target your <b>file.csv</b>." }
         };
 
         function answerQuiz(cardId, isCorrectPick) {
