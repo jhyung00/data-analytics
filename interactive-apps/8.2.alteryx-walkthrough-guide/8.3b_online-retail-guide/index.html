@@ -433,7 +433,7 @@
     
     /* Instructor Notes styling */
     .success-msg { display:none; margin-top:12px; border-radius:14px; border:2px solid var(--green); background:#d1fae5; color:#065f46; padding:12px; font-weight:900; }
-    .instructor-note { display:none; margin-top:14px; padding:12px 14px; background:#fef3c7; border:2px solid #f59e0b; border-radius:12px; color:#78350f; font-weight:800; font-size:.95rem; align-items:flex-start; gap:10px; }
+    .instructor-note { display:none; margin-top:14px; padding:16px; background:#fef3c7; border:2px solid #f59e0b; border-radius:12px; color:#78350f; font-weight:800; font-size:.95rem; align-items:flex-start; gap:10px; }
     .instructor-note.show { display:flex; }
     .instructor-note i { flex-shrink:0; margin-top:2px; }
 
@@ -494,7 +494,6 @@
   </div>
 
   <script>
-    // Disable right-click across the entire document
     document.addEventListener('contextmenu', e => e.preventDefault());
 
     const SECTIONS = [
@@ -506,11 +505,7 @@
         "intro": "Student guide for importing the online retail sales file, cleaning key fields, organizing dates into quarters, summarizing sales, and exploring monthly and quarterly patterns in Alteryx.", 
         "cards": [
           {"type": "callout", "title": "Files to prepare", "items": ["Online Retail Sales.txt", "Summarizing Online Retail Sales - Start.yxmd", "A project folder that will hold your workflow, input file, and output files together"]}, 
-          {"type": "checklist", "title": "What you will practice", "items": ["Importing a delimited text file and correcting the delimiter", "Using Browse to inspect the dataset", "Using DateTime, Formula, Record ID, Select, Summarize, Sort, Filter, and Sample", "Creating Month, Quarter, and Year fields", "Comparing monthly and quarterly sales patterns", "Answering product-type sales questions from grouped outputs"]}, 
-          {"type": "gridshots", "title": "Lesson visuals", "shots": [
-            {"file": "screenshot-001.png", "title": "Lesson opening visual", "desc": "Opening image preserved from the original document."}, 
-            {"file": "screenshot-002.png", "title": "Early workflow visual", "desc": "One of the first setup visuals from the handout."}
-          ]}
+          {"type": "checklist", "title": "What you will practice", "items": ["Importing a delimited text file and correcting the delimiter", "Using Browse to inspect the dataset", "Using DateTime, Formula, Record ID, Select, Summarize, Sort, Filter, and Sample", "Creating Month, Quarter, and Year fields", "Comparing monthly and quarterly sales patterns", "Answering product-type sales questions from grouped outputs"]}
         ]
       }, 
       {
@@ -527,32 +522,44 @@
                 "title": "Create a project folder", 
                 "body": "Download and keep the workflow, the Online Retail Sales.txt file, and any outputs in the same lesson folder so paths are easier to manage.",
                 "downloads": [
-                  {"label": "Download Dataset (.txt)", "file": "Online Retail Sales.txt"},
-                  {"label": "Download Starting Workflow (.yxmd)", "file": "Summarizing Online Retail Sales - Start.yxmd"}
+                  {
+                    "label": "Download Dataset (.txt)", 
+                    "file": "Online Retail Sales.txt",
+                    "dataUrl": "data:application/octet-stream;charset=utf-8,InvoiceNo%2FStockCode%2FDescription%2FQuantity%2FInvoiceDate%2FUnitPrice%2FCustomerID%2FCountry%0A1%2FA%2FTest%20Product%2F1%2F2017-01-01%2F1.00%2F123%2FUS"
+                  },
+                  {
+                    "label": "Download Starting Workflow (.yxmd)", 
+                    "file": "Summarizing Online Retail Sales - Start.yxmd",
+                    "dataUrl": "data:application/octet-stream;charset=utf-8,%3CAlteryxDocument%3E%0A%20%20%3CProperties%3E%3C/Properties%3E%0A%3C/AlteryxDocument%3E"
+                  }
                 ]
               }, 
               {
                 "title": "Bring in the dataset and attach Browse", 
-                "body": "Add an Input Data tool, connect to the sales file, and attach a Browse tool so you can investigate the incoming fields."
+                "body": "Add an Input Data tool, connect to the sales file, and attach a Browse tool so you can investigate the incoming fields.",
+                "shots": []
               }, 
               {
                 "title": "Correct the delimiter", 
                 "body": "This file does not use a comma delimiter. In the Input Data configuration, change the delimiter to a forward slash / so the columns load correctly.",
-                "instructorNote": "Delimiter should be forward slash /"
+                "instructorNote": "Delimiter should be forward slash /",
+                "shots": [
+                  {"file": "new3-1.png", "title": "Delimiter-related setup view", "desc": "This aligns with fixing the text import settings."}
+                ]
               }, 
               {
                 "title": "Spend a few minutes investigating the dataset", 
-                "body": "Look at the fields, ask what each record represents, and note any likely cleansing steps before making changes."
+                "body": "Look at the fields, ask what each record represents, and note any likely cleansing steps before making changes.",
+                "shots": []
               }
             ]
           }, 
-          {"type": "callout", "title": "Findings to notice during the first review", "items": ["Product Type contains some null values", "Only product types with sales appear for a given day; zero-sales categories do not generate a row", "Date is stored as a string and needs conversion", "Dates span 2017 to 2019", "Net Quantity includes at least one value of -1, which signals a return situation"]}, 
-          {"type": "gridshots", "title": "Matched screenshots", "shots": [
-            {"file": "screenshot-003.png", "title": "Input data starting point", "desc": "The first import step in the lesson."}, 
-            {"file": "screenshot-004.png", "title": "Delimiter-related setup view", "desc": "This group of screenshots aligns with fixing the text import settings."}, 
-            {"file": "screenshot-005.png", "title": "Initial browse or data inspection view", "desc": "Early investigation after the file is connected."}, 
-            {"file": "screenshot-006.png", "title": "Another early workflow image", "desc": "Preserved screenshot from the initial cleansing section."}
-          ]}
+          {
+            "type": "findings", 
+            "title": "Findings to notice during the first review", 
+            "instruction": "Record your observations here. We will share in class.",
+            "instructorNote": "The [Product Type] column has some null values. It might make sense to change those to \"Other.\"\nIf you include null, there are 19 different values in [Product Type].\nIf no products were sold from a given product type on a given day, there is no record. Only product types with sales are provided for a given day.\nData types need to be fixed.\n[Date] column is a string type and is not in the required date format. We will need to use the DateTime tool to update the data type.\nDates are from 2017-2019. The most common [Product Type] is Basket. Easter and Gift Baskets are the least common with 1 record each.\nThe data does not contain an identifier other than the [Product Type] the product belongs to.\nThere is a [Net Quantity] value of -1. When looking at that value, it is clear there were no new sales, and one return in that category that day."
+          }
         ]
       }, 
       {
@@ -568,20 +575,32 @@
               {
                 "title": "Convert Date with DateTime", 
                 "body": "Use a DateTime tool to convert the string Date field into a proper date type and output it as Order Date.",
-                "instructorNote": "Use DateTime to create Order Date, then remove original Date in Select"
+                "instructorNote": "Use DateTime to create Order Date, then remove original Date in Select",
+                "shots": [
+                  {"file": "new3-2.png", "title": "DateTime tool for Order Date", "desc": "This screenshot aligns with converting Date into Order Date."}
+                ]
               }, 
               {
                 "title": "Replace null Product Type values", 
                 "body": "Use a Formula tool to change null values in Product Type to Other so those rows remain usable in grouped summaries.",
-                "instructorNote": "Null Product Type values can be changed to Other"
+                "instructorNote": "Null Product Type values can be changed to Other",
+                "shots": [
+                  {"file": "new3-3.png", "title": "Formula tool for Product Type", "desc": "The Formula step that replaces null Product Type values."}
+                ]
               }, 
               {
                 "title": "Add a Record ID", 
-                "body": "Because the dataset does not include a built-in unique identifier, add a Record ID tool to create one."
+                "body": "Because the dataset does not include a built-in unique identifier, add a Record ID tool to create one.",
+                "shots": [
+                  {"file": "screenshot-002.png", "title": "Record ID tool stage", "desc": "This visual matches the identifier step."}
+                ]
               }, 
               {
                 "title": "Use Select to remove and retype fields", 
-                "body": "Remove the original Date field and update data types in Select."
+                "body": "Remove the original Date field and update data types in Select.",
+                "shots": [
+                  {"file": "new3-4.png", "title": "Select tool cleanup", "desc": "A Select configuration used to remove and retype fields."}
+                ]
               }, 
               {
                 "title": "Use Int16 for Net Quantity", 
@@ -591,18 +610,12 @@
               {
                 "title": "Format monetary fields clearly", 
                 "body": "For money-related fields, fixed decimal 19.2 is a good display choice.",
-                "instructorNote": "Fixed decimal 19.2 works well for money fields"
+                "instructorNote": "Fixed decimal 19.2 works well for money fields",
+                "shots": []
               }
             ]
           }, 
-          {"type": "callout", "title": "Suggested data decisions", "items": ["Order Date should be a true date field", "Net Quantity should allow negative values", "Product Type nulls can be grouped as Other", "Monetary fields can use fixed decimal formatting for readability"]}, 
-          {"type": "gridshots", "title": "Matched screenshots", "shots": [
-            {"file": "screenshot-007.png", "title": "DateTime tool for Order Date", "desc": "This screenshot aligns with converting Date into Order Date."}, 
-            {"file": "screenshot-008.png", "title": "Formula tool for Product Type", "desc": "The Formula step that replaces null Product Type values."}, 
-            {"file": "screenshot-009.png", "title": "Record ID tool stage", "desc": "This visual matches the identifier step."}, 
-            {"file": "screenshot-010.png", "title": "Select tool cleanup", "desc": "A Select configuration used to remove and retype fields."}, 
-            {"file": "screenshot-011.png", "title": "Data type review", "desc": "A later cleansing image associated with the Select stage."}
-          ]}
+          {"type": "callout", "title": "Suggested data decisions", "items": ["Order Date should be a true date field", "Net Quantity should allow negative values", "Product Type nulls can be grouped as Other", "Monetary fields can use fixed decimal formatting for readability"]}
         ]
       }, 
       {
@@ -617,15 +630,26 @@
             "steps": [
               {
                 "title": "Create Month with DateTime", 
-                "body": "Add a DateTime tool connected to the cleaned stream. Turn Order Date into a custom date using Mon, and name the new column Month."
+                "body": "Add a DateTime tool connected to the cleaned stream. Turn Order Date into a custom date using Mon, and name the new column Month.",
+                "shots": [
+                  {"file": "screenshot-007.png", "title": "Month creation step", "desc": "DateTime configured to output Month from Order Date."}
+                ]
               }, 
               {
                 "title": "Create Quarter with Formula", 
-                "body": "Add a Formula tool and create a new text column called Quarter. Use a compound IF statement with Contains to map months into Q1, Q2, Q3, and Q4."
+                "body": "Add a Formula tool and create a new text column called Quarter. Use a compound IF statement with Contains to map months into Q1, Q2, Q3, and Q4.",
+                "shots": [
+                  {"file": "screenshot-008.png", "title": "Quarter formula setup", "desc": "The formula logic that assigns quarter labels."},
+                  {"file": "screenshot-009.png", "title": "Quarter results view", "desc": "A screenshot aligned with the new Quarter field."}
+                ]
               }, 
               {
                 "title": "Create Year with DateTime", 
-                "body": "Add another DateTime tool so the year can be output separately for later grouping."
+                "body": "Add another DateTime tool so the year can be output separately for later grouping.",
+                "shots": [
+                  {"file": "screenshot-010.png", "title": "Year extraction step", "desc": "DateTime used to output the Year field."},
+                  {"file": "screenshot-011.png", "title": "Year extraction step", "desc": "DateTime used to output the Year field."}
+                ]
               }, 
               {
                 "title": "Run and verify the new fields", 
@@ -633,54 +657,47 @@
               }
             ]
           }, 
-          {"type": "formula", "title": "Quarter logic idea", "lines": ["IF Contains(\"Jan Feb Mar\", [Month]) THEN \"Q1\"", "ELSEIF Contains(\"Apr May Jun\", [Month]) THEN \"Q2\"", "ELSEIF Contains(\"Jul Aug Sep\", [Month]) THEN \"Q3\"", "ELSE \"Q4\"", "ENDIF"]}, 
-          {"type": "gridshots", "title": "Matched screenshots", "shots": [
-            {"file": "screenshot-012.svg", "title": "Month creation step", "desc": "DateTime configured to output Month from Order Date."}, 
-            {"file": "screenshot-013.png", "title": "Quarter formula setup", "desc": "The formula logic that assigns quarter labels."}, 
-            {"file": "screenshot-014.png", "title": "Quarter results view", "desc": "A screenshot aligned with the new Quarter field."}, 
-            {"file": "screenshot-015.png", "title": "Year extraction step", "desc": "DateTime used to output the Year field."}
-          ]}
+          {"type": "formula", "title": "Quarter logic idea", "lines": ["IF Contains(\"Jan Feb Mar\", [Month]) THEN \"Q1\"", "ELSEIF Contains(\"Apr May Jun\", [Month]) THEN \"Q2\"", "ELSEIF Contains(\"Jul Aug Sep\", [Month]) THEN \"Q3\"", "ELSE \"Q4\"", "ENDIF"]}
         ]
       }, 
       {
         "id": "summarize", 
         "label": "Summarize", 
         "icon": "table-properties", 
-        "title": "Summarize monthly and quarterly sales", 
-        "intro": "Use Summarize to build grouped outputs for monthly sales and quarterly gross sales statistics.", 
+        "title": "Summarize Annual/Quarterly/Monthly Sales", 
+        "intro": "Use Summarize to build grouped outputs for annual, quarterly, and monthly sales statistics.", 
         "cards": [
+          {
+            "type": "callout", 
+            "title": "Tool Introduction", 
+            "items": ["Before beginning, note that the Summarize tool can be found in the Transform tool palette."]
+          },
           {
             "type": "steps", 
             "steps": [
               {
-                "title": "Start with a monthly summary", 
-                "body": "Attach Summarize to the time-prepared stream. Group by Month first, then also add Quarter and Year so the same month is not merged across different years."
+                "title": "1. Annual",
+                "body": "Summarize the annual sales.",
+                "shots": [
+                  {"file": "new3-7.png", "title": "Annual Summary", "desc": "Annual grouping configuration."}
+                ]
               }, 
               {
-                "title": "Add monthly sales totals", 
-                "body": "Add Sum for Net Quantity, Gross Sales, Discount, Returns, and Total Net Sales."
+                "title": "2. Quarterly",
+                "body": "Summarize the quarterly sales.",
+                "shots": [
+                  {"file": "new3-9.png", "title": "Quarterly Summary", "desc": "Quarterly grouping configuration."}
+                ]
               }, 
               {
-                "title": "Clean the output names", 
-                "body": "Rename the output field names so they stay readable and consistent."
-              }, 
-              {
-                "title": "Create a second quarterly summary", 
-                "body": "Add another Summarize tool that groups by Year and Quarter and calculates Sum, Mean, Median, Max, and Min for Gross Sales."
-              }, 
-              {
-                "title": "Interpret the grouped records", 
-                "body": "Each record in the monthly summary should represent one Month-Quarter-Year combination with its aggregated sales values."
+                "title": "3. Monthly",
+                "body": "Summarize the monthly sales.",
+                "shots": [
+                  {"file": "new3-8.png", "title": "Monthly Summary", "desc": "Monthly grouping configuration."}
+                ]
               }
             ]
-          }, 
-          {"type": "gridshots", "title": "Matched screenshots", "shots": [
-            {"file": "screenshot-016.png", "title": "Summarize tool introduced", "desc": "The lesson turns to grouped monthly analysis here."}, 
-            {"file": "screenshot-017.png", "title": "Summarize actions area", "desc": "Available actions depend on the selected data type."}, 
-            {"file": "screenshot-018.png", "title": "Monthly grouping concept", "desc": "Group By fields for Month, Quarter, and Year."}, 
-            {"file": "screenshot-019.png", "title": "Sales total fields summed", "desc": "The grouped sales metrics used in the monthly output."}, 
-            {"file": "screenshot-020.png", "title": "Quarterly summary statistics", "desc": "A second Summarize tool for quarterly Gross Sales metrics."}
-          ]}
+          }
         ]
       }, 
       {
@@ -691,39 +708,51 @@
         "intro": "Use sorted outputs, a targeted Q4 2019 filter, and grouped samples to find standout periods.", 
         "cards": [
           {
+            "type": "callout", 
+            "title": "Tool Introduction", 
+            "items": ["You can find the Sort tool, the Filter tool, and the Sample tool all located in the Preparation tool palette."]
+          },
+          {
             "type": "steps", 
             "steps": [
               {
-                "title": "Sort quarterly Gross Sales descending", 
-                "body": "On the quarterly summary, sort by Sum Gross Sales in descending order to see which quarter generally had the highest sales.",
-                "instructorNote": "Quarter 4 generally has the highest sales and Quarter 3 generally does the worst"
+                "title": "Sort quarterly Total Net Sales descending", 
+                "body": "On the quarterly summary, sort by Total Net Sales in descending order to see which quarter generally had the highest sales.",
+                "instructorNote": "Quarter 4 generally has the highest sales and Quarter 3 generally does the worst",
+                "shots": [
+                  {"file": "new3-10.png", "title": "Sort Configuration", "desc": "Sorting by Total Net Sales."},
+                  {"file": "new3-11.png", "title": "Sort Results", "desc": "Output of the sorted quarterly summary."}
+                ]
               }, 
               {
                 "title": "Investigate Q4 of 2019", 
-                "body": "Start a separate stream from the monthly summary and filter to Quarter = Q4 and Year = 2019. Review the monthly results more closely."
+                "body": "Start a separate stream from the monthly summary and filter to Quarter = Q4 and Year = 2019. Review the monthly results more closely.",
+                "shots": [
+                  {"file": "new3-12.png", "title": "Filter Configuration", "desc": "Filtering strictly for Q4 2019."}
+                ]
               }, 
               {
-                "title": "Sort months by Total Net Sales", 
-                "body": "Use another sort on the monthly summary to look for recurring high- and low-performing months."
+                "title": "Use two separate SORT on the monthly summary to look for low and high performing month.", 
+                "body": "Sort the months to easily identify the highest and lowest performers in your dataset.",
+                "shots": [
+                  {"file": "new3-13.png", "title": "Monthly Sort Configuration", "desc": "First view of the sort configuration."},
+                  {"file": "new3-14-1.png", "title": "Sort Configuration detail", "desc": "Sort tool setup step."},
+                  {"file": "new3-14-2.png", "title": "Sort Configuration detail", "desc": "Sort tool setup step."},
+                  {"file": "new3-14-3.png", "title": "Sort Configuration detail", "desc": "Sort tool setup step."},
+                  {"file": "new3-14-4.png", "title": "Sort Configuration detail", "desc": "Sort tool setup step."}
+                ]
               }, 
               {
-                "title": "Use Sample for the top month in each quarter-year", 
-                "body": "After sorting descending, use Sample with First N rows = 1 and group by Quarter and Year."
-              }, 
-              {
-                "title": "Use Sample for the bottom month in each quarter-year", 
-                "body": "Because the data is sorted descending, a second Sample using the last row per Quarter-Year group will reveal the lowest month in each group."
+                "title": "If you want to find best/worst performing month in each quarter-year", 
+                "body": "After sorting descending, use Sample with First N rows = 1 and group by Quarter and Year.",
+                "shots": [
+                  {"file": "new3-15-1.png", "title": "Sample tool setup", "desc": "Grouping to find the top month."},
+                  {"file": "new3-15-2.png", "title": "Sample results", "desc": "The best month separated by quarter and year."}
+                ]
               }
             ]
           }, 
-          {"type": "callout", "title": "Insights highlighted in the lesson", "items": ["Quarter 4 generally had the highest sales", "Quarter 3 generally did the worst", "Q4 of 2019 stands out strongly", "November and December of 2019 greatly outperformed October", "November, December, and January tend to be strong months, while October tends to be weak"]}, 
-          {"type": "gridshots", "title": "Matched screenshots", "shots": [
-            {"file": "screenshot-021.png", "title": "Sort tool stage", "desc": "Sorting introduced for ranked quarterly results."}, 
-            {"file": "screenshot-022.png", "title": "Sort configuration detail", "desc": "A closer view of sort settings and order."}, 
-            {"file": "screenshot-023.png", "title": "Filter stream for Q4 2019", "desc": "The monthly summary filtered down to one quarter and year."}, 
-            {"file": "screenshot-024.png", "title": "Sample tool introduction", "desc": "The lesson explains sample methods here."}, 
-            {"file": "screenshot-025.png", "title": "Sample grouped by Quarter and Year", "desc": "Selecting the first or last record after sorting."}
-          ]}
+          {"type": "callout", "title": "Insights highlighted in the lesson", "items": ["Quarter 4 generally had the highest sales", "Quarter 3 generally did the worst", "Q4 of 2019 stands out strongly", "November and December of 2019 greatly outperformed October", "November, December, and January tend to be strong months, while October tends to be weak"]}
         ]
       }, 
       {
@@ -737,24 +766,10 @@
             "type": "callout", 
             "title": "Questions", 
             "items": ["What are the highest-selling product types in terms of Total Net Sales?", "What is the highest-selling product type in terms of Net Quantity for each month, without separating by year?", "What product types have the highest Returns?"],
-            "instructorNote": "Highest-selling product types by Total Net Sales: Baskets, Art & Sculpture, Jewelry, and Home Décor. Highest-selling product type by Net Quantity by month: Baskets in 5 months, Art & Sculpture in 2, Jewelry in 2, Kitchen in 2, and Christmas in 1. Highest Returns: similar product groups to the top sellers; comparing returns relative to sales is also useful"
+            "instructorNote": "Highest-selling product types by Total Net Sales: Baskets, Art & Sculpture, Jewelry, and Home Décor.\nHighest-selling product type by Net Quantity by month: Baskets in 5 months, Art & Sculpture in 2, Jewelry in 2, Kitchen in 2, and Christmas in 1.\nHighest Returns: similar product groups to the top sellers; comparing returns relative to sales is also useful"
           }, 
-          {"type": "twocol", "left": {"title": "Suggested paths", "items": ["Question 1: Summarize then Sort", "Question 2: Summarize, Sort, then Sample", "Question 3: Summarize then Sort; also consider returns relative to sales"]}, "right": {"title": "Helpful fields", "items": ["Product Type", "Month", "Total Net Sales", "Net Quantity", "Returns"]}}, 
-          {"type": "gridshots", "title": "Matched screenshots", "shots": [
-            {"file": "screenshot-026.png", "title": "Question section visual", "desc": "The handout transitions from guided workflow to student questions."}, 
-            {"file": "screenshot-027.png", "title": "Question 1 solution snapshot", "desc": "Aligned with highest-selling product types by Total Net Sales."}, 
-            {"file": "screenshot-028.png", "title": "Question 2 solution snapshot", "desc": "Aligned with highest Net Quantity product type by month."}, 
-            {"file": "screenshot-029.png", "title": "Question 3 solution snapshot", "desc": "Aligned with product types showing strong Returns."}
-          ]}
+          {"type": "twocol", "left": {"title": "Suggested paths", "items": ["Question 1: Summarize then Sort", "Question 2: Summarize, Sort, then Sample", "Question 3: Summarize then Sort; also consider returns relative to sales"]}, "right": {"title": "Helpful fields", "items": ["Product Type", "Month", "Total Net Sales", "Net Quantity", "Returns"]}}
         ]
-      }, 
-      {
-        "id": "gallery", 
-        "label": "Screenshot Library", 
-        "icon": "images", 
-        "title": "Screenshot Library", 
-        "intro": "Every extracted screenshot from the original document is included here. Click any image to zoom in at full size.", 
-        "cards": [{"type": "gallery"}]
       }, 
       {
         "id": "instructor", 
@@ -769,8 +784,6 @@
         ]
       }
     ];
-
-    const GALLERY = ["screenshot-001.png", "screenshot-002.png", "screenshot-003.png", "screenshot-004.png", "screenshot-005.png", "screenshot-006.png", "screenshot-007.png", "screenshot-008.png", "screenshot-009.png", "screenshot-010.png", "screenshot-011.png", "screenshot-012.svg", "screenshot-013.png", "screenshot-014.png", "screenshot-015.png", "screenshot-016.png", "screenshot-017.png", "screenshot-018.png", "screenshot-019.png", "screenshot-020.png", "screenshot-021.png", "screenshot-022.png", "screenshot-023.png", "screenshot-024.png", "screenshot-025.png", "screenshot-026.png", "screenshot-027.png", "screenshot-028.png", "screenshot-029.png", "screenshot-030.png", "screenshot-031.png", "screenshot-032.png", "screenshot-033.png", "screenshot-034.png", "screenshot-035.png", "screenshot-036.png", "screenshot-037.png", "screenshot-038.png", "screenshot-039.png", "screenshot-040.png", "screenshot-041.png", "screenshot-042.png", "screenshot-043.png", "screenshot-044.png", "screenshot-045.png", "screenshot-046.png", "screenshot-047.png", "screenshot-048.png", "screenshot-049.png", "screenshot-050.png", "screenshot-051.png", "screenshot-052.png", "screenshot-053.png", "screenshot-054.png", "screenshot-055.png"];
     
     const nav = document.getElementById('nav');
     const content = document.getElementById('content');
@@ -818,26 +831,46 @@
 
     function renderCard(card, idx) {
       if (card.type === 'callout') {
+        let noteHtml = '';
+        if (card.instructorNote) {
+           const formattedNote = card.instructorNote.split('\n').map(n => `<li>${esc(n)}</li>`).join('');
+           noteHtml = `
+            <div class="instructor-note ${instructorUnlocked ? 'show' : ''}">
+              <i data-lucide="lock"></i>
+              <div><strong>Instructor Note:</strong><ul style="margin:4px 0 0; padding-left:18px;">${formattedNote}</ul></div>
+            </div>`;
+        }
         return `
           <section class="panel">
             <h3>${esc(card.title)}</h3>
             <div class="softbox">
               <ul class="list-clean">${card.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
             </div>
-            ${instructorUnlocked && card.instructorNote ? `
-              <div class="instructor-note show">
-                <i data-lucide="lock"></i>
-                <div><strong>Instructor Note:</strong><br>${esc(card.instructorNote)}</div>
-              </div>
-            ` : (card.instructorNote ? `
-              <div class="instructor-note">
-                <i data-lucide="lock"></i>
-                <div><strong>Instructor Note:</strong><br>${esc(card.instructorNote)}</div>
-              </div>
-            ` : '')}
+            ${noteHtml}
           </section>
         `;
       }
+      
+      if (card.type === 'findings') {
+        let noteHtml = '';
+        if (card.instructorNote) {
+           const formattedNote = card.instructorNote.split('\n').map(n => `<li>${esc(n)}</li>`).join('');
+           noteHtml = `
+            <div class="instructor-note ${instructorUnlocked ? 'show' : ''}">
+              <i data-lucide="lock"></i>
+              <div><strong>Instructor Key:</strong><ul style="margin:4px 0 0; padding-left:18px;">${formattedNote}</ul></div>
+            </div>`;
+        }
+        return `
+          <section class="panel">
+            <h3>${esc(card.title)}</h3>
+            <p style="margin-top:0; color:#475569; font-weight:700; margin-bottom:12px;">${esc(card.instruction)}</p>
+            <textarea placeholder="Type your observations here..." style="width:100%; min-height:140px; padding:16px; border:2px solid var(--line); border-radius:14px; font-family:inherit; font-size:16px; margin-bottom:0px; resize:vertical; outline:none;"></textarea>
+            ${noteHtml}
+          </section>
+        `;
+      }
+
       if (card.type === 'checklist') {
         return `
           <section class="panel">
@@ -848,6 +881,7 @@
           </section>
         `;
       }
+      
       if (card.type === 'steps') {
         return `
           <section class="panel">
@@ -864,7 +898,7 @@
                       ${step.downloads && step.downloads.length > 0 ? `
                         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 6px;">
                           ${step.downloads.map(d => `
-                            <a href="data/${esc(d.file)}" download class="download-btn">
+                            <a href="${d.dataUrl || 'data/' + esc(d.file)}" download="${esc(d.file)}" class="download-btn">
                               <i data-lucide="download"></i> ${esc(d.label)}
                             </a>
                           `).join('')}
@@ -917,20 +951,6 @@
                 <h3>${esc(card.right.title)}</h3>
                 <ul class="list-clean">${card.right.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
               </div>
-            </div>
-          </section>
-        `;
-      }
-      if (card.type === 'gallery') {
-        return `
-          <section class="panel">
-            <div class="gallery-grid">
-              ${GALLERY.map(file => `
-                <figure class="gallery-item">
-                  <img src="data/${esc(file)}" alt="${esc(file)}" class="native-shot zoomable" data-title="${esc(file)}" data-src="data/${esc(file)}" loading="lazy">
-                  <figcaption class="caption">${esc(file)}</figcaption>
-                </figure>
-              `).join('')}
             </div>
           </section>
         `;
