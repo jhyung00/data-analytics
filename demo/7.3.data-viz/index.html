@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Visualization: Dimensions, Measures & Aggregations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #fafafa;
+            background-image: radial-gradient(#e4e4e7 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid #f4f4f5;
+        }
+        .premium-shadow {
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+        }
+        
+        /* Custom sleek scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+
+        /* Custom Select Styling */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1em;
+        }
+    </style>
+</head>
+<body class="text-zinc-800 antialiased h-screen flex overflow-hidden selection:bg-indigo-100 selection:text-indigo-900">
+
+    <!-- Resizable Left Navigation Bar -->
+    <nav id="sidebar" class="hidden md:flex flex-col bg-white border-r border-zinc-200 h-full w-64 min-w-[220px] max-w-md shrink-0 relative z-20 transition-none shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <div class="p-6 border-b border-zinc-100">
+            <h1 class="text-lg font-semibold tracking-tight text-zinc-900 flex items-center gap-2.5">
+                <div class="bg-zinc-900 p-1.5 rounded-md">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                </div>
+                DataViz Explorer
+            </h1>
+        </div>
+        <div class="p-4 flex-1">
+            <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3 px-3">Contents</div>
+            <ul class="space-y-1 text-sm font-medium">
+                <li>
+                    <a href="#intro" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg bg-zinc-900 text-white shadow-sm hover:bg-zinc-800 transition-all">
+                        <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Introduction
+                    </a>
+                </li>
+                <li>
+                    <a href="#pillars" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-all">
+                        <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        The 3 Pillars
+                    </a>
+                </li>
+                <li>
+                    <a href="#part1" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-all">
+                        <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Knowledge Check
+                    </a>
+                </li>
+                <li class="pt-4 mt-4 border-t border-zinc-100">
+                    <a href="#part2" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-all">
+                        <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        Seattle Mission
+                    </a>
+                </li>
+                <li>
+                    <a href="#screenshot-guide" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-all">
+                        <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                        Screenshot Guide
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Drag Handle -->
+        <div id="resizer" class="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-indigo-400 transition-colors z-30 flex items-center justify-center group border-r border-transparent hover:border-indigo-400">
+            <div class="h-8 w-0.5 bg-zinc-300 rounded-full group-hover:bg-white"></div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-6 md:p-12 scroll-smooth relative" id="main-content">
+        <div class="max-w-6xl mx-auto space-y-20 pb-24">
+            
+            <!-- Introduction -->
+            <section id="intro" class="scroll-mt-12 max-w-3xl mx-auto pt-8">
+                <div class="mb-4">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600 border border-zinc-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                        Module 1
+                    </span>
+                </div>
+                <h2 class="text-4xl md:text-5xl font-bold text-zinc-900 tracking-tight leading-tight mb-4">Decoding Data Visualizations</h2>
+                <p class="text-lg text-zinc-500 leading-relaxed">Every chart is built on a simple foundation. Before we create our own, let's master the three core building blocks of visual analytics.</p>
+            </section>
+
+            <!-- The 3 Pillars -->
+            <section id="pillars" class="scroll-mt-12 grid md:grid-cols-3 gap-6">
+                <!-- Pillar 1 -->
+                <div class="glass-card p-8 rounded-2xl relative overflow-hidden group hover:border-indigo-200 transition-all duration-300">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-indigo-500 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+                    <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-zinc-900 mb-3 tracking-tight">Dimension <span class="text-zinc-400 font-normal text-sm ml-1">(Group by)</span></h3>
+                    <p class="text-zinc-600 text-sm leading-relaxed mb-6">Qualitative data that categorizes, groups, or slices your data. Think of it as the "text" or "dates".</p>
+                    <div class="bg-zinc-50 border border-zinc-100 text-zinc-600 text-xs py-2.5 px-3 rounded-lg font-mono">
+                        <span class="text-zinc-400 mr-1">//</span> City, Year, Product, Status
+                    </div>
+                </div>
+                
+                <!-- Pillar 2 -->
+                <div class="glass-card p-8 rounded-2xl relative overflow-hidden group hover:border-emerald-200 transition-all duration-300">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-emerald-500 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-zinc-900 mb-3 tracking-tight">Measure <span class="text-zinc-400 font-normal text-sm ml-1">(Value)</span></h3>
+                    <p class="text-zinc-600 text-sm leading-relaxed mb-6">Quantitative, numerical data that can be measured or calculated. The numbers you care about tracking.</p>
+                    <div class="bg-zinc-50 border border-zinc-100 text-zinc-600 text-xs py-2.5 px-3 rounded-lg font-mono">
+                        <span class="text-zinc-400 mr-1">//</span> Revenue, Profit Margin, Units Sold
+                    </div>
+                </div>
+
+                <!-- Pillar 3 -->
+                <div class="glass-card p-8 rounded-2xl relative overflow-hidden group hover:border-violet-200 transition-all duration-300">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-violet-500 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+                    <div class="w-12 h-12 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-zinc-900 mb-3 tracking-tight">Aggregation <span class="text-zinc-400 font-normal text-sm ml-1">(Math)</span></h3>
+                    <p class="text-zinc-600 text-sm leading-relaxed mb-6">How you summarize the Measure across a Dimension. You can't just plot raw numbers without summarizing them!</p>
+                    <div class="bg-zinc-50 border border-zinc-100 text-zinc-600 text-xs py-2.5 px-3 rounded-lg font-mono">
+                        <span class="text-zinc-400 mr-1">//</span> Sum, Average, Count, Max, Min
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interactive Practice -->
+            <section id="part1" class="scroll-mt-12 space-y-8">
+                <div class="flex items-center justify-between border-b border-zinc-200 pb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-zinc-900 tracking-tight">Knowledge Check</h2>
+                        <p class="text-zinc-500 text-sm mt-1">Identify the Dimension, Measure, and Aggregation method used for each chart.</p>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Quiz 1 -->
+                    <div class="glass-card rounded-2xl p-6 flex flex-col premium-shadow">
+                        <div class="mb-6">
+                            <h4 class="font-semibold text-zinc-900 text-sm mb-4">Average Rent by Neighborhood</h4>
+                            <div class="w-full h-40">
+                                <canvas id="chart1"></canvas>
+                            </div>
+                        </div>
+                        <div class="space-y-4 mt-auto border-t border-zinc-100 pt-5">
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Dimension</label>
+                                <select id="q1-dim" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="neighborhood">Neighborhood</option>
+                                    <option value="rent">Rent Price</option>
+                                    <option value="average">Average</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Measure</label>
+                                <select id="q1-meas" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="neighborhood">Neighborhood</option>
+                                    <option value="rent">Rent Price</option>
+                                    <option value="count">Count of Apartments</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Aggregation</label>
+                                <select id="q1-agg" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="sum">Sum</option>
+                                    <option value="average">Average</option>
+                                    <option value="max">Maximum</option>
+                                </select>
+                            </div>
+                            <button onclick="checkAnswer('q1', 'neighborhood', 'rent', 'average')" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2 shadow-sm">Verify Answer</button>
+                            <div id="q1-feedback" class="text-center text-sm font-medium h-5 mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Quiz 2 -->
+                    <div class="glass-card rounded-2xl p-6 flex flex-col premium-shadow">
+                        <div class="mb-6">
+                            <h4 class="font-semibold text-zinc-900 text-sm mb-4">Total Monthly Rainfall</h4>
+                            <div class="w-full h-40">
+                                <canvas id="chart2"></canvas>
+                            </div>
+                        </div>
+                        <div class="space-y-4 mt-auto border-t border-zinc-100 pt-5">
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Dimension</label>
+                                <select id="q2-dim" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="rainfall">Rainfall (Inches)</option>
+                                    <option value="month">Month</option>
+                                    <option value="weather">Weather Type</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Measure</label>
+                                <select id="q2-meas" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="month">Month</option>
+                                    <option value="sum">Sum</option>
+                                    <option value="rainfall">Rainfall (Inches)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Aggregation</label>
+                                <select id="q2-agg" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="sum">Sum (Total)</option>
+                                    <option value="average">Average</option>
+                                    <option value="count">Count</option>
+                                </select>
+                            </div>
+                            <button onclick="checkAnswer('q2', 'month', 'rainfall', 'sum')" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2 shadow-sm">Verify Answer</button>
+                            <div id="q2-feedback" class="text-center text-sm font-medium h-5 mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Quiz 3 -->
+                    <div class="glass-card rounded-2xl p-6 flex flex-col premium-shadow">
+                        <div class="mb-6">
+                            <h4 class="font-semibold text-zinc-900 text-sm mb-4">Service Requests by Type</h4>
+                            <div class="w-full h-40">
+                                <canvas id="chart3"></canvas>
+                            </div>
+                        </div>
+                        <div class="space-y-4 mt-auto border-t border-zinc-100 pt-5">
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Dimension</label>
+                                <select id="q3-dim" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="requests">Number of Requests</option>
+                                    <option value="type">Request Type</option>
+                                    <option value="date">Date</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Measure</label>
+                                <select id="q3-meas" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="records">Records / Rows</option>
+                                    <option value="type">Request Type</option>
+                                    <option value="sum">Sum</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Aggregation</label>
+                                <select id="q3-agg" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="count">Count</option>
+                                    <option value="average">Average</option>
+                                    <option value="min">Minimum</option>
+                                </select>
+                            </div>
+                            <button onclick="checkAnswer('q3', 'type', 'records', 'count')" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2 shadow-sm">Verify Answer</button>
+                            <div id="q3-feedback" class="text-center text-sm font-medium h-5 mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Quiz 4 -->
+                    <div class="glass-card rounded-2xl p-6 flex flex-col premium-shadow">
+                        <div class="mb-6">
+                            <h4 class="font-semibold text-zinc-900 text-sm mb-4">Total Sales by Region & Product</h4>
+                            <div class="w-full h-40">
+                                <canvas id="chart4"></canvas>
+                            </div>
+                        </div>
+                        <div class="space-y-4 mt-auto border-t border-zinc-100 pt-5">
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Dimension</label>
+                                <select id="q4-dim" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="sales">Sales Amount</option>
+                                    <option value="region_product">Region & Product</option>
+                                    <option value="average">Average</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Measure</label>
+                                <select id="q4-meas" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="region">Region</option>
+                                    <option value="product">Product Type</option>
+                                    <option value="sales">Sales Amount</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Aggregation</label>
+                                <select id="q4-agg" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="sum">Sum</option>
+                                    <option value="average">Average</option>
+                                    <option value="count">Count</option>
+                                </select>
+                            </div>
+                            <button onclick="checkAnswer('q4', 'region_product', 'sales', 'sum')" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2 shadow-sm">Verify Answer</button>
+                            <div id="q4-feedback" class="text-center text-sm font-medium h-5 mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Quiz 5 -->
+                    <div class="glass-card rounded-2xl p-6 flex flex-col premium-shadow">
+                        <div class="mb-6">
+                            <h4 class="font-semibold text-zinc-900 text-sm mb-4">Smartphone Market Share (Q3)</h4>
+                            <div class="w-full h-40">
+                                <canvas id="chart5"></canvas>
+                            </div>
+                        </div>
+                        <div class="space-y-4 mt-auto border-t border-zinc-100 pt-5">
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Dimension</label>
+                                <select id="q5-dim" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="company">Company</option>
+                                    <option value="revenue">Units Sold</option>
+                                    <option value="percent">Percentage</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Measure</label>
+                                <select id="q5-meas" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="company">Company Name</option>
+                                    <option value="revenue">Units Sold</option>
+                                    <option value="average">Average Price</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Aggregation</label>
+                                <select id="q5-agg" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="count">Count</option>
+                                    <option value="sum">Sum (Total Units)</option>
+                                    <option value="min">Minimum</option>
+                                </select>
+                            </div>
+                            <button onclick="checkAnswer('q5', 'company', 'revenue', 'sum')" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2 shadow-sm">Verify Answer</button>
+                            <div id="q5-feedback" class="text-center text-sm font-medium h-5 mt-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Quiz 6 -->
+                    <div class="glass-card rounded-2xl p-6 flex flex-col premium-shadow">
+                        <div class="mb-6">
+                            <h4 class="font-semibold text-zinc-900 text-sm mb-4">Maximum Temperature by City</h4>
+                            <div class="w-full h-40">
+                                <canvas id="chart6"></canvas>
+                            </div>
+                        </div>
+                        <div class="space-y-4 mt-auto border-t border-zinc-100 pt-5">
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Dimension</label>
+                                <select id="q6-dim" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="temperature">Temperature</option>
+                                    <option value="city">City</option>
+                                    <option value="date">Date</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Measure</label>
+                                <select id="q6-meas" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="city">City Name</option>
+                                    <option value="temperature">Temperature</option>
+                                    <option value="max">Max</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block mb-1.5">Aggregation</label>
+                                <select id="q6-agg" class="w-full bg-zinc-50 border border-zinc-200 text-zinc-700 text-sm rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 transition-colors">
+                                    <option value="">Select option...</option>
+                                    <option value="sum">Sum</option>
+                                    <option value="average">Average</option>
+                                    <option value="max">Maximum</option>
+                                </select>
+                            </div>
+                            <button onclick="checkAnswer('q6', 'city', 'temperature', 'max')" class="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2 shadow-sm">Verify Answer</button>
+                            <div id="q6-feedback" class="text-center text-sm font-medium h-5 mt-1"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Main Assignment -->
+            <section id="part2" class="scroll-mt-12 bg-zinc-950 text-white rounded-3xl p-8 md:p-12 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] relative overflow-hidden border border-zinc-800">
+                <!-- Decorative background elements -->
+                <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-indigo-500/20 via-violet-500/10 to-transparent rounded-full blur-3xl pointer-events-none transform translate-x-1/3 -translate-y-1/3"></div>
+                <div class="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none transform -translate-x-1/3 translate-y-1/3"></div>
+                
+                <div class="relative z-10 flex flex-col md:flex-row gap-12">
+                    <div class="flex-1 space-y-8">
+                        <div>
+                            <span class="text-indigo-400 font-semibold tracking-wider text-xs uppercase mb-2 block">Application Mission</span>
+                            <h2 class="text-3xl md:text-4xl font-bold text-white tracking-tight">The Seattle Data Mission</h2>
+                            <p class="text-zinc-400 mt-3 text-lg">Apply your knowledge of Dimensions, Measures, and Aggregations to real-world open data.</p>
+                        </div>
+                        
+                        <div class="space-y-6">
+                            <!-- Steps -->
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 border border-zinc-700 bg-zinc-800/50 text-zinc-300 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">1</div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-white">Access the Portal</h4>
+                                    <p class="text-zinc-400 text-sm mt-1 leading-relaxed">Go to the Seattle Open Data portal and open the dataset catalog.</p>
+                                    <a href="https://data.seattle.gov/browse?sortBy=relevance&pageSize=20&limitTo=datasets&page=1" target="_blank" class="inline-flex items-center gap-2 mt-3 bg-white text-zinc-950 hover:bg-zinc-200 px-4 py-2 rounded-lg font-medium transition-colors text-sm">
+                                        Open Seattle Open Data
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 border border-zinc-700 bg-zinc-800/50 text-zinc-300 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">2</div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-white">Pick & Visualize</h4>
+                                    <p class="text-zinc-400 text-sm mt-1 leading-relaxed">Select any interesting dataset. Click the <strong>"Create Visualization"</strong> or <strong>"Visualize"</strong> button in the interface.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 border border-zinc-700 bg-zinc-800/50 text-zinc-300 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">3</div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-white">Build the Chart</h4>
+                                    <p class="text-zinc-400 text-sm mt-1 leading-relaxed">In the visualizer pane, define your <strong>Dimension (Group by)</strong> and a <strong>Measure</strong> to render your chart.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0 border border-zinc-700 bg-zinc-800/50 text-zinc-300 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">4</div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-white">Capture & Submit</h4>
+                                    <p class="text-zinc-400 text-sm mt-1 leading-relaxed mb-3">Take a screenshot of your finished chart. Paste it into the shared Google Doc below with your analysis.</p>
+                                    <a href="https://docs.google.com/document/d/1SPCxQDwoaScuAFK2vSrhcU9sKMDFQ7BmW4hh3CWfkWY/edit?usp=sharing" target="_blank" class="inline-flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-4 py-2 rounded-lg font-medium transition-colors text-sm shadow-[0_0_15px_rgba(99,102,241,0.3)]">
+                                        Open Google Doc
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Decor visual -->
+                    <div class="hidden lg:flex flex-1 items-center justify-center relative">
+                        <div class="w-full max-w-sm aspect-square border border-zinc-800 rounded-2xl bg-zinc-900/50 backdrop-blur-sm p-6 flex flex-col shadow-2xl">
+                            <div class="flex gap-2 mb-6">
+                                <div class="w-3 h-3 rounded-full bg-zinc-700"></div>
+                                <div class="w-3 h-3 rounded-full bg-zinc-700"></div>
+                                <div class="w-3 h-3 rounded-full bg-zinc-700"></div>
+                            </div>
+                            <div class="flex-1 flex items-end gap-3 px-4">
+                                <div class="w-1/4 bg-indigo-500/80 rounded-t-md h-[40%]"></div>
+                                <div class="w-1/4 bg-indigo-400/80 rounded-t-md h-[70%] relative">
+                                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white text-zinc-900 text-[10px] font-bold py-1 px-2 rounded">Measure</div>
+                                </div>
+                                <div class="w-1/4 bg-violet-400/80 rounded-t-md h-[55%]"></div>
+                                <div class="w-1/4 bg-violet-500/80 rounded-t-md h-[90%]"></div>
+                            </div>
+                            <div class="h-px w-full bg-zinc-700 mt-2 mb-2"></div>
+                            <div class="text-center text-[10px] text-zinc-500 uppercase tracking-widest font-semibold">Dimension (Group By)</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Screenshot Guide Section -->
+            <section id="screenshot-guide" class="scroll-mt-12 border-t border-zinc-200 pt-12">
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-zinc-900 tracking-tight flex items-center gap-2">
+                        <svg class="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                        Screenshot Reference Guide
+                    </h3>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="glass-card p-6 rounded-xl border border-zinc-200">
+                        <h4 class="font-semibold text-zinc-900 flex items-center gap-2 mb-4">
+                            <svg class="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.951-1.801"/></svg>
+                            Windows Machine
+                        </h4>
+                        <ol class="text-sm text-zinc-600 space-y-3">
+                            <li class="flex gap-3"><span class="text-zinc-300 font-bold">1.</span> <div>Press <span class="whitespace-nowrap inline-flex items-center gap-1"><kbd class="bg-zinc-100 border border-zinc-200 rounded px-1.5 py-1 font-mono text-[11px] text-zinc-700 leading-none shadow-sm">Windows</kbd> + <kbd class="bg-zinc-100 border border-zinc-200 rounded px-1.5 py-1 font-mono text-[11px] text-zinc-700 leading-none shadow-sm">Shift</kbd> + <kbd class="bg-zinc-100 border border-zinc-200 rounded px-1.5 py-1 font-mono text-[11px] text-zinc-700 leading-none shadow-sm">S</kbd></span></div></li>
+                            <li class="flex gap-3"><span class="text-zinc-300 font-bold">2.</span> Your screen will darken. Click and drag your mouse to select the chart area.</li>
+                            <li class="flex gap-3"><span class="text-zinc-300 font-bold">3.</span> The image is now copied to your clipboard.</li>
+                            <li class="flex gap-3"><span class="text-zinc-300 font-bold">4.</span> <span>Go to the Google Doc and press <span class="whitespace-nowrap inline-flex items-center gap-1"><kbd class="bg-zinc-100 border border-zinc-200 rounded px-1.5 py-1 font-mono text-[11px] text-zinc-700 leading-none shadow-sm">Ctrl</kbd> + <kbd class="bg-zinc-100 border border-zinc-200 rounded px-1.5 py-1 font-mono text-[11px] text-zinc-700 leading-none shadow-sm">V</kbd></span> to paste.</span></li>
+                        </ol>
+                    </div>
+                    
+                    <div class="glass-card p-6 rounded-xl border border-zinc-200">
+                        <h4 class="font-semibold text-zinc-900 flex items-center gap-2 mb-4">
+                            <svg class="w-5 h-5 text-zinc-700" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm3.328 14.172A4.474 4.474 0 0112 17.5a4.474 4.474 0 01-3.328-1.328 1.5 1.5 0 012.122-2.122 1.487 1.487 0 001.206.45 1.487 1.487 0 001.206-.45 1.5 1.5 0 012.122 2.122zM15 10.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm-6 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" opacity="0"/><path d="M16.48 9.382c-.898-2.607-3.69-4.226-6.697-3.791C7.306 5.94 5.378 8.046 5.03 10.55c-.322 2.302.83 4.542 2.898 5.626 1.838.96 4.143.743 5.76-.523.63-.493.072-1.465-.632-1.071-1.25.7-3.033.82-4.408.06-1.57-.866-2.435-2.585-2.193-4.329.26-1.87 1.7-3.447 3.553-3.746 2.228-.362 4.305.85 4.974 2.8.232.673 1.25.408 1.498-.085z"/></svg> 
+                            Mac Machine
+                        </h4>
+                        <ol class="text-sm text-zinc-600 space-y-3">
+                            <li class="flex gap-3"><span class="text-zinc-300 font-bold">1.</span> <div>Press <span class="whitespace-nowrap inline-flex items-center gap-1"><kbd class="bg-zinc-100 border border-zinc-200 rounded px-1.5 py-1 font-mono text-[11px] text-zinc-700 leading-none shadow-sm">Shift</kbd> + <kbd class="bg-zinc-100 border border-zinc-200 rounded px-1.5 py-1 font-mono text-[11px] text-zinc-700 leading-none shadow-sm">Cmd</kbd> + <kbd class="bg-zinc-100 border border-zinc-200 rounded px-1.5 py-1 font-mono text-[11px] text-zinc-700 leading-none shadow-sm">4</kbd></span></div></li>
+                            <li class="flex gap-3"><span class="text-zinc-300 font-bold">2.</span> Your cursor turns into a crosshair. Click and drag to select the chart.</li>
+                            <li class="flex gap-3"><span class="text-zinc-300 font-bold">3.</span> The image is saved to your desktop (or click the floating thumbnail to copy).</li>
+                            <li class="flex gap-3"><span class="text-zinc-300 font-bold">4.</span> <span>Go to the Google Doc and paste it, or drag the file directly in.</span></li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        // Resizable Sidebar Logic
+        const sidebar = document.getElementById('sidebar');
+        const resizer = document.getElementById('resizer');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            sidebar.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            let newWidth = e.clientX;
+            if (newWidth < 220) newWidth = 220;
+            if (newWidth > 450) newWidth = 450;
+            sidebar.style.width = newWidth + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+            sidebar.style.userSelect = 'auto';
+        });
+
+        // Scrollspy for Menu Navigation
+        const sections = document.querySelectorAll('main section');
+        const navLinks = document.querySelectorAll('.nav-link');
+        
+        const activeClasses = ['bg-zinc-900', 'text-white', 'shadow-sm', 'hover:bg-zinc-800'];
+        const inactiveClasses = ['text-zinc-600', 'hover:bg-zinc-50', 'hover:text-zinc-900'];
+
+        const setNavActive = (activeId) => {
+            navLinks.forEach(link => {
+                link.classList.remove(...activeClasses);
+                link.classList.add(...inactiveClasses);
+                const icon = link.querySelector('svg');
+                if (icon) {
+                    icon.classList.remove('text-indigo-400');
+                    icon.classList.add('text-zinc-400');
+                }
+
+                if (link.getAttribute('href') === `#${activeId}`) {
+                    link.classList.remove(...inactiveClasses);
+                    link.classList.add(...activeClasses);
+                    if (icon) {
+                        icon.classList.remove('text-zinc-400');
+                        icon.classList.add('text-indigo-400');
+                    }
+                }
+            });
+        };
+
+        const observerOptions = {
+            root: document.getElementById('main-content'),
+            rootMargin: '-20% 0px -70% 0px',
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    setNavActive(entry.target.id);
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => observer.observe(section));
+
+        // Click handling for instantaneous menu updates
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                const targetId = this.getAttribute('href').substring(1);
+                setNavActive(targetId);
+            });
+        });
+
+        // Quiz Logic
+        function checkAnswer(quizId, correctDim, correctMeas, correctAgg) {
+            const dim = document.getElementById(`${quizId}-dim`).value;
+            const meas = document.getElementById(`${quizId}-meas`).value;
+            const agg = document.getElementById(`${quizId}-agg`).value;
+            const feedback = document.getElementById(`${quizId}-feedback`);
+
+            if (!dim || !meas || !agg) {
+                feedback.innerHTML = `<span class="text-amber-500 flex items-center justify-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> Select all options</span>`;
+                return;
+            }
+
+            if (dim === correctDim && meas === correctMeas && agg === correctAgg) {
+                feedback.innerHTML = `<span class="text-emerald-600 font-semibold flex items-center justify-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Correct analysis</span>`;
+            } else {
+                feedback.innerHTML = `<span class="text-rose-500 font-semibold flex items-center justify-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg> Incorrect, try again</span>`;
+            }
+        }
+
+        // Initialize Chart.js Examples with Refined Premium Palette
+        window.onload = function() {
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#71717a'; // zinc-500
+            Chart.defaults.scale.grid.color = '#f4f4f5'; // zinc-100
+            
+            // Common Options for sleek look
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { beginAtZero: true, border: {display: false} },
+                    x: { border: {display: false}, grid: {display: false} }
+                }
+            };
+
+            // Chart 1: Bar Chart (Rent)
+            new Chart(document.getElementById('chart1'), {
+                type: 'bar',
+                data: {
+                    labels: ['Downtown', 'Capitol Hill', 'Ballard', 'Fremont'],
+                    datasets: [{ label: 'Average Rent ($)', data: [2400, 2100, 1950, 1800], backgroundColor: '#6366f1', borderRadius: 4 }]
+                },
+                options: commonOptions
+            });
+
+            // Chart 2: Line Chart (Rainfall)
+            new Chart(document.getElementById('chart2'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{ label: 'Rainfall (Inches)', data: [5.2, 4.1, 3.8, 2.5, 1.5, 1.1], borderColor: '#0ea5e9', backgroundColor: 'rgba(14, 165, 233, 0.1)', borderWidth: 2, fill: true, tension: 0.4 }]
+                },
+                options: commonOptions
+            });
+
+            // Chart 3: Doughnut Chart (Service Requests)
+            new Chart(document.getElementById('chart3'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Potholes', 'Graffiti', 'Streetlights', 'Other'],
+                    datasets: [{ data: [450, 320, 150, 80], backgroundColor: ['#8b5cf6', '#10b981', '#f59e0b', '#cbd5e1'], borderWidth: 0, cutout: '70%' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6 } } } }
+            });
+
+            // Chart 4: Stacked Bar Chart
+            new Chart(document.getElementById('chart4'), {
+                type: 'bar',
+                data: {
+                    labels: ['North', 'South', 'East', 'West'],
+                    datasets: [
+                        { label: 'Electronics', data: [12000, 15000, 9000, 18000], backgroundColor: '#3b82f6', borderRadius: 2 },
+                        { label: 'Clothing', data: [8000, 7500, 11000, 9500], backgroundColor: '#e2e8f0', borderRadius: 2 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 6 } } }, scales: { x: { stacked: true, grid: {display: false}, border:{display:false} }, y: { stacked: true, beginAtZero: true, border:{display:false} } } }
+            });
+
+            // Chart 5: Pie Chart (Updated with Real Companies)
+            new Chart(document.getElementById('chart5'), {
+                type: 'pie',
+                data: {
+                    labels: ['Apple', 'Samsung', 'Xiaomi', 'Others'],
+                    datasets: [{ data: [45, 25, 15, 15], backgroundColor: ['#18181b', '#3b82f6', '#f97316', '#e4e4e7'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6 } } } }
+            });
+
+            // Chart 6: Horizontal Bar Chart
+            new Chart(document.getElementById('chart6'), {
+                type: 'bar',
+                data: {
+                    labels: ['Phoenix', 'Miami', 'Vegas', 'Dallas', 'Austin'],
+                    datasets: [{ label: 'Max Temp (°F)', data: [115, 98, 112, 105, 108], backgroundColor: '#f43f5e', borderRadius: 4 }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: false, min: 80, border:{display:false} }, y: { grid:{display:false}, border:{display:false} } } }
+            });
+
+        };
+    </script>
+</body>
+</html>
