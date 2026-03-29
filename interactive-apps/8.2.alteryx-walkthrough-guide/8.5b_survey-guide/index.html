@@ -302,7 +302,7 @@
     function esc(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
     
     function shotCard(file) {
-      return `<figure class="shot-card"><img src="img/${esc(file)}" alt="${esc(file)}" class="native-shot zoomable" data-title="${esc(file)}" data-src="img/${esc(file)}" loading="lazy"><figcaption><span>Click to zoom.</span></figcaption></figure>`;
+      return `<figure class="shot-card"><img src="img/${esc(file)}" alt="Workflow Screenshot" class="native-shot zoomable" data-src="img/${esc(file)}" loading="lazy"><figcaption><span>Click to zoom.</span></figcaption></figure>`;
     }
     
     function renderNav() {
@@ -357,7 +357,7 @@
             if (span) desc = span.textContent;
           }
 
-          document.getElementById('sideTitle').textContent = img.dataset.title || 'Screenshot';
+          document.getElementById('sideTitle').textContent = 'Screenshot';
           
           let descriptionHtml = '';
           if (desc && desc !== 'Click to zoom.') {
@@ -365,7 +365,7 @@
           }
 
           document.getElementById('sideBody').innerHTML = `
-            <img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}">
+            <img src="${img.dataset.src}" alt="Screenshot">
             ${descriptionHtml}
           `;
           
