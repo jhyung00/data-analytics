@@ -153,13 +153,14 @@
                 </div>
             </div>
             
-            <nav class="flex space-x-8 text-sm font-black text-slate-400 mt-2 md:mt-0">
-                <button onclick="switchTab('tab-theory')" id="nav-theory" class="nav-tab active hover:text-slate-700 flex items-center"><i class="fas fa-brain mr-2"></i> Visual Dojo</button>
-                <button onclick="switchTab('tab-lab')" id="nav-lab" class="nav-tab hover:text-slate-700 flex items-center"><i class="fas fa-flask mr-2"></i> Data Lab</button>
+            <nav class="flex space-x-4 md:space-x-8 text-sm font-black text-slate-400 mt-2 md:mt-0 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 justify-center md:justify-start">
+                <button onclick="switchTab('tab-fundamentals')" id="nav-fundamentals" class="nav-tab active hover:text-slate-700 flex items-center whitespace-nowrap"><i class="fas fa-book-open mr-2"></i> Chart Fundamentals</button>
+                <button onclick="switchTab('tab-theory')" id="nav-theory" class="nav-tab hover:text-slate-700 flex items-center whitespace-nowrap"><i class="fas fa-brain mr-2"></i> Visual Dojo</button>
+                <button onclick="switchTab('tab-lab')" id="nav-lab" class="nav-tab hover:text-slate-700 flex items-center whitespace-nowrap"><i class="fas fa-flask mr-2"></i> Data Lab</button>
             </nav>
 
             <div class="flex flex-col items-end min-w-[150px]">
-                <div class="text-sm font-black text-slate-700 mb-1">Score: <span id="score-display" class="text-2xl text-pink-500">0</span> <span class="text-slate-400">/ 8</span></div>
+                <div class="text-sm font-black text-slate-700 mb-1">Score: <span id="score-display" class="text-2xl text-pink-500">0</span> <span class="text-slate-400">/ <span id="max-score-display">0</span></span></div>
                 <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                     <div id="progress-bar" class="progress-bar bg-gradient-to-r from-blue-400 to-pink-500 h-2.5 rounded-full" style="width: 0%"></div>
                 </div>
@@ -169,24 +170,41 @@
 
     <main class="w-full max-w-6xl flex-grow">
 
-        <!-- TAB 1: VISUAL THEORY DOJO -->
-        <section id="tab-theory" class="space-y-8 block">
+        <!-- TAB 1: CHART FUNDAMENTALS -->
+        <section id="tab-fundamentals" class="space-y-8 block">
+            <div class="game-card p-6 bg-gradient-to-br from-purple-50 to-pink-50 border-purple-100 mb-8 flex items-center">
+                <div class="w-16 h-16 rounded-full bg-purple-500 text-white flex items-center justify-center text-3xl shadow-lg shadow-purple-200 mr-6 flex-shrink-0">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black mb-1 text-slate-800">Chart Fundamentals</h3>
+                    <p class="text-slate-600 font-semibold">Before investigating the Midwest Machining case, you must understand your tools. Observe the visual structure of each chart below, read its core concept, and deduce its most powerful application in a real-world forensic audit.</p>
+                </div>
+            </div>
+            
+            <div id="fundamentals-container" class="space-y-10">
+                <!-- Fundamental Questions injected via JS -->
+            </div>
+        </section>
+
+        <!-- TAB 2: VISUAL THEORY DOJO -->
+        <section id="tab-theory" class="space-y-8 hidden">
             <div class="game-card p-6 bg-gradient-to-br from-indigo-50 to-blue-50 border-blue-100 mb-8 flex items-center">
                 <div class="w-16 h-16 rounded-full bg-blue-500 text-white flex items-center justify-center text-3xl shadow-lg shadow-blue-200 mr-6 flex-shrink-0">
                     <i class="fas fa-bolt"></i>
                 </div>
                 <div>
                     <h3 class="text-xl font-black mb-1 text-slate-800">Master the Visuals</h3>
-                    <p class="text-slate-600 font-semibold">Read the scenario, select the most powerful visual to prove the anomaly, and submit your evidence. Level up your rank by getting them right on the first try!</p>
+                    <p class="text-slate-600 font-semibold">Apply your fundamental knowledge. Read the Midwest Machining scenario, select the most powerful visual structure to prove the anomaly, and submit your evidence to reveal the chart.</p>
                 </div>
             </div>
             
             <div id="quiz-container" class="space-y-10">
-                <!-- Questions injected via JS -->
+                <!-- Visual Dojo Questions injected via JS -->
             </div>
         </section>
 
-        <!-- TAB 2: DATA LAB & POWER BI BUILD GUIDE -->
+        <!-- TAB 3: DATA LAB & POWER BI BUILD GUIDE -->
         <section id="tab-lab" class="space-y-6 hidden">
             
             <!-- Excel Download Section -->
@@ -445,17 +463,176 @@
         const palette = {
             rose: '#f43f5e', lavender: '#8b5cf6', sage: '#10b981', 
             sky: '#0ea5e9', peach: '#f59e0b', indigo: '#6366f1',
-            slateLight: '#cbd5e1', slateDark: '#475569'
+            slateLight: '#cbd5e1', slateDark: '#475569', pink: '#ec4899'
         };
 
-        const questions = [
+        // --- SECTION 1: CHART FUNDAMENTALS ---
+        const fundamentalQuestions = [
             {
                 id: 1,
+                type: 'fundamental',
+                title: "The Line Chart",
+                icon: "fa-chart-line",
+                iconColor: "text-blue-500",
+                concept: "Connects individual data points to display continuous changes over a sequential scale (typically time).",
+                application: "Tracking monthly revenue, daily expenses, or identifying sudden, unnatural spikes in overtime pay across an operational quarter.",
+                question1: "In forensic analysis, what is the Line Chart's most powerful structural advantage?",
+                options1: ["Comparing categorical totals side-by-side", "Tracking continuous trends and spotting behavioral spikes over time", "Showing the percentage breakdown of a total", "Mapping exact geographical locations"],
+                correctIndex1: 1,
+                reasoning1: "Line charts are the optimal choice for time-series data. The human eye is biologically wired to track continuous lines, instantly spotting deviations, sudden spikes, or precipitous drops from historical norms.",
+                question2: "To build this Line Chart in Power BI tracking overtime trends, how should you map the data fields?",
+                options2: ["X-axis: Department Name | Y-axis: Overtime Spend", "X-axis: Date (Month) | Y-axis: Overtime Spend", "X-axis: Overtime Spend | Y-axis: Date (Month)", "X-axis: Date (Month) | Y-axis: Employee ID"],
+                correctIndex2: 1,
+                reasoning2: "The X-axis must always be the sequential time component (Date/Month), and the Y-axis must be the numerical value being tracked (Overtime Spend).",
+                chartFunc: (ctx) => {
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                            datasets: [{
+                                label: 'Overtime Spend',
+                                data: [1200, 1350, 1100, 4800, 1250, 1400],
+                                borderColor: palette.sky,
+                                backgroundColor: palette.sky,
+                                borderWidth: 4,
+                                tension: 0.3,
+                                pointBackgroundColor: [palette.sky, palette.sky, palette.sky, palette.rose, palette.sky, palette.sky],
+                                pointRadius: [4, 4, 4, 8, 4, 4]
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                }
+            },
+            {
+                id: 2,
+                type: 'fundamental',
+                title: "The Scatter Plot",
+                icon: "fa-braille",
+                iconColor: "text-orange-500",
+                concept: "Uses Cartesian coordinates (X and Y axes) to display values for two separate continuous variables for a vast set of data points.",
+                application: "Plotting thousands of factory inventory items by 'Days in Warehouse' and 'Book Value' to instantly isolate obsolete but highly valued parts.",
+                question1: "Observe the nature of a Scatter Plot. What specific relationship is this chart uniquely designed to expose?",
+                options1: ["The sequential, cumulative drop from gross to net revenue", "The correlation (or extreme outliers) between two independent numerical variables", "The ranking of text-based phrases in a document", "The hour of the day a transaction was approved"],
+                correctIndex1: 1,
+                reasoning1: "Scatter plots handle high-volume data brilliantly. They separate dense clusters of 'normal' operational behavior from isolated 'outliers' (dots far away from the group) that require immediate audit attention.",
+                question2: "To isolate specific anomalous inventory parts using this Scatter Plot in Power BI, how must the axes be configured?",
+                options2: ["X-axis: Product Category | Y-axis: Book Value", "X-axis: Days in Warehouse | Y-axis: Book Value | Values: SKU", "X-axis: SKU | Y-axis: Days in Warehouse", "X-axis: Book Value | Y-axis: Warehouse Location"],
+                correctIndex2: 1,
+                reasoning2: "Scatter plots require continuous numerical data on BOTH axes to plot coordinates. The 'Values' field (SKU) tells Power BI to plot a distinct dot for every single inventory item based on those two numbers.",
+                chartFunc: (ctx) => {
+                    const normal = Array.from({length: 40}, () => ({x: Math.random()*50, y: Math.random()*2000}));
+                    const outlier = [{x: 200, y: 8000}];
+                    new Chart(ctx, {
+                        type: 'scatter',
+                        data: { datasets: [{ label: 'Normal Data', data: normal, backgroundColor: palette.sky }, { label: 'Outlier', data: outlier, backgroundColor: palette.rose, pointRadius: 8 }] },
+                        options: { responsive: true, maintainAspectRatio: false, scales: { x: { title: { display: true, text: 'Variable X' } }, y: { title: { display: true, text: 'Variable Y' } } }, plugins: { legend: { display: false } } }
+                    });
+                }
+            },
+            {
+                id: 3,
+                type: 'fundamental',
+                title: "The Waterfall Chart",
+                icon: "fa-water",
+                iconColor: "text-sky-500",
+                concept: "A specialized bar chart showing how an initial value is affected by a series of intermediate positive or negative adjustments, leading to a final value.",
+                application: "Explaining to a board of directors exactly how a factory's $2M Gross Profit was whittled down to a $500k Net Loss by sequentially subtracting specific departmental overruns.",
+                question1: "When presenting forensic findings, why would you choose a Waterfall Chart over a standard column chart?",
+                options1: ["It shows the cumulative, step-by-step impact of sequential positive and negative changes", "It highlights the most frequent vendors in a database", "It proves whether a numerical distribution follows Benford's law", "It automatically groups geographic regions"],
+                correctIndex1: 0,
+                reasoning1: "Waterfalls are unparalleled for bridge analysis. They tell the 'story' of a metric, visually explaining how 'Point A' became 'Point B' step-by-step through specific additions and deductions.",
+                question2: "How do you map the fields in Power BI to create this sequential Waterfall Chart?",
+                options2: ["Category: Financial Stage (Gross, SG&A, etc.) | Y-axis: Financial Impact ($)", "Category: Financial Impact ($) | Y-axis: Financial Stage", "Category: Date | Y-axis: Financial Impact ($)", "Category: Financial Stage | Y-axis: Date"],
+                correctIndex2: 0,
+                reasoning2: "The Category field acts as the X-axis, defining the steps of the bridge (Gross Profit, SG&A, Net Income). The Y-axis takes the numerical financial impact, automatically building the ascending and descending bridge.",
+                chartFunc: (ctx) => {
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Start', 'Gain', 'Loss 1', 'Loss 2', 'Final'],
+                            datasets: [{
+                                data: [[0, 100], [100, 130], [80, 130], [40, 80], [0, 40]],
+                                backgroundColor: [palette.slateDark, palette.sage, palette.rose, palette.rose, palette.slateDark],
+                                borderRadius: 4
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                }
+            },
+            {
+                id: 4,
+                type: 'fundamental',
+                title: "The Histogram",
+                icon: "fa-chart-bar",
+                iconColor: "text-pink-500",
+                concept: "Groups continuous numerical data into logical ranges (bins) and plots the frequency or count of data points falling into each bin.",
+                application: "Creating bins of $100 for invoice amounts. Normal data creates a bell curve; manipulation creates unnatural spikes.",
+                question1: "You are analyzing employee expense reports. What does a Histogram (Binned Column Chart) uniquely reveal?",
+                options1: ["The specific names of the employees who approved the expenses", "The exact chronological timeline of when expenses were submitted", "The distribution frequency of the data, exposing unnatural human avoidance of corporate thresholds", "The percentage of expenses compared to total revenue"],
+                correctIndex1: 2,
+                reasoning1: "Histograms expose the 'shape' of your data. Fraudsters often don't realize that while their individual transactions look normal, their aggregate behavior destroys the natural statistical distribution, creating glaring visual spikes.",
+                question2: "To expose the threshold abuse using this Histogram (Binned Column Chart) in Power BI, what goes on the X and Y axes?",
+                options2: ["X-axis: Invoice Date | Y-axis: Invoice Amount ($)", "X-axis: Invoice Number | Y-axis: Invoice Amount ($)", "X-axis: Invoice Amount (Binned groups) | Y-axis: Count of Invoices", "X-axis: Count of Invoices | Y-axis: Invoice Amount (Binned groups)"],
+                correctIndex2: 2,
+                reasoning2: "Histograms plot the distribution of a variable. The X-axis contains the numerical ranges (the '$100 Bins' of capitalized amounts), and the Y-axis counts how many invoices fall into that specific bin.",
+                chartFunc: (ctx) => {
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['$0-1k', '$1k-2k', '$2k-3k', '$3k-4k', '$4k-5k', '$5k-6k'],
+                            datasets: [{ 
+                                data: [10, 40, 80, 50, 150, 5], 
+                                backgroundColor: [palette.slateLight, palette.slateLight, palette.slateLight, palette.slateLight, palette.pink, palette.slateLight],
+                                barPercentage: 1, categoryPercentage: 0.95 
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                    });
+                }
+            },
+            {
+                id: 5,
+                type: 'fundamental',
+                title: "The Conditional Matrix",
+                icon: "fa-table",
+                iconColor: "text-red-500",
+                concept: "A data grid where individual cell values are represented as varying shades of color, allowing for rapid visual scanning of high/low concentrations.",
+                application: "Plotting 'Day of Week' against 'Hour of Day'. Legitimate factory shifts light up in light blue; a massive CFO journal entry on Saturday at 11 PM lights up in bright red.",
+                question1: "Why is a Heatmap/Conditional Matrix an investigator's best tool for analyzing system log data?",
+                options1: ["It predicts future financial performance based on past trends", "It visually isolates intersections of two categories to immediately highlight behavioral clusters or rogue timing", "It maps physical assets to their exact warehouse shelves", "It calculates moving averages of transactions automatically"],
+                correctIndex1: 1,
+                reasoning1: "A heatmap leverages our brain's ability to process color intensity much faster than raw numbers. It is the ultimate tool for finding highly specific needles (anomalies) in haystacks of operational logs.",
+                question2: "To build this temporal Heatmap using a Matrix visual in Power BI, how do you map the data fields?",
+                options2: ["Rows: Entry Amount | Columns: Date | Values: Count of Entries", "Rows: User Role | Columns: Entry Amount | Values: Hour of Day", "Rows: Day of Week | Columns: Hour of Day | Values: Entry Amount", "Rows: Date | Columns: User Role | Values: Day of Week"],
+                correctIndex2: 2,
+                reasoning2: "A Matrix cross-tabulates data. By putting 'Day of Week' on Rows and 'Hour of Day' on Columns, you build a grid of time. Putting 'Entry Amount' in Values allows you to apply conditional formatting to visually highlight massive anomalies.",
+                customHTML: `
+                    <div class="flex h-full items-center justify-center flex-col w-full px-4 mt-2">
+                        <div class="text-xs mb-2 text-slate-400 font-bold w-full flex justify-between px-8 uppercase tracking-wider"><span>Morning</span><span>Noon</span><span>Evening</span><span>Night</span></div>
+                        <div class="heatmap-grid w-full">
+                            <div class="heat-cell bg-base">Mon</div><div class="heat-cell bg-heat-1">10</div><div class="heat-cell bg-heat-2">45</div><div class="heat-cell bg-heat-1">12</div><div class="heat-cell bg-base">0</div><div class="heat-cell bg-base">0</div>
+                            <div class="heat-cell bg-base">Tue</div><div class="heat-cell bg-heat-1">15</div><div class="heat-cell bg-heat-3">60</div><div class="heat-cell bg-heat-1">8</div><div class="heat-cell bg-base">0</div><div class="heat-cell bg-base">0</div>
+                            <div class="heat-cell bg-base">Sat</div><div class="heat-cell bg-base">0</div><div class="heat-cell bg-base">0</div><div class="heat-cell bg-base">0</div><div class="heat-cell bg-base">0</div><div class="heat-cell bg-heat-alert animate-pulse">99</div>
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+
+        // --- SECTION 2: VISUAL DOJO ---
+        const questions = [
+            {
+                id: 6,
+                type: 'dojo',
                 title: "The Accrual Divergence",
                 icon: "fa-chart-line",
                 iconColor: "text-indigo-500",
                 scenario: "Midwest Machining's Net Income has been rising steadily by 10% each year, but their Cash Flow from Operations (CFO) is actively declining. You need to show the Board that earnings quality is deteriorating due to aggressive accruals.",
                 badData: "Currently shown as a dense data table with 50 rows of cash flow adjustments, making it impossible to spot the macro trend.",
+                question: "Select your evidence structure:",
                 options: ["100% Stacked Bar Chart", "Line and Clustered Column Combo Chart", "Pie Chart", "Scatter Plot"],
                 correctIndex: 1,
                 reasoning: "A Combo Chart lets you side-by-side compare absolute dollar values of Net Income vs CFO (columns), while plotting the 'Accruals Gap' as a trend line. The divergence becomes visually inescapable.",
@@ -475,12 +652,14 @@
                 }
             },
             {
-                id: 2,
+                id: 7,
+                type: 'dojo',
                 title: "Explaining the 'Big Bath'",
                 icon: "fa-water",
                 iconColor: "text-sky-500",
                 scenario: "Midwest Machining took a massive $50M loss this year to clear their books. You need to explain to the auditors how a $20M Gross Profit turned into a $50M Net Loss by showing the sequential impact of massive machine write-offs.",
                 badData: "Currently shown as a standard pie chart of expenses, which completely fails to show how expenses dragged the positive profit down below zero.",
+                question: "Select your evidence structure:",
                 options: ["Waterfall Chart", "Donut Chart", "Multiple Line Charts", "Radar Chart"],
                 correctIndex: 0,
                 reasoning: "A Waterfall Chart is the undisputed champion for explaining the bridge between two numbers. It clearly shows the sequential, cumulative effect of positive and negative values dropping into the red.",
@@ -501,15 +680,17 @@
                 }
             },
             {
-                id: 3,
+                id: 8,
+                type: 'dojo',
                 title: "Hunting Threshold Abuse",
                 icon: "fa-cut",
                 iconColor: "text-pink-500",
                 scenario: "Midwest's capitalization policy dictates that purchases strictly OVER $5,000 are assets. Purchases $5,000 and below are immediate expenses. You suspect shop managers are splitting tooling invoices to sit just below $5k to game the budget.",
                 badData: "Currently looking at a line chart of 'Average Invoice Size over Time', which mathematically smooths out and hides individual transaction behavior.",
+                question: "Select your evidence structure:",
                 options: ["Area Chart", "Scatter Plot", "Histogram (Binned Column Chart)", "Decomposition Tree"],
                 correctIndex: 2,
-                reasoning: "By grouping invoice amounts into bins, a Histogram reveals an unnatural, massive spike in the '$4,900 - $5,000' bin. This instantly proves human behavior is overriding statistical distribution.",
+                reasoning: "By grouping invoice amounts into bins, a Histogram reveals an unnatural, massive spike in the '$4,900 - $5,000' bin. This instantly proves human behavior is overriding statistics.",
                 chartFunc: (ctx) => {
                     new Chart(ctx, {
                         type: 'bar',
@@ -522,12 +703,14 @@
                 }
             },
             {
-                id: 4,
+                id: 9,
+                type: 'dojo',
                 title: "Locating Ghost Margins",
                 icon: "fa-ghost",
                 iconColor: "text-orange-500",
                 scenario: "Midwest has 15,000 inventory SKUs in their warehouse. You need to identify 'Ghost Inventory'—parts that are extremely old (obsolete) but are still being held at a very high financial value to inflate assets.",
                 badData: "Currently presented as a Top 10 list of 'Most Valuable SKUs', which tells you what is expensive but completely ignores how old it is.",
+                question: "Select your evidence structure:",
                 options: ["100% Stacked Bar Chart", "Scatter Plot", "Treemap", "Gauge Chart"],
                 correctIndex: 1,
                 reasoning: "A Scatter Plot plots two continuous variables (Age vs. Value) for thousands of data points. The 'Top Right' quadrant will immediately isolate the exact SKUs that are dangerously old AND highly valued.",
@@ -542,12 +725,14 @@
                 }
             },
             {
-                id: 5,
+                id: 10,
+                type: 'dojo',
                 title: "Structural Expense Shifts",
                 icon: "fa-layer-group",
                 iconColor: "text-lavender-500",
                 scenario: "Management claims rising expenses are normal plant growth, but you suspect they are quietly shifting massive funds away from Factory Maintenance and into 'Consulting Fees' to hide executive payouts.",
                 badData: "Currently shown as multiple pie charts (one for each year), requiring the user to try and mentally memorize slice sizes across pages.",
+                question: "Select your evidence structure:",
                 options: ["100% Stacked Column Chart", "Scatter Plot", "Funnel Chart", "Waterfall Chart"],
                 correctIndex: 0,
                 reasoning: "A 100% Stacked Column normalizes total expenses to 100%. This removes the distraction of absolute dollar growth and highlights structural shifts—making it obvious if the 'Consulting' block expands vertically over time.",
@@ -567,12 +752,14 @@
                 }
             },
             {
-                id: 6,
+                id: 11,
+                type: 'dojo',
                 title: "Rogue Entry Timing",
                 icon: "fa-clock",
                 iconColor: "text-red-500",
                 scenario: "You have 10,000 manual journal entries. You want to prove that Midwest's CFO is overriding internal controls by posting massive entries late at night on weekends.",
                 badData: "Currently shown as a line chart tracking 'Number of Entries per Day', which completely ignores the hour of the day.",
+                question: "Select your evidence structure:",
                 options: ["Donut Chart", "Matrix with Conditional Formatting (Heatmap)", "Waterfall Chart", "Key Influencers"],
                 correctIndex: 1,
                 reasoning: "A Matrix/Heatmap visualizes intersections of time perfectly. By applying conditional color formatting based on amount, the human eye is instantly drawn to dark red anomalous clusters (e.g., Saturday at 11:00 PM).",
@@ -588,12 +775,14 @@
                 `
             },
             {
-                id: 7,
+                id: 12,
+                type: 'dojo',
                 title: "Benford's Law Fraud Detection",
                 icon: "fa-fingerprint",
                 iconColor: "text-purple-500",
-                scenario: "Benford's Law states naturally occurring numbers start with '1' about 30% of the time. You calculated the actual leading digits of expense reports and need to show deviations from this statistical law.",
+                scenario: "Benford's Law states naturally occurring operational numbers start with '1' about 30% of the time. You calculated the actual leading digits of factory expense reports and need to show deviations from this statistical law.",
                 badData: "Currently shown as a standard data grid, forcing the user to mentally calculate the math differences row by row.",
+                question: "Select your evidence structure:",
                 options: ["Clustered Column & Line Combo Chart", "Pie Chart", "Scatter Plot", "100% Stacked Bar"],
                 correctIndex: 0,
                 reasoning: "A Combo Chart is the industry standard here. Columns show the Actual Frequency, and a Line represents the Expected Theoretical Curve. Any column poking significantly above the line signals fabricated data.",
@@ -612,12 +801,14 @@
                 }
             },
             {
-                id: 8,
+                id: 13,
+                type: 'dojo',
                 title: "Following the Fraud Trail",
                 icon: "fa-sitemap",
                 iconColor: "text-emerald-500",
                 scenario: "You noticed a $5M spike in sales on the last day of the quarter. You need a visual that lets you click the $5M, break it down by Sales Rep, then by Distributor, and finally by Payment Terms.",
                 badData: "Currently using 4 different standalone bar charts, requiring the user to cross-filter manually to follow the path.",
+                question: "Select your evidence structure:",
                 options: ["Decomposition Tree", "Scatter Plot", "Line Chart", "Matrix"],
                 correctIndex: 0,
                 reasoning: "The Decomposition Tree dynamically 'drills-down' across different dimensions ad-hoc. You can visually trace the spike directly to one specific Rep, selling to one Distributor, using highly unusual 'Net 180' payment terms.",
@@ -643,11 +834,15 @@
             }
         ];
 
-        // Scoring System
+        // --- CORE APPLICATION LOGIC ---
+
+        // Scoring System Setup
         let currentScore = 0;
         let answeredQuestions = new Set();
-        const totalQuestions = questions.length;
+        const totalQuestions = fundamentalQuestions.length + questions.length;
         
+        document.getElementById('max-score-display').innerText = totalQuestions;
+
         function updateScoreboard() {
             document.getElementById('score-display').innerText = currentScore;
             const progress = (currentScore / totalQuestions) * 100;
@@ -657,13 +852,15 @@
             if (currentScore === totalQuestions) {
                 rankEl.innerText = "Master Forensic Analyst";
                 rankEl.className = "text-purple-600 bg-purple-100 px-3 py-1 rounded-full animate-pulse";
-            } else if (currentScore >= 5) {
+            } else if (currentScore >= 10) {
                 rankEl.innerText = "Senior Investigator";
                 rankEl.className = "text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full";
+            } else if (currentScore >= 5) {
+                rankEl.innerText = "Field Investigator";
+                rankEl.className = "text-blue-600 bg-blue-100 px-3 py-1 rounded-full";
             }
         }
 
-        // Fire Confetti Function
         function triggerConfetti(x, y) {
             confetti({
                 particleCount: 80,
@@ -672,8 +869,20 @@
                 colors: ['#3b82f6', '#ec4899', '#10b981', '#8b5cf6']
             });
         }
-        
-        // Lab Toggle Functions
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            ['tab-fundamentals', 'tab-theory', 'tab-lab'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById(id).classList.remove('block');
+                document.getElementById('nav-' + id.split('-')[1]).classList.remove('active');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
+            document.getElementById('nav-' + tabId.split('-')[1]).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function toggleVisibility(id) {
             const el = document.getElementById(id);
             const isSteps = id.startsWith('steps-');
@@ -695,12 +904,9 @@
             }
         }
 
-        // Lab Assessment Logic
         function checkLabAnswer(btn, isCorrect) {
             const container = btn.parentElement;
             const buttons = container.querySelectorAll('.lab-mcq-btn');
-            
-            // Reset styles in this group
             buttons.forEach(b => {
                 b.classList.remove('correct', 'incorrect', 'shake-anim');
             });
@@ -717,174 +923,312 @@
             }
         }
 
-        // UI Setup
-        const container = document.getElementById('quiz-container');
-        
         function getIconForOption(optText) {
             const text = optText.toLowerCase();
             if (text.includes('pie') || text.includes('donut')) return 'fa-chart-pie';
             if (text.includes('waterfall')) return 'fa-water';
             if (text.includes('scatter')) return 'fa-braille';
-            if (text.includes('line')) return 'fa-chart-line';
+            if (text.includes('line') || text.includes('tracking')) return 'fa-chart-line';
             if (text.includes('tree') || text.includes('influencers')) return 'fa-sitemap';
-            if (text.includes('matrix') || text.includes('table')) return 'fa-table';
+            if (text.includes('matrix') || text.includes('table') || text.includes('intersection')) return 'fa-table';
             if (text.includes('area')) return 'fa-chart-area';
             return 'fa-chart-bar'; 
         }
 
-        questions.forEach((q, index) => {
-            const block = document.createElement('div');
-            block.className = 'game-card p-6 md:p-8 relative overflow-hidden';
-            block.id = `card-${q.id}`;
+        // --- RENDER DOM CARDS ---
+        function renderQuizCards(containerId, dataArray, prefixLabel) {
+            const container = document.getElementById(containerId);
             
-            let buttonsHTML = '';
-            q.options.forEach((opt, optIdx) => {
-                const iconClass = getIconForOption(opt);
-                buttonsHTML += `<button id="btn-${q.id}-${optIdx}" onclick="selectOption(${q.id}, ${optIdx})" class="mcq-btn w-full text-left px-5 py-4 rounded-xl font-bold text-slate-600 mb-3 flex items-center justify-between group">
-                    <div class="flex items-center">
-                        <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mr-4 text-blue-500 border border-slate-100 shadow-sm group-hover:bg-white transition-colors">
-                            <i class="fas ${iconClass} text-xl"></i>
+            dataArray.forEach((q, index) => {
+                const block = document.createElement('div');
+                block.className = 'game-card p-6 md:p-8 relative overflow-hidden';
+                block.id = `card-${q.id}`;
+                
+                let questionsHTML = '';
+                let contextHTML = '';
+                let revealHTML = '';
+
+                if (q.type === 'fundamental') {
+                    let buttonsHTML1 = '';
+                    q.options1.forEach((opt, optIdx) => {
+                        const iconClass = getIconForOption(opt);
+                        buttonsHTML1 += `<button id="btn-${q.id}-q1-${optIdx}" onclick="selectOption(${q.id}, 'q1', ${optIdx}, 2)" class="mcq-btn w-full text-left px-5 py-4 rounded-xl font-bold text-slate-600 mb-3 flex items-center justify-between group">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mr-4 text-blue-500 border border-slate-100 shadow-sm group-hover:bg-white transition-colors">
+                                    <i class="fas ${iconClass} text-xl"></i>
+                                </div>
+                                <span class="text-[1.05rem]">${String.fromCharCode(65 + optIdx)}. ${opt}</span>
+                            </div>
+                            <i class="far fa-circle text-slate-300 text-2xl group-hover:text-blue-300" id="icon-${q.id}-q1-${optIdx}"></i>
+                        </button>`;
+                    });
+
+                    let buttonsHTML2 = '';
+                    q.options2.forEach((opt, optIdx) => {
+                        const iconClass = 'fa-wrench';
+                        buttonsHTML2 += `<button id="btn-${q.id}-q2-${optIdx}" onclick="selectOption(${q.id}, 'q2', ${optIdx}, 2)" class="mcq-btn w-full text-left px-5 py-4 rounded-xl font-bold text-slate-600 mb-3 flex items-center justify-between group">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mr-4 text-purple-500 border border-slate-100 shadow-sm group-hover:bg-white transition-colors">
+                                    <i class="fas ${iconClass} text-xl"></i>
+                                </div>
+                                <span class="text-[1.05rem]">${String.fromCharCode(65 + optIdx)}. ${opt}</span>
+                            </div>
+                            <i class="far fa-circle text-slate-300 text-2xl group-hover:text-purple-300" id="icon-${q.id}-q2-${optIdx}"></i>
+                        </button>`;
+                    });
+
+                    questionsHTML = `
+                        <div class="mb-8">
+                            <h3 class="text-lg font-black mb-4 text-slate-700">1. ${q.question1}</h3>
+                            ${buttonsHTML1}
                         </div>
-                        <span class="text-[1.05rem]">${String.fromCharCode(65 + optIdx)}. ${opt}</span>
-                    </div>
-                    <i class="far fa-circle text-slate-300 text-2xl group-hover:text-blue-300" id="icon-${q.id}-${optIdx}"></i>
-                </button>`;
-            });
+                        <div class="mb-6">
+                            <h3 class="text-lg font-black mb-4 text-slate-700">2. ${q.question2}</h3>
+                            ${buttonsHTML2}
+                        </div>
+                    `;
 
-            block.innerHTML = `
-                <div class="absolute top-0 right-0 bg-blue-100 text-blue-600 text-xs font-black px-4 py-2 rounded-bl-2xl uppercase tracking-widest border-b border-l border-white">Challenge ${index + 1}</div>
-                
-                <div class="flex justify-between items-center mb-6 mt-2">
-                    <h2 class="text-2xl font-black text-slate-800 flex items-center">
-                        <i class="fas ${q.icon} ${q.iconColor} mr-3 text-2xl drop-shadow-sm"></i> ${q.title}
-                    </h2>
-                </div>
-                
-                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner mb-6 relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 text-slate-200 text-6xl opacity-50"><i class="fas fa-search"></i></div>
-                    <p class="text-slate-600 mb-4 text-base font-semibold leading-relaxed relative z-10"><strong class="text-slate-800 font-black"><i class="fas fa-play text-blue-500 mr-2"></i> Scenario:</strong> ${q.scenario}</p>
-                    <p class="text-slate-500 text-sm font-semibold bg-red-50 p-4 rounded-xl border border-red-100 relative z-10"><strong class="text-red-500 font-black"><i class="fas fa-times-circle mr-2"></i> Bad Practice:</strong> ${q.badData}</p>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="text-lg font-black mb-4 text-slate-700">Select your evidence structure:</h3>
-                    ${buttonsHTML}
-                </div>
-
-                <div class="flex justify-end mt-4">
-                    <button id="submitBtn-${q.id}" onclick="submitAnswer(${q.id}, event)" class="hidden px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-black transition-all items-center shadow-lg shadow-blue-200 hover:shadow-xl hover:-translate-y-1 active:scale-95">
-                        Submit Evidence <i class="fas fa-arrow-right ml-2"></i>
-                    </button>
-                </div>
-
-                <!-- Reveal Section -->
-                <div id="reveal-${q.id}" class="reveal-section pt-8">
-                    <div class="border-t-2 border-dashed border-slate-200 mb-8"></div>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div>
-                            <h4 class="text-xl font-black text-emerald-500 mb-3 flex items-center"><i class="fas fa-check-circle mr-2 text-2xl"></i> Verified Structure</h4>
-                            <p class="text-slate-800 font-black text-lg mb-4 bg-emerald-50 inline-block px-4 py-2 rounded-xl border border-emerald-200">${q.options[q.correctIndex]}</p>
-                            
-                            <div class="bg-white border-l-4 border-blue-500 p-5 rounded-r-2xl shadow-sm mt-4 border-y border-r border-slate-100">
-                                <h5 class="font-black text-blue-600 mb-2 text-sm uppercase tracking-widest flex items-center"><i class="fas fa-lightbulb mr-2 text-yellow-400"></i> Forensic Logic:</h5>
-                                <p class="text-slate-600 text-sm font-semibold leading-relaxed">${q.reasoning}</p>
+                    contextHTML = `
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner relative overflow-hidden flex flex-col justify-center">
+                                <div class="absolute -right-4 -top-4 text-slate-200 text-6xl opacity-50"><i class="fas fa-book-open"></i></div>
+                                <p class="text-slate-600 mb-4 text-base font-semibold leading-relaxed relative z-10"><strong class="text-slate-800 font-black"><i class="fas fa-book-open text-purple-500 mr-2"></i> Core Concept:</strong> ${q.concept}</p>
+                                <p class="text-slate-500 text-sm font-semibold bg-blue-50 p-4 rounded-xl border border-blue-100 relative z-10"><strong class="text-blue-600 font-black"><i class="fas fa-microscope mr-2"></i> Forensic Application:</strong> ${q.application}</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-3xl border-2 border-slate-100 shadow-inner flex flex-col items-center justify-center relative min-h-[250px]">
+                                <span class="absolute top-3 left-4 text-[10px] text-slate-400 uppercase tracking-widest font-black bg-white border border-slate-200 px-3 py-1 rounded-full shadow-sm">Visual Example</span>
+                                ${q.customHTML ? q.customHTML : `<div class="chart-container"><canvas id="canvas-front-${q.id}"></canvas></div>`}
                             </div>
                         </div>
-                        <div class="bg-slate-50 p-5 rounded-3xl border-2 border-slate-100 shadow-inner flex flex-col items-center justify-center relative">
-                            <span class="absolute top-3 left-4 text-[10px] text-slate-400 uppercase tracking-widest font-black bg-white border border-slate-200 px-3 py-1 rounded-full shadow-sm">Target Visual</span>
-                            ${q.customHTML ? q.customHTML : `<div class="chart-container"><canvas id="canvas-${q.id}"></canvas></div>`}
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.appendChild(block);
-        });
+                    `;
+                    
+                    revealHTML = `
+                        <div class="grid grid-cols-1 gap-8">
+                            <div>
+                                <h4 class="text-xl font-black text-emerald-500 mb-3 flex items-center"><i class="fas fa-check-circle mr-2 text-2xl"></i> Verified Concept</h4>
+                                <p class="text-slate-800 font-black text-lg mb-4 bg-emerald-50 inline-block px-4 py-2 rounded-xl border border-emerald-200">${q.options1[q.correctIndex1]}</p>
+                                
+                                <h4 class="text-xl font-black text-emerald-500 mb-3 mt-4 flex items-center"><i class="fas fa-wrench mr-2 text-2xl"></i> Verified Structure</h4>
+                                <p class="text-slate-800 font-black text-lg mb-4 bg-emerald-50 inline-block px-4 py-2 rounded-xl border border-emerald-200">${q.options2[q.correctIndex2]}</p>
 
-        // Tab Switching Logic
-        function switchTab(tabId) {
-            ['tab-theory', 'tab-lab'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-                document.getElementById(id).classList.remove('block');
-                document.getElementById('nav-' + id.split('-')[1]).classList.remove('active');
+                                <div class="bg-white border-l-4 border-blue-500 p-5 rounded-r-2xl shadow-sm mt-4 border-y border-r border-slate-100">
+                                    <h5 class="font-black text-blue-600 mb-2 text-sm uppercase tracking-widest flex items-center"><i class="fas fa-lightbulb mr-2 text-yellow-400"></i> Forensic Logic:</h5>
+                                    <p class="text-slate-600 text-sm font-semibold leading-relaxed mb-3"><strong>Concept:</strong> ${q.reasoning1}</p>
+                                    <p class="text-slate-600 text-sm font-semibold leading-relaxed"><strong>Build:</strong> ${q.reasoning2}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    let buttonsHTML1 = '';
+                    q.options.forEach((opt, optIdx) => {
+                        const iconClass = getIconForOption(opt);
+                        buttonsHTML1 += `<button id="btn-${q.id}-q1-${optIdx}" onclick="selectOption(${q.id}, 'q1', ${optIdx}, 1)" class="mcq-btn w-full text-left px-5 py-4 rounded-xl font-bold text-slate-600 mb-3 flex items-center justify-between group">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mr-4 text-blue-500 border border-slate-100 shadow-sm group-hover:bg-white transition-colors">
+                                    <i class="fas ${iconClass} text-xl"></i>
+                                </div>
+                                <span class="text-[1.05rem]">${String.fromCharCode(65 + optIdx)}. ${opt}</span>
+                            </div>
+                            <i class="far fa-circle text-slate-300 text-2xl group-hover:text-blue-300" id="icon-${q.id}-q1-${optIdx}"></i>
+                        </button>`;
+                    });
+
+                    questionsHTML = `
+                        <div class="mb-6">
+                            <h3 class="text-lg font-black mb-4 text-slate-700">${q.question || 'Select your evidence structure:'}</h3>
+                            ${buttonsHTML1}
+                        </div>
+                    `;
+
+                    contextHTML = `
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner mb-6 relative overflow-hidden">
+                            <div class="absolute -right-4 -top-4 text-slate-200 text-6xl opacity-50"><i class="fas fa-search"></i></div>
+                            <p class="text-slate-600 mb-4 text-base font-semibold leading-relaxed relative z-10"><strong class="text-slate-800 font-black"><i class="fas fa-play text-blue-500 mr-2"></i> Scenario:</strong> ${q.scenario}</p>
+                            <p class="text-slate-500 text-sm font-semibold bg-red-50 p-4 rounded-xl border border-red-100 relative z-10"><strong class="text-red-500 font-black"><i class="fas fa-times-circle mr-2"></i> Bad Practice:</strong> ${q.badData}</p>
+                        </div>
+                    `;
+                    
+                    revealHTML = `
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div>
+                                <h4 class="text-xl font-black text-emerald-500 mb-3 flex items-center"><i class="fas fa-check-circle mr-2 text-2xl"></i> Verified Structure</h4>
+                                <p class="text-slate-800 font-black text-lg mb-4 bg-emerald-50 inline-block px-4 py-2 rounded-xl border border-emerald-200">${q.options[q.correctIndex]}</p>
+                                
+                                <div class="bg-white border-l-4 border-blue-500 p-5 rounded-r-2xl shadow-sm mt-4 border-y border-r border-slate-100">
+                                    <h5 class="font-black text-blue-600 mb-2 text-sm uppercase tracking-widest flex items-center"><i class="fas fa-lightbulb mr-2 text-yellow-400"></i> Forensic Logic:</h5>
+                                    <p class="text-slate-600 text-sm font-semibold leading-relaxed">${q.reasoning}</p>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-3xl border-2 border-slate-100 shadow-inner flex flex-col items-center justify-center relative">
+                                <span class="absolute top-3 left-4 text-[10px] text-slate-400 uppercase tracking-widest font-black bg-white border border-slate-200 px-3 py-1 rounded-full shadow-sm">Target Visual</span>
+                                ${q.customHTML ? q.customHTML : `<div class="chart-container"><canvas id="canvas-${q.id}"></canvas></div>`}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                block.innerHTML = `
+                    <div class="absolute top-0 right-0 ${q.type === 'fundamental' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'} text-xs font-black px-4 py-2 rounded-bl-2xl uppercase tracking-widest border-b border-l border-white">${prefixLabel} ${index + 1}</div>
+                    
+                    <div class="flex justify-between items-center mb-6 mt-2">
+                        <h2 class="text-2xl font-black text-slate-800 flex items-center">
+                            <i class="fas ${q.icon} ${q.iconColor} mr-3 text-2xl drop-shadow-sm"></i> ${q.title}
+                        </h2>
+                    </div>
+                    
+                    ${contextHTML}
+                    ${questionsHTML}
+
+                    <div class="flex justify-end mt-4">
+                        <button id="submitBtn-${q.id}" onclick="submitAnswer(${q.id}, event)" class="hidden px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-black transition-all items-center shadow-lg shadow-blue-200 hover:shadow-xl hover:-translate-y-1 active:scale-95">
+                            Submit Evidence <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+
+                    <!-- Reveal Section -->
+                    <div id="reveal-${q.id}" class="reveal-section pt-8">
+                        <div class="border-t-2 border-dashed border-slate-200 mb-8"></div>
+                        ${revealHTML}
+                    </div>
+                `;
+                container.appendChild(block);
             });
-            document.getElementById(tabId).classList.remove('hidden');
-            document.getElementById(tabId).classList.add('block');
-            document.getElementById('nav-' + tabId.split('-')[1]).classList.add('active');
         }
 
-        // Quiz Logic
+        // Initialize Rendering
+        renderQuizCards('fundamentals-container', fundamentalQuestions, 'Fundamental');
+        renderQuizCards('quiz-container', questions, 'Challenge');
+
+        // Draw the upfront charts for Fundamentals immediately after DOM insertion
+        fundamentalQuestions.forEach(q => {
+            if (q.chartFunc && !q.customHTML) {
+                const ctx = document.getElementById(`canvas-front-${q.id}`).getContext('2d');
+                q.chartFunc(ctx);
+            }
+        });
+
+        // Quiz Selection Logic
         let selectedOptions = {};
 
-        function selectOption(questionId, optIdx) {
+        function selectOption(questionId, subQ, optIdx, requiredCount) {
             if(document.getElementById(`reveal-${questionId}`).classList.contains('visible')) return;
 
-            const q = questions.find(q => q.id === questionId);
-            selectedOptions[questionId] = optIdx;
+            const allQuestions = [...fundamentalQuestions, ...questions];
+            const q = allQuestions.find(q => q.id === questionId);
+            
+            selectedOptions[questionId] = selectedOptions[questionId] || {};
+            selectedOptions[questionId][subQ] = optIdx;
 
-            q.options.forEach((_, idx) => {
-                const btn = document.getElementById(`btn-${questionId}-${idx}`);
-                const icon = document.getElementById(`icon-${questionId}-${idx}`);
-                btn.classList.remove('selected');
-                icon.classList.remove('fas', 'fa-check-circle', 'text-blue-500');
-                icon.classList.add('far', 'fa-circle', 'text-slate-300');
+            // Reset visual state for this sub-question
+            const optionsArray = subQ === 'q1' ? (q.options || q.options1) : q.options2;
+            optionsArray.forEach((_, idx) => {
+                const btn = document.getElementById(`btn-${questionId}-${subQ}-${idx}`);
+                const icon = document.getElementById(`icon-${questionId}-${subQ}-${idx}`);
+                if(btn && icon) {
+                    btn.classList.remove('selected');
+                    icon.classList.remove('fas', 'fa-check-circle', 'text-blue-500', 'text-purple-500');
+                    icon.classList.add('far', 'fa-circle', 'text-slate-300');
+                }
             });
 
-            const btn = document.getElementById(`btn-${questionId}-${optIdx}`);
-            const icon = document.getElementById(`icon-${questionId}-${optIdx}`);
+            // Set visual state for selected
+            const btn = document.getElementById(`btn-${questionId}-${subQ}-${optIdx}`);
+            const icon = document.getElementById(`icon-${questionId}-${subQ}-${optIdx}`);
             btn.classList.add('selected');
             icon.classList.remove('far', 'fa-circle', 'text-slate-300');
-            icon.classList.add('fas', 'fa-check-circle', 'text-blue-500');
+            icon.classList.add('fas', 'fa-check-circle', subQ === 'q1' ? 'text-blue-500' : 'text-purple-500');
 
-            const submitBtn = document.getElementById(`submitBtn-${questionId}`);
-            submitBtn.classList.remove('hidden');
-            submitBtn.classList.add('inline-flex');
+            // Check if all required answers are selected
+            const currentSelections = Object.keys(selectedOptions[questionId]).length;
+            if(currentSelections === requiredCount) {
+                const submitBtn = document.getElementById(`submitBtn-${questionId}`);
+                submitBtn.classList.remove('hidden');
+                submitBtn.classList.add('inline-flex');
+            }
         }
 
         function submitAnswer(questionId, event) {
-            const q = questions.find(q => q.id === questionId);
-            const selectedIdx = selectedOptions[questionId];
-            const btn = document.getElementById(`btn-${questionId}-${selectedIdx}`);
-            const isCorrect = selectedIdx === q.correctIndex;
+            const q = [...fundamentalQuestions, ...questions].find(q => q.id === questionId);
+            const selections = selectedOptions[questionId];
+            
+            let isCorrect = false;
+            if (q.type === 'fundamental') {
+                const q1Correct = selections.q1 === q.correctIndex1;
+                const q2Correct = selections.q2 === q.correctIndex2;
+                isCorrect = q1Correct && q2Correct;
+                
+                if (!q1Correct) document.getElementById(`btn-${questionId}-q1-${selections.q1}`).classList.add('wrong-highlight');
+                if (!q2Correct) document.getElementById(`btn-${questionId}-q2-${selections.q2}`).classList.add('wrong-highlight');
+            } else {
+                isCorrect = selections.q1 === q.correctIndex;
+                if (!isCorrect) document.getElementById(`btn-${questionId}-q1-${selections.q1}`).classList.add('wrong-highlight');
+            }
 
             if (!answeredQuestions.has(questionId)) {
-                answeredQuestions.add(questionId);
-                
                 if (isCorrect) {
+                    answeredQuestions.add(questionId);
                     currentScore++;
                     updateScoreboard();
                     const rect = event.target.getBoundingClientRect();
                     const x = (rect.left + (rect.width / 2)) / window.innerWidth;
                     const y = (rect.top + (rect.height / 2)) / window.innerHeight;
                     triggerConfetti(x, y);
+
+                    const revealDiv = document.getElementById(`reveal-${questionId}`);
+                    const submitBtn = document.getElementById(`submitBtn-${questionId}`);
+                    
+                    revealDiv.classList.add('visible');
+                    submitBtn.classList.add('hidden');
+
+                    if (q.type === 'fundamental') {
+                        const correctBtn1 = document.getElementById(`btn-${questionId}-q1-${q.correctIndex1}`);
+                        correctBtn1.classList.remove('wrong-highlight', 'selected');
+                        correctBtn1.classList.add('correct-highlight');
+                        document.getElementById(`icon-${questionId}-q1-${q.correctIndex1}`).className = 'fas fa-check-circle text-emerald-500 text-2xl';
+
+                        const correctBtn2 = document.getElementById(`btn-${questionId}-q2-${q.correctIndex2}`);
+                        correctBtn2.classList.remove('wrong-highlight', 'selected');
+                        correctBtn2.classList.add('correct-highlight');
+                        document.getElementById(`icon-${questionId}-q2-${q.correctIndex2}`).className = 'fas fa-check-circle text-emerald-500 text-2xl';
+                        
+                        q.options1.forEach((_, idx) => {
+                            const b = document.getElementById(`btn-${questionId}-q1-${idx}`);
+                            b.classList.add('disabled'); b.onclick = null;
+                        });
+                        q.options2.forEach((_, idx) => {
+                            const b = document.getElementById(`btn-${questionId}-q2-${idx}`);
+                            b.classList.add('disabled'); b.onclick = null;
+                        });
+                    } else {
+                        const correctBtn = document.getElementById(`btn-${questionId}-q1-${q.correctIndex}`);
+                        correctBtn.classList.remove('wrong-highlight', 'selected');
+                        correctBtn.classList.add('correct-highlight');
+                        document.getElementById(`icon-${questionId}-q1-${q.correctIndex}`).className = 'fas fa-check-circle text-emerald-500 text-2xl';
+
+                        q.options.forEach((_, idx) => {
+                            const b = document.getElementById(`btn-${questionId}-q1-${idx}`);
+                            b.classList.add('disabled'); b.onclick = null;
+                        });
+                    }
+
+                    if (q.type !== 'fundamental' && q.chartFunc) {
+                        const ctx = document.getElementById(`canvas-${questionId}`).getContext('2d');
+                        q.chartFunc(ctx);
+                    }
                 } else {
                     const card = document.getElementById(`card-${questionId}`);
                     card.classList.add('shake-anim');
-                    setTimeout(() => card.classList.remove('shake-anim'), 400);
-                    btn.classList.add('wrong-highlight');
+                    setTimeout(() => {
+                        card.classList.remove('shake-anim');
+                        if (q.type === 'fundamental') {
+                            if (selections.q1 !== q.correctIndex1) document.getElementById(`btn-${questionId}-q1-${selections.q1}`).classList.remove('wrong-highlight');
+                            if (selections.q2 !== q.correctIndex2) document.getElementById(`btn-${questionId}-q2-${selections.q2}`).classList.remove('wrong-highlight');
+                        } else {
+                            document.getElementById(`btn-${questionId}-q1-${selections.q1}`).classList.remove('wrong-highlight');
+                        }
+                    }, 800);
                 }
-            }
-
-            const revealDiv = document.getElementById(`reveal-${questionId}`);
-            const submitBtn = document.getElementById(`submitBtn-${questionId}`);
-            
-            revealDiv.classList.add('visible');
-            submitBtn.classList.add('hidden');
-
-            const correctBtn = document.getElementById(`btn-${questionId}-${q.correctIndex}`);
-            correctBtn.classList.remove('wrong-highlight', 'selected');
-            correctBtn.classList.add('correct-highlight');
-            const correctIcon = document.getElementById(`icon-${questionId}-${q.correctIndex}`);
-            correctIcon.className = 'fas fa-check-circle text-emerald-500 text-2xl';
-
-            q.options.forEach((_, idx) => {
-                const b = document.getElementById(`btn-${questionId}-${idx}`);
-                b.classList.add('disabled');
-                b.onclick = null;
-            });
-
-            if (q.chartFunc) {
-                const ctx = document.getElementById(`canvas-${questionId}`).getContext('2d');
-                q.chartFunc(ctx);
             }
         }
 
