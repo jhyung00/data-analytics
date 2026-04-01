@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Alteryx Designer: Class 2 Data Cleansing</title>
     
     <!-- Scripts & Fonts -->
@@ -49,10 +49,16 @@
 
     <style>
         /* Custom Gamified Scrollbar */
-        ::-webkit-scrollbar { width: 12px; height: 12px; }
-        ::-webkit-scrollbar-track { background: #cbd5e1; border-left: 3px solid #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #3b82f6; border: 3px solid #0f172a; border-radius: 6px; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #cbd5e1; border-left: 2px solid #0f172a; border-top: 2px solid #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border: 2px solid #0f172a; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #2563eb; }
+
+        @media (min-width: 768px) {
+            ::-webkit-scrollbar { width: 12px; height: 12px; }
+            ::-webkit-scrollbar-track { border-left: 3px solid #0f172a; border-top: 3px solid #0f172a; }
+            ::-webkit-scrollbar-thumb { border: 3px solid #0f172a; border-radius: 6px; }
+        }
 
         body {
             font-family: 'Nunito', sans-serif;
@@ -73,9 +79,9 @@
 
         /* Animation Classes */
         @keyframes popIn { 
-            0% { transform: scale(0.9); opacity: 0; } 
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); opacity: 1; } 
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; } 
+            50% { transform: translate(-50%, -50%) scale(1.02); }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 
         }
         @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
         .animate-pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
@@ -88,9 +94,12 @@
             border-radius: 16px;
             box-shadow: 4px 4px 0px rgba(15, 23, 42, 1);
             transition: transform 0.2s, box-shadow 0.2s;
-            padding: 32px;
-            margin-bottom: 40px;
+            padding: 24px;
+            margin-bottom: 30px;
             scroll-margin-top: 20px;
+        }
+        @media (min-width: 768px) {
+            .game-card { padding: 32px; margin-bottom: 40px; }
         }
 
         /* --- LESSON PLAN OVERLAY --- */
@@ -103,19 +112,34 @@
             display: flex; 
             color: #0f172a;
             overflow: hidden;
+            flex-direction: column; /* Mobile stack */
+        }
+        @media (min-width: 768px) {
+            #lesson-plan-overlay { flex-direction: row; }
         }
 
         /* Sidebar Gamified */
         .sidebar {
-            width: 340px;
+            width: 100%;
             background-color: #fff;
-            height: 100%;
+            height: auto;
+            max-height: 40vh; /* Limits height on mobile */
             overflow-y: auto;
-            border-right: 4px solid #0f172a;
-            box-shadow: 4px 4px 0px rgba(15, 23, 42, 1);
+            border-bottom: 4px solid #0f172a;
+            box-shadow: 0px 4px 0px rgba(15, 23, 42, 1);
             flex-shrink: 0;
             position: relative;
             z-index: 10;
+        }
+        @media (min-width: 768px) {
+            .sidebar {
+                width: 340px;
+                max-height: none;
+                height: 100%;
+                border-bottom: none;
+                border-right: 4px solid #0f172a;
+                box-shadow: 4px 4px 0px rgba(15, 23, 42, 1);
+            }
         }
 
         .logo-area { padding: 24px; border-bottom: 4px solid #0f172a; text-align: center; background: #3b82f6; color: white; }
@@ -130,34 +154,41 @@
         .nav-links a.active { background-color: #3b82f6; color: white; border-color: #0f172a; box-shadow: 2px 2px 0px rgba(15, 23, 42, 1); transform: translateX(4px); }
 
         /* Main Content */
-        .main-content { flex: 1; padding: 40px 60px; overflow-y: auto; scroll-behavior: smooth; position: relative; }
+        .main-content { flex: 1; padding: 20px; overflow-y: auto; scroll-behavior: smooth; position: relative; }
+        @media (min-width: 768px) {
+            .main-content { padding: 40px 60px; }
+        }
 
-        h2 { border-bottom: 4px solid #0f172a; padding-bottom: 15px; margin-top: 0; font-size: 28px; font-weight: 900; color: #3b82f6; display: flex; align-items: center; justify-content: space-between; }
-        h2 img { width: 48px; height: 48px; margin-left: 15px; border: 2px solid #0f172a; border-radius: 12px; box-shadow: 2px 2px 0px rgba(15,23,42,1); }
+        h2 { border-bottom: 4px solid #0f172a; padding-bottom: 15px; margin-top: 0; font-size: 24px; font-weight: 900; color: #3b82f6; display: flex; align-items: center; justify-content: space-between; gap: 8px;}
+        @media (min-width: 768px) { h2 { font-size: 28px; } }
+        h2 img { width: 40px; height: 40px; border: 2px solid #0f172a; border-radius: 12px; box-shadow: 2px 2px 0px rgba(15,23,42,1); flex-shrink: 0;}
+        @media (min-width: 768px) { h2 img { width: 48px; height: 48px; } }
 
         h3 { color: #0f172a; margin-top: 25px; display: flex; align-items: center; font-size: 20px; font-weight: 900; }
         h3 img { margin-right: 12px; width: 32px; height: 32px; }
         h4 { font-weight: 900; font-size: 16px; color: #0f172a; margin-top: 20px; }
 
-        p, li { line-height: 1.6; color: #334155; margin-bottom: 10px; font-size: 16px; font-weight: 700; }
+        p, li { line-height: 1.6; color: #334155; margin-bottom: 10px; font-size: 15px; font-weight: 700; }
+        @media (min-width: 768px) { p, li { font-size: 16px; } }
         ul { list-style-type: disc; padding-left: 24px; }
 
         /* Tool Cards Gamified */
-        .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;}
-        .tool-card { background: white; border: 3px solid #0f172a; border-radius: 16px; padding: 20px; text-align: center; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); }
+        .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; margin-top: 20px;}
+        @media (min-width: 768px) { .tool-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; } }
+        .tool-card { background: white; border: 3px solid #0f172a; border-radius: 16px; padding: 16px; text-align: center; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); }
         .tool-card:hover { transform: translateY(-4px); box-shadow: 2px 2px 0px rgba(15, 23, 42, 1); border-color: #3b82f6; }
-        .tool-card img { width: 48px; height: 48px; margin: 0 auto 12px; border-radius: 8px; border: 2px solid transparent;}
-        .tool-card h4 { font-weight: 900; font-size: 16px; color: #0f172a; margin-bottom: 8px; margin-top: 0;}
-        .tool-card p { font-size: 13px; color: #64748b; line-height: 1.5; margin: 0; font-weight: 700;}
+        .tool-card img { width: 40px; height: 40px; margin: 0 auto 12px; border-radius: 8px; border: 2px solid transparent;}
+        .tool-card h4 { font-weight: 900; font-size: 15px; color: #0f172a; margin-bottom: 8px; margin-top: 0;}
+        .tool-card p { font-size: 12px; color: #64748b; line-height: 1.5; margin: 0; font-weight: 700;}
 
         /* Callouts Gamified */
-        .info-box { background-color: rgba(16, 185, 129, 0.1); border: 3px solid #10b981; padding: 20px; margin: 20px 0; border-radius: 12px; font-weight: 800; color: #0f172a; box-shadow: 4px 4px 0px rgba(16,185,129,0.3); font-size: 15px; }
-        .warning-box { background-color: rgba(245, 158, 11, 0.1); border: 3px solid #f59e0b; padding: 20px; margin: 20px 0; border-radius: 12px; font-weight: 800; color: #0f172a; box-shadow: 4px 4px 0px rgba(245,158,11,0.3); font-size: 15px; }
-        .error-box { background-color: rgba(239, 68, 68, 0.1); border: 3px solid #ef4444; padding: 20px; margin: 20px 0; border-radius: 12px; font-weight: 800; color: #0f172a; box-shadow: 4px 4px 0px rgba(239,68,68,0.3); font-size: 15px; }
+        .info-box { background-color: rgba(16, 185, 129, 0.1); border: 3px solid #10b981; padding: 16px; margin: 16px 0; border-radius: 12px; font-weight: 800; color: #0f172a; box-shadow: 4px 4px 0px rgba(16,185,129,0.3); font-size: 14px; }
+        .warning-box { background-color: rgba(245, 158, 11, 0.1); border: 3px solid #f59e0b; padding: 16px; margin: 16px 0; border-radius: 12px; font-weight: 800; color: #0f172a; box-shadow: 4px 4px 0px rgba(245,158,11,0.3); font-size: 14px; }
+        .error-box { background-color: rgba(239, 68, 68, 0.1); border: 3px solid #ef4444; padding: 16px; margin: 16px 0; border-radius: 12px; font-weight: 800; color: #0f172a; box-shadow: 4px 4px 0px rgba(239,68,68,0.3); font-size: 14px; }
 
         /* Tables Gamified */
-        .ref-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; margin: 15px 0; border: 3px solid #0f172a; border-radius: 12px; overflow: hidden; box-shadow: 4px 4px 0px rgba(15,23,42,1); background: white;}
-        .ref-table th, .ref-table td { border-bottom: 2px solid #0f172a; border-right: 2px solid #0f172a; padding: 12px; text-align: left; font-weight: 700;}
+        .ref-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; margin: 15px 0; border: 3px solid #0f172a; border-radius: 12px; overflow: hidden; box-shadow: 4px 4px 0px rgba(15,23,42,1); background: white;}
+        .ref-table th, .ref-table td { border-bottom: 2px solid #0f172a; border-right: 2px solid #0f172a; padding: 10px; text-align: left; font-weight: 700;}
         .ref-table th:last-child, .ref-table td:last-child { border-right: none; }
         .ref-table tr:last-child td { border-bottom: none; }
         .ref-table th { background-color: #0f172a; font-weight: 900; color: white; }
@@ -165,10 +196,10 @@
         .ref-table td:first-child { font-family: 'JetBrains Mono', monospace; font-weight: 900; color: #3b82f6; }
 
         /* Code Blocks */
-        pre { background: #0f172a; color: white; padding: 20px; border-radius: 12px; font-size: 14px; font-family: 'JetBrains Mono', monospace; border: 3px solid rgba(255,255,255,0.1); margin: 15px 0; box-shadow: 4px 4px 0px rgba(15,23,42,1); font-weight: 600;}
+        pre { background: #0f172a; color: white; padding: 16px; border-radius: 12px; font-size: 13px; font-family: 'JetBrains Mono', monospace; border: 3px solid rgba(255,255,255,0.1); margin: 15px 0; box-shadow: 4px 4px 0px rgba(15,23,42,1); font-weight: 600; overflow-x: auto;}
 
         /* Buttons Gamified */
-        .start-btn { display: block; width: 100%; max-width: 300px; margin: 40px auto 0; background: #3b82f6; color: white; border: 4px solid #0f172a; padding: 16px 32px; font-size: 20px; font-weight: 900; border-radius: 16px; cursor: pointer; box-shadow: 4px 4px 0px rgba(15,23,42,1); transition: all 0.2s; text-align: center; }
+        .start-btn { display: block; width: 100%; max-width: 300px; margin: 40px auto 0; background: #3b82f6; color: white; border: 4px solid #0f172a; padding: 16px 32px; font-size: 18px; font-weight: 900; border-radius: 16px; cursor: pointer; box-shadow: 4px 4px 0px rgba(15,23,42,1); transition: all 0.2s; text-align: center; }
         .start-btn:hover { transform: translateY(4px); box-shadow: 0px 0px 0px rgba(15,23,42,1); background: #2563eb; }
 
         .preview-btn { background-color: white; border: 3px solid #0f172a; color: #0f172a; font-size: 14px; padding: 10px 20px; border-radius: 12px; cursor: pointer; margin-top: 15px; display: inline-flex; align-items: center; gap: 8px; font-weight: 900; box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); transition: all 0.2s; font-family: 'Nunito', sans-serif; }
@@ -176,13 +207,15 @@
         .preview-btn:active { transform: translateY(2px); box-shadow: 2px 2px 0px rgba(15, 23, 42, 1); }
 
         /* Data Preview Modal (Gamified) */
-        #mini-preview-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 900px; background: white; z-index: 300; border-radius: 16px; box-shadow: 8px 8px 0px rgba(15, 23, 42, 1); border: 4px solid #0f172a; }
+        #mini-preview-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 900px; max-height: 90vh; background: white; z-index: 300; border-radius: 16px; box-shadow: 8px 8px 0px rgba(15, 23, 42, 1); border: 4px solid #0f172a; display: flex; flex-direction: column;}
         #mini-preview-backdrop { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.7); z-index: 299; backdrop-filter: blur(4px); }
-        .modal-header { padding: 16px 24px; border-bottom: 4px solid #0f172a; display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; border-radius: 12px 12px 0 0; }
-        .modal-body { padding: 20px; max-height: 500px; overflow: auto; }
+        .modal-header { padding: 12px 16px; border-bottom: 4px solid #0f172a; display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; border-radius: 12px 12px 0 0; flex-shrink: 0;}
+        @media (min-width: 768px) { .modal-header { padding: 16px 24px; } }
+        .modal-body { padding: 16px; overflow: auto; flex: 1; -webkit-overflow-scrolling: touch;}
         
-        .preview-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; font-family: 'JetBrains Mono', monospace; border: 3px solid #0f172a; border-radius: 8px; font-weight: 700;}
-        .preview-table th, .preview-table td { border-bottom: 2px solid #0f172a; border-right: 2px solid #0f172a; padding: 10px; text-align: left; position: relative; white-space: pre; color: #0f172a;}
+        .preview-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; font-family: 'JetBrains Mono', monospace; border: 3px solid #0f172a; border-radius: 8px; font-weight: 700;}
+        .preview-table th, .preview-table td { border-bottom: 2px solid #0f172a; border-right: 2px solid #0f172a; padding: 8px; text-align: left; position: relative; white-space: pre; color: #0f172a;}
+        @media (min-width: 768px) { .preview-table th, .preview-table td { padding: 10px; font-size: 13px; } }
         .preview-table th:last-child, .preview-table td:last-child { border-right: none; }
         .preview-table tr:last-child td { border-bottom: none; }
         .preview-table th { background: #0f172a; position: sticky; top: 0; z-index: 10; font-weight: 900; color: white; }
@@ -196,11 +229,13 @@
         .cell-changed:hover::before { content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(4px); border: 6px solid transparent; border-top-color: #0f172a; z-index: 20; }
 
         /* --- SIMULATOR CANVAS (Gamified) --- */
-        .canvas-bg { background-color: transparent; height: 400px; position: relative; overflow: auto; flex-shrink: 0; }
+        .canvas-bg { background-color: transparent; height: 300px; position: relative; overflow: auto; flex-shrink: 0; touch-action: pan-x pan-y; }
+        @media (min-width: 768px) { .canvas-bg { height: 400px; } }
         
         #canvas-content-wrapper { min-width: 1200px; height: 100%; position: relative; }
 
-        .tool-node { width: 64px; height: 64px; position: absolute; cursor: move; z-index: 10; user-select: none; transition: transform 0.1s; }
+        .tool-node { width: 56px; height: 56px; position: absolute; cursor: move; z-index: 10; user-select: none; transition: transform 0.1s; touch-action: none;}
+        @media (min-width: 768px) { .tool-node { width: 64px; height: 64px; } }
         .tool-node:hover { transform: translateY(-2px); }
         .tool-icon { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         .tool-icon img { width: 100%; height: 100%; border-radius: 12px; border: 3px solid #0f172a; box-shadow: 4px 4px 0px rgba(15, 23, 42, 1); pointer-events: none; background: white;}
@@ -208,12 +243,12 @@
         .tool-label { position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #0f172a; white-space: nowrap; background: white; padding: 2px 8px; border-radius: 6px; border: 2px solid #0f172a; pointer-events: none; box-shadow: 2px 2px 0px rgba(15, 23, 42, 1); z-index: 12;}
 
         /* Sim Anchors */
-        .sim-anchor { position: absolute; width: 0; height: 0; cursor: pointer; z-index: 20; border-top: 8px solid transparent; border-bottom: 8px solid transparent; transition: transform 0.1s; filter: drop-shadow(2px 2px 0px rgba(15,23,42,1)); }
+        .sim-anchor { position: absolute; width: 0; height: 0; cursor: pointer; z-index: 20; border-top: 10px solid transparent; border-bottom: 10px solid transparent; transition: transform 0.1s; filter: drop-shadow(2px 2px 0px rgba(15,23,42,1)); }
         .sim-anchor:hover { transform: scale(1.3); }
-        .sim-anchor-in { top: 50%; left: -12px; transform: translateY(-50%); border-left: 12px solid #10b981; }
-        .sim-anchor-out { top: 50%; right: -12px; transform: translateY(-50%); border-left: 12px solid #10b981; }
-        .sim-anchor-true { top: 25%; right: -12px; transform: translateY(-50%); border-left: 12px solid #10b981; }
-        .sim-anchor-false { top: 75%; right: -12px; transform: translateY(-50%); border-left: 12px solid #10b981; }
+        .sim-anchor-in { top: 50%; left: -14px; transform: translateY(-50%); border-left: 14px solid #10b981; }
+        .sim-anchor-out { top: 50%; right: -14px; transform: translateY(-50%); border-left: 14px solid #10b981; }
+        .sim-anchor-true { top: 25%; right: -14px; transform: translateY(-50%); border-left: 14px solid #10b981; }
+        .sim-anchor-false { top: 75%; right: -14px; transform: translateY(-50%); border-left: 14px solid #10b981; }
         .anchor-label { position: absolute; font-size: 10px; font-weight: 900; color: #0f172a; pointer-events: none; background: white; padding: 0px 4px; border-radius: 4px; border: 1px solid #0f172a;}
         
         .sim-anchor.active-anchor { border-left-color: #f59e0b; }
@@ -236,13 +271,13 @@
 
     <!-- DATA PREVIEW MODAL -->
     <div id="mini-preview-backdrop" onclick="closePreview()"></div>
-    <div id="mini-preview-modal" class="animate-pop-in">
+    <div id="mini-preview-modal" style="display: none;" class="animate-pop-in">
         <div class="modal-header">
-            <span class="font-black text-xl text-[#0f172a] flex items-center gap-3"><i class="fa-solid fa-wand-magic-sparkles text-[#3b82f6] text-2xl"></i> Transformation Preview</span>
+            <span class="font-black text-lg md:text-xl text-[#0f172a] flex items-center gap-2 md:gap-3"><i class="fa-solid fa-wand-magic-sparkles text-[#3b82f6] text-xl md:text-2xl"></i> Transformation Preview</span>
             <button onclick="closePreview()" class="text-[#0f172a] hover:text-[#ef4444] text-2xl transition-colors"><i class="fa-solid fa-circle-xmark"></i></button>
         </div>
-        <div class="bg-[#f1f5f9] px-6 py-3 border-b-4 border-[#0f172a] flex gap-6 text-sm font-bold text-[#0f172a]">
-            <div class="flex items-center gap-2"><div class="w-4 h-4 bg-[#fef08a] border-2 border-[#f59e0b] rounded"></div> Changed Value (Hover for previous)</div>
+        <div class="bg-[#f1f5f9] px-4 md:px-6 py-3 border-b-4 border-[#0f172a] flex flex-wrap gap-4 md:gap-6 text-xs md:text-sm font-bold text-[#0f172a]">
+            <div class="flex items-center gap-2"><div class="w-4 h-4 bg-[#fef08a] border-2 border-[#f59e0b] rounded"></div> Changed Value (Hover for prev)</div>
             <div class="flex items-center gap-2"><div class="w-4 h-4 bg-[#bbf7d0] border-2 border-[#10b981] rounded"></div> New Column</div>
         </div>
         <div class="modal-body" id="preview-content">
@@ -254,7 +289,7 @@
     <div id="lesson-plan-overlay">
         <!-- Sidebar -->
         <div class="sidebar flex flex-col">
-            <div class="logo-area">
+            <div class="logo-area flex-shrink-0">
                 <h1>Alteryx Designer</h1>
                 <span>Class 2: Data Cleansing</span>
             </div>
@@ -280,8 +315,8 @@
             </ul>
         </div>
         
-        <!-- Sidebar Resizer -->
-        <div class="resizer" id="sidebar-resizer" onmousedown="initSidebarResize(event)"><i class="fa-solid fa-grip-lines-vertical text-white"></i></div>
+        <!-- Sidebar Resizer (Hidden on mobile) -->
+        <div class="resizer hidden md:flex" id="sidebar-resizer" onmousedown="initSidebarResize(event)" ontouchstart="initSidebarResize(event)"><i class="fa-solid fa-grip-lines-vertical text-white"></i></div>
 
         <!-- MAIN CONTENT -->
         <div class="main-content" id="lp-content">
@@ -342,9 +377,9 @@
             <section id="dt-specifiers" class="game-card">
                 <h2>DateTime Specifiers</h2>
                 <p>Specifiers always begin with a percent sign (%), followed by a case-sensitive letter or number.</p>
-                <div class="info-box flex items-center justify-between">
+                <div class="info-box flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <span><i class="fa-solid fa-book-bookmark text-[#10b981] mr-2 text-xl"></i> Access the complete guide:</span>
-                    <a href="https://help.alteryx.com/current/en/designer/functions/datetime-functions.html#date-time-function-reference" target="_blank" class="bg-white border-2 border-[#0f172a] text-[#0f172a] px-4 py-2 rounded-lg font-black hover:bg-[#10b981] hover:text-white transition-colors shadow-[2px_2px_0px_#0f172a]">
+                    <a href="https://help.alteryx.com/current/en/designer/functions/datetime-functions.html#date-time-function-reference" target="_blank" class="bg-white border-2 border-[#0f172a] text-[#0f172a] px-4 py-2 rounded-lg font-black hover:bg-[#10b981] hover:text-white transition-colors shadow-[2px_2px_0px_#0f172a] whitespace-nowrap">
                         <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Official Reference
                     </a>
                 </div>
@@ -352,35 +387,43 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div>
                         <h4>Year</h4>
-                        <table class="ref-table">
-                            <tr><th>Specifier</th><th>Output</th><th>Input Support</th></tr>
-                            <tr><td>%y</td><td>Last two digits ("22")</td><td>Up to 4 digits (1959-2058)</td></tr>
-                            <tr><td>%Y</td><td>Four digits ("2022")</td><td>Two or four digits</td></tr>
-                        </table>
+                        <div class="overflow-x-auto">
+                            <table class="ref-table">
+                                <tr><th>Specifier</th><th>Output</th><th>Input Support</th></tr>
+                                <tr><td>%y</td><td>Last two digits ("22")</td><td>Up to 4 digits (1959-2058)</td></tr>
+                                <tr><td>%Y</td><td>Four digits ("2022")</td><td>Two or four digits</td></tr>
+                            </table>
+                        </div>
 
                         <h4>Month</h4>
-                        <table class="ref-table">
-                            <tr><th>Specifier</th><th>Output</th><th>Input Support</th></tr>
-                            <tr><td>%b / %h</td><td>Abbrev. Name ("Sep")</td><td>Abbrev. month name</td></tr>
-                            <tr><td>%B</td><td>Full Name ("September")</td><td>Full or Abbrev. name</td></tr>
-                            <tr><td>%m</td><td>Month Number (01-12)</td><td>1 or 2 digits</td></tr>
-                        </table>
+                        <div class="overflow-x-auto">
+                            <table class="ref-table">
+                                <tr><th>Specifier</th><th>Output</th><th>Input Support</th></tr>
+                                <tr><td>%b / %h</td><td>Abbrev. Name ("Sep")</td><td>Abbrev. month name</td></tr>
+                                <tr><td>%B</td><td>Full Name ("September")</td><td>Full or Abbrev. name</td></tr>
+                                <tr><td>%m</td><td>Month Number (01-12)</td><td>1 or 2 digits</td></tr>
+                            </table>
+                        </div>
                     </div>
                     <div>
                         <h4>Day</h4>
-                        <table class="ref-table">
-                            <tr><th>Specifier</th><th>Output</th><th>Input Support</th></tr>
-                            <tr><td>%d</td><td>Day of Month ("01")</td><td>1 or 2 digits</td></tr>
-                            <tr><td>%e</td><td>Day of month (space)</td><td>1 or 2 digits</td></tr>
-                            <tr><td>%j</td><td>Day of Year (001-366)</td><td>3-digit day of year</td></tr>
-                        </table>
+                        <div class="overflow-x-auto">
+                            <table class="ref-table">
+                                <tr><th>Specifier</th><th>Output</th><th>Input Support</th></tr>
+                                <tr><td>%d</td><td>Day of Month ("01")</td><td>1 or 2 digits</td></tr>
+                                <tr><td>%e</td><td>Day of month (space)</td><td>1 or 2 digits</td></tr>
+                                <tr><td>%j</td><td>Day of Year (001-366)</td><td>3-digit day of year</td></tr>
+                            </table>
+                        </div>
 
                         <h4>Day of Week</h4>
-                        <table class="ref-table">
-                            <tr><th>Specifier</th><th>Output</th><th>Input Support</th></tr>
-                            <tr><td>%a</td><td>Abbrev. Weekday ("Mon")</td><td>Valid abbrev.</td></tr>
-                            <tr><td>%A</td><td>Full Weekday ("Monday")</td><td>Valid name</td></tr>
-                        </table>
+                        <div class="overflow-x-auto">
+                            <table class="ref-table">
+                                <tr><th>Specifier</th><th>Output</th><th>Input Support</th></tr>
+                                <tr><td>%a</td><td>Abbrev. Weekday ("Mon")</td><td>Valid abbrev.</td></tr>
+                                <tr><td>%A</td><td>Full Weekday ("Monday")</td><td>Valid name</td></tr>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -390,7 +433,7 @@
                 <h2>0. Setup & Objectives</h2>
                 <div class="info-box">
                     <strong><i class="fa-solid fa-file-excel text-[#10b981] mr-2"></i> File:</strong> Cab Company Data.xlsx<br>
-                    <strong><i class="fa-solid fa-briefcase text-[#10b981] mr-2 mt-2"></i> Context:</strong> You are an analyst cleaning cab ride data for analysis.
+                    <strong><i class="fa-solid fa-briefcase text-[#10b981] mr-2 mt-2"></i> Context:</strong> You are an analyst cleaning real-world ride data (Ride4Me).
                 </div>
                 <h4>Learning Objectives:</h4>
                 <ul class="space-y-2 mt-2">
@@ -406,7 +449,7 @@
 
             <!-- 1. INPUT -->
             <section id="step1" class="game-card">
-                <h2>1. Start workflow: Input Data <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></h2>
+                <h2>1. Input Data <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></h2>
                 <p><strong>Action:</strong> Drag the <strong>Input Data</strong> tool to the canvas and connect "Cab Company Data.xlsx".</p>
                 <h4>Observe:</h4>
                 <ul class="space-y-2 mt-2 mb-6">
@@ -418,7 +461,7 @@
 
             <!-- 2. BROWSE -->
             <section id="step2" class="game-card">
-                <h2>2. Add visibility: Browse <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/BrowseV2_71x71.png" alt="Browse"></h2>
+                <h2>2. Browse <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/BrowseV2_71x71.png" alt="Browse"></h2>
                 <p><strong>Action:</strong> Connect <strong>Browse</strong> tool to Input Data. Run.</p>
                 <h4>Inspect:</h4>
                 <ul class="space-y-2 mt-2">
@@ -431,7 +474,7 @@
 
             <!-- 3. SELECT -->
             <section id="step3" class="game-card">
-                <h2>3. Fix structure first: Select <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" alt="Select"></h2>
+                <h2>3. Select <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" alt="Select"></h2>
                 <p><strong>Action:</strong> Add <strong>Select</strong> tool.</p>
                 <ul class="space-y-2 mt-2">
                     <li>Clean up field names (make formatting consistent).</li>
@@ -445,7 +488,7 @@
 
             <!-- 4. CLEANSE CAB -->
             <section id="step4" class="game-card">
-                <h2>4. Clean categorical text: Cab Company <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></h2>
+                <h2>4. Clean Categorical <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></h2>
                 <p><strong>Action:</strong> Add <strong>Data Cleansing</strong> tool.</p>
                 <h4>Configuration for [Cab Company]:</h4>
                 <ul class="space-y-2 mt-2 mb-6">
@@ -458,7 +501,7 @@
 
             <!-- 5. CLEANSE START -->
             <section id="step5" class="game-card">
-                <h2>5. Clean whitespace: Start Point <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></h2>
+                <h2>5. Clean Whitespace <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></h2>
                 <p><strong>Action:</strong> Add another <strong>Data Cleansing</strong> tool.</p>
                 <h4>Configuration for [Start Point]:</h4>
                 <ul class="space-y-2 mt-2 mb-6">
@@ -470,7 +513,7 @@
 
             <!-- 6. REPLACE NULLS -->
             <section id="step6" class="game-card">
-                <h2>6. Replace “meaningful nulls” <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></h2>
+                <h2>6. Replace Meaningful Nulls <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></h2>
                 <p><strong>Logic:</strong> In this dataset, null rainfall doesn’t mean “unknown”; it means no rainfall. So replacing null with 0 is justified.</p>
                 <p><strong>Action:</strong> Use Data Cleansing on [Rain].</p>
                 <ul class="space-y-2 mt-2 mb-6">
@@ -481,8 +524,8 @@
 
             <!-- 7. IMPUTATION -->
             <section id="step7" class="game-card">
-                <h2>7. Handle missing numeric values: Price <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Imputation_71x71.png" alt="Impute"></h2>
-                <p><strong>Decision:</strong> Remove or Impute? Removing rows loses data. We will Impute.</p>
+                <h2>7. Imputation <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Imputation_71x71.png" alt="Impute"></h2>
+                <p><strong>Decision:</strong> Remove or Impute? Removing rows loses data. We will Impute missing prices.</p>
                 <p><strong>Action:</strong> Add <strong>Imputation</strong> tool.</p>
                 <ul class="space-y-2 mt-2 mb-6">
                     <li>Field to impute: [Price]</li>
@@ -497,7 +540,7 @@
 
             <!-- 8. FORMULA -->
             <section id="step8" class="game-card">
-                <h2>8. Handle missing categorical values <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Formula_71x71.png" alt="Formula"></h2>
+                <h2>8. Formula (Nulls) <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Formula_71x71.png" alt="Formula"></h2>
                 <p><strong>Problem:</strong> Imputation tool is for numbers. Cab Company is text.</p>
                 <p><strong>Action:</strong> Add <strong>Formula</strong> tool.</p>
                 <h4>Expression:</h4>
@@ -513,7 +556,7 @@
 
             <!-- 9. RECORD ID -->
             <section id="step9" class="game-card">
-                <h2>9. Create a unique identifier <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/RecordID123_71x71.png" alt="RecordID"></h2>
+                <h2>9. Unique ID <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/RecordID123_71x71.png" alt="RecordID"></h2>
                 <p><strong>Action:</strong> Add <strong>Record ID</strong> tool.</p>
                 <p class="mb-6"><strong>Why?</strong> It’s possible multiple rides share the same time/company/start point, so having a single ID is cleaner.</p>
                 <button class="preview-btn" onclick="showLessonPreview(8)"><i class="fa-solid fa-eye"></i> Preview Data</button>
@@ -521,7 +564,7 @@
 
             <!-- 10. DATETIME -->
             <section id="step10" class="game-card">
-                <h2>10. Convert Time Ride Ordered <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DT"></h2>
+                <h2>10. DateTime Conversion <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DT"></h2>
                 <p><strong>Action:</strong> Add <strong>DateTime</strong> tool (Parse Palette).</p>
                 <h4>Configuration:</h4>
                 <ul class="space-y-2 mt-2 mb-6">
@@ -534,7 +577,7 @@
 
             <!-- 11. FEATURE ENG -->
             <section id="step11" class="game-card">
-                <h2>11. Feature Engineering: Day of Week <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DT"></h2>
+                <h2>11. Feature Engineering <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DT"></h2>
                 <p><strong>Action:</strong> Add another <strong>DateTime</strong> tool.</p>
                 <h4>Configuration:</h4>
                 <ul class="space-y-2 mt-2 mb-6">
@@ -572,40 +615,40 @@
 
 
     <!-- SIMULATOR UI -->
-    <header class="bg-[#0f172a] text-white p-4 flex justify-between items-center shadow-[4px_4px_0px_#0f172a] z-50 shrink-0 border-b-4 border-black font-sans relative">
-        <div class="flex items-center gap-4">
-            <div class="bg-[#3b82f6] w-12 h-12 rounded-xl border-2 border-white flex items-center justify-center font-black text-2xl shadow-[2px_2px_0px_rgba(255,255,255,0.5)]"><i class="fa-solid fa-shapes"></i></div>
+    <header class="bg-[#0f172a] text-white p-4 flex flex-col md:flex-row justify-between items-start md:items-center shadow-[4px_4px_0px_#0f172a] z-50 shrink-0 border-b-4 border-black font-sans relative gap-4">
+        <div class="flex items-center gap-3 md:gap-4 w-full md:w-auto">
+            <div class="bg-[#3b82f6] w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 border-white flex items-center justify-center font-black text-xl md:text-2xl shadow-[2px_2px_0px_rgba(255,255,255,0.5)] flex-shrink-0"><i class="fa-solid fa-shapes"></i></div>
             <div>
-                <h1 class="font-black text-2xl leading-none">Designer Basics <span class="text-[#f59e0b] text-sm font-bold border-2 border-[#f59e0b] rounded-full px-2 py-0.5 ml-2">SIMULATOR</span></h1>
-                <p class="text-sm text-slate-300 font-bold mt-1">Class 2: Cab Data Cleansing</p>
+                <h1 class="font-black text-xl md:text-2xl leading-none flex items-center flex-wrap gap-2">Designer Basics <span class="text-[#f59e0b] text-[10px] md:text-xs font-bold border-2 border-[#f59e0b] rounded-full px-2 py-0.5">SIMULATOR</span></h1>
+                <p class="text-xs md:text-sm text-slate-300 font-bold mt-1">Class 2: Cab Data Cleansing</p>
             </div>
         </div>
-        <div class="flex gap-4 items-center">
-            <button onclick="stepBack()" class="bg-[#f1f5f9] text-[#0f172a] font-black text-sm px-4 py-2 rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.5)] transition-all border-3 border-[#0f172a] flex items-center gap-2"><i class="fa-solid fa-backward text-[#3b82f6]"></i> Back</button>
-            <div class="h-8 w-1 bg-slate-600 rounded-full mx-1"></div>
-            <button onclick="runWorkflow()" id="btn-global-run" class="bg-[#10b981] text-white font-black text-lg px-6 py-2 rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.5)] transition-all border-3 border-[#0f172a] flex items-center gap-2">
+        <div class="flex flex-wrap gap-2 md:gap-4 items-center w-full md:w-auto justify-between md:justify-end">
+            <button onclick="stepBack()" class="bg-[#f1f5f9] text-[#0f172a] font-black text-xs md:text-sm px-3 md:px-4 py-2 rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.5)] transition-all border-3 border-[#0f172a] flex items-center gap-1 md:gap-2"><i class="fa-solid fa-backward text-[#3b82f6]"></i> <span class="hidden sm:inline">Back</span></button>
+            <div class="hidden md:block h-8 w-1 bg-slate-600 rounded-full mx-1"></div>
+            <button onclick="runWorkflow()" id="btn-global-run" class="flex-1 md:flex-none justify-center bg-[#10b981] text-white font-black text-sm md:text-lg px-4 md:px-6 py-2 rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.5)] transition-all border-3 border-[#0f172a] flex items-center gap-2">
                 <i class="fa-solid fa-play"></i> Run
             </button>
-            <div class="h-8 w-1 bg-slate-600 rounded-full mx-1"></div>
-            <button onclick="showLessonPlan()" class="bg-[#f1f5f9] text-[#0f172a] font-black text-sm px-4 py-2 rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.5)] transition-all border-3 border-[#0f172a]"><i class="fa-solid fa-book text-[#3b82f6] mr-1"></i> Guide</button>
-            <button onclick="downloadRawData()" class="bg-white text-[#10b981] font-black text-sm px-4 py-2 rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.5)] transition-all border-3 border-[#0f172a] flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> File</button>
+            <div class="hidden md:block h-8 w-1 bg-slate-600 rounded-full mx-1"></div>
+            <button onclick="showLessonPlan()" class="bg-[#f1f5f9] text-[#0f172a] font-black text-xs md:text-sm px-3 md:px-4 py-2 rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.5)] transition-all border-3 border-[#0f172a]"><i class="fa-solid fa-book text-[#3b82f6] mr-1"></i> Guide</button>
+            <button onclick="downloadRawData()" class="bg-white text-[#10b981] font-black text-xs md:text-sm px-3 md:px-4 py-2 rounded-xl shadow-[4px_4px_0px_rgba(0,0,0,0.5)] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,0.5)] transition-all border-3 border-[#0f172a] flex items-center gap-1 md:gap-2"><i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">File</span></button>
         </div>
     </header>
 
-    <div class="canvas-bg border-b-4 border-[#0f172a] shadow-inner" id="canvas-container" onmousemove="drag(event)" onmouseup="endDrag()">
+    <div class="canvas-bg border-b-4 border-[#0f172a] shadow-inner" id="canvas-container" onmousemove="drag(event)" ontouchmove="drag(event)" onmouseup="endDrag(event)" ontouchend="endDrag(event)">
         <div id="canvas-content-wrapper">
-            <div class="absolute top-4 left-4 text-[#0f172a] text-sm font-black uppercase tracking-widest bg-white/80 px-3 py-1 border-2 border-[#0f172a] rounded-lg shadow-[2px_2px_0px_#0f172a] select-none z-10">Workflow Canvas</div>
+            <div class="absolute top-4 left-4 text-[#0f172a] text-xs md:text-sm font-black uppercase tracking-widest bg-white/80 px-2 py-1 md:px-3 border-2 border-[#0f172a] rounded-lg shadow-[2px_2px_0px_#0f172a] select-none z-10">Workflow Canvas</div>
             <svg id="connections-layer"></svg>
 
             <!-- Tool 0: Input -->
-            <div class="tool-node" id="node-0" style="left: 40px; top: 180px;" onmousedown="startDrag(event, 0)" onclick="activateStep(0)">
+            <div class="tool-node" id="node-0" style="left: 20px; top: 100px;" onmousedown="startDrag(event, 0)" ontouchstart="startDrag(event, 0)">
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 0, 'out')" title="View Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></div>
                 <div class="tool-label">Input Data</div>
             </div>
 
             <!-- Tool 1: Browse -->
-            <div class="tool-node" id="node-1" style="left: 40px; top: 70px;" onmousedown="startDrag(event, 1)" onclick="activateStep(1)">
+            <div class="tool-node" id="node-1" style="left: 20px; top: 20px;" onmousedown="startDrag(event, 1)" ontouchstart="startDrag(event, 1)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 1, 'in')" title="View Input"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/BrowseV2_71x71.png" alt="Browse"></div>
                 <div class="tool-label">Browse</div>
@@ -613,7 +656,7 @@
             </div>
 
             <!-- Tool 2: Select -->
-            <div class="tool-node" id="node-2" style="left: 160px; top: 180px;" onmousedown="startDrag(event, 2)" onclick="activateStep(2)">
+            <div class="tool-node" id="node-2" style="left: 120px; top: 100px;" onmousedown="startDrag(event, 2)" ontouchstart="startDrag(event, 2)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 2, 'in')" title="View Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 2, 'out')" title="View Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" alt="Select"></div>
@@ -621,7 +664,7 @@
             </div>
 
             <!-- Tool 3: Cleanse Cab -->
-            <div class="tool-node" id="node-3" style="left: 280px; top: 180px;" onmousedown="startDrag(event, 3)" onclick="activateStep(3)">
+            <div class="tool-node" id="node-3" style="left: 220px; top: 100px;" onmousedown="startDrag(event, 3)" ontouchstart="startDrag(event, 3)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 3, 'in')" title="View Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 3, 'out')" title="View Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></div>
@@ -629,7 +672,7 @@
             </div>
 
             <!-- Tool 4: Cleanse Start/Rain -->
-            <div class="tool-node" id="node-4" style="left: 400px; top: 180px;" onmousedown="startDrag(event, 4)" onclick="activateStep(4)">
+            <div class="tool-node" id="node-4" style="left: 320px; top: 100px;" onmousedown="startDrag(event, 4)" ontouchstart="startDrag(event, 4)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 4, 'in')" title="View Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 4, 'out')" title="View Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Cleanse"></div>
@@ -637,7 +680,7 @@
             </div>
 
             <!-- Tool 5: Imputation -->
-            <div class="tool-node" id="node-5" style="left: 520px; top: 180px;" onmousedown="startDrag(event, 5)" onclick="activateStep(5)">
+            <div class="tool-node" id="node-5" style="left: 420px; top: 100px;" onmousedown="startDrag(event, 5)" ontouchstart="startDrag(event, 5)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 5, 'in')" title="View Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 5, 'out')" title="View Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Imputation_71x71.png" alt="Imputation"></div>
@@ -645,7 +688,7 @@
             </div>
 
             <!-- Tool 6: Formula -->
-            <div class="tool-node" id="node-6" style="left: 640px; top: 180px;" onmousedown="startDrag(event, 6)" onclick="activateStep(6)">
+            <div class="tool-node" id="node-6" style="left: 520px; top: 100px;" onmousedown="startDrag(event, 6)" ontouchstart="startDrag(event, 6)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 6, 'in')" title="View Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 6, 'out')" title="View Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Formula_71x71.png" alt="Formula"></div>
@@ -653,7 +696,7 @@
             </div>
             
             <!-- Tool 7: Record ID -->
-            <div class="tool-node" id="node-7" style="left: 760px; top: 180px;" onmousedown="startDrag(event, 7)" onclick="activateStep(7)">
+            <div class="tool-node" id="node-7" style="left: 620px; top: 100px;" onmousedown="startDrag(event, 7)" ontouchstart="startDrag(event, 7)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 7, 'in')" title="View Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 7, 'out')" title="View Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/RecordID123_71x71.png" alt="RecordID"></div>
@@ -661,7 +704,7 @@
             </div>
 
             <!-- Tool 8: DateTime Parse -->
-            <div class="tool-node" id="node-8" style="left: 880px; top: 180px;" onmousedown="startDrag(event, 8)" onclick="activateStep(8)">
+            <div class="tool-node" id="node-8" style="left: 720px; top: 100px;" onmousedown="startDrag(event, 8)" ontouchstart="startDrag(event, 8)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 8, 'in')" title="View Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 8, 'out')" title="View Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DateTime"></div>
@@ -669,7 +712,7 @@
             </div>
 
             <!-- Tool 9: DateTime Day -->
-            <div class="tool-node" id="node-9" style="left: 1000px; top: 180px;" onmousedown="startDrag(event, 9)" onclick="activateStep(9)">
+            <div class="tool-node" id="node-9" style="left: 820px; top: 100px;" onmousedown="startDrag(event, 9)" ontouchstart="startDrag(event, 9)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 9, 'in')" title="View Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 9, 'out')" title="View Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DateTime"></div>
@@ -677,7 +720,7 @@
             </div>
 
             <!-- Tool 10: Filter -->
-            <div class="tool-node" id="node-10" style="left: 1120px; top: 180px;" onmousedown="startDrag(event, 10)" onclick="activateStep(10)">
+            <div class="tool-node" id="node-10" style="left: 920px; top: 100px;" onmousedown="startDrag(event, 10)" ontouchstart="startDrag(event, 10)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 10, 'in')" title="View Input"></div>
                 
                 <!-- True Anchor -->
@@ -695,31 +738,38 @@
     </div>
 
     <!-- Canvas Vertical Resizer -->
-    <div class="resizer-hz" id="canvas-resizer" onmousedown="initCanvasResize(event)"><i class="fa-solid fa-grip-lines text-white"></i></div>
+    <div class="resizer-hz" id="canvas-resizer" onmousedown="initCanvasResize(event)" ontouchstart="initCanvasResize(event)"><i class="fa-solid fa-grip-lines text-white"></i></div>
 
     <!-- Workspace -->
-    <div class="flex flex-1 overflow-hidden bg-white z-20 relative font-sans" id="workspace-container">
-        <div class="w-1/3 min-w-[320px] bg-[#f1f5f9] border-r-4 border-[#0f172a] flex flex-col" id="config-pane">
-            <div class="bg-white border-b-4 border-[#0f172a] px-4 py-3 font-black text-[#0f172a] text-lg flex justify-between items-center select-none shadow-sm">
+    <div class="flex flex-col md:flex-row flex-1 overflow-hidden bg-white z-20 relative font-sans" id="workspace-container">
+        <!-- Config Pane -->
+        <div class="w-full md:w-1/3 md:min-w-[320px] max-h-[40vh] md:max-h-none bg-[#f1f5f9] border-b-4 md:border-b-0 md:border-r-4 border-[#0f172a] flex flex-col" id="config-pane">
+            <div class="bg-white border-b-4 border-[#0f172a] px-4 py-3 font-black text-[#0f172a] text-sm md:text-lg flex justify-between items-center select-none shadow-sm flex-shrink-0">
                 <span><i class="fa-solid fa-gear text-[#3b82f6] mr-2"></i>Configuration</span>
                 <span id="step-badge" class="text-xs bg-[#3b82f6] text-white px-3 py-1 rounded-full border-2 border-[#0f172a] shadow-[2px_2px_0px_#0f172a]">--</span>
             </div>
             <div id="config-panel" class="p-4 overflow-y-auto flex-1 text-sm font-bold text-slate-700"></div>
         </div>
-        <div class="resizer" id="resizer" onmousedown="initResize(event)"><i class="fa-solid fa-grip-lines-vertical text-white"></i></div>
+        
+        <!-- Horizontal Resizer (Hidden on mobile) -->
+        <div class="resizer hidden md:flex" id="resizer" onmousedown="initResize(event)" ontouchstart="initResize(event)"><i class="fa-solid fa-grip-lines-vertical text-white"></i></div>
+        
+        <!-- Results Pane -->
         <div class="flex-1 bg-white flex flex-col min-w-0" id="results-pane">
-            <div class="border-b-4 border-[#0f172a] px-4 py-3 font-black text-[#0f172a] flex justify-between items-center text-sm bg-[#f1f5f9] select-none shadow-sm">
-                <div class="flex items-center gap-2 text-lg">
+            <div class="border-b-4 border-[#0f172a] px-3 py-2 md:px-4 md:py-3 font-black text-[#0f172a] flex flex-col sm:flex-row justify-between sm:items-center text-sm bg-[#f1f5f9] select-none shadow-sm flex-shrink-0 gap-2">
+                <div class="flex items-center gap-2 text-sm md:text-lg truncate">
                     <i class="fa-solid fa-table text-[#10b981]"></i>
-                    <span>Results - <span id="tool-name-display" class="text-[#3b82f6]">Select an anchor</span></span>
+                    <span class="truncate">Results - <span id="tool-name-display" class="text-[#3b82f6]">Select an anchor</span></span>
                 </div>
-                <div class="bg-[#0f172a] text-[#f59e0b] px-3 py-1 rounded-full border-2 border-white shadow-[2px_2px_0px_#0f172a] text-xs"><span id="record-count">0</span> records</div>
+                <div class="bg-[#0f172a] text-[#f59e0b] px-3 py-1 rounded-full border-2 border-white shadow-[2px_2px_0px_#0f172a] text-[10px] md:text-xs self-start sm:self-auto"><span id="record-count">0</span> records</div>
             </div>
-            <div class="flex-1 overflow-auto relative p-2 bg-white">
-                <table class="w-full text-left border-separate border-spacing-0 font-mono text-sm font-bold text-[#0f172a]" id="data-grid">
-                    <thead id="grid-head"></thead>
-                    <tbody id="grid-body"></tbody>
-                </table>
+            <div class="flex-1 overflow-auto relative p-0 md:p-2 bg-white">
+                <div class="min-w-max h-full">
+                    <table class="w-full text-left border-separate border-spacing-0 font-mono text-xs md:text-sm font-bold text-[#0f172a]" id="data-grid">
+                        <thead id="grid-head"></thead>
+                        <tbody id="grid-body"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -731,12 +781,6 @@
         let viewingAnchor = null; // {toolId, type}
 
         // --- INTERACTION LOGIC ---
-        function toggleAnswer(btn) {
-            const answer = btn.nextElementSibling;
-            if (answer.style.display === "block") { answer.style.display = "none"; btn.innerText = "Show Answer"; }
-            else { answer.style.display = "block"; btn.innerText = "Hide Answer"; }
-        }
-        function reveal(el) { el.classList.add('revealed'); }
         function closeLessonPlan() { document.getElementById('lesson-plan-overlay').style.display = 'none'; activateStep(0); }
         function showLessonPlan() { document.getElementById('lesson-plan-overlay').style.display = 'flex'; }
         
@@ -748,15 +792,14 @@
         // Formula Dropdown Logic
         function toggleFormulaDropdown() {
             const dropdown = document.getElementById('formula-dropdown-list');
-            if (dropdown) {
-                dropdown.classList.toggle('hidden');
-            }
+            if (dropdown) dropdown.classList.toggle('hidden');
         }
 
         function selectFormulaColumn(colName) {
             const display = document.getElementById('formula-selected-display');
             if (display) display.innerText = colName;
-            document.getElementById('formula-dropdown-list').classList.add('hidden');
+            const dropdown = document.getElementById('formula-dropdown-list');
+            if(dropdown) dropdown.classList.add('hidden');
         }
 
         // Navigation Highlighting
@@ -788,47 +831,46 @@
         });
         
         // --- DATA ENGINE (Cab Data) ---
-        // Headers: Cab Company,Time Ride Ordered,start_point,destination,Distance,Price,Surge Multiplier,temp,rain,wind
         const rawData = [
-            { "Cab Company": "  Ride4me", "Time Ride Ordered": "11/26/22 3:55:59", "start_point": "  North Station  ", "destination": "North End", "Distance": "1.08", "Price": "7", "Surge Multiplier": "1", "temp": "40.94", "rain": null, "wind": "1.43" }, // Row 0: Whitespace, Null Rain
+            { "Cab Company": "  Ride4me", "Time Ride Ordered": "11/26/22 3:55:59", "start_point": "  North Station  ", "destination": "North End", "Distance": "1.08", "Price": "7", "Surge Multiplier": "1", "temp": "40.94", "rain": null, "wind": "1.43" },
             { "Cab Company": "Ride4Me", "Time Ride Ordered": "11/26/22 3:56:40", "start_point": "Financial District", "destination": "Haymarket Square", "Distance": "1.25", "Price": "8.5", "Surge Multiplier": "1", "temp": "40.95", "rain": null, "wind": "1.49" }, 
-            { "Cab Company": "Ride4Me", "Time Ride Ordered": "11/28/22 3:58:22", "start_point": "Haymarket Square", "destination": "West End", "Distance": "0.71", "Price": null, "Surge Multiplier": "1", "temp": "40.98", "rain": null, "wind": "1.57" }, // Row 2: Null Price
+            { "Cab Company": "Ride4Me", "Time Ride Ordered": "11/28/22 3:58:22", "start_point": "Haymarket Square", "destination": "West End", "Distance": "0.71", "Price": null, "Surge Multiplier": "1", "temp": "40.98", "rain": null, "wind": "1.57" },
             { "Cab Company": "Ride4me", "Time Ride Ordered": "11/28/22 3:58:23", "start_point": "North End", "destination": "Theatre District", "Distance": "1.41", "Price": "14", "Surge Multiplier": "1", "temp": "41.02", "rain": null, "wind": "1.59" }, 
-            { "Cab Company": null, "Time Ride Ordered": "11/26/22 4:4:43", "start_point": "Back Bay", "destination": "Boston University", "Distance": "1.46", "Price": "13.5", "Surge Multiplier": "1", "temp": "40.63", "rain": null, "wind": "2.57" }, // Row 4: Null Cab
+            { "Cab Company": null, "Time Ride Ordered": "11/26/22 4:4:43", "start_point": "Back Bay", "destination": "Boston University", "Distance": "1.46", "Price": "13.5", "Surge Multiplier": "1", "temp": "40.63", "rain": null, "wind": "2.57" },
             { "Cab Company": null, "Time Ride Ordered": "11/26/22 4:5:10", "start_point": "North Station", "destination": "North End", "Distance": "1.08", "Price": "6.5", "Surge Multiplier": "1", "temp": "40.49", "rain": null, "wind": "2.56" }, 
-            { "Cab Company": "ZippyRide", "Time Ride Ordered": "11/29/22 4:10:48", "start_point": "Theatre District", "destination": "North End", "Distance": "1.57", "Price": "7.5", "Surge Multiplier": "1", "temp": "40.23", "rain": null, "wind": "2.68" }, // Tue
-            { "Cab Company": "Zippy Ride", "Time Ride Ordered": "11/29/22 4:10:48", "start_point": "Theatre District", "destination": "North End", "Distance": "1.57", "Price": null, "Surge Multiplier": "1", "temp": "40.23", "rain": null, "wind": "2.68" }, // Tue
-            { "Cab Company": "Ride4Me", "Time Ride Ordered": "12/18/22 18:15:20", "start_point": "Theatre District", "destination": "Fenway", "Distance": "3.12", "Price": "34", "Surge Multiplier": "1", "temp": "30.81", "rain": "0.02", "wind": "13.15" }, // Sun
-            { "Cab Company": "Ride4Me", "Time Ride Ordered": "12/18/22 18:20:7", "start_point": "Northeastern University", "destination": "Financial District", "Distance": "4.3", "Price": "32.5", "Surge Multiplier": "1", "temp": "30.91", "rain": "0.01", "wind": "13.06" }, // Sun
-            { "Cab Company": "Ride4Me", "Time Ride Ordered": "12/18/22 18:20:12", "start_point": "West End", "destination": "Haymarket Square", "Distance": "0.77", "Price": "7", "Surge Multiplier": "1", "temp": "30.79", "rain": null, "wind": "13.09" }, // Sun
-            { "Cab Company": "Ride4Me", "Time Ride Ordered": "12/19/22 18:20:14", "start_point": "Beacon Hill", "destination": "South Station", "Distance": "2.48", "Price": "30.5", "Surge Multiplier": "1", "temp": "30.8", "rain": null, "wind": "13.08" } // Mon
+            { "Cab Company": "ZippyRide", "Time Ride Ordered": "11/29/22 4:10:48", "start_point": "Theatre District", "destination": "North End", "Distance": "1.57", "Price": "7.5", "Surge Multiplier": "1", "temp": "40.23", "rain": null, "wind": "2.68" },
+            { "Cab Company": "Zippy Ride", "Time Ride Ordered": "11/29/22 4:10:48", "start_point": "Theatre District", "destination": "North End", "Distance": "1.57", "Price": null, "Surge Multiplier": "1", "temp": "40.23", "rain": null, "wind": "2.68" },
+            { "Cab Company": "Ride4Me", "Time Ride Ordered": "12/18/22 18:15:20", "start_point": "Theatre District", "destination": "Fenway", "Distance": "3.12", "Price": "34", "Surge Multiplier": "1", "temp": "30.81", "rain": "0.02", "wind": "13.15" },
+            { "Cab Company": "Ride4Me", "Time Ride Ordered": "12/18/22 18:20:7", "start_point": "Northeastern University", "destination": "Financial District", "Distance": "4.3", "Price": "32.5", "Surge Multiplier": "1", "temp": "30.91", "rain": "0.01", "wind": "13.06" },
+            { "Cab Company": "Ride4Me", "Time Ride Ordered": "12/18/22 18:20:12", "start_point": "West End", "destination": "Haymarket Square", "Distance": "0.77", "Price": "7", "Surge Multiplier": "1", "temp": "30.79", "rain": null, "wind": "13.09" },
+            { "Cab Company": "Ride4Me", "Time Ride Ordered": "12/19/22 18:20:14", "start_point": "Beacon Hill", "destination": "South Station", "Distance": "2.48", "Price": "30.5", "Surge Multiplier": "1", "temp": "30.8", "rain": null, "wind": "13.08" }
         ];
 
-        let currentState = { amountType: "Double" };
+        let currentState = { stepIndex: 0 };
 
         const steps = [
             {
                 id: "input", title: "Input Data",
-                configHTML: `<div class="bg-white p-4 rounded-xl border-3 border-[#0f172a] shadow-[4px_4px_0px_#0f172a] mb-4"><label class="block font-black mb-2 text-[#0f172a]">Connect a File</label><div class="flex bg-[#f1f5f9] border-2 border-[#0f172a] p-2 rounded-lg items-center shadow-inner"><input type="text" value="Cab Company Data.xlsx" class="w-full outline-none bg-transparent font-mono text-[#0f172a] font-bold" readonly></div></div><div class="bg-[#f59e0b]/20 p-3 rounded-xl border-2 border-[#f59e0b] text-[#0f172a] font-black shadow-[2px_2px_0px_#0f172a]">12 rows loaded for simulation.</div><div class="mt-4"><h4 class="font-black text-sm mb-1 text-[#0f172a]">Instructions:</h4><p class="text-xs text-slate-600 font-bold">1. Drag the file onto the canvas.<br>2. Check the Results window for the data quality bar.<br>3. Look for 'red flags' in start_point and nulls in Price.</p></div>`
+                configHTML: `<div class="bg-white p-4 rounded-xl border-3 border-[#0f172a] shadow-[4px_4px_0px_#0f172a] mb-4"><label class="block font-black mb-2 text-[#0f172a]">Connect a File</label><div class="flex bg-[#f1f5f9] border-2 border-[#0f172a] p-2 rounded-lg items-center shadow-inner"><input type="text" value="Cab Company Data.xlsx" class="w-full outline-none bg-transparent font-mono text-[#0f172a] font-bold text-xs md:text-sm" readonly></div></div><div class="bg-[#f59e0b]/20 p-3 rounded-xl border-2 border-[#f59e0b] text-[#0f172a] font-black shadow-[2px_2px_0px_#0f172a]">12 rows loaded for simulation.</div><div class="mt-4"><h4 class="font-black text-sm mb-1 text-[#0f172a]">Instructions:</h4><p class="text-xs text-slate-600 font-bold">1. Drag the file onto the canvas.<br>2. Check the Results window for the data quality bar.<br>3. Look for 'red flags' in start_point and nulls in Price.</p></div>`
             },
             {
                 id: "browse", title: "Browse Tool",
                 configHTML: `
                     <div class="space-y-3 font-sans">
-                        <p class="font-black text-[#0f172a] text-lg border-b-2 border-[#0f172a] pb-1">Data Quality Profiles:</p>
-                        <div class="bg-white p-3 rounded-lg border-2 border-[#0f172a] shadow-[2px_2px_0px_#0f172a] border-l-8 border-l-[#ef4444]"><div class="flex justify-between font-black text-sm"><span>start_point</span></div><div class="w-full bg-[#f1f5f9] h-2 rounded mt-1 overflow-hidden border border-[#0f172a]"><div class="bg-[#ef4444] w-full h-full"></div></div><div class="text-[10px] font-bold text-[#ef4444] mt-1">Leading/Trailing Whitespace</div></div>
-                        <div class="bg-white p-3 rounded-lg border-2 border-[#0f172a] shadow-[2px_2px_0px_#0f172a] border-l-8 border-l-[#f59e0b]"><div class="flex justify-between font-black text-sm"><span>Price</span></div><div class="w-full bg-[#f1f5f9] h-2 rounded mt-1 overflow-hidden border border-[#0f172a]"><div class="bg-[#f59e0b] w-full h-full"></div></div><div class="text-[10px] font-bold text-[#f59e0b] mt-1">Nulls Detected</div></div>
-                        <div class="bg-white p-3 rounded-lg border-2 border-[#0f172a] shadow-[2px_2px_0px_#0f172a]"><div class="flex justify-between font-black text-sm"><span>Cab Company</span></div><div class="text-[10px] font-bold text-slate-600 mt-1">Found: Ride4Me, RIDE4ME, Zippy Ride...</div></div>
+                        <p class="font-black text-[#0f172a] text-base md:text-lg border-b-2 border-[#0f172a] pb-1">Data Quality Profiles:</p>
+                        <div class="bg-white p-3 rounded-lg border-2 border-[#0f172a] shadow-[2px_2px_0px_#0f172a] border-l-8 border-l-[#ef4444]"><div class="flex justify-between font-black text-xs md:text-sm"><span>start_point</span></div><div class="w-full bg-[#f1f5f9] h-2 rounded mt-1 overflow-hidden border border-[#0f172a]"><div class="bg-[#ef4444] w-full h-full"></div></div><div class="text-[10px] md:text-xs font-bold text-[#ef4444] mt-1">Leading/Trailing Whitespace</div></div>
+                        <div class="bg-white p-3 rounded-lg border-2 border-[#0f172a] shadow-[2px_2px_0px_#0f172a] border-l-8 border-l-[#f59e0b]"><div class="flex justify-between font-black text-xs md:text-sm"><span>Price</span></div><div class="w-full bg-[#f1f5f9] h-2 rounded mt-1 overflow-hidden border border-[#0f172a]"><div class="bg-[#f59e0b] w-full h-full"></div></div><div class="text-[10px] md:text-xs font-bold text-[#f59e0b] mt-1">Nulls Detected</div></div>
+                        <div class="bg-white p-3 rounded-lg border-2 border-[#0f172a] shadow-[2px_2px_0px_#0f172a]"><div class="flex justify-between font-black text-xs md:text-sm"><span>Cab Company</span></div><div class="text-[10px] md:text-xs font-bold text-slate-600 mt-1">Found: Ride4Me, RIDE4ME, Zippy Ride...</div></div>
                     </div>
                     <div class="mt-4"><h4 class="font-black text-sm mb-1 text-[#0f172a]">Instructions:</h4><p class="text-xs text-slate-600 font-bold">1. Connect Browse to Input Data.<br>2. Run the workflow.<br>3. Inspect the 'Not OK' indicators in the profile.</p></div>`
             },
             {
                 id: "select", title: "Select Tool",
-                configHTML: `<div class="bg-white border-3 border-[#0f172a] rounded-xl shadow-[4px_4px_0px_#0f172a] overflow-hidden"><table class="w-full text-left font-mono text-xs font-bold"><thead class="bg-[#0f172a] text-white border-b-2 border-[#0f172a]"><tr><th class="p-2 w-8 text-center">✓</th><th class="p-2 border-l border-[#0f172a]">Field</th><th class="p-2 border-l border-[#0f172a]">Type</th><th class="p-2 border-l border-[#0f172a]">Rename</th></tr></thead><tbody><tr class="border-b-2 border-[#0f172a] hover:bg-[#f1f5f9]"><td class="p-2 text-center border-r border-[#0f172a]"><input type="checkbox" checked class="accent-[#3b82f6]"></td><td class="p-2 border-r border-[#0f172a]">Cab Company</td><td class="p-2 border-r border-[#0f172a]">V_String</td><td class="p-2"></td></tr><tr class="border-b-2 border-[#0f172a] hover:bg-[#f1f5f9]"><td class="p-2 text-center border-r border-[#0f172a]"><input type="checkbox" checked class="accent-[#3b82f6]"></td><td class="p-2 border-r border-[#0f172a]">Time Ride...</td><td class="p-2 text-[#ef4444] border-r border-[#0f172a]">String</td><td class="p-2"></td></tr><tr class="border-b-2 border-[#0f172a] bg-[#3b82f6]/10"><td class="p-2 text-center border-r border-[#0f172a]"><input type="checkbox" checked class="accent-[#3b82f6]"></td><td class="p-2 border-r border-[#0f172a]">Price</td><td class="p-2 font-black text-[#3b82f6] border-r border-[#0f172a]">Double</td><td class="p-2 text-slate-500 italic">Dollars</td></tr><tr class="hover:bg-[#f1f5f9]"><td class="p-2 text-center border-r border-[#0f172a]"><input type="checkbox" checked class="accent-[#3b82f6]"></td><td class="p-2 border-r border-[#0f172a]">start_point</td><td class="p-2 border-r border-[#0f172a]">V_String</td><td class="p-2">Start Point</td></tr></tbody></table></div><div class="text-xs font-bold p-3 rounded-xl bg-[#f59e0b]/20 border-2 border-[#f59e0b] text-[#0f172a] mt-4 shadow-[2px_2px_0px_#0f172a]"><strong><i class="fa-solid fa-lightbulb text-[#f59e0b]"></i> Tip:</strong> Don't change Time to DateTime yet!</div><div class="mt-4"><h4 class="font-black text-sm mb-1 text-[#0f172a]">Instructions:</h4><p class="text-xs text-slate-600 font-bold">1. Rename fields for consistency.<br>2. Change Price to Double.<br>3. Add 'Dollars' to description.</p></div>`
+                configHTML: `<div class="bg-white border-3 border-[#0f172a] rounded-xl shadow-[4px_4px_0px_#0f172a] overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-left font-mono text-[10px] md:text-xs font-bold"><thead class="bg-[#0f172a] text-white border-b-2 border-[#0f172a]"><tr><th class="p-2 w-8 text-center">✓</th><th class="p-2 border-l border-[#0f172a]">Field</th><th class="p-2 border-l border-[#0f172a]">Type</th><th class="p-2 border-l border-[#0f172a]">Rename</th></tr></thead><tbody><tr class="border-b-2 border-[#0f172a] hover:bg-[#f1f5f9]"><td class="p-2 text-center border-r border-[#0f172a]"><input type="checkbox" checked class="accent-[#3b82f6]"></td><td class="p-2 border-r border-[#0f172a]">Cab Company</td><td class="p-2 border-r border-[#0f172a]">V_String</td><td class="p-2"></td></tr><tr class="border-b-2 border-[#0f172a] hover:bg-[#f1f5f9]"><td class="p-2 text-center border-r border-[#0f172a]"><input type="checkbox" checked class="accent-[#3b82f6]"></td><td class="p-2 border-r border-[#0f172a]">Time Ride...</td><td class="p-2 text-[#ef4444] border-r border-[#0f172a]">String</td><td class="p-2"></td></tr><tr class="border-b-2 border-[#0f172a] bg-[#3b82f6]/10"><td class="p-2 text-center border-r border-[#0f172a]"><input type="checkbox" checked class="accent-[#3b82f6]"></td><td class="p-2 border-r border-[#0f172a]">Price</td><td class="p-2 font-black text-[#3b82f6] border-r border-[#0f172a]">Double</td><td class="p-2 text-slate-500 italic">Dollars</td></tr><tr class="hover:bg-[#f1f5f9]"><td class="p-2 text-center border-r border-[#0f172a]"><input type="checkbox" checked class="accent-[#3b82f6]"></td><td class="p-2 border-r border-[#0f172a]">start_point</td><td class="p-2 border-r border-[#0f172a]">V_String</td><td class="p-2">Start Point</td></tr></tbody></table></div></div><div class="text-xs font-bold p-3 rounded-xl bg-[#f59e0b]/20 border-2 border-[#f59e0b] text-[#0f172a] mt-4 shadow-[2px_2px_0px_#0f172a]"><strong><i class="fa-solid fa-lightbulb text-[#f59e0b]"></i> Tip:</strong> Don't change Time to DateTime yet!</div><div class="mt-4"><h4 class="font-black text-sm mb-1 text-[#0f172a]">Instructions:</h4><p class="text-xs text-slate-600 font-bold">1. Rename fields for consistency.<br>2. Change Price to Double.<br>3. Add 'Dollars' to description.</p></div>`
             },
             {
                 id: "cleanse_cab", title: "Data Cleansing (Cab)",
-                configHTML: `<div class="bg-[#f1f5f9] border-2 border-[#0f172a] p-3 mb-3 rounded-xl shadow-[2px_2px_0px_#0f172a]"><label class="block text-xs font-black text-[#0f172a] mb-2">Select Fields to Cleanse:</label><div class="bg-white border-2 border-[#0f172a] p-2 h-16 overflow-y-auto text-xs font-bold rounded-lg shadow-inner"><label class="flex items-center gap-2"><input type="checkbox" checked class="accent-[#3b82f6] w-4 h-4"> Cab Company</label><label class="flex items-center gap-2 mt-1"><input type="checkbox" class="accent-[#3b82f6] w-4 h-4"> Price</label></div></div><div class="bg-[#f1f5f9] border-2 border-[#0f172a] p-3 mb-3 rounded-xl shadow-[2px_2px_0px_#0f172a]"><label class="block text-xs font-black text-[#0f172a] mb-1">Replace Nulls:</label><div class="text-xs text-slate-500 font-bold italic">None selected</div></div><div class="bg-[#f1f5f9] border-2 border-[#0f172a] p-3 mb-3 rounded-xl shadow-[2px_2px_0px_#0f172a]"><label class="block text-xs font-black text-[#0f172a] mb-2">Remove Unwanted Characters:</label><label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" checked class="accent-[#3b82f6] w-4 h-4"> Leading/Trailing Whitespace</label><label class="flex items-center gap-2 mt-1 text-xs font-bold"><input type="checkbox" checked class="accent-[#3b82f6] w-4 h-4"> All Whitespace</label></div><div class="bg-[#f1f5f9] border-2 border-[#0f172a] p-3 rounded-xl shadow-[2px_2px_0px_#0f172a]"><label class="block text-xs font-black text-[#0f172a] mb-2">Modify Case:</label><div class="flex gap-4 text-xs font-bold"><label class="flex items-center gap-2"><input type="radio" name="case" checked class="accent-[#3b82f6] w-4 h-4"> Upper Case</label><label class="flex items-center gap-2"><input type="radio" name="case" class="accent-[#3b82f6] w-4 h-4"> Title Case</label></div></div><div class="mt-4"><h4 class="font-black text-sm mb-1 text-[#0f172a]">Instructions:</h4><p class="text-xs text-slate-600 font-bold">1. Select [Cab Company].<br>2. Check 'Modify Case -> Upper Case'.<br>3. Check 'Remove -> All Whitespace'.</p></div>`
+                configHTML: `<div class="bg-[#f1f5f9] border-2 border-[#0f172a] p-3 mb-3 rounded-xl shadow-[2px_2px_0px_#0f172a]"><label class="block text-xs font-black text-[#0f172a] mb-2">Select Fields to Cleanse:</label><div class="bg-white border-2 border-[#0f172a] p-2 h-16 overflow-y-auto text-xs font-bold rounded-lg shadow-inner"><label class="flex items-center gap-2"><input type="checkbox" checked class="accent-[#3b82f6] w-4 h-4"> Cab Company</label><label class="flex items-center gap-2 mt-1"><input type="checkbox" class="accent-[#3b82f6] w-4 h-4"> Price</label></div></div><div class="bg-[#f1f5f9] border-2 border-[#0f172a] p-3 mb-3 rounded-xl shadow-[2px_2px_0px_#0f172a]"><label class="block text-xs font-black text-[#0f172a] mb-1">Replace Nulls:</label><div class="text-xs text-slate-500 font-bold italic">None selected</div></div><div class="bg-[#f1f5f9] border-2 border-[#0f172a] p-3 mb-3 rounded-xl shadow-[2px_2px_0px_#0f172a]"><label class="block text-xs font-black text-[#0f172a] mb-2">Remove Unwanted Characters:</label><label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" checked class="accent-[#3b82f6] w-4 h-4"> Leading/Trailing Whitespace</label><label class="flex items-center gap-2 mt-1 text-xs font-bold"><input type="checkbox" checked class="accent-[#3b82f6] w-4 h-4"> All Whitespace</label></div><div class="bg-[#f1f5f9] border-2 border-[#0f172a] p-3 rounded-xl shadow-[2px_2px_0px_#0f172a]"><label class="block text-xs font-black text-[#0f172a] mb-2">Modify Case:</label><div class="flex flex-wrap gap-2 text-xs font-bold"><label class="flex items-center gap-2"><input type="radio" name="case" checked class="accent-[#3b82f6] w-4 h-4"> Upper Case</label><label class="flex items-center gap-2"><input type="radio" name="case" class="accent-[#3b82f6] w-4 h-4"> Title Case</label></div></div><div class="mt-4"><h4 class="font-black text-sm mb-1 text-[#0f172a]">Instructions:</h4><p class="text-xs text-slate-600 font-bold">1. Select [Cab Company].<br>2. Check 'Modify Case -> Upper Case'.<br>3. Check 'Remove -> All Whitespace'.</p></div>`
             },
             {
                 id: "cleanse_start", title: "Data Cleansing (Start/Rain)",
@@ -836,24 +878,24 @@
             },
             {
                 id: "impute", title: "Imputation Tool",
-                configHTML: `<div class="bg-white p-4 rounded-xl border-3 border-[#0f172a] shadow-[4px_4px_0px_#0f172a] mb-4"><label class="block font-black text-sm mb-2 text-[#0f172a]">Field to Impute</label><select class="w-full border-2 border-[#0f172a] rounded-lg p-2 font-bold font-mono text-sm bg-[#f1f5f9] focus:outline-none"><option>Price</option></select><label class="block font-black text-sm mt-4 mb-2 text-[#0f172a]">Incoming Value to Replace</label><div class="flex gap-4 mb-2 font-bold text-sm"><label class="flex items-center gap-2"><input type="radio" checked class="accent-[#3b82f6] w-4 h-4"> Null()</label><label class="flex items-center gap-2"><input type="radio" class="accent-[#3b82f6] w-4 h-4"> User Specified</label></div><label class="block font-black text-sm mt-4 mb-2 text-[#0f172a]">Replace With Value</label><div class="flex gap-4 font-bold text-sm"><label class="flex items-center gap-2"><input type="radio" checked class="accent-[#3b82f6] w-4 h-4"> Median</label><label class="flex items-center gap-2"><input type="radio" class="accent-[#3b82f6] w-4 h-4"> Mean</label><label class="flex items-center gap-2"><input type="radio" class="accent-[#3b82f6] w-4 h-4"> Mode</label></div></div><div class="mt-4"><h4 class="font-black text-sm mb-1 text-[#0f172a]">Instructions:</h4><p class="text-xs text-slate-600 font-bold">1. Select 'Price'.<br>2. Choose 'Median' to handle outliers safely.</p></div>`
+                configHTML: `<div class="bg-white p-4 rounded-xl border-3 border-[#0f172a] shadow-[4px_4px_0px_#0f172a] mb-4"><label class="block font-black text-sm mb-2 text-[#0f172a]">Field to Impute</label><select class="w-full border-2 border-[#0f172a] rounded-lg p-2 font-bold font-mono text-sm bg-[#f1f5f9] focus:outline-none"><option>Price</option></select><label class="block font-black text-sm mt-4 mb-2 text-[#0f172a]">Incoming Value to Replace</label><div class="flex gap-4 mb-2 font-bold text-xs md:text-sm"><label class="flex items-center gap-2"><input type="radio" checked class="accent-[#3b82f6] w-4 h-4"> Null()</label><label class="flex items-center gap-2"><input type="radio" class="accent-[#3b82f6] w-4 h-4"> User Specified</label></div><label class="block font-black text-sm mt-4 mb-2 text-[#0f172a]">Replace With Value</label><div class="flex flex-wrap gap-3 font-bold text-xs md:text-sm"><label class="flex items-center gap-2"><input type="radio" checked class="accent-[#3b82f6] w-4 h-4"> Median</label><label class="flex items-center gap-2"><input type="radio" class="accent-[#3b82f6] w-4 h-4"> Mean</label><label class="flex items-center gap-2"><input type="radio" class="accent-[#3b82f6] w-4 h-4"> Mode</label></div></div><div class="mt-4"><h4 class="font-black text-sm mb-1 text-[#0f172a]">Instructions:</h4><p class="text-xs text-slate-600 font-bold">1. Select 'Price'.<br>2. Choose 'Median' to handle outliers safely.</p></div>`
             },
             {
                 id: "formula", title: "Formula Tool",
                 configHTML: `
-                <div class="flex border-b-4 border-[#0f172a] text-xs font-black mb-3">
-                    <div class="px-3 py-2 text-white bg-[#0f172a] border-r-2 border-[#0f172a] rounded-tl-lg">Output Column</div>
-                    <div class="px-3 py-2 text-[#0f172a] w-full bg-[#f1f5f9]">Data Preview <span class="float-right text-slate-500 font-mono text-[10px] mt-0.5">RIDE4ME</span></div>
-                    <div class="w-10 bg-[#f1f5f9] border-l-2 border-[#0f172a] rounded-tr-lg flex items-center justify-center"><i class="fa-solid fa-trash-can text-[#ef4444] hover:text-red-600 cursor-pointer"></i></div>
+                <div class="flex border-b-4 border-[#0f172a] text-[10px] md:text-xs font-black mb-3 text-center">
+                    <div class="px-2 py-2 text-white bg-[#0f172a] border-r-2 border-[#0f172a] rounded-tl-lg">Output Column</div>
+                    <div class="px-2 py-2 text-[#0f172a] w-full bg-[#f1f5f9] text-left relative">Data Preview <span class="absolute right-2 text-slate-500 font-mono text-[9px] mt-0.5 hidden sm:inline">RIDE4ME</span></div>
+                    <div class="w-10 bg-[#f1f5f9] border-l-2 border-[#0f172a] rounded-tr-lg flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-trash-can text-[#ef4444] hover:text-red-600 cursor-pointer"></i></div>
                 </div>
                 
                 <div class="relative mb-3">
                     <div onclick="toggleFormulaDropdown()" class="border-2 border-[#0f172a] hover:border-[#3b82f6] rounded-lg bg-white p-2 flex items-center justify-between text-xs shadow-[2px_2px_0px_#0f172a] cursor-pointer font-bold">
-                        <span id="formula-selected-display" class="text-[#0f172a]">Cab Company</span>
+                        <span id="formula-selected-display" class="text-[#0f172a] truncate">Cab Company</span>
                         <i class="fa-solid fa-caret-down text-[#0f172a]"></i>
                     </div>
                     
-                    <div id="formula-dropdown-list" class="absolute top-full left-0 w-64 bg-white border-2 border-[#0f172a] shadow-[4px_4px_0px_#0f172a] z-20 rounded-lg mt-2 text-xs hidden max-h-60 overflow-y-auto font-bold text-[#0f172a]">
+                    <div id="formula-dropdown-list" class="absolute top-full left-0 w-full sm:w-64 bg-white border-2 border-[#0f172a] shadow-[4px_4px_0px_#0f172a] z-20 rounded-lg mt-2 text-xs hidden max-h-60 overflow-y-auto font-bold text-[#0f172a]">
                         <div onclick="selectFormulaColumn('Select Column')" class="p-2 hover:bg-[#f1f5f9] flex items-center gap-2 cursor-pointer border-b-2 border-[#0f172a] text-slate-500">Select Column</div>
                         <div class="p-2 hover:bg-[#f1f5f9] flex items-center gap-2 cursor-pointer text-[#3b82f6]"><div class="bg-[#3b82f6] text-white w-5 h-5 flex items-center justify-center rounded text-[10px]">fx</div> + Add Column</div>
                         <div onclick="selectFormulaColumn('Cab Company')" class="p-2 bg-[#f1f5f9] text-[#3b82f6] flex items-center gap-2 cursor-pointer border-l-4 border-[#3b82f6]">
@@ -877,7 +919,7 @@
                         <div class="bg-[#3b82f6] text-white w-6 h-6 flex items-center justify-center rounded-md border-2 border-[#0f172a] hover:bg-[#2563eb] shadow-[2px_2px_0px_#0f172a] text-[10px] cursor-pointer"><i class="fa-solid fa-folder-open"></i></div>
                         <div class="bg-[#3b82f6] text-white w-6 h-6 flex items-center justify-center rounded-md border-2 border-[#0f172a] hover:bg-[#2563eb] shadow-[2px_2px_0px_#0f172a] text-[10px] cursor-pointer"><i class="fa-solid fa-floppy-disk"></i></div>
                     </div>
-                    <div class="p-3 text-xs font-mono leading-relaxed h-24 bg-white font-bold text-[#0f172a]">
+                    <div class="p-3 text-[10px] md:text-xs font-mono leading-relaxed h-24 bg-white font-bold text-[#0f172a] overflow-x-auto">
                         <span class="text-[#3b82f6]">IF</span> <span class="text-[#8b5cf6]">IsNull</span>([<span class="text-[#f59e0b]">Cab Company</span>])<br>
                         <span class="text-[#3b82f6]">THEN</span> <span class="text-[#10b981]">"RIDE4ME"</span><br>
                         <span class="text-[#3b82f6]">ELSE</span> [<span class="text-[#f59e0b]">Cab Company</span>]<br>
@@ -885,12 +927,12 @@
                     </div>
                 </div>
                 
-                <div class="flex gap-3 mb-3 items-center">
-                    <div class="text-xs text-[#0f172a] font-black">Data type:</div>
-                    <select class="border-2 border-[#0f172a] rounded-lg text-xs font-bold font-mono p-1 bg-[#f1f5f9] text-[#0f172a] w-24 focus:outline-none shadow-sm">
+                <div class="flex flex-wrap gap-2 mb-3 items-center">
+                    <div class="text-xs text-[#0f172a] font-black">Type:</div>
+                    <select class="border-2 border-[#0f172a] rounded-lg text-xs font-bold font-mono p-1 bg-[#f1f5f9] text-[#0f172a] w-20 focus:outline-none shadow-sm">
                         <option>V_String</option>
                     </select>
-                    <div class="text-xs text-[#0f172a] font-black ml-2">Size:</div>
+                    <div class="text-xs text-[#0f172a] font-black sm:ml-2">Size:</div>
                     <input type="number" value="254" class="border-2 border-[#0f172a] rounded-lg text-xs font-bold font-mono p-1 w-16 text-[#0f172a] bg-[#f1f5f9] focus:outline-none shadow-sm">
                 </div>
                 
@@ -906,12 +948,12 @@
                 id: "datetime", title: "DateTime Tool",
                 configHTML: `
                 <div class="bg-white border-3 border-[#0f172a] rounded-xl p-3 mb-4 shadow-[4px_4px_0px_#0f172a]">
-                    <div class="text-xs font-black text-[#3b82f6] mb-2 uppercase tracking-wide">Select the format to convert</div>
+                    <div class="text-[10px] md:text-xs font-black text-[#3b82f6] mb-2 uppercase tracking-wide">Select the format to convert</div>
                     <div class="space-y-2">
-                        <label class="flex items-center gap-2 text-xs font-bold text-[#0f172a]">
+                        <label class="flex items-center gap-2 text-[10px] md:text-xs font-bold text-[#0f172a]">
                             <input type="radio" name="dt-format-p" class="accent-[#3b82f6] w-4 h-4"> Date/Time format to string
                         </label>
-                        <label class="flex items-center gap-2 text-xs font-bold text-[#0f172a]">
+                        <label class="flex items-center gap-2 text-[10px] md:text-xs font-bold text-[#0f172a]">
                             <input type="radio" name="dt-format-p" checked class="accent-[#3b82f6] w-4 h-4"> String to Date/Time format
                         </label>
                     </div>
@@ -936,7 +978,7 @@
 
                 <div class="mb-4">
                     <label class="block text-xs font-black text-[#0f172a] mb-1">Select the format matching the string</label>
-                    <div class="border-2 border-[#0f172a] rounded-lg bg-white h-24 overflow-y-auto text-xs font-bold font-mono shadow-inner">
+                    <div class="border-2 border-[#0f172a] rounded-lg bg-white h-24 overflow-y-auto text-[10px] md:text-xs font-bold font-mono shadow-inner">
                         <div class="p-2 hover:bg-[#f1f5f9] cursor-pointer border-b border-gray-100">yyyy-MM-dd hh:mm:ss</div>
                         <div class="p-2 hover:bg-[#f1f5f9] cursor-pointer border-b border-gray-100">MM/dd/yyyy hh:mm:ss</div>
                         <div class="p-2 bg-[#3b82f6] text-white cursor-pointer border-b border-[#0f172a]">MM/dd/yy hh:mm:ss</div>
@@ -952,12 +994,12 @@
                 id: "datetime_day", title: "DateTime Tool (Feature)",
                 configHTML: `
                 <div class="bg-white border-3 border-[#0f172a] rounded-xl p-3 mb-4 shadow-[4px_4px_0px_#0f172a]">
-                    <div class="text-xs font-black text-[#10b981] mb-2 uppercase tracking-wide">Select the format to convert</div>
+                    <div class="text-[10px] md:text-xs font-black text-[#10b981] mb-2 uppercase tracking-wide">Select the format to convert</div>
                     <div class="space-y-2">
-                        <label class="flex items-center gap-2 text-xs font-bold text-[#0f172a]">
+                        <label class="flex items-center gap-2 text-[10px] md:text-xs font-bold text-[#0f172a]">
                             <input type="radio" name="dt-format" checked class="accent-[#10b981] w-4 h-4"> Date/Time format to string
                         </label>
-                        <label class="flex items-center gap-2 text-xs font-bold text-[#0f172a]">
+                        <label class="flex items-center gap-2 text-[10px] md:text-xs font-bold text-[#0f172a]">
                             <input type="radio" name="dt-format" class="accent-[#10b981] w-4 h-4"> String to Date/Time format
                         </label>
                     </div>
@@ -990,14 +1032,14 @@
                     <input type="text" value="day" class="w-full border-2 border-[#0f172a] rounded-lg p-2 text-xs font-bold font-mono text-[#10b981] bg-white focus:outline-none shadow-inner">
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 text-xs">
+                <div class="grid grid-cols-2 gap-4 text-[10px] md:text-xs">
                     <div>
                         <span class="font-black block text-[#0f172a] mb-1">Example</span>
-                        <div class="bg-[#f1f5f9] border-2 border-[#0f172a] rounded p-2 text-slate-500 font-mono font-bold">2000-01-02 ...</div>
+                        <div class="bg-[#f1f5f9] border-2 border-[#0f172a] rounded p-2 text-slate-500 font-mono font-bold truncate">2000-01-02...</div>
                     </div>
                     <div>
                         <span class="font-black block text-[#0f172a] mb-1">Output</span>
-                        <div class="bg-white border-2 border-[#0f172a] rounded p-2 text-[#10b981] font-mono font-bold shadow-inner">Sunday</div>
+                        <div class="bg-white border-2 border-[#0f172a] rounded p-2 text-[#10b981] font-mono font-bold shadow-inner truncate">Sunday</div>
                     </div>
                 </div>
 
@@ -1005,12 +1047,11 @@
             },
             {
                 id: "filter", title: "Filter Tool",
-                configHTML: `<div class="bg-white p-4 rounded-xl border-3 border-[#0f172a] shadow-[4px_4px_0px_#0f172a] mb-4"><label class="block font-black text-sm mb-2 text-[#0f172a]">Filter Type</label><div class="flex gap-4 mb-4 font-bold text-sm"><label class="flex items-center gap-2"><input type="radio" class="accent-[#3b82f6] w-4 h-4"> Basic</label><label class="flex items-center gap-2"><input type="radio" checked class="accent-[#3b82f6] w-4 h-4"> Custom</label></div><label class="block font-black text-sm mb-2 text-[#0f172a]">Expression</label><div class="bg-[#f1f5f9] border-2 border-[#0f172a] p-3 rounded-lg text-xs font-mono font-bold text-[#3b82f6] shadow-inner">[Day of Week] = "Saturday"<br><span class="text-[#0f172a]">OR</span><br>[Day of Week] = "Sunday"</div><div class="mt-4 bg-[#f59e0b]/20 border-2 border-[#f59e0b] p-3 rounded-lg font-bold text-xs text-[#0f172a] shadow-[2px_2px_0px_#f59e0b]"><strong><span class="bg-[#10b981] text-white px-1 rounded border border-[#0f172a]">T</span> Anchor:</strong> Weekends<br><strong><span class="bg-[#ef4444] text-white px-1 rounded border border-[#0f172a]">F</span> Anchor:</strong> Weekdays</div></div><div class="mt-4"><h4 class="font-black text-sm mb-1 text-[#0f172a]">Instructions:</h4><p class="text-xs text-slate-600 font-bold">1. Use Custom Filter.<br>2. Filter for Saturday OR Sunday.</p></div>`
+                configHTML: `<div class="bg-white p-4 rounded-xl border-3 border-[#0f172a] shadow-[4px_4px_0px_#0f172a] mb-4"><label class="block font-black text-sm mb-2 text-[#0f172a]">Filter Type</label><div class="flex gap-4 mb-4 font-bold text-sm"><label class="flex items-center gap-2"><input type="radio" class="accent-[#3b82f6] w-4 h-4"> Basic</label><label class="flex items-center gap-2"><input type="radio" checked class="accent-[#3b82f6] w-4 h-4"> Custom</label></div><label class="block font-black text-sm mb-2 text-[#0f172a]">Expression</label><div class="bg-[#f1f5f9] border-2 border-[#0f172a] p-3 rounded-lg text-xs font-mono font-bold text-[#3b82f6] shadow-inner overflow-x-auto">[Day of Week] = "Saturday"<br><span class="text-[#0f172a]">OR</span><br>[Day of Week] = "Sunday"</div><div class="mt-4 bg-[#f59e0b]/20 border-2 border-[#f59e0b] p-3 rounded-lg font-bold text-xs text-[#0f172a] shadow-[2px_2px_0px_#f59e0b]"><strong><span class="bg-[#10b981] text-white px-1 rounded border border-[#0f172a]">T</span> Anchor:</strong> Weekends<br><strong><span class="bg-[#ef4444] text-white px-1 rounded border border-[#0f172a]">F</span> Anchor:</strong> Weekdays</div></div><div class="mt-4"><h4 class="font-black text-sm mb-1 text-[#0f172a]">Instructions:</h4><p class="text-xs text-slate-600 font-bold">1. Use Custom Filter.<br>2. Filter for Saturday OR Sunday.</p></div>`
             }
         ];
 
         // --- CORE FUNCTIONS ---
-
         function stepBack() {
             if (currentState.stepIndex > 0) {
                 activateStep(currentState.stepIndex - 1);
@@ -1059,61 +1100,49 @@
         
         // --- DATA PREVIEW LOGIC ---
         function getStepData(stepIndex) {
-            // 0. Raw / Step 1 & 2 & 3
             let processed = JSON.parse(JSON.stringify(rawData));
 
-            // 1. Cleanse Cab (Step 4 / Index 3)
             let cleansedCab = processed.map(row => {
                 let r = {...row};
                 if(r["Cab Company"]) r["Cab Company"] = r["Cab Company"].toUpperCase().replace(/\s+/g, '');
                 return r;
             });
 
-            // 2. Cleanse Start (Step 5 / Index 4) - JUST START POINT TRIMMING
             let cleansedStart = cleansedCab.map(row => {
                 let r = {...row};
                 if(r.start_point) r.start_point = r.start_point.trim();
-                // Rain is NOT touched here yet
                 return r;
             });
 
-            // 3. Cleanse Rain (Step 6 / Index 5) - JUST RAIN REPLACEMENT
             let cleansedRain = cleansedStart.map(row => {
                 let r = {...row};
                 if(r.rain === null) r.rain = 0;
                 return r;
             });
 
-            // 4. Imputation (Step 7 / Index 6) - PRICE REPLACEMENT
             let prices = processed.filter(r => r.Price !== null).map(r => parseFloat(r.Price)).sort((a,b) => a-b);
             let median = prices[Math.floor(prices.length/2)];
             let imputed = cleansedRain.map(row => {
                 let r = {...row};
-                if(r.Price === null) r.Price = median.toFixed(2); // Keep numeric format
+                if(r.Price === null) r.Price = median.toFixed(2);
                 return r;
             });
 
-            // 5. Formula (Step 8 / Index 7) - CAB NULL REPLACEMENT
             let formulated = imputed.map(row => {
                 let r = {...row};
                 if(r["Cab Company"] === null) r["Cab Company"] = "RIDE4ME";
                 return r;
             });
 
-            // 6. Record ID (Step 9 / Index 8)
             let wID = formulated.map((row, i) => { return { "Ride ID": i+1, ...row }; });
 
-            // 7. DateTime Parse (Step 10 / Index 9)
             let wDateParse = wID.map(row => {
                 let r = {...row};
                 let d = new Date(r["Time Ride Ordered"]);
-                if(!isNaN(d)) {
-                    r["Time of Order"] = r["Time Ride Ordered"]; 
-                } 
+                if(!isNaN(d)) r["Time of Order"] = r["Time Ride Ordered"]; 
                 return r;
             });
 
-            // 8. Day of Week (Step 11 / Index 10)
             let wDateFeature = wDateParse.map(row => {
                 let r = {...row};
                 let d = new Date(r["Time Ride Ordered"]);
@@ -1125,34 +1154,25 @@
                 return r;
             });
             
-            // 9. Filter (Step 12 / Index 11)
             let filteredTrue = wDateFeature.filter(r => r["Day of Week"] === "Saturday" || r["Day of Week"] === "Sunday");
 
-            // --- STRICT RETURN MAPPING ---
-            if(stepIndex <= 2) return processed; // Steps 0, 1, 2, 3 (Input, Browse, Select)
-            if(stepIndex === 3) return cleansedCab; // Step 4
-            if(stepIndex === 4) return cleansedStart; // Step 5 (Start Point only)
-            if(stepIndex === 5) return cleansedRain; // Step 6 (Rain only)
-            if(stepIndex === 6) return imputed; // Step 7 (Price Imputation)
-            if(stepIndex === 7) return formulated; // Step 8 (Formula)
-            if(stepIndex === 8) return wID; // Step 9
-            if(stepIndex === 9) return wDateParse; // Step 10
-            if(stepIndex === 10) return wDateFeature; // Step 11
-            if(stepIndex === 11) return filteredTrue; // Step 12
+            if(stepIndex <= 2) return processed; 
+            if(stepIndex === 3) return cleansedCab;
+            if(stepIndex === 4) return cleansedStart;
+            if(stepIndex === 5) return cleansedRain;
+            if(stepIndex === 6) return imputed;
+            if(stepIndex === 7) return formulated;
+            if(stepIndex === 8) return wID;
+            if(stepIndex === 9) return wDateParse;
+            if(stepIndex === 10) return wDateFeature;
+            if(stepIndex === 11) return filteredTrue;
             
             return processed;
         }
 
-        // --- NEW: TAILORED MOCK DATA FOR LESSON PREVIEWS ---
         function getMockLessonData(stepIndex) {
-            let currentData = [];
-            let prevData = [];
-
-            // Only use specific mock logic for the split filter view, 
-            // otherwise fall back to standard data flow logic
             switch(stepIndex) {
-                case 11: // Step 12: Filter
-                    // Return distinct datasets for display
+                case 11: 
                     return {
                         specialType: 'split',
                         trueData: [
@@ -1164,13 +1184,9 @@
                             { "Ride ID": 4, "Day of Week": "Monday", "Price": "14" }
                         ]
                     };
-                    break;
-                    
                 default:
-                    // Use standard logic for other steps
                     return null; 
             }
-            return { current: currentData, prev: prevData };
         }
 
         function renderTableHTML(currentData, prevData, title) {
@@ -1180,7 +1196,7 @@
             const prevHeaders = prevData && prevData.length > 0 ? Object.keys(prevData[0]) : [];
             
             let html = `<div class="mb-6"><h5 class="font-black text-sm text-[#0f172a] mb-2 uppercase tracking-wide border-b-2 border-[#0f172a] pb-1">${title}</h5>`;
-            html += '<table class="preview-table"><thead><tr>';
+            html += '<div class="overflow-x-auto"><table class="preview-table"><thead><tr>';
             headers.forEach(h => html += `<th>${h}</th>`);
             html += '</tr></thead><tbody>';
             
@@ -1193,17 +1209,12 @@
                     let prevValAttr = "";
                     
                     if (prevData) {
-                        // Check if column is new
                         if (!prevHeaders.includes(h)) {
                             cellClass = "cell-new";
                         } else {
-                            // Check if value changed
                             let oldVal = prevData[rowIndex] ? prevData[rowIndex][h] : undefined;
-                            
-                            // Loose equality check
                             if (String(val) !== String(oldVal)) {
                                 cellClass = "cell-changed";
-                                // Wrap string values in quotes for tooltip to visualize whitespace
                                 let tooltipVal = typeof oldVal === 'string' ? `'${oldVal}'` : oldVal;
                                 if(oldVal === null) tooltipVal = 'null';
                                 prevValAttr = `data-prev="Prev: ${tooltipVal}"`;
@@ -1215,7 +1226,7 @@
                 });
                 html += '</tr>';
             });
-            html += '</tbody></table></div>';
+            html += '</tbody></table></div></div>';
             return html;
         }
 
@@ -1225,7 +1236,6 @@
             let htmlContent = "";
 
             if (mock && mock.specialType === 'split') {
-                // Handle Split View (Filter)
                 htmlContent += renderTableHTML(mock.trueData, null, "True Anchor (Weekends)");
                 htmlContent += renderTableHTML(mock.falseData, null, "False Anchor (Weekdays)");
                 htmlContent += `<div class="text-xs font-bold text-slate-400 mt-4 text-right italic">* Simulated preview showing data split</div>`;
@@ -1237,7 +1247,6 @@
                     prevData = mock.prev;
                 } else {
                     currentData = getStepData(stepIndex);
-                    // Crucial fix: The previous data is exactly one step index back in our strict sequence
                     const prevIndex = stepIndex > 0 ? stepIndex - 1 : 0;
                     prevData = getStepData(prevIndex);
                 }
@@ -1252,7 +1261,7 @@
             }
             
             previewContent.innerHTML = htmlContent;
-            document.getElementById('mini-preview-modal').style.display = 'block';
+            document.getElementById('mini-preview-modal').style.display = 'flex';
             document.getElementById('mini-preview-backdrop').style.display = 'block';
         }
 
@@ -1262,7 +1271,7 @@
             
             const step3_Cab = getStepData(3);
             const step4_Start = getStepData(4);
-            const step5_Rain = getStepData(5); // Result of Node 4
+            const step5_Rain = getStepData(5); 
             const step6_Imp = getStepData(6);
             const step7_Form = getStepData(7);
             const step8_ID = getStepData(8);
@@ -1270,27 +1279,27 @@
             const step10_Feat = getStepData(10);
             const step11_Filt = getStepData(11);
 
-            if (toolId === 0) { // Input
+            if (toolId === 0) { 
                 data = rawData; displayTitle = "Input Data";
-            } else if (toolId === 1) { // Browse
+            } else if (toolId === 1) { 
                 data = rawData; displayTitle = "Browse (Input)";
-            } else if (toolId === 2) { // Select
+            } else if (toolId === 2) { 
                 data = rawData; displayTitle = "Select Output";
-            } else if (toolId === 3) { // Cleanse Cab
+            } else if (toolId === 3) { 
                 data = type === 'in' ? rawData : step3_Cab; displayTitle = "Cleanse Cab " + (type==='in'?'Input':'Output');
-            } else if (toolId === 4) { // Cleanse Start/Rain (Combines Steps 5 & 6)
+            } else if (toolId === 4) { 
                 data = type === 'in' ? step3_Cab : step5_Rain; displayTitle = "Cleanse Start/Rain " + (type==='in'?'Input':'Output');
-            } else if (toolId === 5) { // Imputation (Step 7)
+            } else if (toolId === 5) { 
                 data = type === 'in' ? step5_Rain : step6_Imp; displayTitle = "Imputation " + (type==='in'?'Input':'Output');
-            } else if (toolId === 6) { // Formula (Step 8)
+            } else if (toolId === 6) { 
                 data = type === 'in' ? step6_Imp : step7_Form; displayTitle = "Formula " + (type==='in'?'Input':'Output');
-            } else if (toolId === 7) { // Record ID (Step 9)
+            } else if (toolId === 7) { 
                 data = type === 'in' ? step7_Form : step8_ID; displayTitle = "Record ID " + (type==='in'?'Input':'Output');
-            } else if (toolId === 8) { // DateTime Parse (Step 10)
+            } else if (toolId === 8) { 
                 data = type === 'in' ? step8_ID : step9_Parse; displayTitle = "DateTime Parse " + (type==='in'?'Input':'Output');
-            } else if (toolId === 9) { // DateTime Feature (Step 11)
+            } else if (toolId === 9) { 
                 data = type === 'in' ? step9_Parse : step10_Feat; displayTitle = "DateTime Feature " + (type==='in'?'Input':'Output');
-            } else if (toolId === 10) { // Filter (Step 12)
+            } else if (toolId === 10) { 
                 if (type === 'in') {
                     data = step10_Feat; displayTitle = "Filter Input";
                 } else if (type === 'true') { 
@@ -1302,7 +1311,7 @@
             }
 
             document.getElementById('tool-name-display').innerText = displayTitle;
-            renderGrid(data, toolId === 1); // Show quality bars only for initial browse
+            renderGrid(data, toolId === 1); 
         }
 
         function renderGrid(data, showBars) {
@@ -1322,7 +1331,7 @@
                 let bar = '';
                 if(showBars) {
                     let color = 'q-ok';
-                    if(h === 'start_point') color = 'q-error'; // Dirty
+                    if(h === 'start_point') color = 'q-error'; 
                     if(h === 'Price') color = 'q-null';
                     if(h === 'Cab Company') color = 'q-null'; 
                     bar = `<div class="quality-bar"><div class="${color} w-full"></div></div>`;
@@ -1380,44 +1389,69 @@
             XLSX.writeFile(wb, "Cab_Company_Data.xlsx");
         }
 
+        // --- UNIFIED TOUCH & MOUSE EVENT HELPER ---
+        function getClientPos(e) {
+            if (e.touches && e.touches.length > 0) {
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            return { x: e.clientX, y: e.clientY };
+        }
+
         // --- DRAG LOGIC ---
         let draggedNode = null, dragOffsetX = 0, dragOffsetY = 0;
+        
         function startDrag(e, nodeId) {
+            if (e.target.classList.contains('sim-anchor')) return; // Ignore anchors
+            
+            activateStep(nodeId);
             draggedNode = document.getElementById(`node-${nodeId}`);
             const rect = draggedNode.getBoundingClientRect();
-            // Important: Account for scroll position when dragging in a scrolling container
-            const container = document.getElementById('canvas-container'); 
-            dragOffsetX = e.clientX - rect.left; 
-            dragOffsetY = e.clientY - rect.top;
+            const pos = getClientPos(e);
+            dragOffsetX = pos.x - rect.left; 
+            dragOffsetY = pos.y - rect.top;
             draggedNode.classList.add('active');
+
+            if (e.type === 'touchstart') {
+                document.body.style.overflow = 'hidden'; // Prevents background scroll on mobile
+            }
         }
+        
         function drag(e) {
             if (!draggedNode) return;
-            e.preventDefault();
-            // For scrolling container, we need to calculate position relative to the wrapper including scroll
-            const container = document.getElementById('canvas-content-wrapper');
-            const bg = document.getElementById('canvas-container'); // The scrollable window
+            if (e.type === 'touchmove') e.preventDefault(); // Stop native pull-to-refresh
             
-            let x = e.clientX - bg.getBoundingClientRect().left + bg.scrollLeft - dragOffsetX;
-            let y = e.clientY - bg.getBoundingClientRect().top + bg.scrollTop - dragOffsetY;
+            const pos = getClientPos(e);
+            const bg = document.getElementById('canvas-container'); 
+            
+            let x = pos.x - bg.getBoundingClientRect().left + bg.scrollLeft - dragOffsetX;
+            let y = pos.y - bg.getBoundingClientRect().top + bg.scrollTop - dragOffsetY;
             
             draggedNode.style.left = `${Math.max(0, x)}px`;
             draggedNode.style.top = `${Math.max(0, y)}px`;
             drawConnections();
         }
-        function endDrag() { draggedNode = null; }
+        
+        function endDrag(e) { 
+            if (draggedNode) {
+                draggedNode = null; 
+                document.body.style.overflow = '';
+            }
+        }
 
         function drawConnections() {
             const svg = document.getElementById('connections-layer');
             svg.innerHTML = ''; 
-            // Simple sequential connections for this linear flow
             const pathSeq = [[0,1], [0,2], [2,3], [3,4], [4,5], [5,6], [6,7], [7,8], [8,9], [9,10]];
             
             pathSeq.forEach(([srcId, tgtId]) => {
                 const src = document.getElementById(`node-${srcId}`);
                 const tgt = document.getElementById(`node-${tgtId}`);
-                const x1 = parseInt(src.style.left) + 64, y1 = parseInt(src.style.top) + 32; 
-                const x2 = parseInt(tgt.style.left), y2 = parseInt(tgt.style.top) + 32; 
+                // Account for potential mobile sizing differences
+                const nodeWidth = src.offsetWidth;
+                const nodeHeight = src.offsetHeight;
+                
+                const x1 = parseInt(src.style.left) + nodeWidth, y1 = parseInt(src.style.top) + (nodeHeight/2); 
+                const x2 = parseInt(tgt.style.left), y2 = parseInt(tgt.style.top) + (nodeHeight/2); 
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('d', `M ${x1} ${y1} C ${(x1+x2)/2} ${y1}, ${(x1+x2)/2} ${y2}, ${x2} ${y2}`);
                 path.setAttribute('stroke', '#0f172a'); path.setAttribute('stroke-width', '4'); path.setAttribute('fill', 'none');
@@ -1432,12 +1466,16 @@
             document.body.style.userSelect = 'none'; 
             document.addEventListener('mousemove', doResize); 
             document.addEventListener('mouseup', stopResize); 
+            document.addEventListener('touchmove', doResize, {passive: false});
+            document.addEventListener('touchend', stopResize);
         }
         function doResize(e) {
             if (!isResizing) return;
+            if (e.type === 'touchmove') e.preventDefault();
+            const pos = getClientPos(e);
             const container = document.getElementById('workspace-container');
             const configPane = document.getElementById('config-pane');
-            let newWidth = e.clientX - container.getBoundingClientRect().left;
+            let newWidth = pos.x - container.getBoundingClientRect().left;
             configPane.style.width = `${Math.max(200, Math.min(newWidth, container.offsetWidth - 200))}px`;
         }
         function stopResize() { 
@@ -1445,6 +1483,8 @@
             document.body.style.userSelect = ''; 
             document.removeEventListener('mousemove', doResize); 
             document.removeEventListener('mouseup', stopResize); 
+            document.removeEventListener('touchmove', doResize);
+            document.removeEventListener('touchend', stopResize);
         }
 
         // --- SIDEBAR RESIZING ---
@@ -1454,12 +1494,15 @@
             document.body.style.userSelect = 'none';
             document.addEventListener('mousemove', doSidebarResize);
             document.addEventListener('mouseup', stopSidebarResize);
+            document.addEventListener('touchmove', doSidebarResize, {passive: false});
+            document.addEventListener('touchend', stopSidebarResize);
         }
         function doSidebarResize(e) {
             if (!isResizingSidebar) return;
+            if (e.type === 'touchmove') e.preventDefault();
+            const pos = getClientPos(e);
             const sidebar = document.querySelector('.sidebar');
-            let newWidth = e.clientX;
-            // Add boundaries for resize limits
+            let newWidth = pos.x;
             if (newWidth > 200 && newWidth < window.innerWidth - 300) {
                 sidebar.style.width = `${newWidth}px`;
             }
@@ -1469,6 +1512,8 @@
             document.body.style.userSelect = '';
             document.removeEventListener('mousemove', doSidebarResize);
             document.removeEventListener('mouseup', stopSidebarResize);
+            document.removeEventListener('touchmove', doSidebarResize);
+            document.removeEventListener('touchend', stopSidebarResize);
         }
 
         // --- CANVAS HORIZONTAL RESIZING (Vertical Space Split) ---
@@ -1478,17 +1523,20 @@
             document.body.style.userSelect = 'none';
             document.addEventListener('mousemove', doCanvasResize);
             document.addEventListener('mouseup', stopCanvasResize);
+            document.addEventListener('touchmove', doCanvasResize, {passive: false});
+            document.addEventListener('touchend', stopCanvasResize);
         }
         function doCanvasResize(e) {
             if (!isResizingCanvas) return;
+            if (e.type === 'touchmove') e.preventDefault();
+            const pos = getClientPos(e);
             const canvasContainer = document.getElementById('canvas-container');
             const headerHeight = document.querySelector('header').offsetHeight;
             
-            let newHeight = e.clientY - headerHeight;
-            // Add boundaries for resize limits
+            let newHeight = pos.y - headerHeight;
             if (newHeight > 100 && newHeight < window.innerHeight - 150) {
                 canvasContainer.style.height = `${newHeight}px`;
-                drawConnections(); // Safely refresh SVG connections just in case
+                drawConnections(); 
             }
         }
         function stopCanvasResize() {
@@ -1496,14 +1544,18 @@
             document.body.style.userSelect = '';
             document.removeEventListener('mousemove', doCanvasResize);
             document.removeEventListener('mouseup', stopCanvasResize);
+            document.removeEventListener('touchmove', doCanvasResize);
+            document.removeEventListener('touchend', stopCanvasResize);
         }
 
         window.addEventListener('load', () => { 
             drawConnections(); 
             setTimeout(() => document.getElementById('browse-hint').classList.remove('hidden'), 1000); 
-            // Initialize Step 0 view correctly
             activateStep(0);
         });
+        
+        // Ensure SVG redraws nicely when resizing window 
+        window.addEventListener('resize', drawConnections);
     </script>
 </body>
 </html>
