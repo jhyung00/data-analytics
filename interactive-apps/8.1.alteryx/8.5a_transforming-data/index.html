@@ -6,7 +6,6 @@
     <title>Alteryx Designer: Employee Survey Analysis</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Theme Config -->
     <script>
         tailwind.config = {
             theme: {
@@ -191,15 +190,15 @@
         /* Data Preview Modal Gamified */
         #mini-preview-modal {
             display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 90%; max-width: 900px; background: white; z-index: 300;
+            width: 95%; max-width: 900px; max-height: 90vh; background: white; z-index: 300;
             border-radius: 16px; box-shadow: 8px 8px 0px rgba(15, 23, 42, 1);
-            border: 4px solid #0f172a; cursor: grab;
+            border: 4px solid #0f172a; cursor: grab; flex-direction: column;
         }
         #mini-preview-backdrop {
             display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); z-index: 299;
         }
         .modal-header { padding: 16px 20px; border-bottom: 4px solid #0f172a; display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; border-radius: 12px 12px 0 0; cursor: move; }
-        .modal-body { padding: 20px; max-height: 500px; overflow: auto; background: white; border-radius: 0 0 12px 12px;}
+        .modal-body { padding: 20px; flex: 1; overflow: auto; background: white; border-radius: 0 0 12px 12px;}
         
         .preview-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; font-family: 'JetBrains Mono', monospace; font-weight: 700; border: 3px solid #0f172a; border-radius: 8px; overflow: hidden;}
         .preview-table th, .preview-table td { border-bottom: 2px solid #0f172a; border-right: 2px solid #0f172a; padding: 10px; text-align: left; }
@@ -334,7 +333,7 @@
             position: relative;
         }
 
-        .tool-node { width: 64px; height: 64px; position: absolute; cursor: move; z-index: 10; user-select: none; transition: transform 0.1s;}
+        .tool-node { width: 64px; height: 64px; position: absolute; cursor: move; z-index: 10; user-select: none; transition: transform 0.1s; touch-action: none;}
         .tool-node:hover { transform: translateY(-2px); }
         .tool-node.active .tool-icon img { border-color: #f59e0b; box-shadow: 0 0 0 4px #f59e0b, 4px 4px 0px rgba(15, 23, 42, 1); }
         .tool-icon { width: 100%; height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: center; background: transparent; }
@@ -379,20 +378,28 @@
         .h-resizer { height: 12px; cursor: row-resize; background-color: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 20; flex-shrink: 0; width: 100%; transition: background 0.2s; border-top: 2px solid rgba(255,255,255,0.2); border-bottom: 2px solid rgba(0,0,0,0.5);}
         .h-resizer:hover { background-color: #3b82f6; }
         .resizer i, .lp-resizer i, .h-resizer i { font-size: 10px; color: white; }
+
+        /* ========================================= */
+        /* MOBILE RESPONSIVE OVERRIDES               */
+        /* ========================================= */
+        @media (max-width: 767px) {
+            .b-layout { grid-template-columns: 1fr; }
+            .b-toolflow { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+            .b-toolflow .b-arrow { transform: rotate(90deg); margin: 10px 0;}
+            .main-content { padding: 20px; }
+            #lesson-plan-overlay { flex-direction: column; }
+            .sidebar { width: 100% !important; max-height: 40vh; border-right: none; border-bottom: 4px solid #0f172a; flex-shrink: 0; }
+            .lp-resizer, .resizer, .h-resizer { display: none !important; }
+            .tidy-container { flex-direction: column; }
+            .tidy-arrow { transform: rotate(90deg); margin: 16px 0; }
+            .tidy-box { width: 100%; max-width: 320px; }
+            .q-table-wrap { flex-direction: column; }
+            .q-table-wrap .b-arrow { transform: rotate(90deg); }
+        }
     </style>
 </head>
 <body class="text-game-dark">
 
-    <!-- Custom Modal -->
-    <div id="custom-alert" class="hidden fixed inset-0 z-[999] bg-game-dark/80 backdrop-blur-sm flex items-center justify-center">
-        <div class="game-card p-8 max-w-sm w-full text-center animate-pop-in mx-4">
-            <h3 id="alert-title" class="text-2xl font-black mb-4 text-game-blue border-b-4 border-game-dark pb-2">Message</h3>
-            <p id="alert-msg" class="mb-6 font-bold text-lg text-game-dark"></p>
-            <button onclick="document.getElementById('custom-alert').classList.add('hidden')" class="bg-game-yellow text-game-dark font-black py-3 px-8 rounded-xl border-3 border-game-dark shadow-game hover:shadow-game-sm hover:translate-y-[2px] transition-all text-lg w-full">Got it!</button>
-        </div>
-    </div>
-
-    <!-- DATA PREVIEW MODAL -->
     <div id="mini-preview-backdrop" onclick="closePreview()"></div>
     <div id="mini-preview-modal">
         <div class="modal-header" id="modal-drag-handle">
@@ -400,14 +407,11 @@
             <button onclick="closePreview()" class="text-game-dark hover:text-game-red transition-colors text-xl"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="modal-body" id="preview-content">
-            <!-- Table goes here -->
-        </div>
+            </div>
     </div>
 
-    <!-- LESSON PLAN OVERLAY -->
     <div id="lesson-plan-overlay">
-        <!-- Sidebar -->
-        <div class="sidebar w-[320px]">
+        <div class="sidebar w-full md:w-[320px]">
             <div class="p-6 border-b-4 border-game-dark text-center bg-game-blue text-white">
                 <h1 class="font-black text-2xl tracking-wide">Alteryx Designer</h1>
                 <span class="text-game-yellow text-sm font-black uppercase tracking-wider bg-game-dark px-3 py-1 rounded-full border-2 border-white mt-2 inline-block shadow-game-sm">Master Class</span>
@@ -428,19 +432,17 @@
                 <li><a href="#findings"><i class="fa-solid fa-chart-pie w-6"></i> 8. Survey: Findings</a></li>
             </ul>
         </div>
-        <div class="lp-resizer" onmousedown="initLpResize(event)"><i class="fa-solid fa-grip-lines-vertical"></i></div>
+        <div class="lp-resizer" onpointerdown="initLpResize(event)"><i class="fa-solid fa-grip-lines-vertical"></i></div>
 
-        <!-- MAIN CONTENT -->
         <div class="main-content" id="lp-content">
 
-            <!-- INTERACTIVE CONCEPT BUILDER -->
             <section id="interactive-builder" style="padding: 0; background: transparent; box-shadow: none;">
                 <div style="background:linear-gradient(120deg, #3b82f6, #10b981); color:white; padding:40px 32px; border-radius: 16px 16px 0 0; border: 4px solid #0f172a; border-bottom: none;">
                     <div class="inline-block bg-game-dark text-game-yellow border-2 border-white shadow-game-sm rounded-full px-4 py-1 font-black text-sm uppercase tracking-widest mb-4">Interactive Simulator Lesson</div>
-                    <h1 style="margin:0 0 12px;font-size:2.5rem; font-family: 'Nunito', sans-serif; font-weight: 900; color: white; text-shadow: 2px 2px 0px #0f172a;">Build the Shape Change Yourself</h1>
-                    <p style="max-width:980px; margin:8px 0; color: white; line-height: 1.6; font-size: 18px; font-weight: 700;">This section behaves like a mini Alteryx concept simulator. Drag fields into configuration boxes, run Cross Tab or Transpose, and immediately see how the table shape changes.</p>
+                    <h1 class="text-3xl md:text-5xl font-black mb-3" style="font-family: 'Nunito', sans-serif; text-shadow: 2px 2px 0px #0f172a;">Build the Shape Change Yourself</h1>
+                    <p style="max-width:980px; margin:8px 0; color: white; line-height: 1.6; font-size: 18px; font-weight: 700;">This section behaves like a mini Alteryx concept simulator. Drag fields into configuration boxes, run Cross Tab or Transpose, and immediately see how the table shape changes. <br><span class="text-sm bg-game-dark/50 px-2 py-1 rounded inline-block mt-2"><i class="fa-solid fa-mobile-screen-button"></i> Mobile Note: Drag and drop is best experienced on a desktop browser.</span></p>
                 </div>
-                <div style="padding: 32px; background: #cbd5e1; border: 4px solid #0f172a; border-top: none; border-radius: 0 0 16px 16px; box-shadow: 8px 8px 0px rgba(15, 23, 42, 1);">
+                <div class="p-4 md:p-8" style="background: #cbd5e1; border: 4px solid #0f172a; border-top: none; border-radius: 0 0 16px 16px; box-shadow: 8px 8px 0px rgba(15, 23, 42, 1);">
                     
                     <div class="b-grid">
                         <div class="b-card game-card">
@@ -479,7 +481,7 @@
                             </div>
                         </div>
 
-                        <div class="b-card game-card">
+                        <div class="b-card game-card overflow-x-auto">
                             <div class="b-pill"><i class="fa-solid fa-table mr-2"></i>Raw Dataset</div>
                             <h2 style="font-size:1.75rem; border:none; color: #0f172a; margin:0 0 8px; padding-bottom: 0;">Starting table</h2>
                             <p style="font-size:15px;color:var(--muted); font-weight: 800;">Each row is one record. This is the long-format data students start with.</p>
@@ -487,25 +489,20 @@
                             <div id="rawTable" style="max-height: 250px; overflow-y: auto;"></div>
                         </div>
 
-                        <!-- CROSS TAB BUILDER -->
                         <div class="b-card game-card" style="border-color: #3b82f6; background-color: #eff6ff;">
                             <div class="b-pill" style="background:#3b82f6; color:white;"><i class="fa-solid fa-hammer mr-2"></i>Simulator 1: Cross Tab</div>
-                            <h2 style="font-size:1.75rem; border:none; color: #0f172a; margin:0 0 8px; padding-bottom: 0;">Drag fields into the Cross Tab configuration</h2>
+                            <h2 class="text-xl md:text-3xl font-black border-none text-game-dark m-0 pb-2">Drag fields into the Cross Tab configuration</h2>
                             <p style="font-size:15px;color:var(--muted); margin-bottom:20px; font-weight: 800;">Goal: turn <strong class="text-game-dark">MenuCategory</strong> values into columns and sum <strong class="text-game-dark">ItemsSold</strong> by <strong class="text-game-dark">DiningHall</strong>.</p>
                             
                             <div class="b-layout">
                                 <div class="b-sidebar">
                                     <h3 style="font-size:1.2rem; color: #0f172a; margin:0 0 16px; border: none; padding: 0;"><i class="fa-solid fa-list-ul mr-2 text-game-blue"></i>Available fields</h3>
                                     <div class="b-field-list" id="availableFieldsCT"></div>
-                                    <div class="b-warn teacher-only">
-                                        <strong>Teaching note:</strong> In real Alteryx, you check boxes in the panel. Here, you drag them to explicitly define their structural role.
-                                    </div>
                                 </div>
 
                                 <div>
                                     <div class="b-panel" id="builderPanelCT">
-                                        <!-- Droppable zones generated by JS -->
-                                    </div>
+                                        </div>
                                     <div class="b-btnrow">
                                         <button class="good" onclick="runBuilderCT()"><i class="fa-solid fa-play mr-2"></i>Run Cross Tab</button>
                                         <button class="ghost" onclick="loadCorrectCT()"><i class="fa-solid fa-magic mr-2"></i>Load Correct Setup</button>
@@ -515,8 +512,7 @@
                             </div>
                         </div>
 
-                        <!-- CROSS TAB OUTPUT -->
-                        <div class="b-card game-card">
+                        <div class="b-card game-card overflow-x-auto">
                             <div class="b-pill"><i class="fa-solid fa-table-columns mr-2"></i>Output 1: Cross Tab</div>
                             <h2 style="font-size:1.75rem; border:none; color: #0f172a; margin:0 0 16px; padding-bottom: 0;">See the shape change (Wide Format)</h2>
                             <div id="outputShapeCT" class="b-shape"></div>
@@ -524,10 +520,9 @@
                             <div id="outputExplanationCT"></div>
                         </div>
                         
-                        <!-- TRANSPOSE BUILDER -->
                         <div class="b-card game-card" style="border-color: #10b981; background-color: #ecfdf5;">
                             <div class="b-pill" style="background:#10b981; color:white;"><i class="fa-solid fa-hammer mr-2"></i>Simulator 2: Transpose</div>
-                            <h2 style="font-size:1.75rem; border:none; color: #0f172a; margin:0 0 8px; padding-bottom: 0;">Drag fields into the Transpose configuration</h2>
+                            <h2 class="text-xl md:text-3xl font-black border-none text-game-dark m-0 pb-2">Drag fields into the Transpose configuration</h2>
                             <p style="font-size:15px;color:var(--muted); margin-bottom:20px; font-weight: 800;">Goal: take the wide data above and "unpivot" it. Keep the identifier and stack the new category columns back down into rows.</p>
                             
                             <div class="b-layout">
@@ -540,8 +535,7 @@
 
                                 <div>
                                     <div class="b-panel" id="builderPanelTR">
-                                        <!-- Droppable zones generated by JS -->
-                                    </div>
+                                        </div>
                                     <div class="b-btnrow">
                                         <button class="good" onclick="runBuilderTR()"><i class="fa-solid fa-play mr-2"></i>Run Transpose</button>
                                         <button class="ghost" onclick="loadCorrectTR()"><i class="fa-solid fa-magic mr-2"></i>Load Correct Setup</button>
@@ -551,8 +545,7 @@
                             </div>
                         </div>
                         
-                        <!-- TRANSPOSE OUTPUT -->
-                        <div class="b-card game-card">
+                        <div class="b-card game-card overflow-x-auto">
                             <div class="b-pill"><i class="fa-solid fa-table-list mr-2"></i>Output 2: Transpose</div>
                             <h2 style="font-size:1.75rem; border:none; color: #0f172a; margin:0 0 16px; padding-bottom: 0;">See the shape change (Long Format)</h2>
                             <div id="outputShapeTR" class="b-shape"></div>
@@ -560,24 +553,10 @@
                             <div id="outputExplanationTR"></div>
                         </div>
 
-                        <div class="b-card b-half game-card teacher-only" style="border-color: #ef4444; background: #fef2f2;">
-                            <div class="b-pill" style="background:#ef4444; color:white;"><i class="fa-solid fa-chalkboard-user mr-2"></i>Teacher Talk Track</div>
-                            <h2 style="font-size:1.75rem; border:none; color: #0f172a; margin:0 0 16px; padding-bottom: 0;">How to narrate the change</h2>
-                            <div style="font-size: 15px; color: #0f172a; font-weight: 800;">
-                                <p style="margin: 8px 0;">Ask students: Which field should stay as the row label? That should lead them to <strong>DiningHall</strong>.</p>
-                                <p style="margin: 8px 0;">Ask: Which field has the values we want to spread across columns? That should lead them to <strong>MenuCategory</strong>.</p>
-                                <p style="margin: 8px 0;">Ask: Which field contains the measure we want to add up? That should lead them to <strong>ItemsSold</strong>.</p>
-                                <hr style="margin: 16px 0; border: none; border-top: 3px solid #0f172a;">
-                                <p style="margin: 8px 0;">For Transpose ask: Which field should stay fixed as the identifier? (DiningHall).</p>
-                                <p style="margin: 8px 0;">Then ask: Which columns should be stacked into rows? (The new category columns).</p>
-                            </div>
-                        </div>
-
                         <div class="b-card game-card">
                             <div class="b-pill"><i class="fa-solid fa-gamepad mr-2"></i>Practice Check</div>
                             <h2 style="font-size:1.75rem; border:none; color: #0f172a; margin:0 0 16px; padding-bottom: 0;">Interactive Scenarios</h2>
 
-                            <!-- Scenario 1: Cross Tab NO Grouping -->
                             <div class="b-question animate-slide-down">
                                 <div class="q-table-wrap">
                                     <table class="q-mini-table">
@@ -586,7 +565,7 @@
                                         <tr><td>South</td><td class="flash-source-1">Hat</td><td class="flash-source-1">5</td></tr>
                                         <tr><td>North</td><td>Shoe</td><td>2</td></tr>
                                     </table>
-                                    <div class="b-arrow">→</div>
+                                    <div class="b-arrow hidden md:block">→</div>
                                     <table class="q-mini-table">
                                         <tr><th class="flash-target-1">Hat</th><th>Shoe</th></tr>
                                         <tr><td class="flash-target-1">10</td><td>2</td></tr>
@@ -603,7 +582,6 @@
                                 </div>
                             </div>
 
-                            <!-- Scenario 2: Cross Tab WITH Grouping -->
                             <div class="b-question animate-slide-down" style="animation-delay: 0.2s">
                                 <div class="q-table-wrap">
                                     <table class="q-mini-table">
@@ -612,7 +590,7 @@
                                         <tr><td class="flash-source-2">North</td><td>Shoe</td><td>2</td></tr>
                                         <tr><td class="flash-source-2">South</td><td>Hat</td><td>5</td></tr>
                                     </table>
-                                    <div class="b-arrow">→</div>
+                                    <div class="b-arrow hidden md:block">→</div>
                                     <table class="q-mini-table">
                                         <tr><th class="flash-target-2">Store</th><th>Hat</th><th>Shoe</th></tr>
                                         <tr><td class="flash-target-2">North</td><td>5</td><td>2</td></tr>
@@ -630,7 +608,6 @@
                                 </div>
                             </div>
 
-                            <!-- Scenario 3: The Reversal Myth -->
                             <div class="b-question animate-slide-down" style="animation-delay: 0.4s">
                                 <div class="q-table-wrap">
                                     <div style="text-align:center;">
@@ -641,7 +618,7 @@
                                             <tr><td>Bob</td><td class="flash-source-3">Hat</td><td class="flash-source-3">2</td></tr>
                                         </table>
                                     </div>
-                                    <div class="b-arrow" style="font-size:20px;">CT→</div>
+                                    <div class="b-arrow hidden md:block" style="font-size:20px;">CT→</div>
                                     <div style="text-align:center;">
                                         <div style="font-size:12px; color:#0f172a; margin-bottom:6px; font-weight:900; font-family: 'JetBrains Mono', monospace;">2. Cross Tab (Sum)</div>
                                         <table class="q-mini-table">
@@ -649,7 +626,7 @@
                                             <tr><td>Bob</td><td class="flash-mid-3">3</td></tr>
                                         </table>
                                     </div>
-                                    <div class="b-arrow" style="font-size:20px;">TR→</div>
+                                    <div class="b-arrow hidden md:block" style="font-size:20px;">TR→</div>
                                     <div style="text-align:center;">
                                         <div style="font-size:12px; color:#0f172a; margin-bottom:6px; font-weight:900; font-family: 'JetBrains Mono', monospace;">3. Transpose</div>
                                         <table class="q-mini-table">
@@ -674,7 +651,6 @@
                             <h2 style="font-size:1.75rem; border:none; color: #0f172a; margin:0 0 16px; padding-bottom: 0;">Why "Long" Data is Better for Analysis (Tidy Data)</h2>
                             
                             <div class="tidy-container">
-                                <!-- Wide Data Box -->
                                 <div class="tidy-box">
                                     <div class="tidy-title">Wide Format<br><span style="font-size:12px; color:#64748b; font-weight:800; font-family: 'Nunito', sans-serif;">(Great for Humans)</span></div>
                                     <div class="tidy-row">
@@ -689,9 +665,8 @@
                                     </div>
                                 </div>
 
-                                <div class="tidy-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                                <div class="tidy-arrow hidden md:block"><i class="fa-solid fa-arrow-right"></i></div>
 
-                                <!-- Long Data Box -->
                                 <div class="tidy-box">
                                     <div class="tidy-title">Long Format (Tidy)<br><span style="font-size:12px; color:#64748b; font-weight:800; font-family: 'Nunito', sans-serif;">(Required by Machines)</span></div>
                                     <div class="tidy-row">
@@ -725,15 +700,8 @@
                 </div>
             </section>
 
-            <!-- LEVEL 1: Orders Demo -->
             <section id="orders-module" class="game-card" style="background-color: #f0fdf4; border-color: #10b981;">
-                <h2><div class="flex items-center"><i class="fa-solid fa-store text-game-green mr-3 text-3xl"></i>Example 1: Intro to Pivoting (Retail Orders)</div></h2>
-                <div class="info-box teacher-only">
-                    <strong>Teaching Script:</strong><br>
-                    • <strong>Cross Tab</strong> = "Turn categories into columns (wide)"<br>
-                    • <strong>Transpose</strong> = "Turn columns back into rows (long)"<br>
-                    <em>Wide is great for reports. Long is great for joins, charts, modeling, and grouping.</em>
-                </div>
+                <h2 class="text-2xl md:text-3xl"><div class="flex items-center"><i class="fa-solid fa-store text-game-green mr-3"></i>Example 1: Intro to Pivoting (Retail Orders)</div></h2>
                 
                 <h3>Step 1 & 2: Input & Formula</h3>
                 <p>Load <code>orders_demo.csv</code>. Use a <strong>Formula</strong> tool to calculate a new field: <code>Revenue = [Units] * [UnitPrice]</code>. This makes the Cross Tab feel like a real-world aggregation.</p>
@@ -762,12 +730,8 @@
                 <button onclick="launchSimulator('orders')" class="start-btn bg-game-green border-game-dark"><i class="fa-solid fa-rocket mr-2"></i> Launch Orders Simulator</button>
             </section>
 
-            <!-- LEVEL 2: Campus Modules -->
             <section id="campus-module" class="game-card" style="background-color: #fef2f2; border-color: #ef4444;">
-                <h2><div class="flex items-center"><i class="fa-solid fa-school text-game-red mr-3 text-3xl"></i>Example 2: Handling Nulls (Campus Clubs)</div></h2>
-                <div class="info-box teacher-only">
-                    <strong>Alteryx Teaching Flow:</strong> For teaching core pivoting tools, non-financial data like student activities works incredibly well. It’s intuitive, easily understandable, and perfectly demonstrates Cross Tab, Null handling, and Transposing.
-                </div>
+                <h2 class="text-2xl md:text-3xl"><div class="flex items-center"><i class="fa-solid fa-school text-game-red mr-3"></i>Example 2: Handling Nulls (Campus Clubs)</div></h2>
                 
                 <h3>Step 1 — Input Data</h3>
                 <p>Load <code>campus_club_activity.csv</code>. The data contains student info, their club, the type of activity (Event, Meeting, etc.), and hours spent.</p>
@@ -796,19 +760,12 @@
                 </ul>
                 <p class="mt-4">Followed by a <strong>Select</strong> tool to rename <code>Name</code> → <code>ActivityType</code> and <code>Value</code> → <code>TotalHours</code>.</p>
                 <button class="preview-btn" onclick="showLessonPreview('campus_long')"><i class="fa-solid fa-eye text-game-red"></i> View Transposed Long Data</button>
-
-                <div class="warning-box teacher-only">
-                    <strong>Teaching Question for Students:</strong><br>
-                    <em>Why might analysts convert a Cross Tab table back to long format?</em><br><br>
-                    <strong>Good answers:</strong> Easier for charting/visualizations (Tableau, PowerBI), easier for filtering, easier for joining datasets, and many analytics tools strictly require a long/tidy data format.
-                </div>
                 
                 <button onclick="launchSimulator('campus')" class="start-btn bg-game-red border-game-dark"><i class="fa-solid fa-rocket mr-2"></i> Launch Campus Simulator</button>
             </section>
 
-            <!-- LEVEL 3: Intro & Setup -->
             <section id="setup" class="game-card" style="border-top: 8px solid #3b82f6;">
-                <h2><div class="flex items-center"><i class="fa-solid fa-clipboard-question text-game-blue mr-3 text-3xl"></i>Advanced: Employee Survey</div></h2>
+                <h2 class="text-2xl md:text-3xl"><div class="flex items-center"><i class="fa-solid fa-clipboard-question text-game-blue mr-3 text-3xl"></i>Advanced: Employee Survey</div></h2>
                 <div class="info-box">
                     <strong><i class="fa-solid fa-briefcase text-game-green mr-2"></i>The Situation:</strong> The company wants to improve employee retention. They sent out an employee satisfaction survey to understand where improvements could be made.
                 </div>
@@ -824,9 +781,8 @@
                 </div>
             </section>
 
-            <!-- 2. Investigation -->
             <section id="investigation" class="game-card">
-                <h2><div class="flex items-center"><i class="fa-solid fa-magnifying-glass-chart text-game-dark mr-3 text-3xl"></i>Survey: Initial Investigation</div></h2>
+                <h2 class="text-2xl md:text-3xl"><div class="flex items-center"><i class="fa-solid fa-magnifying-glass-chart text-game-dark mr-3 text-3xl"></i>Survey: Initial Investigation</div></h2>
                 <h3>Current State of the Data</h3>
                 <ul class="space-y-2">
                     <li><i class="fa-solid fa-caret-right text-game-blue mr-2"></i>Each respondent is their own column. The question is stated first, with the response on the next row.</li>
@@ -842,9 +798,8 @@
                 <button class="preview-btn" onclick="showLessonPreview('raw')"><i class="fa-solid fa-eye"></i> View Raw Survey Data</button>
             </section>
 
-            <!-- 3. Phase 1 -->
             <section id="phase1" class="game-card">
-                <h2><div class="flex items-center"><i class="fa-solid fa-code-branch text-game-purple mr-3 text-3xl"></i>Survey: Initial Transformations</div></h2>
+                <h2 class="text-2xl md:text-3xl"><div class="flex items-center"><i class="fa-solid fa-code-branch text-game-purple mr-3 text-3xl"></i>Survey: Initial Transformations</div></h2>
                 <p class="bg-game-purple/10 border-l-8 border-game-purple p-4 rounded-r-xl font-bold text-game-dark mb-6"><strong>Objective:</strong> Align the questions and their accompanying responses into the same record.</p>
                 
                 <h3>Step 1: Record ID</h3>
@@ -865,9 +820,8 @@
                 <button class="preview-btn" onclick="showLessonPreview('phase1')"><i class="fa-solid fa-eye"></i> View Output After Join</button>
             </section>
 
-            <!-- 4. Phase 2 -->
             <section id="phase2" class="game-card">
-                <h2><div class="flex items-center"><i class="fa-solid fa-table text-game-yellow mr-3 text-3xl"></i>Survey: Pivot Back to Tabular Data</div></h2>
+                <h2 class="text-2xl md:text-3xl"><div class="flex items-center"><i class="fa-solid fa-table text-game-yellow mr-3 text-3xl"></i>Survey: Pivot Back to Tabular Data</div></h2>
                 <p class="bg-game-yellow/20 border-l-8 border-game-yellow p-4 rounded-r-xl font-bold text-game-dark mb-6"><strong>Objective:</strong> Make questions the headers, and respondents the rows.</p>
                 
                 <h3>Step 6: Sort</h3>
@@ -882,9 +836,8 @@
                 <button class="preview-btn" onclick="showLessonPreview('phase2')"><i class="fa-solid fa-eye"></i> View Clean Tabular Data</button>
             </section>
 
-            <!-- 5. Phase 3 -->
             <section id="phase3" class="game-card">
-                <h2><div class="flex items-center"><i class="fa-solid fa-layer-group text-game-green mr-3 text-3xl"></i>Survey: Analysis & Aggregation</div></h2>
+                <h2 class="text-2xl md:text-3xl"><div class="flex items-center"><i class="fa-solid fa-layer-group text-game-green mr-3 text-3xl"></i>Survey: Analysis & Aggregation</div></h2>
                 <p class="bg-game-green/20 border-l-8 border-game-green p-4 rounded-r-xl font-bold text-game-dark mb-6"><strong>Objective:</strong> Find the average response by question category and department.</p>
 
                 <h3>Step 10: Transpose</h3>
@@ -896,9 +849,8 @@
                 <button class="preview-btn" onclick="showLessonPreview('phase3')"><i class="fa-solid fa-eye"></i> View Final Aggregation</button>
             </section>
 
-            <!-- 6. Findings -->
             <section id="findings" class="game-card" style="border-bottom: 8px solid #0f172a;">
-                <h2><div class="flex items-center"><i class="fa-solid fa-chart-pie text-game-blue mr-3 text-3xl"></i>Survey Findings & Discussion</div></h2>
+                <h2 class="text-2xl md:text-3xl"><div class="flex items-center"><i class="fa-solid fa-chart-pie text-game-blue mr-3 text-3xl"></i>Survey Findings & Discussion</div></h2>
                 <p>Cautiously interpret averages (distributions matter, but bounded 1-10 scales limit outlier impact).</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                     <div class="bg-game-light p-6 rounded-xl border-3 border-game-dark shadow-game-sm">
@@ -913,10 +865,6 @@
                         <p class="font-bold text-slate-700">Communication and Management Performance are scoring poorly for the Sales department.</p>
                     </div>
                 </div>
-
-                <div class="warning-box teacher-only mt-8">
-                    <strong>Discussion:</strong> What actions might you take? (Review text responses, conduct interviews, apply Support's best practices).
-                </div>
                 
                 <div class="text-center mt-12 mb-4">
                     <button onclick="launchSimulator('survey')" class="start-btn bg-game-blue mx-auto"><i class="fa-solid fa-rocket mr-2"></i> Launch Survey Simulator</button>
@@ -927,61 +875,57 @@
         </div>
     </div>
 
-    <!-- SIMULATOR UI -->
-    <header class="bg-game-dark text-white p-4 flex justify-between items-center shadow-game z-50 shrink-0 border-b-4 border-black font-sans">
-        <div class="flex items-center gap-4">
-            <div class="bg-game-blue w-12 h-12 rounded-xl border-2 border-white flex items-center justify-center font-black text-2xl shadow-game-sm"><i class="fa-solid fa-shapes"></i></div>
-            <div>
-                <h1 class="font-black text-2xl leading-none" id="sim-title">Retail Orders Demo</h1>
-                <p class="text-sm text-slate-300 font-bold mt-1" id="sim-subtitle">Intro to Cross Tab & Transpose</p>
+    <header class="bg-game-dark text-white p-4 flex flex-col lg:flex-row justify-between items-center shadow-game z-50 shrink-0 border-b-4 border-black font-sans gap-4">
+        <div class="flex flex-col md:flex-row items-center gap-4 w-full lg:w-auto text-center md:text-left">
+            <div class="flex items-center justify-center md:justify-start gap-4">
+                <div class="bg-game-blue w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 border-white flex items-center justify-center font-black text-xl md:text-2xl shadow-game-sm shrink-0"><i class="fa-solid fa-shapes"></i></div>
+                <div>
+                    <h1 class="font-black text-xl md:text-2xl leading-none" id="sim-title">Retail Orders Demo</h1>
+                    <p class="text-xs md:text-sm text-slate-300 font-bold mt-1" id="sim-subtitle">Intro to Cross Tab & Transpose</p>
+                </div>
             </div>
             
-            <!-- FLOW TOGGLE -->
-            <div class="flex bg-game-light rounded-xl p-1 shadow-inner border-2 border-game-dark ml-6 gap-1">
-                <button id="tab-orders" onclick="switchFlow('orders')" class="px-4 py-2 text-sm font-black rounded-lg bg-game-green text-white border-2 border-game-dark shadow-game-sm transition-all">Ex 1: Orders</button>
-                <button id="tab-campus" onclick="switchFlow('campus')" class="px-4 py-2 text-sm font-black rounded-lg text-slate-500 hover:text-game-dark hover:bg-white transition-all">Ex 2: Campus</button>
-                <button id="tab-survey" onclick="switchFlow('survey')" class="px-4 py-2 text-sm font-black rounded-lg text-slate-500 hover:text-game-dark hover:bg-white transition-all">Adv: Survey</button>
+            <div class="flex flex-wrap justify-center bg-game-light rounded-xl p-1 shadow-inner border-2 border-game-dark lg:ml-6 gap-1 w-full md:w-auto mt-2 md:mt-0">
+                <button id="tab-orders" onclick="switchFlow('orders')" class="flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-sm font-black rounded-lg bg-game-green text-white border-2 border-game-dark shadow-game-sm transition-all">Ex 1: Orders</button>
+                <button id="tab-campus" onclick="switchFlow('campus')" class="flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-sm font-black rounded-lg text-slate-500 hover:text-game-dark hover:bg-white transition-all">Ex 2: Campus</button>
+                <button id="tab-survey" onclick="switchFlow('survey')" class="flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-sm font-black rounded-lg text-slate-500 hover:text-game-dark hover:bg-white transition-all">Adv: Survey</button>
             </div>
         </div>
-        <div class="flex gap-4 items-center">
-            <button onclick="stepBack()" class="bg-game-light text-game-dark font-black text-sm px-4 py-2 rounded-xl shadow-game-sm hover:translate-y-[2px] transition-all border-2 border-game-dark flex items-center gap-2"><i class="fa-solid fa-backward"></i> Back</button>
-            <div class="h-8 w-1 bg-slate-600 rounded-full mx-2"></div>
-            <button onclick="runWorkflow()" id="btn-global-run" class="bg-game-green text-white font-black text-lg px-6 py-2 rounded-xl shadow-game hover:shadow-game-sm hover:translate-y-[2px] transition-all border-3 border-game-dark flex items-center gap-2">
+        <div class="flex flex-wrap justify-center gap-2 md:gap-4 items-center w-full lg:w-auto mt-2 lg:mt-0">
+            <button onclick="stepBack()" class="flex-1 md:flex-none justify-center bg-game-light text-game-dark font-black text-sm px-4 py-2 rounded-xl shadow-game-sm hover:translate-y-[2px] transition-all border-2 border-game-dark flex items-center gap-2"><i class="fa-solid fa-backward"></i> Back</button>
+            <div class="hidden md:block h-8 w-1 bg-slate-600 rounded-full mx-2"></div>
+            <button onclick="runWorkflow()" id="btn-global-run" class="flex-1 md:flex-none justify-center bg-game-green text-white font-black text-base md:text-lg px-4 md:px-6 py-2 rounded-xl shadow-game hover:shadow-game-sm hover:translate-y-[2px] transition-all border-3 border-game-dark flex items-center gap-2">
                 <i class="fa-solid fa-play"></i> Run
             </button>
-            <div class="h-8 w-1 bg-slate-600 rounded-full mx-2"></div>
-            <button onclick="showLessonPlan()" class="bg-game-light text-game-dark font-black text-sm px-4 py-2 rounded-xl shadow-game-sm hover:translate-y-[2px] transition-all border-2 border-game-dark"><i class="fa-solid fa-book text-game-blue mr-1"></i> Guide</button>
+            <div class="hidden md:block h-8 w-1 bg-slate-600 rounded-full mx-2"></div>
+            <button onclick="showLessonPlan()" class="flex-1 md:flex-none justify-center bg-game-light text-game-dark font-black text-sm px-4 py-2 rounded-xl shadow-game-sm hover:translate-y-[2px] transition-all border-2 border-game-dark"><i class="fa-solid fa-book text-game-blue mr-1"></i> Guide</button>
         </div>
     </header>
 
-    <div class="canvas-bg border-b-4 border-game-dark shadow-inner" id="canvas-container" onmousemove="drag(event)" onmouseup="endDrag()">
+    <div class="canvas-bg border-b-4 border-game-dark shadow-inner" id="canvas-container" onpointermove="drag(event)" onpointerup="endDrag()" onpointerleave="endDrag()">
         <div id="canvas-content-wrapper">
-            <div class="absolute top-4 left-4 text-game-dark text-sm font-black uppercase tracking-widest bg-white/80 px-3 py-1 border-2 border-game-dark rounded-lg shadow-game-sm select-none z-10">Workflow Canvas</div>
+            <div class="absolute top-4 left-4 text-game-dark text-xs md:text-sm font-black uppercase tracking-widest bg-white/80 px-3 py-1 border-2 border-game-dark rounded-lg shadow-game-sm select-none z-10">Workflow Canvas</div>
             
-            <div id="orders-title-label" class="absolute top-16 left-10 text-xs text-game-green font-black tracking-widest bg-white px-2 py-1 rounded border-2 border-game-green shadow-game-sm">EXAMPLE 1: RETAIL ORDERS PIVOTING</div>
-            <div id="campus-title-label" class="absolute top-16 left-10 text-xs text-game-red font-black tracking-widest bg-white px-2 py-1 rounded border-2 border-game-red shadow-game-sm" style="display:none;">EXAMPLE 2: CAMPUS CLUB ACTIVITY (HANDLING NULLS)</div>
-            <div id="survey-title-label" class="absolute top-16 left-10 text-xs text-game-blue font-black tracking-widest bg-white px-2 py-1 rounded border-2 border-game-blue shadow-game-sm" style="display:none;">ADVANCED: EMPLOYEE SURVEY DATA TRANSFORMATION</div>
+            <div id="orders-title-label" class="absolute top-16 left-10 text-[10px] md:text-xs text-game-green font-black tracking-widest bg-white px-2 py-1 rounded border-2 border-game-green shadow-game-sm">EXAMPLE 1: RETAIL ORDERS PIVOTING</div>
+            <div id="campus-title-label" class="absolute top-16 left-10 text-[10px] md:text-xs text-game-red font-black tracking-widest bg-white px-2 py-1 rounded border-2 border-game-red shadow-game-sm" style="display:none;">EXAMPLE 2: CAMPUS CLUB ACTIVITY (HANDLING NULLS)</div>
+            <div id="survey-title-label" class="absolute top-16 left-10 text-[10px] md:text-xs text-game-blue font-black tracking-widest bg-white px-2 py-1 rounded border-2 border-game-blue shadow-game-sm" style="display:none;">ADVANCED: EMPLOYEE SURVEY DATA TRANSFORMATION</div>
 
             <svg id="connections-layer"></svg>
 
-            <!-- Nodes -->
-            <!-- 0: Input Survey Data -->
-            <div class="tool-node" id="node-0" style="left: 40px; top: 180px; display:none;" onmousedown="startDrag(event, 0)" onclick="activateStep(0)">
+            <div class="tool-node" id="node-0" style="left: 40px; top: 180px; display:none;" onpointerdown="startDrag(event, 0)" onclick="activateStep(0)">
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 0, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></div>
                 <div class="tool-label">Survey Data</div>
             </div>
 
-            <!-- 1: Record ID -->
-            <div class="tool-node" id="node-1" style="left: 160px; top: 180px; display:none;" onmousedown="startDrag(event, 1)" onclick="activateStep(1)">
+            <div class="tool-node" id="node-1" style="left: 160px; top: 180px; display:none;" onpointerdown="startDrag(event, 1)" onclick="activateStep(1)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 1, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 1, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/RecordID123_71x71.png" alt="Record ID"></div>
                 <div class="tool-label">Record ID</div>
             </div>
 
-            <!-- 2: Filter -->
-            <div class="tool-node" id="node-2" style="left: 280px; top: 180px; display:none;" onmousedown="startDrag(event, 2)" onclick="activateStep(2)">
+            <div class="tool-node" id="node-2" style="left: 280px; top: 180px; display:none;" onpointerdown="startDrag(event, 2)" onclick="activateStep(2)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 2, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-T-out" onclick="viewAnchor(event, 2, 'T')" title="True (Answers)"></div><div class="anchor-lbl lbl-T-out">T</div>
                 <div class="sim-anchor sim-anchor-F-out" onclick="viewAnchor(event, 2, 'F')" title="False (Questions)"></div><div class="anchor-lbl lbl-F-out">F</div>
@@ -989,32 +933,28 @@
                 <div class="tool-label">Filter</div>
             </div>
 
-            <!-- 3: Formula -->
-            <div class="tool-node" id="node-3" style="left: 400px; top: 250px; display:none;" onmousedown="startDrag(event, 3)" onclick="activateStep(3)">
+            <div class="tool-node" id="node-3" style="left: 400px; top: 250px; display:none;" onpointerdown="startDrag(event, 3)" onclick="activateStep(3)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 3, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 3, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Formula_71x71.png" alt="Formula"></div>
                 <div class="tool-label">Formula (+1)</div>
             </div>
 
-            <!-- 4: Transpose Answers -->
-            <div class="tool-node" id="node-4" style="left: 400px; top: 110px; display:none;" onmousedown="startDrag(event, 4)" onclick="activateStep(4)">
+            <div class="tool-node" id="node-4" style="left: 400px; top: 110px; display:none;" onpointerdown="startDrag(event, 4)" onclick="activateStep(4)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 4, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 4, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/TransposePivot_71x71.png" alt="Transpose"></div>
                 <div class="tool-label">Transpose (A)</div>
             </div>
 
-            <!-- 5: Transpose Questions -->
-            <div class="tool-node" id="node-5" style="left: 520px; top: 250px; display:none;" onmousedown="startDrag(event, 5)" onclick="activateStep(5)">
+            <div class="tool-node" id="node-5" style="left: 520px; top: 250px; display:none;" onpointerdown="startDrag(event, 5)" onclick="activateStep(5)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 5, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 5, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/TransposePivot_71x71.png" alt="Transpose"></div>
                 <div class="tool-label">Transpose (Q)</div>
             </div>
 
-            <!-- 6: Join -->
-            <div class="tool-node" id="node-6" style="left: 640px; top: 180px; display:none;" onmousedown="startDrag(event, 6)" onclick="activateStep(6)">
+            <div class="tool-node" id="node-6" style="left: 640px; top: 180px; display:none;" onpointerdown="startDrag(event, 6)" onclick="activateStep(6)">
                 <div class="sim-anchor sim-anchor-L-in" onclick="viewAnchor(event, 6, 'L-in')" title="Left Input (Answers)"></div><div class="anchor-lbl lbl-L-in">L</div>
                 <div class="sim-anchor sim-anchor-R-in" onclick="viewAnchor(event, 6, 'R-in')" title="Right Input (Questions)"></div><div class="anchor-lbl lbl-R-in">R</div>
                 <div class="sim-anchor sim-anchor-L-out" onclick="viewAnchor(event, 6, 'L')" title="Left Unjoined"></div><div class="anchor-lbl lbl-L-out">L</div>
@@ -1024,47 +964,41 @@
                 <div class="tool-label">Join</div>
             </div>
 
-            <!-- 7: Sort -->
-            <div class="tool-node" id="node-7" style="left: 760px; top: 180px; display:none;" onmousedown="startDrag(event, 7)" onclick="activateStep(7)">
+            <div class="tool-node" id="node-7" style="left: 760px; top: 180px; display:none;" onpointerdown="startDrag(event, 7)" onclick="activateStep(7)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 7, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 7, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Sort_71x71.png" alt="Sort"></div>
                 <div class="tool-label">Sort</div>
             </div>
 
-            <!-- 8: Cross Tab -->
-            <div class="tool-node" id="node-8" style="left: 880px; top: 180px; display:none;" onmousedown="startDrag(event, 8)" onclick="activateStep(8)">
+            <div class="tool-node" id="node-8" style="left: 880px; top: 180px; display:none;" onpointerdown="startDrag(event, 8)" onclick="activateStep(8)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 8, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 8, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/CrossTabPivot_71x71.png" alt="Cross Tab"></div>
                 <div class="tool-label">Cross Tab</div>
             </div>
 
-            <!-- 9: Select -->
-            <div class="tool-node" id="node-9" style="left: 1000px; top: 180px; display:none;" onmousedown="startDrag(event, 9)" onclick="activateStep(9)">
+            <div class="tool-node" id="node-9" style="left: 1000px; top: 180px; display:none;" onpointerdown="startDrag(event, 9)" onclick="activateStep(9)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 9, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 9, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" alt="Select"></div>
                 <div class="tool-label">Select / Clean</div>
             </div>
 
-            <!-- 10: Transpose 2 -->
-            <div class="tool-node" id="node-10" style="left: 1120px; top: 180px; display:none;" onmousedown="startDrag(event, 10)" onclick="activateStep(10)">
+            <div class="tool-node" id="node-10" style="left: 1120px; top: 180px; display:none;" onpointerdown="startDrag(event, 10)" onclick="activateStep(10)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 10, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 10, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/TransposePivot_71x71.png" alt="Transpose"></div>
                 <div class="tool-label">Transpose (Cat)</div>
             </div>
 
-            <!-- 11: Input Category Lookup -->
-            <div class="tool-node" id="node-11" style="left: 1120px; top: 300px; display:none;" onmousedown="startDrag(event, 11)" onclick="activateStep(11)">
+            <div class="tool-node" id="node-11" style="left: 1120px; top: 300px; display:none;" onpointerdown="startDrag(event, 11)" onclick="activateStep(11)">
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 11, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></div>
                 <div class="tool-label">Category Lookup</div>
             </div>
 
-            <!-- 12: Join Lookup -->
-            <div class="tool-node" id="node-12" style="left: 1240px; top: 220px; display:none;" onmousedown="startDrag(event, 12)" onclick="activateStep(12)">
+            <div class="tool-node" id="node-12" style="left: 1240px; top: 220px; display:none;" onpointerdown="startDrag(event, 12)" onclick="activateStep(12)">
                 <div class="sim-anchor sim-anchor-L-in" onclick="viewAnchor(event, 12, 'L-in')" title="Left Input"></div><div class="anchor-lbl lbl-L-in">L</div>
                 <div class="sim-anchor sim-anchor-R-in" onclick="viewAnchor(event, 12, 'R-in')" title="Right Input"></div><div class="anchor-lbl lbl-R-in">R</div>
                 <div class="sim-anchor sim-anchor-J-out" onclick="viewAnchor(event, 12, 'J')" title="Joined"></div><div class="anchor-lbl lbl-J-out">J</div>
@@ -1072,94 +1006,75 @@
                 <div class="tool-label">Join Lookup</div>
             </div>
 
-            <!-- 13: Cross Tab Averages -->
-            <div class="tool-node" id="node-13" style="left: 1360px; top: 220px; display:none;" onmousedown="startDrag(event, 13)" onclick="activateStep(13)">
+            <div class="tool-node" id="node-13" style="left: 1360px; top: 220px; display:none;" onpointerdown="startDrag(event, 13)" onclick="activateStep(13)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 13, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 13, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/CrossTabPivot_71x71.png" alt="Cross Tab"></div>
                 <div class="tool-label">Cross Tab (Avg)</div>
             </div>
 
-            <!-- ============================== -->
-            <!-- BONUS FLOW: Campus Clubs      -->
-            <!-- ============================== -->
-            
-            <!-- 14: Input Campus Data -->
-            <div class="tool-node" id="node-14" style="left: 40px; top: 180px; display:none;" onmousedown="startDrag(event, 14)" onclick="activateStep(14)">
+            <div class="tool-node" id="node-14" style="left: 40px; top: 180px; display:none;" onpointerdown="startDrag(event, 14)" onclick="activateStep(14)">
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 14, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></div>
                 <div class="tool-label">Campus Data</div>
             </div>
 
-            <!-- 15: Cross Tab Campus -->
-            <div class="tool-node" id="node-15" style="left: 180px; top: 180px; display:none;" onmousedown="startDrag(event, 15)" onclick="activateStep(15)">
+            <div class="tool-node" id="node-15" style="left: 180px; top: 180px; display:none;" onpointerdown="startDrag(event, 15)" onclick="activateStep(15)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 15, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 15, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/CrossTabPivot_71x71.png" alt="Cross Tab"></div>
                 <div class="tool-label">Cross Tab</div>
             </div>
 
-            <!-- 16: Data Cleansing -->
-            <div class="tool-node" id="node-16" style="left: 320px; top: 180px; display:none;" onmousedown="startDrag(event, 16)" onclick="activateStep(16)">
+            <div class="tool-node" id="node-16" style="left: 320px; top: 180px; display:none;" onpointerdown="startDrag(event, 16)" onclick="activateStep(16)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 16, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 16, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/DataCleansing_71x71.png" alt="Data Cleansing"></div>
                 <div class="tool-label">Data Cleansing</div>
             </div>
 
-            <!-- 17: Transpose Campus -->
-            <div class="tool-node" id="node-17" style="left: 460px; top: 180px; display:none;" onmousedown="startDrag(event, 17)" onclick="activateStep(17)">
+            <div class="tool-node" id="node-17" style="left: 460px; top: 180px; display:none;" onpointerdown="startDrag(event, 17)" onclick="activateStep(17)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 17, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 17, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/TransposePivot_71x71.png" alt="Transpose"></div>
                 <div class="tool-label">Transpose</div>
             </div>
 
-            <!-- 18: Select Campus -->
-            <div class="tool-node" id="node-18" style="left: 600px; top: 180px; display:none;" onmousedown="startDrag(event, 18)" onclick="activateStep(18)">
+            <div class="tool-node" id="node-18" style="left: 600px; top: 180px; display:none;" onpointerdown="startDrag(event, 18)" onclick="activateStep(18)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 18, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 18, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" alt="Select"></div>
                 <div class="tool-label">Select</div>
             </div>
 
-            <!-- ============================== -->
-            <!-- ORDERS FLOW: L1 (Beginner)    -->
-            <!-- ============================== -->
-            
-            <!-- 19: Input Orders Data -->
-            <div class="tool-node" id="node-19" style="left: 40px; top: 180px;" onmousedown="startDrag(event, 19)" onclick="activateStep(19)">
+            <div class="tool-node" id="node-19" style="left: 40px; top: 180px;" onpointerdown="startDrag(event, 19)" onclick="activateStep(19)">
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 19, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input"></div>
                 <div class="tool-label">Orders Data</div>
             </div>
 
-            <!-- 20: Formula (Revenue) -->
-            <div class="tool-node" id="node-20" style="left: 180px; top: 180px;" onmousedown="startDrag(event, 20)" onclick="activateStep(20)">
+            <div class="tool-node" id="node-20" style="left: 180px; top: 180px;" onpointerdown="startDrag(event, 20)" onclick="activateStep(20)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 20, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 20, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Formula_71x71.png" alt="Formula"></div>
                 <div class="tool-label">Formula</div>
             </div>
 
-            <!-- 21: Cross Tab Orders -->
-            <div class="tool-node" id="node-21" style="left: 320px; top: 180px;" onmousedown="startDrag(event, 21)" onclick="activateStep(21)">
+            <div class="tool-node" id="node-21" style="left: 320px; top: 180px;" onpointerdown="startDrag(event, 21)" onclick="activateStep(21)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 21, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 21, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/CrossTabPivot_71x71.png" alt="Cross Tab"></div>
                 <div class="tool-label">Cross Tab</div>
             </div>
 
-            <!-- 22: Transpose Orders -->
-            <div class="tool-node" id="node-22" style="left: 460px; top: 180px;" onmousedown="startDrag(event, 22)" onclick="activateStep(22)">
+            <div class="tool-node" id="node-22" style="left: 460px; top: 180px;" onpointerdown="startDrag(event, 22)" onclick="activateStep(22)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 22, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 22, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/TransposePivot_71x71.png" alt="Transpose"></div>
                 <div class="tool-label">Transpose</div>
             </div>
 
-            <!-- 23: Select Orders -->
-            <div class="tool-node" id="node-23" style="left: 600px; top: 180px;" onmousedown="startDrag(event, 23)" onclick="activateStep(23)">
+            <div class="tool-node" id="node-23" style="left: 600px; top: 180px;" onpointerdown="startDrag(event, 23)" onclick="activateStep(23)">
                 <div class="sim-anchor sim-anchor-in" onclick="viewAnchor(event, 23, 'in')" title="Input"></div>
                 <div class="sim-anchor sim-anchor-out" onclick="viewAnchor(event, 23, 'out')" title="Output"></div>
                 <div class="tool-icon"><img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" alt="Select"></div>
@@ -1169,30 +1084,29 @@
         </div>
     </div>
     
-    <div class="h-resizer" id="h-resizer" onmousedown="initHResize(event)">
+    <div class="h-resizer" id="h-resizer" onpointerdown="initHResize(event)">
         <i class="fa-solid fa-grip-lines text-white"></i>
     </div>
 
-    <!-- Workspace -->
-    <div class="flex flex-1 overflow-hidden font-sans" id="workspace-container">
-        <div class="w-1/3 min-w-[320px] bg-game-light border-r-4 border-game-dark flex flex-col" id="config-pane">
-            <div class="bg-white border-b-4 border-game-dark px-4 py-3 font-black text-game-dark text-lg flex justify-between items-center select-none shadow-sm">
+    <div class="flex flex-col md:flex-row flex-1 overflow-hidden font-sans" id="workspace-container">
+        <div class="w-full md:w-1/3 min-w-0 md:min-w-[320px] h-[40vh] md:h-auto overflow-y-auto border-b-4 md:border-b-0 md:border-r-4 border-game-dark flex flex-col bg-game-light" id="config-pane">
+            <div class="bg-white border-b-4 border-game-dark px-4 py-3 font-black text-game-dark text-base md:text-lg flex justify-between items-center select-none shadow-sm sticky top-0 z-10">
                 <span><i class="fa-solid fa-gear text-game-blue mr-2"></i>Configuration</span>
-                <span id="step-badge" class="text-xs bg-game-blue text-white px-3 py-1 rounded-full border-2 border-game-dark shadow-game-sm">--</span>
+                <span id="step-badge" class="text-[10px] md:text-xs bg-game-blue text-white px-3 py-1 rounded-full border-2 border-game-dark shadow-game-sm">--</span>
             </div>
-            <div id="config-panel" class="p-4 overflow-y-auto flex-1 text-sm font-bold text-slate-700"></div>
+            <div id="config-panel" class="p-4 flex-1 text-sm font-bold text-slate-700"></div>
         </div>
-        <div class="resizer" id="resizer" onmousedown="initResize(event)"><i class="fa-solid fa-grip-lines-vertical text-white"></i></div>
-        <div class="flex-1 bg-white flex flex-col min-w-0" id="results-pane">
-            <div class="border-b-4 border-game-dark px-4 py-3 font-black text-game-dark flex justify-between items-center text-sm bg-game-light select-none shadow-sm">
-                <div class="flex items-center gap-2 text-lg">
+        <div class="resizer hidden md:flex" id="resizer" onpointerdown="initResize(event)"><i class="fa-solid fa-grip-lines-vertical text-white"></i></div>
+        <div class="flex-1 bg-white flex flex-col min-w-0 min-h-0" id="results-pane">
+            <div class="border-b-4 border-game-dark px-4 py-3 font-black text-game-dark flex justify-between items-center text-sm bg-game-light select-none shadow-sm sticky top-0 z-10">
+                <div class="flex items-center gap-2 text-base md:text-lg">
                     <i class="fa-solid fa-table text-game-green"></i>
-                    <span>Results - <span id="tool-name-display" class="text-game-blue">Select an anchor</span></span>
+                    <span class="truncate">Results - <span id="tool-name-display" class="text-game-blue">Select an anchor</span></span>
                 </div>
-                <div class="bg-game-dark text-game-yellow px-3 py-1 rounded-full border-2 border-white shadow-game-sm"><span id="record-count">0</span> records</div>
+                <div class="bg-game-dark text-game-yellow px-2 py-1 md:px-3 rounded-full border-2 border-white shadow-game-sm whitespace-nowrap text-xs md:text-sm"><span id="record-count">0</span> recs</div>
             </div>
             <div class="flex-1 overflow-auto relative p-2">
-                <table class="w-full text-left border-separate border-spacing-0 font-mono text-sm font-bold text-game-dark" id="data-grid">
+                <table class="w-full text-left border-separate border-spacing-0 font-mono text-xs md:text-sm font-bold text-game-dark" id="data-grid">
                     <thead id="grid-head"></thead>
                     <tbody id="grid-body"></tbody>
                 </table>
@@ -1253,16 +1167,16 @@
 
             // Update Tabs
             document.getElementById('tab-orders').className = flow === 'orders' 
-                ? 'px-4 py-2 text-sm font-black rounded-lg bg-game-green text-white border-2 border-game-dark shadow-game-sm transition-all' 
-                : 'px-4 py-2 text-sm font-black rounded-lg text-slate-500 hover:text-game-dark hover:bg-white transition-all';
+                ? 'flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-sm font-black rounded-lg bg-game-green text-white border-2 border-game-dark shadow-game-sm transition-all' 
+                : 'flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-sm font-black rounded-lg text-slate-500 hover:text-game-dark hover:bg-white transition-all';
             
             document.getElementById('tab-campus').className = flow === 'campus' 
-                ? 'px-4 py-2 text-sm font-black rounded-lg bg-game-red text-white border-2 border-game-dark shadow-game-sm transition-all' 
-                : 'px-4 py-2 text-sm font-black rounded-lg text-slate-500 hover:text-game-dark hover:bg-white transition-all';
+                ? 'flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-sm font-black rounded-lg bg-game-red text-white border-2 border-game-dark shadow-game-sm transition-all' 
+                : 'flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-sm font-black rounded-lg text-slate-500 hover:text-game-dark hover:bg-white transition-all';
 
             document.getElementById('tab-survey').className = flow === 'survey' 
-                ? 'px-4 py-2 text-sm font-black rounded-lg bg-game-blue text-white border-2 border-game-dark shadow-game-sm transition-all' 
-                : 'px-4 py-2 text-sm font-black rounded-lg text-slate-500 hover:text-game-dark hover:bg-white transition-all';
+                ? 'flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-sm font-black rounded-lg bg-game-blue text-white border-2 border-game-dark shadow-game-sm transition-all' 
+                : 'flex-1 md:flex-none px-2 md:px-4 py-2 text-xs md:text-sm font-black rounded-lg text-slate-500 hover:text-game-dark hover:bg-white transition-all';
             
             // Toggle Nodes
             for(let i=0; i<=13; i++) { let n = document.getElementById(`node-${i}`); if(n) n.style.display = flow === 'survey' ? 'block' : 'none'; }
@@ -1778,7 +1692,7 @@
             }
             
             content.innerHTML = html;
-            document.getElementById('mini-preview-modal').style.display = 'block';
+            document.getElementById('mini-preview-modal').style.display = 'flex';
             document.getElementById('mini-preview-backdrop').style.display = 'block';
         }
 
@@ -1895,6 +1809,12 @@
 
         // --- DRAG LOGIC (Main Simulator Canvas) ---
         let draggedNode = null, dragOffsetX = 0, dragOffsetY = 0;
+        
+        function getClientCoords(e) {
+            if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            return { x: e.clientX, y: e.clientY };
+        }
+
         function startDrag(e, nodeId) {
             draggedNode = document.getElementById(`node-${nodeId}`);
             const rect = draggedNode.getBoundingClientRect();
@@ -1918,7 +1838,7 @@
         let modalHandle = document.getElementById('modal-drag-handle');
         let isDraggingModal = false, modalOffsetX, modalOffsetY;
 
-        modalHandle.addEventListener('mousedown', (e) => {
+        modalHandle.addEventListener('pointerdown', (e) => {
             isDraggingModal = true;
             const rect = modal.getBoundingClientRect();
             modalOffsetX = e.clientX - rect.left;
@@ -1926,7 +1846,7 @@
             modalHandle.style.cursor = 'grabbing';
         });
 
-        document.addEventListener('mousemove', (e) => {
+        document.addEventListener('pointermove', (e) => {
             if (isDraggingModal) {
                 e.preventDefault();
                 let x = e.clientX - modalOffsetX; let y = e.clientY - modalOffsetY;
@@ -1936,7 +1856,7 @@
             }
         });
 
-        document.addEventListener('mouseup', () => {
+        document.addEventListener('pointerup', () => {
             isDraggingModal = false;
             modalHandle.style.cursor = 'move';
         });
@@ -1997,17 +1917,17 @@
         // --- PANE RESIZING ---
         let isResizing = false, isLpResizing = false, isHResizing = false;
 
-        function initResize(e) { isResizing = true; document.body.style.userSelect = 'none'; document.addEventListener('mousemove', doResize); document.addEventListener('mouseup', stopResize); }
+        function initResize(e) { isResizing = true; document.body.style.userSelect = 'none'; document.addEventListener('pointermove', doResize); document.addEventListener('pointerup', stopResize); }
         function doResize(e) { if(!isResizing) return; const container = document.getElementById('workspace-container'); const configPane = document.getElementById('config-pane'); let newWidth = e.clientX - container.getBoundingClientRect().left; configPane.style.width = `${Math.max(200, Math.min(newWidth, container.offsetWidth - 200))}px`; }
-        function stopResize() { isResizing = false; document.body.style.userSelect = ''; document.removeEventListener('mousemove', doResize); document.removeEventListener('mouseup', stopResize); }
+        function stopResize() { isResizing = false; document.body.style.userSelect = ''; document.removeEventListener('pointermove', doResize); document.removeEventListener('pointerup', stopResize); }
 
-        function initLpResize(e) { isLpResizing = true; document.body.style.userSelect = 'none'; document.addEventListener('mousemove', doLpResize); document.addEventListener('mouseup', stopLpResize); }
+        function initLpResize(e) { isLpResizing = true; document.body.style.userSelect = 'none'; document.addEventListener('pointermove', doLpResize); document.addEventListener('pointerup', stopLpResize); }
         function doLpResize(e) { if(!isLpResizing) return; const sidebar = document.querySelector('#lesson-plan-overlay .sidebar'); let newWidth = e.clientX; sidebar.style.width = `${Math.max(200, Math.min(newWidth, window.innerWidth - 200))}px`; }
-        function stopLpResize() { isLpResizing = false; document.body.style.userSelect = ''; document.removeEventListener('mousemove', doLpResize); document.removeEventListener('mouseup', stopLpResize); }
+        function stopLpResize() { isLpResizing = false; document.body.style.userSelect = ''; document.removeEventListener('pointermove', doLpResize); document.removeEventListener('pointerup', stopLpResize); }
 
-        function initHResize(e) { isHResizing = true; document.body.style.userSelect = 'none'; document.addEventListener('mousemove', doHResize); document.addEventListener('mouseup', stopHResize); }
+        function initHResize(e) { isHResizing = true; document.body.style.userSelect = 'none'; document.addEventListener('pointermove', doHResize); document.addEventListener('pointerup', stopHResize); }
         function doHResize(e) { if(!isHResizing) return; const container = document.getElementById('canvas-container'); const topOffset = container.getBoundingClientRect().top; let newHeight = e.clientY - topOffset; container.style.height = `${Math.max(150, Math.min(newHeight, window.innerHeight - 150))}px`; }
-        function stopHResize() { isHResizing = false; document.body.style.userSelect = ''; document.removeEventListener('mousemove', doHResize); document.removeEventListener('mouseup', stopHResize); }
+        function stopHResize() { isHResizing = false; document.body.style.userSelect = ''; document.removeEventListener('pointermove', doHResize); document.removeEventListener('pointerup', stopHResize); }
 
         
         // ==========================================
@@ -2042,15 +1962,15 @@
         function renderBTable(rows){
             if(!rows || !rows.length) return "<p class='font-bold text-slate-500 p-4'>No rows to display.</p>";
             const cols = Object.keys(rows[0]);
-            let html = "<table class='b-table'><thead><tr>";
-            cols.forEach(c => html += `<th>${c}</th>`);
+            let html = "<div class='overflow-x-auto'><table class='b-table w-full'><thead><tr>";
+            cols.forEach(c => html += `<th class="whitespace-nowrap">${c}</th>`);
             html += "</tr></thead><tbody>";
             rows.forEach(r => {
                 html += "<tr>";
-                cols.forEach(c => html += `<td>${r[c] ?? "<span class='text-slate-400 italic'>NULL</span>"}</td>`);
+                cols.forEach(c => html += `<td class="whitespace-nowrap">${r[c] ?? "<span class='text-slate-400 italic'>NULL</span>"}</td>`);
                 html += "</tr>";
             });
-            html += "</tbody></table>";
+            html += "</tbody></table></div>";
             return html;
         }
 
@@ -2067,7 +1987,7 @@
             const html = fields.map(f => `
                 <div class="b-field" draggable="true" data-field="${f}" data-type="CT">
                     <span>${f}</span>
-                    <small class="bg-game-light px-2 py-0.5 rounded border border-slate-300">${bFieldType(f)}</small>
+                    <small class="bg-game-light px-2 py-0.5 rounded border border-slate-300 hidden md:inline-block">${bFieldType(f)}</small>
                 </div>
             `).join("");
             document.getElementById("availableFieldsCT").innerHTML = html;
@@ -2077,7 +1997,7 @@
             const html = fields.map(f => `
                 <div class="b-field" draggable="true" data-field="${f}" data-type="TR">
                     <span>${f}</span>
-                    <small class="bg-game-light px-2 py-0.5 rounded border border-slate-300">dimension</small>
+                    <small class="bg-game-light px-2 py-0.5 rounded border border-slate-300 hidden md:inline-block">dimension</small>
                 </div>
             `).join("");
             document.getElementById("availableFieldsTR").innerHTML = html;
