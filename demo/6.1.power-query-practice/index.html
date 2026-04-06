@@ -309,15 +309,21 @@
                                 Get 4 CSVs
                             </button>
                         </div>
-                        <p class="text-slate-300">Extract the 4 raw data fragments to your local secure drive using the button above.</p>
+                        <ul class="text-slate-300 space-y-2 list-none">
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Create a new folder on your computer named <code class="bg-blue-900 text-white px-2 py-1 rounded border border-blue-500">PAC-ETL-Mission</code>.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Download the 4 raw CSV files using the button above.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Move all 4 downloaded CSV files into your newly created folder.</li>
+                        </ul>
                     </div>
 
                     <!-- Step 2: Initialize -->
                     <div class="relative z-10 step-card p-5">
                         <div class="absolute -left-10 md:-left-14 bg-slate-900 text-yellow-400 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center font-bold shadow-[0_0_10px_rgba(253,224,71,0.8)] game-font text-[10px]">2</div>
-                        <h4 class="font-bold text-white mb-3 text-lg uppercase tracking-wider text-yellow-400">Player 1 Start (Excel)</h4>
-                        <p class="text-slate-300 mb-2">Open local Excel client &rarr; Create blank architecture.</p>
-                        <p class="text-slate-300">Save file to directory containing CSVs as: <code class="bg-blue-900 text-white px-2 py-1 rounded border border-blue-500">PQ_ETL_Lab.xlsx</code>.</p>
+                        <h4 class="font-bold text-white mb-3 text-lg uppercase tracking-wider text-yellow-400">Player 1 Start (Power BI)</h4>
+                        <ul class="text-slate-300 space-y-2 list-none">
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Open Power BI Desktop and close any welcome pop-ups to view a blank report.</li>
+                            <li><span class="text-blue-300 italic text-xs mt-2 block">> This Power BI file will act as your ETL engine to process and store the final output from your raw CSVs.</span></li>
+                        </ul>
                     </div>
 
                     <!-- Step 3: Import -->
@@ -325,7 +331,7 @@
                         <div class="absolute -left-10 md:-left-14 bg-slate-900 text-yellow-400 w-8 h-8 rounded-full border-2 border-blue-500 flex items-center justify-center font-bold shadow-[0_0_10px_rgba(253,224,71,0.8)] game-font text-[10px]">3</div>
                         <h4 class="font-bold text-white mb-3 text-lg uppercase tracking-wider text-yellow-400">Eat Raw Data</h4>
                         <ul class="text-slate-300 space-y-2 list-none">
-                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Navigate to <strong class="text-white">Data</strong> tab &rarr; <strong class="text-white">Get Data</strong> &rarr; <strong class="text-white">From Text/CSV</strong>.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> In Power BI, navigate to the <strong class="text-white">Home</strong> tab &rarr; <strong class="text-white">Get Data</strong> &rarr; <strong class="text-white">Text/CSV</strong>.</li>
                             <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Target <span class="text-blue-300">Raw_AP_Transactions.csv</span> &rarr; Execute <strong class="text-white">Transform Data</strong>.</li>
                             <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-circle text-[8px]"></i></span> Rename query parameter to: <code class="text-yellow-300 font-bold">AP_Raw</code></li>
                         </ul>
@@ -415,7 +421,7 @@
                             </button>
                             <div id="hint-join" class="hidden p-5 bg-slate-900 text-white border-l-4 border-yellow-400 text-sm rounded-lg shadow-inner">
                                 <span class="text-yellow-400 font-bold game-font text-[10px] leading-relaxed">QUESTION:</span> Why use a 'Left Outer' join instead of an 'Inner' join?<br><br>
-                                <span class="text-blue-200 italic block">> ANSWER: An Inner Join drops any row that doesn't have a match. We can't just "delete" an invoice because a vendor was missing from our map—that understates liabilities! A Left Outer Join keeps all AP invoices and puts a "null" where mapping is missing, flagging it for review.</span>
+                                <span class="text-blue-200 italic block">> ANSWER: An Inner Join drops any row that doesn't have a match. We can't just "delete" an invoice because a vendor was missing from our map - that understates liabilities! A Left Outer Join keeps all AP invoices and puts a "null" where mapping is missing, flagging it for review.</span>
                             </div>
                         </div>
                     </div>
@@ -452,7 +458,7 @@
                             </button>
                             <div id="hint-po" class="hidden p-5 bg-slate-900 text-white border-l-4 border-yellow-400 text-sm rounded-lg shadow-inner">
                                 <span class="text-yellow-400 font-bold game-font text-[10px] leading-relaxed">QUESTION:</span> From an audit perspective, what does "No PO" indicate?<br><br>
-                                <span class="text-blue-200 italic block">> ANSWER: It means the business spent money without getting pre-approval from procurement. This is a massive red flag for unauthorized spending, maverick purchasing, or potential fraud. It requires immediate manager review.</span>
+                                <span class="text-blue-200 italic block">> ANSWER: It means the business spent money without getting pre-approval from procurement. This is a significant red flag for unauthorized spending, maverick purchasing, or potential fraud. It requires immediate manager review.</span>
                             </div>
                         </div>
                     </div>
@@ -489,7 +495,8 @@
                             <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-play text-xs"></i></span> Right-click AP_Raw &rarr; Reference. Rename to <code>Exception_Report</code>.</li>
                             <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-play text-xs"></i></span> Filter to keep anomalies (Mismatches, Null Vendors, Duplicates).</li>
                             <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-play text-xs"></i></span> Rename AP_Raw to <code>Clean_AP_Transactions</code>.</li>
-                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-play text-xs"></i></span> Execute: Close & Load To... (Table).</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-play text-xs"></i></span> Execute: <strong class="text-white">Close &amp; Apply</strong> (from the Home ribbon) to load into the model.</li>
+                            <li><span class="text-yellow-400 mr-2"><i class="fa-solid fa-play text-xs"></i></span> File &rarr; <strong>Save As</strong>: Name it <code class="bg-blue-900 text-white px-2 py-1 rounded border border-blue-500 font-normal">PQ_ETL_Lab.pbix</code> and save it in your mission folder.</li>
                         </ul>
                     </div>
                 </div>
@@ -506,9 +513,9 @@
                         <div class="bg-slate-900 p-6 rounded-xl border-2 border-blue-600 inline-block text-left w-full relative z-10 mb-8">
                             <p class="font-bold text-white mb-4 text-sm font-mono border-b-2 border-blue-800 pb-3"><i class="fa-solid fa-upload text-yellow-400 mr-2"></i> > SUBMIT_SCORE_TO_CANVAS</p>
                             <ol class="list-decimal list-inside text-blue-200 space-y-3 text-xs font-mono">
-                                <li>Save <code class="text-yellow-400 font-bold bg-blue-950 px-2 py-1 rounded">PQ_ETL_Lab.xlsx</code> to local drive.</li>
+                                <li>Save your completed <code class="text-yellow-400 font-bold bg-blue-950 px-2 py-1 rounded">PQ_ETL_Lab.pbix</code> file (which now holds your loaded data).</li>
                                 <li>Access the university Canvas portal.</li>
-                                <li>Upload file to target drop zone to collect XP.</li>
+                                <li>Upload the <code class="text-yellow-400 font-bold bg-blue-950 px-2 py-1 rounded">PQ_ETL_Lab.pbix</code> file to the target drop zone to collect XP.</li>
                             </ol>
                         </div>
 
@@ -554,7 +561,7 @@
                             <li><span class="text-yellow-400 font-bold">11.</span> <strong>Logic:</strong> Add Conditional Col <code>POMatchStatus</code> (Match/Mismatch/No PO).</li>
                             <li><span class="text-yellow-400 font-bold">12.</span> <strong>Duplicates:</strong> Right-click AP_Raw &rarr; <strong>Duplicate</strong>. Group By (Vendor+Amount). Merge back.</li>
                             <li><span class="text-yellow-400 font-bold">13.</span> <strong>Exception Report:</strong> Reference AP_Raw. Filter for Mismatches/Nulls.</li>
-                            <li><span class="text-yellow-400 font-bold">14.</span> <strong>Final Load:</strong> Load AP_Raw and Exception_Report as Tables.</li>
+                            <li><span class="text-yellow-400 font-bold">14.</span> <strong>Final Load:</strong> Execute <strong>Close &amp; Apply</strong>, then <strong>Save As</strong> <code>PQ_ETL_Lab.pbix</code>.</li>
                         </ul>
                     </div>
                 </div>
