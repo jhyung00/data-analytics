@@ -62,10 +62,14 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(226, 232, 240, 0.8);
         }
-        .hero-pattern {
-            background-color: #0f172a;
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231e293b' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        
+        .cyber-grid {
+            background-image: linear-gradient(rgba(14, 165, 233, 0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(14, 165, 233, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-position: center center;
         }
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 10px;
@@ -125,6 +129,9 @@
         .animation-delay-2000 {
             animation-delay: 2s;
         }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased flex flex-col min-h-screen relative">
@@ -146,100 +153,118 @@
                 </div>
 
                 <div class="hidden md:flex space-x-1 items-center">
-                    <button onclick="switchTab('apps')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Lecture Materials</button>
-                    <button onclick="switchTab('demos')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Real-World Practice</button>
+                    <button onclick="switchTab('apps')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Learning Materials</button>
+                    <button onclick="switchTab('demos')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Application</button>
                     <button onclick="switchTab('labs')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Labs</button>
                     <button onclick="switchTab('study')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Study Guides</button>
+                    <button onclick="switchTab('project')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Project</button>
                     <button onclick="switchTab('bonus')" class="px-4 py-2 rounded-lg text-slate-600 hover:text-primary hover:bg-slate-50 font-medium transition-all text-sm">Bonus</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <header id="home" class="relative hero-pattern text-white py-20 lg:py-24 overflow-hidden">
-        <!-- Replaced static gradient with continuous moving gradient -->
-        <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-sky-900/80 to-indigo-900 opacity-90 animate-gradient-x"></div>
+    <!-- Updated Futuristic and Mobile Friendly Header -->
+    <header id="home" class="relative bg-slate-900 text-white py-16 md:py-24 overflow-hidden">
         
-        <!-- Blobs now use screen blend mode and higher opacity to pop against the dark background -->
-        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-[30rem] h-[30rem] bg-sky-500 rounded-full mix-blend-screen filter blur-3xl opacity-40 animate-blob"></div>
-        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-[30rem] h-[30rem] bg-indigo-500 rounded-full mix-blend-screen filter blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-purple-500 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob" style="animation-delay: 4s;"></div>
+        <!-- Animated Multi-Color Gradient Background -->
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-indigo-900 to-cyan-900 animate-gradient-x opacity-95"></div>
+        
+        <!-- Subtle Cyber Grid Overlay -->
+        <div class="absolute inset-0 cyber-grid opacity-30"></div>
+        
+        <!-- Responsive Moving Blobs (Adjusted sizes for mobile) -->
+        <div class="absolute top-0 right-0 -mr-10 -mt-10 w-64 h-64 md:w-[30rem] md:h-[30rem] bg-cyan-500 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob"></div>
+        <div class="absolute bottom-0 left-0 -ml-10 -mb-10 w-64 h-64 md:w-[30rem] md:h-[30rem] bg-purple-600 rounded-full mix-blend-screen filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 md:w-[25rem] md:h-[25rem] bg-indigo-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
 
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center">
-            <div class="md:w-2/3 mb-8 md:mb-0 z-10">
-                <div class="inline-flex items-center px-3 py-1 mb-4 text-xs font-semibold tracking-wider text-sky-300 uppercase bg-slate-800/80 backdrop-blur-sm rounded-full border border-slate-700">
+            <div class="w-full md:w-2/3 mb-4 md:mb-0 z-10 text-center md:text-left mt-4 md:mt-0">
+                <div class="inline-flex items-center px-3 py-1.5 mb-6 text-xs font-semibold tracking-wider text-cyan-300 uppercase bg-slate-800/80 backdrop-blur-md rounded-full border border-slate-700 shadow-lg shadow-cyan-900/20">
                     <span class="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
                     Spring 2026 Semester
                 </div>
-                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 leading-tight">
-                    Data Analysis <br/>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">for Accountants</span>
+                <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-4 md:mb-6 leading-tight">
+                    Data Analysis <br class="hidden sm:block" />
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-400">for Accountants</span>
                 </h1>
-                <p class="text-lg text-slate-300 max-w-2xl leading-relaxed">
-                    Explore lecture materials, real-world case studies, and hands-on labs designed to master financial data visualization.
+                <p class="text-base sm:text-lg text-slate-300 max-w-2xl leading-relaxed mx-auto md:mx-0">
+                    Explore learning materials, applied case studies, and hands-on labs designed to build robust data analysis, modeling, and automation skills.
                 </p>
             </div>
         </div>
     </header>
 
-    <main class="flex-grow -mt-10 relative z-20 pb-24">
+    <main class="flex-grow -mt-8 md:-mt-12 relative z-20 pb-24">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+            <!-- Horizontal scrolling on mobile for navigation categories -->
+            <div class="flex overflow-x-auto pb-4 mb-8 md:grid md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 hide-scrollbar md:pb-0 md:mb-12 snap-x">
                 
-                <button onclick="switchTab('apps')" id="btn-apps" class="category-btn active glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-sky-500 group">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                            <i class="fa-solid fa-book-open text-blue-500 text-xl"></i>
+                <button onclick="switchTab('apps')" id="btn-apps" class="snap-start min-w-[200px] md:min-w-0 category-btn active glass-card text-left p-5 md:p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-sky-500 group">
+                    <div class="flex items-center justify-between mb-3 md:mb-4">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                            <i class="fa-solid fa-book-open text-blue-500 text-lg md:text-xl"></i>
                         </div>
                         <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-blue-500 transition-colors"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-800">Lecture Materials</h3>
-                    <p class="text-sm text-slate-500 mt-1">Interactive Concepts</p>
+                    <h3 class="text-base md:text-lg font-bold text-slate-800">Learning Materials</h3>
+                    <p class="text-xs md:text-sm text-slate-500 mt-1">Interactive Concepts</p>
                 </button>
 
-                <button onclick="switchTab('demos')" id="btn-demos" class="category-btn glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-orange-500 group">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
-                            <i class="fa-solid fa-laptop-code text-orange-500 text-xl"></i>
+                <button onclick="switchTab('demos')" id="btn-demos" class="snap-start min-w-[200px] md:min-w-0 category-btn glass-card text-left p-5 md:p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-orange-500 group">
+                    <div class="flex items-center justify-between mb-3 md:mb-4">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-orange-50 flex items-center justify-center group-hover:bg-orange-100 transition-colors">
+                            <i class="fa-solid fa-laptop-code text-orange-500 text-lg md:text-xl"></i>
                         </div>
                         <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-orange-500 transition-colors"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-800">Class Demos</h3>
-                    <p class="text-sm text-slate-500 mt-1">Real-World Practice</p>
+                    <h3 class="text-base md:text-lg font-bold text-slate-800">Application</h3>
+                    <p class="text-xs md:text-sm text-slate-500 mt-1">Class Demos</p>
                 </button>
 
-                <button onclick="switchTab('labs')" id="btn-labs" class="category-btn glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-emerald-500 group">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
-                            <i class="fa-solid fa-flask text-emerald-500 text-xl"></i>
+                <button onclick="switchTab('labs')" id="btn-labs" class="snap-start min-w-[200px] md:min-w-0 category-btn glass-card text-left p-5 md:p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-emerald-500 group">
+                    <div class="flex items-center justify-between mb-3 md:mb-4">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                            <i class="fa-solid fa-flask text-emerald-500 text-lg md:text-xl"></i>
                         </div>
                         <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-emerald-500 transition-colors"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-800">Laboratory</h3>
-                    <p class="text-sm text-slate-500 mt-1">Assignments</p>
+                    <h3 class="text-base md:text-lg font-bold text-slate-800">Lab</h3>
+                    <p class="text-xs md:text-sm text-slate-500 mt-1">Assignments</p>
                 </button>
 
-                <button onclick="switchTab('study')" id="btn-study" class="category-btn glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-rose-500 group">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
-                            <i class="fa-solid fa-graduation-cap text-rose-500 text-xl"></i>
+                <button onclick="switchTab('study')" id="btn-study" class="snap-start min-w-[200px] md:min-w-0 category-btn glass-card text-left p-5 md:p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-rose-500 group">
+                    <div class="flex items-center justify-between mb-3 md:mb-4">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-rose-50 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
+                            <i class="fa-solid fa-graduation-cap text-rose-500 text-lg md:text-xl"></i>
                         </div>
                         <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-rose-500 transition-colors"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-800">Study Guides</h3>
-                    <p class="text-sm text-slate-500 mt-1">Exam Preparation</p>
+                    <h3 class="text-base md:text-lg font-bold text-slate-800">Study Guides</h3>
+                    <p class="text-xs md:text-sm text-slate-500 mt-1">Exam Preparation</p>
                 </button>
 
-                <button onclick="switchTab('bonus')" id="btn-bonus" class="category-btn glass-card text-left p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-violet-500 group">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="w-12 h-12 rounded-full bg-violet-50 flex items-center justify-center group-hover:bg-violet-100 transition-colors">
-                            <i class="fa-solid fa-star text-violet-500 text-xl"></i>
+                <button onclick="switchTab('project')" id="btn-project" class="snap-start min-w-[200px] md:min-w-0 category-btn glass-card text-left p-5 md:p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-indigo-500 group">
+                    <div class="flex items-center justify-between mb-3 md:mb-4">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
+                            <i class="fa-solid fa-briefcase text-indigo-500 text-lg md:text-xl"></i>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-indigo-500 transition-colors"></i>
+                    </div>
+                    <h3 class="text-base md:text-lg font-bold text-slate-800">Project</h3>
+                    <p class="text-xs md:text-sm text-slate-500 mt-1">Case Study</p>
+                </button>
+
+                <button onclick="switchTab('bonus')" id="btn-bonus" class="snap-start min-w-[200px] md:min-w-0 category-btn glass-card text-left p-5 md:p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border-l-4 border-l-transparent hover:border-l-violet-500 group">
+                    <div class="flex items-center justify-between mb-3 md:mb-4">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-violet-50 flex items-center justify-center group-hover:bg-violet-100 transition-colors">
+                            <i class="fa-solid fa-star text-violet-500 text-lg md:text-xl"></i>
                         </div>
                         <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-violet-500 transition-colors"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-slate-800">Bonus</h3>
-                    <p class="text-sm text-slate-500 mt-1">Advanced Topics</p>
+                    <h3 class="text-base md:text-lg font-bold text-slate-800">Bonus</h3>
+                    <p class="text-xs md:text-sm text-slate-500 mt-1">Advanced Topics</p>
                 </button>
 
             </div>
@@ -249,7 +274,7 @@
                 <div id="view-apps" class="animate-fade-in block">
                     <div class="flex items-center justify-between mb-8">
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-900">Lecture Materials</h2>
+                            <h2 class="text-2xl font-bold text-slate-900">Learning Materials</h2>
                             <p class="text-slate-600">Interactive modules covering core course concepts.</p>
                         </div>
                         <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">11 Modules</span>
@@ -258,7 +283,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-blue-100 relative overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Introduction to Data Analysis">
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2">0. Introduction</h3>
@@ -271,11 +296,11 @@
 
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-emerald-100 relative overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Excel Spreadsheet Basics">
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2">1. Excel Basic</h3>
-                                <p class="text-slate-600 text-xs mb-4 flex-grow">Foundational shortcuts.</p>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Foundational spreadsheet structuring.</p>
                                 <a href="interactive-apps/1.excel-basic/" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
                                     <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
                                 </a>
@@ -284,25 +309,24 @@
 
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-amber-100 relative overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1555421689-d68471e189f2?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Dashboard indicating conditional logic">
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2">2. Excel Conditional</h3>
-                                <p class="text-slate-600 text-xs mb-4 flex-grow">Visualizing data rules.</p>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Conditional Statements and logic handling.</p>
                                 <a href="interactive-apps/2.excel-conditional/" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
                                     <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
                                 </a>
                             </div>
                         </div>
 
-                        <!-- Module 3: Updated to entirely new Image -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-blue-100 relative overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <img src="https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Data tables and lookups">
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2">3. Excel Lookup</h3>
-                                <p class="text-slate-600 text-xs mb-4 flex-grow">VLOOKUP & XLOOKUP.</p>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Advanced search using XLOOKUP, INDEX-MATCH.</p>
                                 <a href="interactive-apps/3.excel-lookup/" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
                                     <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
                                 </a>
@@ -311,38 +335,37 @@
 
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-purple-100 relative overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <img src="https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Summarized data blocks">
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2">4. Excel Pivot Table</h3>
-                                <p class="text-slate-600 text-xs mb-4 flex-grow">Summarizing data sets.</p>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Summarizing large and complex data sets.</p>
                                 <a href="interactive-apps/4.excel-pivot-table/" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
                                     <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
                                 </a>
                             </div>
                         </div>
-                        <!-- Module 5.1: Excel Stat -->
+                        
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-red-100 relative overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1543286386-2e659306cd6c?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Financial and regression charts">
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2">5.1 Excel Stat</h3>
-                                <p class="text-slate-600 text-xs mb-4 flex-grow">Regression & Analysis.</p>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Linear Regression & Data Analysis.</p>
                                 <a href="interactive-apps/5.1.excel-stat/" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
                                     <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
                                 </a>
                             </div>
                         </div>
 
-                        <!-- Module 5.2: Updated to entirely new Image -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-orange-100 relative overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1591696205602-2f950c417cb9?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <img src="https://images.unsplash.com/photo-1543286386-2e659306cd6c?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Descriptive analytics overview">
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2">5.2 Excel Descriptive</h3>
-                                <p class="text-slate-600 text-xs mb-4 flex-grow">Descriptive statistics.</p>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Descriptive statistics overviews.</p>
                                 <a href="interactive-apps/5.2.excel-descriptive/" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
                                     <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
                                 </a>
@@ -351,11 +374,11 @@
 
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
                             <div class="h-40 bg-teal-100 relative overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <img src="https://images.unsplash.com/photo-1535320903710-d993d3d77d29?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Forecasting and scenario mapping">
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
-                                <h3 class="text-lg font-bold text-slate-800 mb-2">5.3 Excel What if Analysis </h3>
-                                <p class="text-slate-600 text-xs mb-4 flex-grow">Optimization models using Solver & Scenario Analysis</p>
+                                <h3 class="text-lg font-bold text-slate-800 mb-2">5.3 Excel What If Analysis </h3>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Optimization models using Solver & Scenario Analysis.</p>
                                 <a href="interactive-apps/5.3.excel-whatif/" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
                                     <i class="fa-solid fa-play mr-2 text-xs"></i> Launch
                                 </a>
@@ -364,27 +387,26 @@
 
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative">
                             <div class="h-40 bg-yellow-100 relative overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Data servers and query pipelines">
                                 <div class="absolute top-2 right-2 bg-white text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded shadow">Multi-Part</div>
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2">6. Power Query</h3>
-                                <p class="text-slate-600 text-xs mb-4 flex-grow">Data transformations & simulations.</p>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Data cleaning, transformations & simulations.</p>
                                 <button onclick="openModal('power-query-modal')" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors cursor-pointer">
                                     <i class="fa-solid fa-list-ul mr-2 text-xs"></i> View Simulations
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Module 7: Updated to entirely new Dashboard Image -->
                         <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative">
                             <div class="h-40 bg-yellow-400 relative overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <img src="https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Data dashboard and charts on laptop screen">
                                 <div class="absolute top-2 right-2 bg-white text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded shadow">Multi-Part</div>
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2">7. Power BI</h3>
-                                <p class="text-slate-600 text-xs mb-4 flex-grow">Visualization & DAX.</p>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Dashboard visualization & DAX capabilities.</p>
                                 <button onclick="openModal('power-bi-modal')" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors cursor-pointer">
                                     <i class="fa-solid fa-list-ul mr-2 text-xs"></i> View Lessons
                                 </button>
@@ -393,12 +415,12 @@
 
                          <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative">
                             <div class="h-40 bg-cyan-600 relative overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Nodes and automated logic flows">
                                 <div class="absolute top-2 right-2 bg-white text-cyan-700 text-[10px] font-bold px-2 py-0.5 rounded shadow">Multi-Part</div>
                             </div>
                             <div class="p-6 flex flex-col flex-grow">
                                 <h3 class="text-lg font-bold text-slate-800 mb-2">8. Alteryx</h3>
-                                <p class="text-slate-600 text-xs mb-4 flex-grow">Workflow automation series.</p>
+                                <p class="text-slate-600 text-xs mb-4 flex-grow">Building reliable workflow automation.</p>
                                 <button onclick="openModal('alteryx-modal')" class="inline-flex justify-center items-center w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors cursor-pointer">
                                     <i class="fa-solid fa-list-ul mr-2 text-xs"></i> View Lessons
                                 </button>
@@ -411,7 +433,7 @@
                 <div id="view-demos" class="hidden animate-fade-in">
                     <div class="flex items-center justify-between mb-8">
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-900">Real-World Practice</h2>
+                            <h2 class="text-2xl font-bold text-slate-900">Application</h2>
                             <p class="text-slate-600">Interactive scenarios and class demonstrations.</p>
                         </div>
                         <span class="bg-orange-100 text-orange-800 text-xs font-semibold px-2.5 py-0.5 rounded">13 Demos + Coming Soon</span>
@@ -549,7 +571,7 @@
                             </div>
                         </div>
 
-                        <!-- NEW DEMO 7.3 INSERTED HERE -->
+                        <!-- DEMO 7.3 -->
                         <div class="glass-card rounded-xl shadow-sm hover:shadow-md transition-all duration-300 group flex items-center p-3 border border-slate-100 hover:border-slate-200">
                             <div class="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center shrink-0 mr-3 group-hover:bg-amber-100 transition-colors">
                                 <i class="fa-solid fa-chart-pie text-lg text-amber-600"></i>
@@ -609,10 +631,10 @@
                 <div id="view-labs" class="hidden animate-fade-in">
                     <div class="flex items-center justify-between mb-8">
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-900">Laboratory Exercises</h2>
+                            <h2 class="text-2xl font-bold text-slate-900">Lab Exercises</h2>
                             <p class="text-slate-600">Hands-on practice environments.</p>
                         </div>
-                        <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded">10 Labs</span>
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-0.5 rounded">8 Labs</span>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -686,7 +708,6 @@
                             </div>
                         </div>
 
-                        <!-- Unlocked Lab 6 Addition -->
                         <div class="bg-white rounded-xl shadow-sm border border-emerald-100 p-6 relative overflow-hidden group hover:shadow-md transition-shadow">
                             <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                                 <i class="fa-solid fa-gears text-6xl text-emerald-600"></i>
@@ -721,22 +742,8 @@
                             </div>
                             <div class="relative">
                                 <span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded mb-3 inline-block">Lab 8</span>
-                                <h3 class="text-lg font-bold text-slate-700 mb-1">Alteryx (Movie Dataset)</h3>
-                                <p class="text-xs text-slate-500 mb-2">Workflow Automation</p>
-                                <div class="inline-flex items-center text-sm font-medium text-slate-400 mt-2 cursor-not-allowed">
-                                    <i class="fa-solid fa-lock mr-2"></i> Locked
-                                </div>
-                            </div>
-                        </div>
-                        
-                         <div class="bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden opacity-75 grayscale hover:grayscale-0 transition-all">
-                            <div class="absolute top-0 right-0 p-3 opacity-10">
-                                <i class="fa-solid fa-layer-group text-6xl text-slate-400"></i>
-                            </div>
-                            <div class="relative">
-                                <span class="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded mb-3 inline-block">Lab 9</span>
                                 <h3 class="text-lg font-bold text-slate-700 mb-1">Alteryx</h3>
-                                <p class="text-xs text-slate-500 mb-2">Advanced Workflows</p>
+                                <p class="text-xs text-slate-500 mb-2">Workflow Automation</p>
                                 <div class="inline-flex items-center text-sm font-medium text-slate-400 mt-2 cursor-not-allowed">
                                     <i class="fa-solid fa-lock mr-2"></i> Locked
                                 </div>
@@ -808,6 +815,31 @@
                             </div>
                         </div>
 
+                    </div>
+                </div>
+
+                <div id="view-project" class="hidden animate-fade-in">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900">Course Project</h2>
+                            <p class="text-slate-600">Final cumulative case study pulling all concepts together.</p>
+                        </div>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded">1 Project</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="glass-card rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group border-t-4 border-t-indigo-400">
+                            <div class="h-48 bg-slate-200 relative overflow-hidden opacity-75 grayscale">
+                                <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=600" class="w-full h-full object-cover" alt="Data analysis final project placeholder">
+                            </div>
+                            <div class="p-6 flex flex-col flex-grow">
+                                <h3 class="text-xl font-bold text-slate-800 mb-2">Final Case Study</h3>
+                                <p class="text-slate-600 text-sm mb-6 flex-grow">Apply everything you've learned to analyze and solve a comprehensive real-world dataset scenario.</p>
+                                <div class="inline-flex justify-center items-center w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 font-bold cursor-not-allowed">
+                                    <i class="fa-solid fa-lock mr-2"></i> Coming Soon
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1149,10 +1181,11 @@
                 <div>
                     <h4 class="text-white text-lg font-bold mb-4">Quick Links</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><button onclick="switchTab('apps')" class="hover:text-sky-400 transition-colors text-left">Lecture Materials</button></li>
-                        <li><button onclick="switchTab('demos')" class="hover:text-sky-400 transition-colors text-left">Class Demos</button></li>
-                        <li><button onclick="switchTab('labs')" class="hover:text-sky-400 transition-colors text-left">Laboratory</button></li>
+                        <li><button onclick="switchTab('apps')" class="hover:text-sky-400 transition-colors text-left">Learning Materials</button></li>
+                        <li><button onclick="switchTab('demos')" class="hover:text-sky-400 transition-colors text-left">Application</button></li>
+                        <li><button onclick="switchTab('labs')" class="hover:text-sky-400 transition-colors text-left">Lab</button></li>
                         <li><button onclick="switchTab('study')" class="hover:text-sky-400 transition-colors text-left">Study Guides</button></li>
+                        <li><button onclick="switchTab('project')" class="hover:text-sky-400 transition-colors text-left">Project</button></li>
                     </ul>
                 </div>
                 <div>
@@ -1192,6 +1225,7 @@
                 if(btn.id === 'btn-demos') btn.classList.remove('border-l-orange-500');
                 if(btn.id === 'btn-labs') btn.classList.remove('border-l-emerald-500');
                 if(btn.id === 'btn-study') btn.classList.remove('border-l-rose-500');
+                if(btn.id === 'btn-project') btn.classList.remove('border-l-indigo-500');
                 if(btn.id === 'btn-bonus') btn.classList.remove('border-l-violet-500');
             });
             
@@ -1205,6 +1239,8 @@
             document.getElementById('view-demos').classList.add('hidden');
             document.getElementById('view-labs').classList.add('hidden');
             document.getElementById('view-study').classList.add('hidden');
+            const viewProject = document.getElementById('view-project');
+            if (viewProject) viewProject.classList.add('hidden');
             document.getElementById('view-bonus').classList.add('hidden');
 
             const view = document.getElementById(`view-${tabId}`);
