@@ -573,9 +573,9 @@
         "label": "Overview", 
         "icon": "shopping-cart", 
         "title": "Summarizing Online Retail Sales", 
-        "intro": "Student guide for importing the online retail sales file, cleaning key fields, organizing dates into quarters, summarizing sales, and exploring monthly and quarterly patterns in Alteryx.", 
+        "intro": "Student guide exploring online retail sales. The class begins with summarization using a pre-built workflow, while earlier sections outline the initial data preparation steps.", 
         "cards": [
-          {"type": "callout", "title": "Files to prepare", "items": ["Online Retail Sales.txt", "Summarizing Online Retail Sales - Start.yxmd", "A project folder that will hold your workflow, input file, and output files together"]}, 
+          {"type": "callout", "title": "Files to prepare", "items": ["start.zip (contains the pre-built workflow and dataset)", "A project folder to hold your extracted workflow and output files"]}, 
           {"type": "checklist", "title": "What you will practice", "items": ["Importing a delimited text file and correcting the delimiter", "Using Browse to inspect the dataset", "Using DateTime, Formula, Record ID, Select, Summarize, Sort, Filter, and Sample", "Creating Month, Quarter, and Year fields", "Comparing monthly and quarterly sales patterns", "Answering product-type sales questions from grouped outputs"]}
         ]
       }, 
@@ -587,31 +587,34 @@
         "intro": "Start by organizing the project folder, bringing in the CSV, and correcting the delimiter so the data loads properly.", 
         "cards": [
           {
+            "type": "callout", 
+            "title": "Important: Class Starting Point", 
+            "items": [
+              "Our live session will start directly at the Summarize section.",
+              "Download start.zip from the steps below. It contains the pre-built workflow and data.",
+              "If you want to see how the pre-built workflow was created, refer to the reference steps in this section, Initial Cleansing, and Month, Quarter, Year."
+            ]
+          },
+          {
             "type": "steps", 
             "steps": [
               {
-                "title": "Create a project folder", 
-                "body": "Download and keep the workflow, the Online Retail Sales.txt file, and any outputs in the same lesson folder so paths are easier to manage.",
+                "title": "Download the lab files", 
+                "body": "Download the start.zip file and extract it into a dedicated project folder. This file contains the pre-built workflow and the dataset. Keep the files together so paths are easier to manage.",
                 "downloads": [
                   {
-                    "label": "Download Dataset (.txt)", 
-                    "file": "Online Retail Sales.txt",
-                    "dataUrl": "data:application/octet-stream;charset=utf-8,InvoiceNo%2FStockCode%2FDescription%2FQuantity%2FInvoiceDate%2FUnitPrice%2FCustomerID%2FCountry%0A1%2FA%2FTest%20Product%2F1%2F2017-01-01%2F1.00%2F123%2FUS"
-                  },
-                  {
-                    "label": "Download Starting Workflow (.yxmd)", 
-                    "file": "Summarizing Online Retail Sales - Start.yxmd",
-                    "dataUrl": "data:application/octet-stream;charset=utf-8,%3CAlteryxDocument%3E%0A%20%20%3CProperties%3E%3C/Properties%3E%0A%3C/AlteryxDocument%3E"
+                    "label": "Download start.zip", 
+                    "file": "start.zip"
                   }
                 ]
               }, 
               {
-                "title": "Bring in the dataset and attach Browse", 
+                "title": "Bring in the dataset and attach Browse (Reference)", 
                 "body": "Add an Input Data tool, connect to the sales file, and attach a Browse tool so you can investigate the incoming fields.",
                 "shots": []
               }, 
               {
-                "title": "Correct the delimiter", 
+                "title": "Correct the delimiter (Reference)", 
                 "body": "This file does not use a comma delimiter. In the Input Data configuration, change the delimiter to a forward slash / so the columns load correctly.",
                 "instructorNote": "Delimiter should be forward slash /",
                 "shots": [
@@ -619,7 +622,7 @@
                 ]
               }, 
               {
-                "title": "Spend a few minutes investigating the dataset", 
+                "title": "Spend a few minutes investigating the dataset (Reference)", 
                 "body": "Look at the fields, ask what each record represents, and note any likely cleansing steps before making changes.",
                 "shots": []
               }
@@ -637,7 +640,7 @@
         "id": "cleanse", 
         "label": "Initial Cleansing", 
         "icon": "brush-cleaning", 
-        "title": "Clean core fields", 
+        "title": "Clean core fields (Reference)", 
         "intro": "Standardize the date field, fill null product types, create a row identifier, and correct data types before analysis.", 
         "cards": [
           {
@@ -693,7 +696,7 @@
         "id": "quarters", 
         "label": "Month, Quarter, Year", 
         "icon": "calendar-range", 
-        "title": "Create Month, Quarter, and Year", 
+        "title": "Create Month, Quarter, and Year (Reference)", 
         "intro": "Prepare the dataset for time-based analysis by creating fields that support monthly and quarterly grouping.", 
         "cards": [
           {
@@ -735,7 +738,7 @@
         "id": "summarize", 
         "label": "Summarize", 
         "icon": "table-properties", 
-        "title": "Summarize Annual/Quarterly/Monthly Sales", 
+        "title": "Summarize Annual, Quarterly, and Monthly Sales", 
         "intro": "Use Summarize to build grouped outputs for annual, quarterly, and monthly sales statistics.", 
         "cards": [
           {
