@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Audit - Combining Data Pizza</title>
+  <style>
+    :root {
+      --ink:#11203b;
+      --bg:#eef4ff;
+      --panel:#ffffff;
+      --line:#d3ddf0;
+      --ok:#0f766e;
+      --bad:#b91c1c;
+      --accent:#4338ca;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--ink);
+      background:linear-gradient(180deg, #f7faff 0%, #eef4ff 100%);
+      padding:28px;
+    }
+    .wrap {
+      max-width:1220px;
+      margin:0 auto;
+    }
+    .hero {
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:24px;
+      box-shadow:0 14px 32px rgba(17,32,59,.08);
+      margin-bottom:18px;
+    }
+    .hero h1 {
+      margin:0 0 10px;
+      font-size:34px;
+      letter-spacing:-.03em;
+    }
+    .hero p {
+      margin:0;
+      color:#4e5f7a;
+      line-height:1.7;
+      font-size:16px;
+      font-weight:650;
+    }
+    .actions {
+      margin-top:16px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+    }
+    .btn {
+      display:inline-flex;
+      align-items:center;
+      text-decoration:none;
+      padding:11px 14px;
+      border-radius:14px;
+      font-weight:800;
+      background:#e0e7ff;
+      color:#312e81;
+      border:1px solid #c7d2fe;
+    }
+    .summary {
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap:12px;
+      margin-bottom:18px;
+    }
+    .stat {
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      box-shadow:0 10px 24px rgba(17,32,59,.06);
+    }
+    .stat strong {
+      display:block;
+      font-size:28px;
+      letter-spacing:-.03em;
+    }
+    .grid {
+      display:grid;
+      gap:14px;
+    }
+    .row {
+      display:grid;
+      grid-template-columns: 260px 1fr;
+      gap:18px;
+      align-items:start;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:16px;
+      box-shadow:0 10px 24px rgba(17,32,59,.06);
+    }
+    .thumb {
+      width:100%;
+      height:190px;
+      object-fit:contain;
+      border:1px solid #d8e2f4;
+      border-radius:14px;
+      background:#fff;
+    }
+    .meta h2 {
+      margin:0 0 8px;
+      font-size:22px;
+      letter-spacing:-.02em;
+    }
+    .meta p {
+      margin:0 0 8px;
+      color:#4e5f7a;
+      line-height:1.65;
+      font-weight:650;
+    }
+    .path {
+      display:inline-block;
+      margin:6px 0 10px;
+      padding:8px 10px;
+      border-radius:12px;
+      background:#0f172a;
+      color:#f8fafc;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:13px;
+      word-break:break-all;
+    }
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:7px 10px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:12px;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      border:1px solid transparent;
+    }
+    .ok {
+      background:rgba(15,118,110,.12);
+      color:var(--ok);
+      border-color:rgba(15,118,110,.22);
+    }
+    .bad {
+      background:rgba(185,28,28,.10);
+      color:var(--bad);
+      border-color:rgba(185,28,28,.18);
+    }
+    @media (max-width: 880px) {
+      body { padding:16px; }
+      .row { grid-template-columns: 1fr; }
+      .thumb { height:220px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Screenshot audit dashboard</h1>
+      <p>Use this page to confirm that every guide screenshot loads from the local <strong>img/</strong> folder. If a row shows <strong>Missing</strong>, check the file name and folder structure after unzip.</p>
+      <div class="actions">
+        <a class="btn" href="index.html">Open index.html</a>
+      </div>
+    </section>
+
+    <section class="summary" id="summary"></section>
+    <section class="grid" id="grid"></section>
+  </div>
+
+  <script>
+    const IMAGES = [
+  {
+    "section": "Overview / Final reference",
+    "step": "First join block overview",
+    "file": "screenshot-01.png",
+    "path": "img/screenshot-01.png",
+    "desc": "The guide's opening workflow crop showing the three source tables feeding the first join sequence."
+  },
+  {
+    "section": "First Join",
+    "step": "Join orders to order details",
+    "file": "screenshot-02.png",
+    "path": "img/screenshot-02.png",
+    "desc": "Join the orders table to the order_details table using order_id."
+  },
+  {
+    "section": "First Join",
+    "step": "Join pizza types to pizzas",
+    "file": "screenshot-03.png",
+    "path": "img/screenshot-03.png",
+    "desc": "Join the pizza_types table to the pizzas table using pizza_type_id."
+  },
+  {
+    "section": "First Join",
+    "step": "Join the two prepared branches",
+    "file": "screenshot-04.png",
+    "path": "img/screenshot-04.png",
+    "desc": "Combine the detail branch and the pizza lookup branch using pizza_id."
+  },
+  {
+    "section": "Summaries",
+    "step": "Formula for pizza sales",
+    "file": "screenshot-05.png",
+    "path": "img/screenshot-05.png",
+    "desc": "Create Pizza Sales with the formula [quantity] * [price]."
+  },
+  {
+    "section": "Summaries",
+    "step": "Summarize sales per pizza",
+    "file": "screenshot-06.png",
+    "path": "img/screenshot-06.png",
+    "desc": "Group by pizza name and sum Pizza Sales to get Total Sales per Pizza Type."
+  },
+  {
+    "section": "Summaries",
+    "step": "Summarize sales per category",
+    "file": "screenshot-07.png",
+    "path": "img/screenshot-07.png",
+    "desc": "Group by category and sum Pizza Sales to get Total Sales per Category."
+  },
+  {
+    "section": "Summaries",
+    "step": "Summarize total sales",
+    "file": "screenshot-08.png",
+    "path": "img/screenshot-08.png",
+    "desc": "Sum Pizza Sales across all records to get Total Sales."
+  },
+  {
+    "section": "Join + Append",
+    "step": "Join and append section overview",
+    "file": "screenshot-09.png",
+    "path": "img/screenshot-09.png",
+    "desc": "Overview of the final combine-and-calculate section for the two required percentage outputs."
+  },
+  {
+    "section": "Join + Append",
+    "step": "Join pizza totals to category totals",
+    "file": "screenshot-10.png",
+    "path": "img/screenshot-10.png",
+    "desc": "Join the pizza-level results to the category-level results on category."
+  },
+  {
+    "section": "Join + Append",
+    "step": "Append total sales",
+    "file": "screenshot-11.png",
+    "path": "img/screenshot-11.png",
+    "desc": "Append the single Total Sales value onto each joined pizza/category row."
+  },
+  {
+    "section": "Formula",
+    "step": "Final percentage formulas",
+    "file": "screenshot-12.png",
+    "path": "img/screenshot-12.png",
+    "desc": "Calculate both required percentages: share of all pizza sales and share within category."
+  },
+  {
+    "section": "Overview / Final reference",
+    "step": "Entire workflow",
+    "file": "screenshot-13.png",
+    "path": "img/screenshot-13.png",
+    "desc": "The complete teacher-guide workflow showing the lesson from input through final calculations."
+  }
+];
+
+    const summary = document.getElementById('summary');
+    const grid = document.getElementById('grid');
+
+    let loaded = 0;
+    let missing = 0;
+
+    function updateSummary() {
+      summary.innerHTML = `
+        <div class="stat"><div>Total expected</div><strong>${IMAGES.length}</strong></div>
+        <div class="stat"><div>Loaded from img/</div><strong>${loaded}</strong></div>
+        <div class="stat"><div>Missing</div><strong>${missing}</strong></div>
+      `;
+    }
+
+    function makeRow(item) {
+      const row = document.createElement('article');
+      row.className = 'row';
+
+      const img = document.createElement('img');
+      img.className = 'thumb';
+      img.alt = item.step;
+      img.src = item.path;
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+
+      const title = document.createElement('h2');
+      title.textContent = item.step;
+
+      const desc = document.createElement('p');
+      desc.textContent = item.desc;
+
+      const section = document.createElement('p');
+      section.innerHTML = `<strong>Section:</strong> ${item.section}`;
+
+      const path = document.createElement('div');
+      path.className = 'path';
+      path.textContent = item.path;
+
+      const badge = document.createElement('span');
+
+      img.onload = () => {
+        loaded += 1;
+        badge.className = 'badge ok';
+        badge.textContent = 'Loaded';
+        updateSummary();
+      };
+
+      img.onerror = () => {
+        missing += 1;
+        badge.className = 'badge bad';
+        badge.textContent = 'Missing';
+        img.style.borderColor = '#fecaca';
+        img.style.background = '#fff1f2';
+        updateSummary();
+      };
+
+      meta.appendChild(title);
+      meta.appendChild(desc);
+      meta.appendChild(section);
+      meta.appendChild(path);
+      meta.appendChild(badge);
+
+      row.appendChild(img);
+      row.appendChild(meta);
+      return row;
+    }
+
+    updateSummary();
+    IMAGES.forEach(item => grid.appendChild(makeRow(item)));
+  </script>
+</body>
+</html>

@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Combining Data: Pizza Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0f172a',
+            slatebg: '#e2e8f0',
+            panel: '#ffffff',
+            soft: '#f8fafc',
+            line: '#cbd5e1',
+            pizzaRed: '#dc2626',
+            basil: '#15803d',
+            cheese: '#f59e0b',
+            crust: '#ffedd5'
+          },
+          boxShadow: {
+            game: '5px 5px 0px rgba(15,23,42,1)',
+            gameSm: '3px 3px 0px rgba(15,23,42,1)'
+          },
+          fontFamily: {
+            sans: ['Nunito','system-ui','sans-serif'],
+            mono: ['JetBrains Mono','monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --ink: #0f172a;
+      --line: #cbd5e1;
+      --soft: #fefce8;
+      --panel: #ffffff;
+      --pizzaRed: #dc2626;
+      --basil: #15803d;
+      --cheese: #f59e0b;
+      --crust: #fef3c7;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; height:100%; font-family:'Nunito', system-ui, sans-serif; color:var(--ink); background:#ffedd5; }
+    body {
+      background-image:
+        radial-gradient(#fdba74 1.5px, transparent 1.5px),
+        radial-gradient(#fdba74 1.5px, transparent 1.5px);
+      background-size:36px 36px;
+      background-position:0 0, 18px 18px;
+    }
+    .app-shell {
+      width:min(1500px, 96vw);
+      height:min(94vh, 980px);
+      margin:3vh auto;
+      background:#fff;
+      border:3px solid var(--ink);
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow:8px 8px 0 rgba(15,23,42,1);
+      display:flex;
+    }
+    .sidebar {
+      width:310px;
+      min-width:240px;
+      max-width:50vw;
+      resize:horizontal;
+      overflow-x:hidden;
+      overflow-y:auto;
+      background:var(--ink);
+      color:#fff;
+      display:flex;
+      flex-direction:column;
+      border-right:3px solid var(--ink);
+      flex-shrink:0;
+    }
+    .brand {
+      padding:28px 24px 22px;
+      border-bottom:3px solid rgba(255,255,255,.08);
+    }
+    .brand .badge {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:#ffedd5;
+      color:#c2410c;
+      border:2px solid var(--ink);
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      padding:6px 12px;
+      margin-bottom:14px;
+    }
+    .brand h1 {
+      margin:0;
+      font-size:28px;
+      line-height:1.05;
+      font-weight:900;
+      letter-spacing:-.03em;
+    }
+    .brand p {
+      margin:10px 0 0;
+      color:#cbd5e1;
+      font-weight:700;
+      line-height:1.45;
+      font-size:14px;
+    }
+    .nav {
+      padding:14px 10px 18px;
+      overflow:auto;
+    }
+    .nav button {
+      width:100%;
+      border:none;
+      background:transparent;
+      color:#cbd5e1;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:13px 14px;
+      border-radius:14px;
+      font-weight:800;
+      font-size:15px;
+      text-align:left;
+      cursor:pointer;
+      transition:all .15s ease;
+      border-left:5px solid transparent;
+    }
+    .nav button:hover {
+      background:rgba(255,255,255,.08);
+      color:#fff;
+    }
+    .nav button.active {
+      background:var(--pizzaRed);
+      color:#fff;
+      border-left-color:#fff;
+      box-shadow:3px 3px 0 rgba(255,255,255,.18) inset;
+    }
+    .sidebar-footer {
+      margin-top:auto;
+      padding:16px 18px 20px;
+      border-top:3px solid rgba(255,255,255,.08);
+    }
+    .lock-btn {
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 16px;
+      border-radius:14px;
+      border:3px solid var(--ink);
+      background:var(--cheese);
+      color:var(--ink);
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:3px 3px 0 rgba(255,255,255,.15);
+    }
+    .content {
+      flex:1;
+      min-width:0;
+      overflow:auto;
+      background:#fff7ed;
+      padding:28px;
+      transition: flex 0.3s;
+    }
+    .section { display:none; }
+    .section.active { display:block; animation:fade .2s ease; }
+    @keyframes fade {
+      from { opacity:0; transform:translateY(6px); }
+      to { opacity:1; transform:none; }
+    }
+    .hero, .panel {
+      background:var(--panel);
+      border:3px solid var(--ink);
+      border-radius:22px;
+      box-shadow:5px 5px 0 rgba(15,23,42,1);
+    }
+    .hero {
+      padding:26px 28px;
+      margin-bottom:24px;
+    }
+    .eyebrow {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:var(--pizzaRed);
+      background:#fee2e2;
+      padding:7px 12px;
+      border-radius:999px;
+      border:2px solid var(--ink);
+    }
+    .hero h2 {
+      margin:14px 0 8px;
+      font-size:40px;
+      line-height:1.02;
+      letter-spacing:-.04em;
+      color:var(--ink);
+    }
+    .hero p {
+      margin:0;
+      font-size:18px;
+      line-height:1.6;
+      color:#334155;
+      font-weight:700;
+      max-width:900px;
+    }
+    .stack { display:grid; gap:20px; }
+    .panel {
+      padding:20px;
+    }
+    .panel h3 {
+      margin:0 0 10px;
+      color:var(--ink);
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:-.02em;
+    }
+    .panel h4 {
+      margin:0 0 8px;
+      color:var(--ink);
+      font-size:18px;
+      font-weight:900;
+    }
+    .panel p, .panel li {
+      color:#1e293b;
+      font-size:16px;
+      line-height:1.65;
+      font-weight:700;
+    }
+    .softbox {
+      background:var(--soft);
+      border:2px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+    }
+    .list-clean {
+      margin:0;
+      padding-left:18px;
+      display:grid;
+      gap:10px;
+    }
+    .steps { display:grid; gap:14px; }
+    .step {
+      background:var(--soft);
+      border:2px solid var(--line);
+      border-radius:18px;
+      padding:16px 16px 16px 18px;
+    }
+    .step-head {
+      display:flex;
+      align-items:flex-start;
+      gap:14px;
+    }
+    .step-num {
+      min-width:36px;
+      height:36px;
+      border-radius:12px;
+      background:var(--pizzaRed);
+      color:#fff;
+      border:2px solid var(--ink);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      box-shadow:3px 3px 0 rgba(15,23,42,1);
+      margin-top:2px;
+    }
+    .step p { margin:6px 0 0; }
+    .download-btn {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background:var(--pizzaRed);
+      color:#fff;
+      border:3px solid var(--ink);
+      border-radius:12px;
+      padding:10px 16px;
+      font-weight:900;
+      text-decoration:none;
+      margin-top:12px;
+      transition:transform 0.1s, box-shadow 0.1s;
+    }
+    .download-btn:hover {
+      transform:translate(-2px,-2px);
+      box-shadow:4px 4px 0 rgba(15,23,42,1);
+    }
+    .shot-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+      gap:16px;
+    }
+    .shot-card {
+      background:#fff;
+      border:2px solid var(--line);
+      border-radius:18px;
+      padding:12px;
+    }
+    .shot-card strong {
+      display:block;
+      color:var(--ink);
+      margin-top:10px;
+      margin-bottom:4px;
+      font-size:15px;
+    }
+    .shot-card span {
+      display:block;
+      color:#475569;
+      font-size:13px;
+      line-height:1.5;
+      font-weight:700;
+    }
+    .native-shot {
+      display:block;
+      width:auto;
+      height:auto;
+      max-width:100%;
+      border:1.5px solid #94a3b8;
+      border-radius:10px;
+      background:#f8fafc;
+      cursor:zoom-in;
+    }
+    .twocol {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:16px;
+    }
+    .gallery-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+      gap:14px;
+    }
+    .gallery-item {
+      border:2px solid var(--line);
+      background:#fff;
+      border-radius:16px;
+      padding:10px;
+    }
+    .gallery-item .caption {
+      margin-top:8px;
+      font-size:12px;
+      font-weight:800;
+      color:#475569;
+      word-break:break-word;
+    }
+
+    /* --- New Side Viewer CSS --- */
+    .side-viewer {
+      display: none;
+      width: 45%;
+      min-width: 350px;
+      max-width: 600px;
+      border-left: 3px solid var(--ink);
+      background: #e2e8f0;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .side-viewer.open {
+      display: flex;
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(20px); opacity: 0; }
+      to { transform: none; opacity: 1; }
+    }
+    .side-viewer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: #fff;
+      border-bottom: 3px solid var(--ink);
+    }
+    .side-viewer-head h5 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+    .side-viewer-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .side-viewer-body img {
+      width: 100%;
+      height: auto;
+      border: 3px solid var(--ink);
+      border-radius: 12px;
+      box-shadow: 5px 5px 0 rgba(15,23,42,1);
+      background: #fff;
+    }
+    .side-viewer-body .desc {
+      margin-top: 20px;
+      font-weight: 800;
+      color: #334155;
+      font-size: 16px;
+      line-height: 1.6;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 12px;
+      border: 2px solid var(--line);
+    }
+
+    .modal-backdrop {
+      position:fixed;
+      inset:0;
+      background:rgba(15,23,42,.72);
+      backdrop-filter:blur(4px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:999;
+      padding:20px;
+    }
+    .modal-backdrop.open { display:flex; }
+    .modal-card {
+      background:#fff;
+      border:3px solid var(--ink);
+      border-radius:22px;
+      max-width:min(1100px, 96vw);
+      max-height:90vh;
+      overflow:auto;
+      box-shadow:10px 10px 0 rgba(15,23,42,.35);
+      padding:18px;
+    }
+    .modal-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .modal-head h5 {
+      margin:0;
+      font-size:22px;
+      font-weight:900;
+      color:var(--ink);
+    }
+    .icon-btn {
+      border:3px solid var(--ink);
+      background:#e2e8f0;
+      color:var(--ink);
+      border-radius:12px;
+      width:42px;
+      height:42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      font-weight:900;
+    }
+    .modal-card img {
+      display:block;
+      max-width:none;
+      width:auto;
+      height:auto;
+      background:#fff;
+      border:1px solid #94a3b8;
+      border-radius:10px;
+    }
+    .hidden-section-note {
+      background:#fef3c7;
+      color:#78350f;
+      border:2px solid #f59e0b;
+      border-radius:16px;
+      padding:14px 16px;
+      font-weight:800;
+    }
+    .codebox {
+      font-family:'JetBrains Mono',monospace;
+      background:#fff;
+      border:2px solid var(--ink);
+      border-radius:14px;
+      padding:14px 16px;
+      display:grid;
+      gap:8px;
+      font-size:14px;
+      color:#0f172a;
+      font-weight:700;
+    }
+    
+    /* Instructor Notes styling */
+    .success-msg { display:none; margin-top:12px; border-radius:14px; border:2px solid var(--basil); background:#dcfce7; color:#065f46; padding:12px; font-weight:900; }
+    .instructor-note { display:none; margin-top:14px; padding:16px; background:#fefce8; border:2px solid var(--cheese); border-radius:12px; color:#9a3412; font-weight:800; font-size:.95rem; align-items:flex-start; gap:10px; }
+    .instructor-note.show { display:flex; }
+    .instructor-note i { flex-shrink:0; margin-top:2px; color:var(--cheese); }
+
+    @media (max-width: 1100px) {
+      .side-viewer {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        z-index: 1000;
+        border: none;
+      }
+    }
+    @media (max-width: 1000px) {
+      .app-shell { flex-direction:column; height:auto; min-height:95vh; }
+      .sidebar { width:100%; max-width:none; resize:none; overflow-y:visible; border-right:none; border-bottom:3px solid var(--ink); }
+      .content { padding:18px; }
+      .hero h2 { font-size:32px; }
+    }
+    @media (max-width: 760px) {
+      .twocol { grid-template-columns:1fr; }
+      .hero h2 { font-size:28px; }
+      .hero p { font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="badge"><i data-lucide="badge-check"></i> Interactive student file</div>
+        <h1>Combining Data<br>Pizza Lab</h1>
+        <p>Combine and aggregate pizza sales data using Joins, Append, and Summarize to find the share of total and category sales.</p>
+      </div>
+      <nav class="nav" id="nav"></nav>
+      <div class="sidebar-footer">
+        <button class="lock-btn" id="openLock"><i data-lucide="lock"></i> Instructor access</button>
+      </div>
+    </aside>
+    <main class="content" id="content"></main>
+
+    <aside class="side-viewer" id="sideViewer">
+      <div class="side-viewer-head">
+        <h5 id="sideTitle">Screenshot</h5>
+        <button class="icon-btn" id="closeSide" aria-label="Close pane"><i data-lucide="x"></i></button>
+      </div>
+      <div class="side-viewer-body" id="sideBody"></div>
+    </aside>
+  </div>
+
+  <div class="modal-backdrop" id="lockModal" aria-hidden="true">
+    <div class="modal-card" style="max-width:520px;">
+      <div class="modal-head">
+        <h5>Instructor access</h5>
+        <button class="icon-btn" id="closeLock" aria-label="Close instructor modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="stack">
+        <p style="margin:0; color:#334155; font-weight:800;">Enter the local password to reveal the instructor only section in the navigation.</p>
+        <label style="font-weight:900; color:#0f172a;">Password</label>
+        <input id="lockInput" type="password" autocomplete="off" placeholder="Enter password" style="width:100%; padding:14px 16px; border:3px solid #0f172a; border-radius:14px; font-size:16px; font-weight:800; color:#0f172a; background:#fff;" />
+        <button class="lock-btn" id="unlockBtn" style="box-shadow:3px 3px 0 rgba(15,23,42,1);">Unlock</button>
+        <div id="lockMsg" class="hidden-section-note" style="display:none;"></div>
+        <div id="vaultSuccess" class="success-msg">Unlocked. Instructor notes are now visible beneath the relevant instructions, and the Instructor Access section is in the sidebar.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    const SECTIONS = [
+      {
+        "id": "overview",
+        "label": "Overview",
+        "icon": "pizza",
+        "title": "Combining Data: Join, Append, Union",
+        "intro": "Use multiple joins plus one append to show each pizza type's sales as a share of all pizza sales and as a share of sales within its category.",
+        "cards": [
+          {
+            "type": "callout",
+            "title": "Files to prepare",
+            "items": [
+              "pizza.zip (contains the datasets)",
+              "A project folder to hold your workflow and output files"
+            ]
+          },
+          {
+            "type": "checklist",
+            "title": "Lesson goal",
+            "items": [
+              "Show each pizza type's sales as a proportion of total sales across all pizzas.",
+              "Show each pizza type's sales as a proportion of total sales within its category."
+            ]
+          },
+          {
+            "type": "example",
+            "title": "Quick Example",
+            "html": "<p style='margin-top:0; margin-bottom:8px;'>Imagine we have <strong>$100</strong> in Grand Total sales. <strong>$80</strong> of that comes from the 'Classic' category, and <strong>$20</strong> from 'Chicken'.</p><p style='margin-bottom:8px;'>If the <strong>Hawaiian Pizza</strong> (a Classic pizza) sold <strong>$40</strong>, then:</p><ul class='list-clean' style='margin-top:12px;'><li style='color:var(--ink); font-weight:900;'>Goal 1: Hawaiian is <span style='color:var(--basil)'>40%</span> of the Grand Total ($40 / $100).</li><li style='color:var(--ink); font-weight:900;'>Goal 2: Hawaiian is <span style='color:var(--pizzaRed)'>50%</span> of its Category Total ($40 / $80).</li></ul>"
+          },
+          {
+            "type": "steps",
+            "steps": [
+              {
+                "title": "Download the lab files",
+                "body": "Download the pizza.zip file and extract it into a dedicated project folder. This file contains the datasets. Keep the files together so paths are easier to manage.",
+                "downloads": [
+                  {
+                    "label": "Download pizza.zip",
+                    "file": "pizza.zip",
+                    "dataUrl": "data/pizza.zip"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "firstjoin",
+        "label": "First Join",
+        "icon": "link",
+        "title": "Prepare the base pizza sales table",
+        "intro": "Build a single detailed table by joining the order tables and the pizza lookup tables, then combine those branches with pizza_id.",
+        "cards": [
+          {
+            "type": "steps",
+            "steps": [
+              {
+                "title": "Review the join block",
+                "body": "Start with a three-input workflow area that combines transactional order rows with pizza lookup data before any calculations happen.",
+                "shots": [
+                  {
+                    "file": "screenshot-01.png",
+                    "title": "First join block overview",
+                    "desc": "The opening workflow crop showing the three source tables feeding the first join sequence."
+                  }
+                ]
+              },
+              {
+                "title": "Join orders to order details on order_id",
+                "body": "Use a Join tool keyed on order_id so each order line carries the order date and time.",
+                "shots": [
+                  {
+                    "file": "screenshot-02.png",
+                    "title": "Join orders to order details",
+                    "desc": "Join the orders table to the order_details table using order_id."
+                  }
+                ]
+              },
+              {
+                "title": "Join pizza types to pizzas on pizza_type_id",
+                "body": "Use a second Join tool keyed on pizza_type_id so each pizza size and price row inherits its name, category, and ingredients.",
+                "shots": [
+                  {
+                    "file": "screenshot-03.png",
+                    "title": "Join pizza types to pizzas",
+                    "desc": "Join the pizza_types table to the pizzas table using pizza_type_id."
+                  }
+                ]
+              },
+              {
+                "title": "Join the prepared branches on pizza_id",
+                "body": "Use a final Join on pizza_id to bring the order detail rows together with the pizza lookup information.",
+                "shots": [
+                  {
+                    "file": "screenshot-04.png",
+                    "title": "Join the two prepared branches",
+                    "desc": "Combine the detail branch and the pizza lookup branch using pizza_id."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "summaries",
+        "label": "Summaries",
+        "icon": "table-properties",
+        "title": "Calculate sales at three different grains",
+        "intro": "Once the detailed table is ready, calculate Pizza Sales, then summarize that measure at the pizza, category, and overall levels.",
+        "cards": [
+          {
+            "type": "steps",
+            "steps": [
+              {
+                "title": "Create Pizza Sales",
+                "body": "Use a Formula tool with [quantity] * [price]. This produces the measure used in every downstream summarize step.",
+                "shots": [
+                  {
+                    "file": "screenshot-05.png",
+                    "title": "Formula for pizza sales",
+                    "desc": "Create Pizza Sales with the formula [quantity] * [price]."
+                  }
+                ]
+              },
+              {
+                "title": "Calculate sum of sales per pizza",
+                "body": "Summarize the data by pizza name and sum Pizza Sales. This becomes Total Sales per Pizza Type.",
+                "shots": [
+                  {
+                    "file": "screenshot-06.png",
+                    "title": "Summarize sales per pizza",
+                    "desc": "Group by pizza name and sum Pizza Sales to get Total Sales per Pizza Type."
+                  }
+                ]
+              },
+              {
+                "title": "Calculate total sales per category",
+                "body": "Summarize by category and sum Pizza Sales to create Total Sales per Category.",
+                "shots": [
+                  {
+                    "file": "screenshot-07.png",
+                    "title": "Summarize sales per category",
+                    "desc": "Group by category and sum Pizza Sales to get Total Sales per Category."
+                  }
+                ]
+              },
+              {
+                "title": "Calculate total sales",
+                "body": "Run one more Summarize tool that simply sums Pizza Sales across the full table to create a single Total Sales value.",
+                "shots": [
+                  {
+                    "file": "screenshot-08.png",
+                    "title": "Summarize total sales",
+                    "desc": "Sum Pizza Sales across all records to get Total Sales."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "joinappend",
+        "label": "Join + Append",
+        "icon": "git-merge",
+        "title": "Combine the summary outputs",
+        "intro": "Join the pizza-level results to the category totals, then append the single Total Sales value so each row has every denominator it needs.",
+        "cards": [
+          {
+            "type": "steps",
+            "steps": [
+              {
+                "title": "Review the final combine section",
+                "body": "Group the last steps into a Join and Append Fields area focused on the two reporting questions.",
+                "shots": [
+                  {
+                    "file": "screenshot-09.png",
+                    "title": "Join and append section overview",
+                    "desc": "Overview of the final combine-and-calculate section for the two required percentage outputs."
+                  }
+                ]
+              },
+              {
+                "title": "Join pizza totals to category totals on category",
+                "body": "Use a Join tool keyed on category so each pizza type row receives its matching Total Sales per Category.",
+                "shots": [
+                  {
+                    "file": "screenshot-10.png",
+                    "title": "Join pizza totals to category totals",
+                    "desc": "Join the pizza-level results to the category-level results on category."
+                  }
+                ]
+              },
+              {
+                "title": "Append the overall Total Sales value",
+                "body": "Use Append Fields to add the one-row Total Sales result to every joined pizza and category row.",
+                "shots": [
+                  {
+                    "file": "screenshot-11.png",
+                    "title": "Append total sales",
+                    "desc": "Append the single Total Sales value onto each joined pizza/category row."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "formula",
+        "label": "Formula",
+        "icon": "calculator",
+        "title": "Create the two required percentage outputs",
+        "intro": "With all three totals available on each row, one Formula tool can produce the final metrics for the lesson.",
+        "cards": [
+          {
+            "type": "formula",
+            "title": "Final formulas",
+            "lines": [
+              "% of Total Sales = [Total Sales per Pizza Type] / [Total Sales] * 100",
+              "% of Category Sales = [Total Sales per Pizza Type] / [Total Sales per Category] * 100"
+            ]
+          },
+          {
+            "type": "gridshots",
+            "title": "Formula screenshot",
+            "shots": [
+              {
+                "file": "screenshot-12.png",
+                "title": "Final percentage formulas",
+                "desc": "Calculate both required percentages: share of all pizza sales and share within category."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "workflow",
+        "label": "Entire Workflow",
+        "icon": "git-graph",
+        "title": "Reference view of the full solution",
+        "intro": "Use this final screenshot to sanity-check your build after you recreate the workflow in Alteryx.",
+        "cards": [
+          {
+            "type": "gridshots",
+            "title": "Complete workflow",
+            "shots": [
+              {
+                "file": "screenshot-13.png",
+                "title": "Entire workflow",
+                "desc": "The complete workflow showing the lesson from input through final calculations."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "instructor",
+        "label": "Instructor Access",
+        "icon": "lock",
+        "title": "Instructor only notes",
+        "intro": "This section appears only after entering the instructor password in the padlock modal.",
+        "hidden": true,
+        "cards": [
+          {
+            "type": "callout",
+            "title": "Instructor quick notes",
+            "items": [
+              "Password for this package: online",
+              "Ensure students join on correct ID fields: order_id, pizza_type_id, pizza_id",
+              "Check that [quantity] and [price] are numeric before the Formula tool."
+            ]
+          }
+        ]
+      }
+    ];
+    
+    const nav = document.getElementById('nav');
+    const content = document.getElementById('content');
+    let activeId = 'overview';
+    let instructorUnlocked = false;
+    
+    function esc(str) {
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#39;');
+    }
+
+    function shotCard(shot) {
+      if(!shot.file) return '';
+      return `
+        <figure class="shot-card">
+          <img src="img/${esc(shot.file)}" alt="${esc(shot.title)}" class="native-shot zoomable" data-title="${esc(shot.title)}" data-src="img/${esc(shot.file)}" loading="lazy" onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 800 400%22%3E%3Crect fill=%22%23f8fafc%22 width=%22800%22 height=%22400%22/%3E%3Ctext fill=%22%2394a3b8%22 font-family=%22sans-serif%22 font-size=%2224%22 dy=%2210.5%22 font-weight=%22bold%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EImage: img/${esc(shot.file)}%3C/text%3E%3C/svg%3E'">
+          <figcaption>
+            <strong>${esc(shot.title)}</strong>
+            <span>${esc(shot.desc||'')}</span>
+          </figcaption>
+        </figure>
+      `;
+    }
+
+    function renderNav() {
+      nav.innerHTML = '';
+      SECTIONS.filter(s => !s.hidden || instructorUnlocked).forEach(section => {
+        const btn = document.createElement('button');
+        btn.className = section.id === activeId ? 'active' : '';
+        btn.dataset.target = section.id;
+        btn.innerHTML = `<i data-lucide="${section.icon}"></i><span>${esc(section.label)}</span>`;
+        btn.addEventListener('click', () => {
+          activeId = section.id;
+          document.getElementById('sideViewer').classList.remove('open');
+          renderNav();
+          renderContent();
+        });
+        nav.appendChild(btn);
+      });
+      lucide.createIcons();
+    }
+
+    function renderCard(card, idx) {
+      if (card.type === 'callout') {
+        let noteHtml = '';
+        if (card.instructorNote) {
+           const formattedNote = card.instructorNote.split('\n').map(n => `<li>${esc(n)}</li>`).join('');
+           noteHtml = `
+            <div class="instructor-note ${instructorUnlocked ? 'show' : ''}">
+              <i data-lucide="lock"></i>
+              <div><strong>Instructor Note:</strong><ul style="margin:4px 0 0; padding-left:18px;">${formattedNote}</ul></div>
+            </div>`;
+        }
+        return `
+          <section class="panel">
+            <h3>${esc(card.title)}</h3>
+            <div class="softbox">
+              <ul class="list-clean">${card.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+            </div>
+            ${noteHtml}
+          </section>
+        `;
+      }
+      
+      if (card.type === 'example') {
+        return `
+          <section class="panel" style="background:var(--crust); border:3px solid var(--cheese);">
+            <h3 style="color:#b45309; display:flex; align-items:center; gap:8px;"><i data-lucide="lightbulb"></i> ${esc(card.title)}</h3>
+            <div style="color:#334155; font-size:16px; font-weight:700;">
+               ${card.html}
+            </div>
+          </section>
+        `;
+      }
+
+      if (card.type === 'findings') {
+        let noteHtml = '';
+        if (card.instructorNote) {
+           const formattedNote = card.instructorNote.split('\n').map(n => `<li>${esc(n)}</li>`).join('');
+           noteHtml = `
+            <div class="instructor-note ${instructorUnlocked ? 'show' : ''}">
+              <i data-lucide="lock"></i>
+              <div><strong>Instructor Key:</strong><ul style="margin:4px 0 0; padding-left:18px;">${formattedNote}</ul></div>
+            </div>`;
+        }
+        return `
+          <section class="panel">
+            <h3>${esc(card.title)}</h3>
+            <p style="margin-top:0; color:#475569; font-weight:700; margin-bottom:12px;">${esc(card.instruction)}</p>
+            <textarea placeholder="Type your observations here..." style="width:100%; min-height:140px; padding:16px; border:2px solid var(--line); border-radius:14px; font-family:inherit; font-size:16px; margin-bottom:0px; resize:vertical; outline:none;"></textarea>
+            ${noteHtml}
+          </section>
+        `;
+      }
+
+      if (card.type === 'checklist') {
+        return `
+          <section class="panel">
+            <h3>${esc(card.title)}</h3>
+            <div class="softbox">
+              <ul class="list-clean">${card.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+            </div>
+          </section>
+        `;
+      }
+      
+      if (card.type === 'steps') {
+        return `
+          <section class="panel">
+            <h3>Step-by-step</h3>
+            <div class="steps">
+              ${card.steps.map((step, i) => `
+                <div class="step">
+                  <div class="step-head">
+                    <div class="step-num">${i+1}</div>
+                    <div style="flex: 1; min-width: 0;">
+                      <h4>${esc(step.title)}</h4>
+                      <p>${esc(step.body)}</p>
+                      
+                      ${step.downloads && step.downloads.length > 0 ? `
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 6px;">
+                          ${step.downloads.map(d => `
+                            <a href="${d.dataUrl || 'data/' + esc(d.file)}" download="${esc(d.file)}" class="download-btn">
+                              <i data-lucide="download"></i> ${esc(d.label)}
+                            </a>
+                          `).join('')}
+                        </div>
+                      ` : ''}
+                      
+                      ${step.shots && step.shots.length > 0 ? `
+                        <div class="shot-grid" style="margin-top: 16px;">
+                          ${step.shots.map(shot => shotCard(shot)).join('')}
+                        </div>
+                      ` : ''}
+
+                      ${instructorUnlocked && step.instructorNote ? `
+                        <div class="instructor-note show">
+                          <i data-lucide="lock"></i>
+                          <div><strong>Instructor Note:</strong><br>${esc(step.instructorNote)}</div>
+                        </div>
+                      ` : (step.instructorNote ? `
+                        <div class="instructor-note">
+                          <i data-lucide="lock"></i>
+                          <div><strong>Instructor Note:</strong><br>${esc(step.instructorNote)}</div>
+                        </div>
+                      ` : '')}
+                    </div>
+                  </div>
+                </div>`).join('')}
+            </div>
+          </section>
+        `;
+      }
+      if (card.type === 'gridshots') {
+        return `
+          <section class="panel">
+            <h3>${esc(card.title || 'Matched screenshots')}</h3>
+            <div class="shot-grid">
+              ${card.shots.map(shot => shotCard(shot)).join('')}
+            </div>
+          </section>
+        `;
+      }
+      if (card.type === 'twocol') {
+        return `
+          <section class="panel">
+            <div class="twocol">
+              <div class="softbox">
+                <h3>${esc(card.left.title)}</h3>
+                <ul class="list-clean">${card.left.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+              </div>
+              <div class="softbox">
+                <h3>${esc(card.right.title)}</h3>
+                <ul class="list-clean">${card.right.items.map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+              </div>
+            </div>
+          </section>
+        `;
+      }
+      if (card.type === 'formula') {
+        return `
+          <section class="panel">
+            <h3>${esc(card.title)}</h3>
+            <div class="codebox">
+              ${card.lines.map(line => `<div>${esc(line)}</div>`).join('')}
+            </div>
+          </section>
+        `;
+      }
+      return '';
+    }
+
+    function renderContent() {
+      const section = SECTIONS.find(s => s.id === activeId) || SECTIONS[0];
+      const hiddenNote = section.hidden ? '<div class="hidden-section-note">Instructor only section unlocked for this local file.</div>' : '';
+      content.innerHTML = `
+        <section class="section active">
+          <div class="hero">
+            <div class="eyebrow"><i data-lucide="${section.icon}"></i> ${esc(section.label)}</div>
+            <h2>${esc(section.title)}</h2>
+            <p>${esc(section.intro)}</p>
+          </div>
+          ${hiddenNote}
+          <div class="stack">
+            ${section.cards.map(renderCard).join('')}
+          </div>
+        </section>
+      `;
+      lucide.createIcons();
+      attachZoomHandlers();
+    }
+
+    function attachZoomHandlers() {
+      document.querySelectorAll('.zoomable').forEach(img => {
+        img.onclick = () => {
+          let desc = '';
+          const figcaption = img.nextElementSibling;
+          if (figcaption) {
+            const span = figcaption.querySelector('span');
+            if (span) desc = span.textContent;
+          }
+
+          document.getElementById('sideTitle').textContent = img.dataset.title || 'Screenshot';
+          document.getElementById('sideBody').innerHTML = `
+            <img src="${img.dataset.src}" alt="${esc(img.dataset.title || 'Screenshot')}" onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%25%22 height=%22100%25%22 viewBox=%220 0 800 400%22%3E%3Crect fill=%22%23f8fafc%22 width=%22800%22 height=%22400%22/%3E%3Ctext fill=%22%2394a3b8%22 font-family=%22sans-serif%22 font-size=%2224%22 dy=%2210.5%22 font-weight=%22bold%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EImage%20Not%20Found%3C/text%3E%3C/svg%3E'">
+            ${desc ? `<p class="desc">${esc(desc)}</p>` : ''}
+          `;
+          
+          document.getElementById('sideViewer').classList.add('open');
+        };
+      });
+    }
+
+    function closeSideViewer() {
+      document.getElementById('sideViewer').classList.remove('open');
+    }
+
+    function openLock() {
+      document.getElementById('lockModal').classList.add('open');
+      document.getElementById('lockInput').value = '';
+      document.getElementById('lockMsg').style.display = 'none';
+      document.getElementById('vaultSuccess').style.display = 'none';
+      setTimeout(() => document.getElementById('lockInput').focus(), 30);
+    }
+
+    function closeLock() {
+      document.getElementById('lockModal').classList.remove('open');
+    }
+
+    function unlockInstructor() {
+      const val = document.getElementById('lockInput').value.trim();
+      const msg = document.getElementById('lockMsg');
+      const successMsg = document.getElementById('vaultSuccess');
+      if (val === 'online') {
+        instructorUnlocked = true;
+        msg.style.display = 'none';
+        successMsg.style.display = 'block';
+        
+        // Reveal inline instructor notes immediately
+        document.querySelectorAll('.instructor-note').forEach(el => el.classList.add('show'));
+
+        renderNav();
+        setTimeout(() => {
+          activeId = 'instructor';
+          renderNav();
+          renderContent();
+          closeLock();
+        }, 800);
+      } else {
+        successMsg.style.display = 'none';
+        msg.style.display = 'block';
+        msg.textContent = 'Password not recognized. Try again.';
+      }
+    }
+
+    document.getElementById('openLock').addEventListener('click', openLock);
+    document.getElementById('closeLock').addEventListener('click', closeLock);
+    document.getElementById('unlockBtn').addEventListener('click', unlockInstructor);
+    document.getElementById('lockInput').addEventListener('keydown', e => {
+      if(e.key === 'Enter') unlockInstructor();
+    });
+    
+    // Wire up the new close button for the side viewer
+    document.getElementById('closeSide').addEventListener('click', closeSideViewer);
+    
+    document.getElementById('lockModal').addEventListener('click', e => {
+      if(e.target.id === 'lockModal') closeLock();
+    });
+    window.addEventListener('keydown', e => {
+      if(e.key === 'Escape') {
+        closeSideViewer();
+        closeLock();
+      }
+    });
+
+    renderNav();
+    renderContent();
+  </script>
+</body>
+</html>
