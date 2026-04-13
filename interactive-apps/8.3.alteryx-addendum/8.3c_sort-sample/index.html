@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Alteryx Lesson</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Hide scrollbar for a cleaner look on the conveyor belt, but keep functionality */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        body { -webkit-tap-highlight-color: transparent; }
+        
+        /* Highlight border for the table rows */
+        .target-row {
+            outline: 2px solid #ef4444; /* red-500 */
+            outline-offset: -1px;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect } = React;
+
+        // ==========================================
+        // ICON FACTORY (Replaces lucide-react dependency)
+        // ==========================================
+        const createIcon = (paths) => ({ size = 24, className = '', strokeWidth = 2 }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} dangerouslySetInnerHTML={{ __html: paths }} />
+        );
+
+        const Star = createIcon('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />');
+        const Heart = createIcon('<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />');
+        const Package = createIcon('<line x1="16.5" y1="9.4" x2="7.5" y2="4.21" /><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" />');
+        const Coffee = createIcon('<path d="M17 8h1a4 4 0 1 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" x2="6" y1="2" y2="4" /><line x1="10" x2="10" y1="2" y2="4" /><line x1="14" x2="14" y1="2" y2="4" />');
+        const ArrowRight = createIcon('<path d="M5 12h14" /><path d="m12 5 7 7-7 7" />');
+        const ArrowDown = createIcon('<path d="M12 5v14" /><path d="m19 12-7 7-7-7" />');
+        const HandHeart = createIcon('<path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" /><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2" /><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8" /><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />');
+        const ShoppingCart = createIcon('<circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />');
+        const Info = createIcon('<circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />');
+        const Database = createIcon('<ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M3 5V19A9 3 0 0 0 21 19V5" /><path d="M3 12A9 3 0 0 0 21 12" />');
+        const Settings = createIcon('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" />');
+        const PlusCircle = createIcon('<circle cx="12" cy="12" r="10" /><path d="M8 12h8" /><path d="M12 8v8" />');
+        const Scissors = createIcon('<circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" /><line x1="20" x2="8.12" y1="4" y2="15.88" /><line x1="14.47" x2="20" y1="14.48" y2="20" /><line x1="8.12" x2="12" y1="8.12" y2="12" />');
+        const Play = createIcon('<polygon points="6 3 20 12 6 21 6 3" />');
+        const ChevronRight = createIcon('<path d="m9 18 6-6-6-6" />');
+        const LayoutList = createIcon('<rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /><path d="M14 4h7" /><path d="M14 9h7" /><path d="M14 15h7" /><path d="M14 20h7" />');
+        const CheckSquare = createIcon('<polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />');
+        const Square = createIcon('<rect width="18" height="18" x="3" y="3" rx="2" />');
+        const Monitor = createIcon('<rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" />');
+        const Table = createIcon('<path d="M12 3v18" /><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" />');
+        const ScanLine = createIcon('<path d="M3 7V5a2 2 0 0 1 2-2h2" /><path d="M17 3h2a2 2 0 0 1 2 2v2" /><path d="M21 17v2a2 2 0 0 1-2 2h-2" /><path d="M7 21H5a2 2 0 0 1-2-2v-2" /><line x1="7" x2="17" y1="12" y2="12" />');
+        const Trophy = createIcon('<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>');
+        const CheckCircle = createIcon('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>');
+        const XCircle = createIcon('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>');
+        const RefreshCw = createIcon('<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>');
+
+        // ==========================================
+        // PART 1: VISUAL METAPHOR DATA & CONFIG
+        // ==========================================
+        const GROCERIES = [
+        { id: 1, aisle: 'Fresh', type: 'Meal', name: 'Artisan Pizza', price: 6, Icon: Star, color: 'text-blue-600', bg: 'bg-blue-100' },
+        { id: 2, aisle: 'Fresh', type: 'Meal', name: 'Basic Slice', price: 4, Icon: Star, color: 'text-blue-600', bg: 'bg-blue-100' },
+        { id: 3, aisle: 'Fresh', type: 'Snack', name: 'Honey Apple', price: 5, Icon: Heart, color: 'text-orange-500', bg: 'bg-orange-100' },
+        { id: 4, aisle: 'Fresh', type: 'Snack', name: 'Basic Apple', price: 2, Icon: Heart, color: 'text-orange-500', bg: 'bg-orange-100' },
+        { id: 5, aisle: 'Pantry', type: 'Meal', name: 'Truffle Pasta', price: 7, Icon: Package, color: 'text-blue-600', bg: 'bg-blue-100' },
+        { id: 6, aisle: 'Pantry', type: 'Meal', name: 'Ramen Box', price: 3, Icon: Package, color: 'text-blue-600', bg: 'bg-blue-100' },
+        { id: 7, aisle: 'Pantry', type: 'Snack', name: 'Fancy Croissant', price: 8, Icon: Coffee, color: 'text-orange-500', bg: 'bg-orange-100' },
+        { id: 8, aisle: 'Pantry', type: 'Snack', name: 'Mini Croissant', price: 2, Icon: Coffee, color: 'text-orange-500', bg: 'bg-orange-100' },
+        ];
+
+        const UNSORTED_IDS = [6, 3, 7, 1, 8, 2, 5, 4];
+
+        const VISUAL_SCENARIOS = {
+        'none': {
+            label: 'No Grouping',
+            groupFields: [],
+            sortRules: 'price',
+            sortText: 'The belt sorts purely by Price (tallest stack first), completely ignoring the Aisles and Types.',
+            sampleText: 'Scanning left-to-right for the SINGLE most expensive item overall. It stops instantly at the Fancy Croissant.'
+        },
+        'aisle': {
+            label: 'Group by Aisle Only',
+            groupFields: ['aisle'],
+            sortRules: 'aisle-price',
+            sortText: 'The belt organizes by Aisle first (Fresh, then Pantry), then sorts by Price within those sections.',
+            sampleText: 'Scanning left-to-right. It selects the most expensive item in the Fresh section, and the most expensive item in the Pantry section.'
+        },
+        'type': {
+            label: 'Group by Item Type Only',
+            groupFields: ['type'],
+            sortRules: 'type-price', 
+            sortText: 'The belt organizes by Item Type first (Blue Meals, then Orange Snacks), then sorts by Price within those sections.',
+            sampleText: 'Scanning left-to-right. It selects the single most expensive Meal, and the single most expensive Snack overall.'
+        },
+        'both': {
+            label: 'Group by Both (Aisle & Type)',
+            groupFields: ['aisle', 'type'],
+            sortRules: 'aisle-type-price',
+            sortText: 'The belt organizes into strict clusters: Fresh Meals, Fresh Snacks, Pantry Meals, Pantry Snacks. Each cluster has its most expensive item at the front.',
+            sampleText: 'Scanning for every unique combination. It picks the leader of all four packs!'
+        }
+        };
+
+        // ==========================================
+        // PART 2: DATA WORKFLOW DATA & ENGINES
+        // ==========================================
+        // Data updated to be completely symmetrical!
+        const RAW_DATA = [
+        { id: 1, year: 2023, quarter: 'Q1', category: 'Electronics', sales: 4500 },
+        { id: 2, year: 2023, quarter: 'Q1', category: 'Furniture', sales: 1200 },
+        { id: 3, year: 2023, quarter: 'Q1', category: 'Clothing', sales: 850 },
+        { id: 4, year: 2023, quarter: 'Q2', category: 'Electronics', sales: 3200 },
+        { id: 5, year: 2023, quarter: 'Q2', category: 'Furniture', sales: 1800 },
+        { id: 6, year: 2023, quarter: 'Q2', category: 'Clothing', sales: 900 },
+        { id: 7, year: 2023, quarter: 'Q3', category: 'Electronics', sales: 5100 },
+        { id: 8, year: 2023, quarter: 'Q3', category: 'Furniture', sales: 2100 },
+        { id: 9, year: 2023, quarter: 'Q3', category: 'Clothing', sales: 1100 },
+        { id: 10, year: 2024, quarter: 'Q1', category: 'Electronics', sales: 2100 },
+        { id: 11, year: 2024, quarter: 'Q1', category: 'Furniture', sales: 6400 },
+        { id: 12, year: 2024, quarter: 'Q1', category: 'Clothing', sales: 1500 },
+        { id: 13, year: 2024, quarter: 'Q2', category: 'Electronics', sales: 1500 },
+        { id: 14, year: 2024, quarter: 'Q2', category: 'Furniture', sales: 5100 },
+        { id: 15, year: 2024, quarter: 'Q2', category: 'Clothing', sales: 1100 },
+        { id: 16, year: 2024, quarter: 'Q3', category: 'Electronics', sales: 2500 },
+        { id: 17, year: 2024, quarter: 'Q3', category: 'Furniture', sales: 3200 },
+        { id: 18, year: 2024, quarter: 'Q3', category: 'Clothing', sales: 1400 }
+        ];
+
+        const COLUMNS = ['year', 'quarter', 'category', 'sales'];
+
+        const processSummarize = (data, config) => {
+        const groupFields = config.groupFields || [];
+        if (groupFields.length === 0) return data; 
+        const groups = {};
+        data.forEach(row => {
+            const key = groupFields.map(f => row[f]).join('|');
+            if (!groups[key]) {
+            groups[key] = { Total_Sales: 0 };
+            groupFields.forEach(f => groups[key][f] = row[f]);
+            }
+            groups[key].Total_Sales += Number(row.sales || row.Total_Sales || 0);
+        });
+        return Object.values(groups);
+        };
+
+        const processSort = (data, config) => {
+        if (data.length === 0) return data;
+        const { sort1, sort2, sort3 } = config;
+        
+        return [...data].sort((a, b) => {
+            const checks = [sort1, sort2, sort3];
+            for (let sortRule of checks) {
+            if (sortRule && sortRule.field && sortRule.field !== 'None') {
+                let valA = a[sortRule.field];
+                let valB = b[sortRule.field];
+                if (valA !== valB) {
+                let comp = 0;
+                if (typeof valA === 'string' && typeof valB === 'string') comp = valA.localeCompare(valB);
+                else comp = (valA || 0) - (valB || 0);
+                return sortRule.order === 'Asc' ? comp : -comp;
+                }
+            }
+            }
+            return 0;
+        });
+        };
+
+        const processSample = (data, config) => {
+        const n = parseInt(config.nRows, 10);
+        const groupFields = config.groupFields || [];
+        if (isNaN(n) || n <= 0) return data;
+        if (groupFields.length === 0) return data.slice(0, n);
+
+        const groups = {};
+        data.forEach(row => {
+            const key = groupFields.map(f => row[f]).join('|');
+            if (!groups[key]) groups[key] = [];
+            if (groups[key].length < n) groups[key].push(row);
+        });
+        return Object.values(groups).flat();
+        };
+
+        const executeTool = (data, tool) => {
+        if (tool.type === 'Summarize') return processSummarize(data, tool.config);
+        if (tool.type === 'Sort Data') return processSort(data, tool.config);
+        if (tool.type === 'Sample') return processSample(data, tool.config);
+        return data;
+        };
+
+        // Helper function to figure out WHICH indices the Sample tool will pick from the sorted array
+        const getSampledIndices = (data, config) => {
+            const n = parseInt(config.nRows, 10);
+            const groupFields = config.groupFields || [];
+            const indices = new Set();
+            if (isNaN(n) || n <= 0) return indices;
+            if (groupFields.length === 0) {
+                for (let i = 0; i < n && i < data.length; i++) indices.add(i);
+                return indices;
+            }
+            const groups = {};
+            data.forEach((row, i) => {
+                const key = groupFields.map(f => row[f]).join('|');
+                if (!groups[key]) groups[key] = 0;
+                if (groups[key] < n) {
+                    groups[key]++;
+                    indices.add(i);
+                }
+            });
+            return indices;
+        };
+
+        // ==========================================
+        // QUIZ DATA
+        // ==========================================
+        const QUIZ_QUESTIONS = [
+        {
+            question: "You want to find the highest-paid employee in each Department. Which configuration gives you the correct result?",
+            dataHeaders: ['Department', 'Employee', 'Salary'],
+            dataRows: [
+                ['HR', 'Alice', '$60k'],
+                ['HR', 'Bob', '$90k'],
+                ['IT', 'Carol', '$85k']
+            ],
+            options: [
+            "[Sort] Dept: Asc,  Salary: Desc ➔ [Sample] N=1, Group: Dept",
+            "[Sort] Dept: Asc,  Salary: Asc  ➔ [Sample] N=1, Group: Dept",
+            "[Sort] Salary: Desc, Dept: None ➔ [Sample] N=1, Group: Dept"
+            ],
+            answer: 0,
+            explanation: "Correct! You must sort by the grouping field (Department) to cluster the data, AND the metric (Salary Descending) to put the highest at the top of each cluster, before using the Sample tool."
+        },
+        {
+            question: "How do you correctly configure the tools to find the SINGLE fastest car for each Make?",
+            dataHeaders: ['Make', 'Model', 'Top_Speed'],
+            dataRows: [
+                ['Ford', 'Mustang', '155'],
+                ['Honda', 'Civic', '130'],
+                ['Ford', 'Focus', '120']
+            ],
+            options: [
+            "[Sort] Make: None, Speed: None ➔ [Sample] N=1, Group: Make",
+            "[Sort] Make: Asc,  Speed: Desc ➔ [Sample] N=1, Group: Make",
+            "[Sort] Make: Asc,  Speed: Asc  ➔ [Sample] N=1, Group: Make"
+            ],
+            answer: 1,
+            explanation: "Exactly right! Sorting by Make clusters them, and Sorting by Speed (Desc) puts the fastest at the top. The first option is the classic 'gotcha' where you forget to sort, giving you random results!"
+        },
+        {
+            question: "You want the most expensive ticket for EVERY Genre at EVERY Theater. How should you set up the tools?",
+            dataHeaders: ['Theater', 'Genre', 'Price'],
+            dataRows: [
+                ['AMC', 'Action', '$15'],
+                ['AMC', 'Action', '$18'],
+                ['AMC', 'Comedy', '$12']
+            ],
+            options: [
+            "[Sort] Theater: Asc, Genre: Asc, Price: Desc ➔ [Sample] N=1, Group: Theater",
+            "[Sort] Theater: Asc, Genre: Asc, Price: Desc ➔ [Sample] N=1, Group: Genre  ",
+            "[Sort] Theater: Asc, Genre: Asc, Price: Desc ➔ [Sample] N=1, Group: Both   "
+            ],
+            answer: 2,
+            explanation: "Nailed it! To get the top item for every unique combination, you must select both fields in the Sample tool's Group By configuration."
+        }
+        ];
+
+
+        // ==========================================
+        // SUB-COMPONENTS
+        // ==========================================
+        const PriceStack = ({ height }) => (
+        <div className="flex flex-col-reverse gap-[3px] h-20 justify-start items-center">
+            {Array.from({ length: height }).map((_, i) => (
+            <div key={i} className="w-5 md:w-6 h-1.5 bg-emerald-400 rounded-sm border border-emerald-600 shadow-[0_1px_2px_rgba(0,0,0,0.2)]" />
+            ))}
+        </div>
+        );
+
+        const GroceryCard = ({ item, isSampled, isFaded }) => {
+        const { Icon, color, bg } = item;
+        return (
+            <div className={`flex flex-col items-center p-2 md:p-3 rounded-xl border-2 w-24 md:w-28 shrink-0 bg-white transition-all duration-700 ease-in-out ${
+            isSampled ? 'border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.6)] scale-110 z-30' : 'border-slate-200 shadow-sm z-10'
+            } ${isFaded ? 'opacity-20 grayscale scale-90' : 'opacity-100'}`}>
+            <div className="w-full flex justify-between items-center mb-2">
+                <span className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest">{item.aisle}</span>
+                <span className={`text-[8px] md:text-[9px] font-bold px-1.5 py-0.5 rounded-sm ${bg} ${color}`}>{item.type}</span>
+            </div>
+            <div className="flex items-end gap-1 md:gap-2 h-20 mt-1">
+                <Icon size={24} className={`md:w-7 md:h-7 ${color} mb-0.5`} strokeWidth={2} />
+                <PriceStack height={item.price} />
+            </div>
+            <span className="text-[10px] md:text-[11px] font-bold text-slate-700 mt-4 text-center leading-tight h-8 flex items-center">{item.name}</span>
+            </div>
+        );
+        };
+
+        // ==========================================
+        // VIEW 1: THE VISUAL METAPHOR
+        // ==========================================
+        function VisualMetaphorView({ onNext }) {
+        const [activeScenarioKey, setActiveScenarioKey] = useState('none');
+        const [workflowStep, setWorkflowStep] = useState(0); 
+        
+        const activeScenario = VISUAL_SCENARIOS[activeScenarioKey];
+
+        const sortedData = useMemo(() => {
+            let sorted = [...GROCERIES];
+            if (activeScenario.sortRules === 'price') {
+            sorted.sort((a, b) => b.price - a.price);
+            } else if (activeScenario.sortRules === 'aisle-price') {
+            sorted.sort((a, b) => {
+                if (a.aisle < b.aisle) return -1;
+                if (a.aisle > b.aisle) return 1;
+                return b.price - a.price; 
+            });
+            } else if (activeScenario.sortRules === 'type-price') {
+            sorted.sort((a, b) => {
+                if (a.type < b.type) return -1;
+                if (a.type > b.type) return 1;
+                return b.price - a.price; 
+            });
+            } else if (activeScenario.sortRules === 'aisle-type-price') {
+            sorted.sort((a, b) => {
+                if (a.aisle < b.aisle) return -1;
+                if (a.aisle > b.aisle) return 1;
+                if (a.type < b.type) return -1;
+                if (a.type > b.type) return 1;
+                return b.price - a.price; 
+            });
+            }
+            return sorted;
+        }, [activeScenario.sortRules]);
+
+        const sampledItemIds = useMemo(() => {
+            if (activeScenario.groupFields.length === 0) return [sortedData[0].id];
+            const collectedIds = [];
+            const seenGroups = new Set();
+            sortedData.forEach(item => {
+            const groupKey = activeScenario.groupFields.map(field => item[field]).join('-');
+            if (!seenGroups.has(groupKey)) {
+                seenGroups.add(groupKey);
+                collectedIds.push(item.id);
+            }
+            });
+            return collectedIds;
+        }, [sortedData, activeScenario.groupFields]);
+
+        const handleScenarioChange = (key) => {
+            setActiveScenarioKey(key);
+            setWorkflowStep(0); 
+        };
+
+        const [isMobile, setIsMobile] = useState(false);
+        useEffect(() => {
+            const checkMobile = () => setIsMobile(window.innerWidth < 768);
+            checkMobile();
+            window.addEventListener('resize', checkMobile);
+            return () => window.removeEventListener('resize', checkMobile);
+        }, []);
+
+        const ITEM_WIDTH = isMobile ? 96 : 112; 
+        const GAP = isMobile ? 12 : 16;         
+        const TOTAL_SLOT_WIDTH = ITEM_WIDTH + GAP;
+
+        return (
+            <div className="max-w-6xl mx-auto space-y-4 md:space-y-6 pb-12 animate-in fade-in duration-500 p-2 sm:p-4">
+            
+            <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm mt-2 md:mt-4">
+                <h1 className="text-xl md:text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                <ShoppingCart className="text-emerald-500" />
+                The Live Sorting Conveyor Belt
+                </h1>
+                <p className="text-sm md:text-base text-slate-500 mb-4 md:mb-6">
+                See exactly how sorting affects grouping. Note how the items are color-coded by their Type.
+                </p>
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2 md:gap-3">
+                {Object.entries(VISUAL_SCENARIOS).map(([key, scenario]) => (
+                    <button
+                    key={key}
+                    onClick={() => handleScenarioChange(key)}
+                    className={`flex-1 sm:flex-none px-3 py-2 md:px-4 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold transition-all border-2 ${
+                        activeScenarioKey === key 
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm md:scale-105' 
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                    >
+                    {scenario.label}
+                    </button>
+                ))}
+                </div>
+            </div>
+
+            <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+                <div className={`flex-1 border p-4 md:p-5 rounded-2xl flex flex-col justify-center gap-2 transition-colors duration-500 ${
+                workflowStep === 0 ? 'bg-slate-50 border-slate-200' :
+                workflowStep === 1 ? 'bg-blue-50 border-blue-200' : 
+                'bg-emerald-50 border-emerald-200'
+                }`}>
+                <div className="flex items-center gap-2 font-bold text-base md:text-lg mb-1">
+                    {workflowStep === 0 && <span className="text-slate-500 flex items-center gap-2"><Database size={18} /> 1. Raw Data</span>}
+                    {workflowStep === 1 && <span className="text-blue-600 flex items-center gap-2"><ArrowDown size={18} /> 2. Sorted Data</span>}
+                    {workflowStep === 2 && <span className="text-emerald-600 flex items-center gap-2"><ScanLine size={18} /> 3. Selected Items</span>}
+                </div>
+                <p className="font-medium text-slate-700 leading-relaxed text-xs md:text-sm">
+                    {workflowStep === 0 && "The groceries are scrambled. If we try to select the most expensive items right now, it would be chaos!"}
+                    {workflowStep === 1 && activeScenario.sortText}
+                    {workflowStep === 2 && activeScenario.sampleText}
+                </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row lg:flex-col justify-center gap-2 md:gap-3 shrink-0">
+                <button 
+                    onClick={() => setWorkflowStep(1)}
+                    disabled={workflowStep !== 0}
+                    className={`flex-1 flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-4 rounded-xl font-bold text-sm md:text-md shadow-sm transition-all duration-300 ${
+                    workflowStep === 0 ? 'bg-blue-600 hover:bg-blue-700 text-white md:hover:scale-105 shadow-blue-200 shadow-lg cursor-pointer' 
+                    : 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
+                    }`}
+                >
+                    <ArrowDown className={workflowStep === 0 ? 'animate-bounce' : ''} size={18} /> Sort Belt
+                </button>
+                
+                <button 
+                    onClick={() => setWorkflowStep(2)}
+                    disabled={workflowStep !== 1}
+                    className={`flex-1 flex justify-center items-center gap-2 px-4 py-3 md:px-6 md:py-4 rounded-xl font-bold text-sm md:text-md shadow-sm transition-all duration-300 ${
+                    workflowStep === 1 ? 'bg-emerald-600 hover:bg-emerald-700 text-white md:hover:scale-105 shadow-emerald-200 shadow-lg cursor-pointer' 
+                    : 'bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
+                    }`}
+                >
+                    <HandHeart className={workflowStep === 1 ? 'animate-pulse' : ''} size={18} /> Select Top Items
+                </button>
+
+                {workflowStep === 2 && (
+                    <button 
+                    onClick={() => setWorkflowStep(0)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 md:px-6 md:py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-semibold transition-colors text-xs md:text-sm"
+                    >
+                    Reset Belt
+                    </button>
+                )}
+                </div>
+            </div>
+
+            <div className="bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl shadow-sm overflow-hidden mt-4 md:mt-6">
+                <div className="bg-slate-800 px-4 md:px-6 py-3 border-b border-slate-900 flex items-center justify-between">
+                <h2 className="font-semibold text-white flex items-center gap-2 text-sm md:text-base">
+                    <ArrowRight className="text-slate-400" size={16} />
+                    Conveyor Belt
+                </h2>
+                <div className="flex gap-1">
+                    <div className={`h-1.5 w-6 md:h-2 md:w-8 rounded-full ${workflowStep >= 0 ? 'bg-slate-400' : 'bg-slate-700'}`} />
+                    <div className={`h-1.5 w-6 md:h-2 md:w-8 rounded-full ${workflowStep >= 1 ? 'bg-blue-400' : 'bg-slate-700'}`} />
+                    <div className={`h-1.5 w-6 md:h-2 md:w-8 rounded-full ${workflowStep >= 2 ? 'bg-emerald-400' : 'bg-slate-700'}`} />
+                </div>
+                </div>
+                
+                <div className="p-4 md:p-8 bg-slate-50 overflow-x-auto hide-scrollbar">
+                <div className="relative h-[160px] md:h-[180px]" style={{ width: `${GROCERIES.length * TOTAL_SLOT_WIDTH}px` }}>
+                    <div className="absolute left-0 right-0 bottom-3 md:bottom-4 h-3 md:h-4 bg-slate-300 rounded-full shadow-inner border border-slate-400/50" />
+                    
+                    {GROCERIES.map(item => {
+                    let currentIndex = 0;
+                    if (workflowStep === 0) {
+                        currentIndex = UNSORTED_IDS.indexOf(item.id);
+                    } else {
+                        currentIndex = sortedData.findIndex(d => d.id === item.id);
+                    }
+
+                    const isSampled = workflowStep === 2 && sampledItemIds.includes(item.id);
+                    const isFaded = workflowStep === 2 && !isSampled;
+                    
+                    return (
+                        <div 
+                        key={item.id} 
+                        className="absolute top-0 transition-transform duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+                        style={{ transform: `translateX(${currentIndex * TOTAL_SLOT_WIDTH}px)` }}
+                        >
+                        <GroceryCard item={item} isSampled={isSampled} isFaded={isFaded} />
+                        </div>
+                    );
+                    })}
+                </div>
+                </div>
+            </div>
+
+            {workflowStep === 2 && (
+                <div className="flex justify-center mt-8 md:mt-12 animate-in fade-in zoom-in delay-300">
+                <button 
+                    onClick={onNext}
+                    className="group px-6 md:px-8 py-3 md:py-4 w-full sm:w-auto justify-center bg-slate-900 text-white rounded-xl md:rounded-2xl font-bold text-sm md:text-lg hover:bg-slate-800 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 flex items-center gap-2 md:gap-3"
+                >
+                    Apply to Alteryx Data <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
+                </button>
+                </div>
+            )}
+            </div>
+        );
+        }
+
+        // ==========================================
+        // VIEW 2: THE DATA WORKFLOW
+        // ==========================================
+        function DataWorkflowView({ onNext }) {
+        const [pipeline, setPipeline] = useState([
+            { id: 1, type: 'Summarize', config: { groupFields: ['year', 'category'] } },
+            { id: 2, type: 'Sort Data', config: { sort1: { field: 'year', order: 'Asc' }, sort2: { field: 'Total_Sales', order: 'Desc' } } },
+            { id: 3, type: 'Sample', config: { nRows: 1, groupFields: [] } }
+        ]);
+        
+        const [activeStepId, setActiveStepId] = useState(3);
+        const [viewStepId, setViewStepId] = useState(3); 
+        const [explanation, setExplanation] = useState("No Grouping: Grabs the absolute top 1 record from the sorted list. Since 2023 Electronics is at the very top, that is the only row returned.");
+
+        const results = useMemo(() => {
+            const res = [RAW_DATA];
+            let currentData = RAW_DATA;
+            pipeline.forEach(tool => {
+            if (tool.type !== 'None') currentData = executeTool(currentData, tool);
+            res.push(currentData);
+            });
+            return res;
+        }, [pipeline]);
+
+        // Calculate EXACTLY which indices from Step 2 will be grabbed by Step 3
+        const sampledIndicesPreview = useMemo(() => {
+            if (viewStepId !== 2) return new Set();
+            return getSampledIndices(results[2], pipeline[2].config);
+        }, [viewStepId, results, pipeline]);
+
+        const getAvailableColumns = (stepIndex) => {
+            if (stepIndex === 0) return COLUMNS;
+            const prevData = results[stepIndex];
+            if (prevData.length === 0) return [];
+            return Object.keys(prevData[0]).filter(k => k !== 'id');
+        };
+
+        const updateToolType = (stepId, newType) => {
+            setPipeline(prev => prev.map(step => {
+            if (step.id === stepId) {
+                let defaultConfig = {};
+                if (newType === 'Summarize') defaultConfig = { groupFields: ['year', 'category'] };
+                if (newType === 'Sort Data') defaultConfig = { sort1: { field: 'None', order: 'Asc' }, sort2: { field: 'None', order: 'Desc' }, sort3: { field: 'None', order: 'Desc' } };
+                if (newType === 'Sample') defaultConfig = { nRows: 1, groupFields: [] }; 
+                return { ...step, type: newType, config: defaultConfig };
+            }
+            return step;
+            }));
+        };
+
+        const updateToolConfig = (stepId, key, value) => {
+            setPipeline(prev => prev.map(step => {
+            if (step.id === stepId) return { ...step, config: { ...step.config, [key]: value } };
+            return step;
+            }));
+        };
+
+        const toggleCheckboxField = (stepId, field, configKey, currentFields = []) => {
+            const newFields = currentFields.includes(field) 
+            ? currentFields.filter(f => f !== field)
+            : [...currentFields, field];
+            updateToolConfig(stepId, configKey, newFields);
+        };
+
+        const loadPreset = (sortConfig, sampleGroups, explanationText) => {
+            setPipeline([
+            { id: 1, type: 'Summarize', config: { groupFields: ['year', 'category'] } },
+            { id: 2, type: 'Sort Data', config: sortConfig },
+            { id: 3, type: 'Sample', config: { nRows: 1, groupFields: sampleGroups } } 
+            ]);
+            setViewStepId(3);
+            setActiveStepId(3);
+            setExplanation(explanationText);
+        };
+
+        const getToolIcon = (type) => {
+            if (type === 'Summarize') return <PlusCircle size={16} className="text-purple-600" />;
+            if (type === 'Sort Data') return <ArrowDown size={16} className="text-blue-600" />;
+            if (type === 'Sample') return <Scissors size={16} className="text-emerald-600" />;
+            return <LayoutList size={16} className="text-gray-400" />;
+        };
+
+        return (
+            <div className="flex-1 flex flex-col min-h-0 animate-in fade-in duration-500 bg-slate-50">
+            <header className="bg-white border-b border-slate-200 p-4 md:px-6 md:py-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 md:gap-4 shadow-sm z-10 relative">
+                <div>
+                <h1 className="text-lg md:text-xl font-semibold text-slate-900 flex items-center gap-2">
+                    <Settings className="text-blue-600" size={20} />
+                    Data Mode: Selecting Top 1
+                </h1>
+                <p className="text-xs md:text-sm text-slate-500 mt-1">
+                    Applying logic to data. The Sample tool is configured to grab the First 1 row, simulating Alteryx.
+                </p>
+                </div>
+                <div className="flex flex-row flex-wrap w-full lg:w-auto gap-2">
+                <button onClick={() => loadPreset(
+                    { sort1: { field: 'Total_Sales', order: 'Desc' }, sort2: { field: 'None', order: 'Asc' } },
+                    [], "No Grouping: Scans top to bottom for the single highest Total Sales overall."
+                )} className="flex-1 sm:flex-none px-2 py-2 md:px-3 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-md text-xs md:text-sm font-bold transition-colors border border-slate-300">Overall</button>
+                
+                <button onClick={() => loadPreset(
+                    { sort1: { field: 'year', order: 'Asc' }, sort2: { field: 'Total_Sales', order: 'Desc' } },
+                    ['year'], "Group by Year: Scans top to bottom and grabs the top 1 record it finds for 2023, and the top 1 record it finds for 2024."
+                )} className="flex-1 sm:flex-none px-2 py-2 md:px-3 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md text-xs md:text-sm font-bold transition-colors border border-blue-200">Per Year</button>
+                
+                <button onClick={() => loadPreset(
+                    { sort1: { field: 'category', order: 'Asc' }, sort2: { field: 'Total_Sales', order: 'Desc' } },
+                    ['category'], "Group by Category: Sorts by Category first, then grabs the single highest Total Sales for each category."
+                )} className="flex-1 sm:flex-none px-2 py-2 md:px-3 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-md text-xs md:text-sm font-bold transition-colors border border-purple-200">Per Category</button>
+                
+                <button onClick={() => loadPreset(
+                    { sort1: { field: 'year', order: 'Asc' }, sort2: { field: 'category', order: 'Asc' }, sort3: { field: 'Total_Sales', order: 'Desc' } },
+                    ['year', 'category'], "Group by Both: Sort is set to Year > Category > Sales. Sample grabs the top 1 item for every unique combination."
+                )} className="flex-1 sm:flex-none px-2 py-2 md:px-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-md text-xs md:text-sm font-bold transition-colors border border-emerald-200">Per Both</button>
+                </div>
+            </header>
+
+            <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+                {/* Sidebar Pipeline */}
+                <div className="w-full md:w-72 lg:w-80 bg-white border-r border-b md:border-b-0 border-slate-200 flex flex-col shrink-0 overflow-y-auto max-h-[40vh] md:max-h-full">
+                <div className="p-3 md:p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-2 font-medium text-sm">
+                    <span className="flex items-center gap-2"><Play size={14} className="text-slate-500" /> Pipeline Config</span>
+                    <button onClick={onNext} className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-bold hover:bg-emerald-200">Take Quiz &rarr;</button>
+                </div>
+                <div className="flex-1 p-3 md:p-4 space-y-3 md:space-y-4">
+                    {pipeline.map((step, index) => (
+                    <div key={step.id} onClick={() => setActiveStepId(step.id)} className={`relative p-3 rounded-lg border-2 cursor-pointer transition-all ${activeStepId === step.id ? 'border-blue-500 bg-blue-50/50 shadow-md' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                        <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] md:text-xs font-bold text-slate-400 tracking-wider">STEP {index + 1}</span>
+                        {getToolIcon(step.type)}
+                        </div>
+                        <select value={step.type} onChange={(e) => updateToolType(step.id, e.target.value)} className="w-full text-xs md:text-sm p-1.5 bg-white border border-slate-300 rounded font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="None">Empty Tool Slot</option>
+                        <option value="Summarize">Summarize Data</option>
+                        <option value="Sort Data">Sort Data Rows</option>
+                        <option value="Sample">Sample N Rows</option>
+                        </select>
+
+                        {step.type !== 'None' && (
+                        <div className="mt-3 pt-3 border-t border-slate-200 space-y-3">
+                            {step.type === 'Summarize' && (
+                            <div>
+                                <label className="block text-[10px] md:text-xs font-bold text-slate-600 mb-2">Group By Fields:</label>
+                                <div className="space-y-1.5">
+                                {getAvailableColumns(index).filter(c => c !== 'sales').map(c => (
+                                    <button key={c} onClick={(e) => { e.stopPropagation(); toggleCheckboxField(step.id, c, 'groupFields', step.config.groupFields || []); }} className="flex items-center gap-2 text-xs w-full hover:bg-slate-100 p-1 rounded font-medium">
+                                    {(step.config.groupFields || []).includes(c) ? <CheckSquare size={14} className="text-blue-600" /> : <Square size={14} className="text-slate-400" />}
+                                    <span className="capitalize">{c}</span>
+                                    </button>
+                                ))}
+                                </div>
+                            </div>
+                            )}
+                            {step.type === 'Sort Data' && (
+                            <div className="space-y-2 md:space-y-3">
+                                {['sort1', 'sort2', 'sort3'].map((sortKey, idx) => (
+                                <div key={sortKey} className="bg-slate-50 p-2 rounded border border-slate-200">
+                                    <label className="block text-[10px] md:text-xs font-bold text-slate-600 mb-1">
+                                    {idx === 0 ? 'Primary Sort:' : idx === 1 ? 'Secondary Sort:' : 'Tertiary Sort:'}
+                                    </label>
+                                    <div className="flex gap-1 md:gap-2">
+                                    <select value={step.config[sortKey]?.field || 'None'} onChange={(e) => updateToolConfig(step.id, sortKey, { ...step.config[sortKey], field: e.target.value })} className="flex-1 text-xs md:text-sm p-1 md:p-1.5 border border-slate-300 rounded bg-white">
+                                        <option value="None">None</option>
+                                        {getAvailableColumns(index).map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                    <select value={step.config[sortKey]?.order || 'Asc'} onChange={(e) => updateToolConfig(step.id, sortKey, { ...step.config[sortKey], order: e.target.value })} className="w-16 md:w-20 text-xs md:text-sm p-1 md:p-1.5 border border-slate-300 rounded bg-white">
+                                        <option value="Asc">Asc</option>
+                                        <option value="Desc">Desc</option>
+                                    </select>
+                                    </div>
+                                </div>
+                                ))}
+                            </div>
+                            )}
+                            {step.type === 'Sample' && (
+                            <>
+                                <div className="bg-slate-50 p-2 rounded border border-slate-200">
+                                    <label className="block text-[10px] md:text-xs font-bold text-slate-600 mb-1">Sample Type:</label>
+                                    <select disabled className="w-full text-xs md:text-sm p-1.5 border border-slate-300 rounded bg-white text-slate-700 font-medium mb-2 opacity-80">
+                                        <option>First N Rows</option>
+                                    </select>
+                                    <label className="block text-[10px] md:text-xs font-bold text-slate-600 mb-1">N =</label>
+                                    <input type="number" disabled value="1" className="w-full text-xs md:text-sm p-1.5 border border-slate-300 rounded bg-white text-slate-700 font-bold text-center opacity-80" />
+                                    <p className="text-[9px] text-slate-500 mt-1.5 leading-tight italic">
+                                        Note: Alteryx offers various sample types (e.g. Last N, Skip 1st N). We use First N=1 for this lesson.
+                                    </p>
+                                </div>
+                                <div>
+                                <label className="block text-[10px] md:text-xs font-bold text-slate-600 mb-2 mt-3">Group By Fields (Optional):</label>
+                                <div className="space-y-1.5">
+                                    {getAvailableColumns(index).filter(c => !c.toLowerCase().includes('sales')).map(c => (
+                                    <button key={c} onClick={(e) => { e.stopPropagation(); toggleCheckboxField(step.id, c, 'groupFields', step.config.groupFields || []); }} className="flex items-center gap-2 text-xs w-full hover:bg-slate-100 p-1 rounded font-medium">
+                                        {(step.config.groupFields || []).includes(c) ? <CheckSquare size={14} className="text-blue-600" /> : <Square size={14} className="text-slate-400" />}
+                                        <span className="capitalize">{c}</span>
+                                    </button>
+                                    ))}
+                                </div>
+                                </div>
+                            </>
+                            )}
+                        </div>
+                        )}
+                        {index < pipeline.length - 1 && (
+                        <div className="absolute -bottom-4 md:-bottom-5 left-1/2 -translate-x-1/2 text-slate-300 z-10 bg-white">
+                            <ChevronRight className="rotate-90" size={16} />
+                        </div>
+                        )}
+                    </div>
+                    ))}
+                </div>
+                </div>
+
+                {/* Data Viewer */}
+                <div className="flex-1 flex flex-col p-3 md:p-6 overflow-hidden min-h-[50vh]">
+                <div className="flex space-x-1 md:space-x-2 border-b border-slate-300 mb-3 md:mb-4 overflow-x-auto hide-scrollbar pb-1">
+                    <button onClick={() => setViewStepId(0)} className={`px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold rounded-t-lg flex items-center gap-1.5 md:gap-2 whitespace-nowrap ${viewStepId === 0 ? 'bg-white border border-b-0 border-slate-300 text-slate-800 shadow-sm' : 'bg-slate-100 text-slate-500 hover:text-slate-700 border border-transparent'}`}>
+                    <Database size={14} /> Input Data
+                    </button>
+                    {pipeline.map((step, idx) => (
+                    <button key={step.id} onClick={() => setViewStepId(idx + 1)} className={`px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold rounded-t-lg flex items-center gap-1.5 md:gap-2 whitespace-nowrap ${viewStepId === idx + 1 ? 'bg-white border border-b-0 border-slate-300 text-slate-800 shadow-sm' : 'bg-slate-100 text-slate-500 hover:text-slate-700 border border-transparent'}`}>
+                        {getToolIcon(step.type)} {step.type !== 'None' ? `${idx + 1}. ${step.type.trim()}` : `Step ${idx + 1}`}
+                    </button>
+                    ))}
+                </div>
+
+                {viewStepId === 2 && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 md:p-4 mb-3 md:mb-4 flex items-start gap-2 md:gap-3 shrink-0 shadow-sm">
+                    <Info className="text-red-600 shrink-0 mt-0.5" size={16} />
+                    <p className="text-xs md:text-sm text-red-900 font-medium leading-relaxed">
+                        <strong>Preview:</strong> The rows highlighted in the red box are the exact rows the Sample tool will select in the next step based on your current grouping!
+                    </p>
+                    </div>
+                )}
+
+                {viewStepId === 3 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 mb-3 md:mb-4 flex items-start gap-2 md:gap-3 shrink-0 shadow-sm">
+                    <Info className="text-blue-600 shrink-0 mt-0.5" size={16} />
+                    <p className="text-xs md:text-sm text-blue-900 font-medium leading-relaxed">{explanation}</p>
+                    </div>
+                )}
+
+                <div className="flex-1 bg-white border border-slate-300 rounded-lg shadow-sm overflow-hidden flex flex-col relative">
+                    {results[viewStepId].length === 0 ? (
+                    <div className="absolute inset-0 flex items-center justify-center text-slate-400 font-medium text-sm">No data available.</div>
+                    ) : (
+                    <div className="overflow-x-auto flex-1 pb-4">
+                        <table className="min-w-full text-left text-xs md:text-sm whitespace-nowrap border-collapse">
+                            <thead className="bg-slate-800 sticky top-0 shadow-sm z-20 text-white">
+                            <tr>
+                                {Object.keys(results[viewStepId][0]).filter(k => k !== 'id').map(key => (
+                                <th key={key} className="px-4 py-2 md:px-6 md:py-3 font-bold uppercase tracking-wider text-[10px] md:text-xs">{key.replace('_', ' ')}</th>
+                                ))}
+                            </tr>
+                            </thead>
+                            <tbody className="bg-white">
+                            {results[viewStepId].map((row, idx) => {
+                                const isTarget = viewStepId === 2 && sampledIndicesPreview.has(idx);
+                                const trClass = isTarget 
+                                    ? 'bg-red-50 target-row relative z-10'
+                                    : 'hover:bg-blue-50 border-b border-slate-100 transition-colors';
+
+                                return (
+                                <tr key={idx} className={trClass}>
+                                    {Object.entries(row).filter(([k]) => k !== 'id').map(([k, v], cellIdx) => (
+                                        <td key={cellIdx} className={`px-4 py-2 md:px-6 md:py-3 ${isTarget ? 'text-red-900 font-bold' : 'text-slate-700 font-medium'}`}>
+                                        {typeof v === 'number' && (k.toLowerCase().includes('sales')) ? `$${v.toLocaleString()}` : v}
+                                        </td>
+                                    ))}
+                                </tr>
+                                );
+                            })}
+                            </tbody>
+                        </table>
+                    </div>
+                    )}
+                    <div className="sticky bottom-0 bg-slate-100 border-t border-slate-300 px-4 py-2 md:px-6 md:py-2 text-[10px] md:text-xs font-bold text-slate-600 flex justify-between shadow-[0_-2px_5px_rgba(0,0,0,0.02)] shrink-0 z-30">
+                    <span>{viewStepId === 0 ? 'Input Data' : `After Step ${viewStepId}`}</span>
+                    <span className="bg-slate-200 px-2 py-0.5 rounded text-slate-800">{results[viewStepId].length} Rows total</span>
+                    </div>
+                </div>
+                </div>
+            </div>
+            </div>
+        );
+        }
+
+        // ==========================================
+        // VIEW 3: THE QUIZ
+        // ==========================================
+        function QuizView() {
+            const [currentQ, setCurrentQ] = useState(0);
+            const [selectedAnswer, setSelectedAnswer] = useState(null);
+            const [isAnswered, setIsAnswered] = useState(false);
+            const [score, setScore] = useState(0);
+            const [quizComplete, setQuizComplete] = useState(false);
+
+            const question = QUIZ_QUESTIONS[currentQ];
+
+            const handleOptionClick = (index) => {
+                if (isAnswered) return;
+                setSelectedAnswer(index);
+                setIsAnswered(true);
+                if (index === question.answer) {
+                    setScore(prev => prev + 1);
+                }
+            };
+
+            const nextQuestion = () => {
+                if (currentQ < QUIZ_QUESTIONS.length - 1) {
+                    setCurrentQ(prev => prev + 1);
+                    setSelectedAnswer(null);
+                    setIsAnswered(false);
+                } else {
+                    setQuizComplete(true);
+                }
+            };
+
+            const resetQuiz = () => {
+                setCurrentQ(0);
+                setSelectedAnswer(null);
+                setIsAnswered(false);
+                setScore(0);
+                setQuizComplete(false);
+            };
+
+            if (quizComplete) {
+                return (
+                    <div className="flex-1 flex flex-col items-center justify-center p-4 animate-in fade-in zoom-in duration-500">
+                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 text-center max-w-md w-full">
+                            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Trophy size={40} className="text-emerald-500" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-slate-900 mb-2">Quiz Complete!</h2>
+                            <p className="text-slate-500 mb-6">You scored {score} out of {QUIZ_QUESTIONS.length}.</p>
+                            
+                            <button 
+                                onClick={resetQuiz}
+                                className="flex justify-center items-center gap-2 w-full px-6 py-4 bg-slate-900 text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-colors shadow-md"
+                            >
+                                <RefreshCw size={20} /> Retake Quiz
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="flex-1 flex flex-col p-4 md:p-8 overflow-y-auto bg-slate-50 animate-in fade-in duration-500">
+                    <div className="max-w-3xl mx-auto w-full">
+                        <div className="mb-6 flex justify-between items-center text-sm font-bold text-slate-500">
+                            <span>Question {currentQ + 1} of {QUIZ_QUESTIONS.length}</span>
+                            <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full">Score: {score}</span>
+                        </div>
+
+                        <div className="bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden mb-6">
+                            <div className="bg-slate-800 p-6 md:p-8 text-white">
+                                <h2 className="text-xl md:text-2xl font-bold leading-relaxed">{question.question}</h2>
+                            </div>
+                            
+                            <div className="p-6 pb-2 border-b border-slate-100 bg-slate-50/50">
+                                <div className="mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">Example Data:</div>
+                                <div className="overflow-x-auto rounded border border-slate-200 shadow-sm">
+                                    <table className="w-full text-left text-sm whitespace-nowrap bg-white">
+                                        <thead className="bg-slate-100 border-b border-slate-200">
+                                            <tr>
+                                                {question.dataHeaders.map(h => <th key={h} className="px-4 py-2 font-bold text-slate-700">{h}</th>)}
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {question.dataRows.map((row, i) => (
+                                                <tr key={i}>
+                                                    {row.map((c, j) => <td key={j} className="px-4 py-2 text-slate-600 font-mono text-xs">{c}</td>)}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div className="p-4 md:p-6 space-y-3">
+                                {question.options.map((opt, idx) => {
+                                    const isSelected = selectedAnswer === idx;
+                                    const isCorrect = idx === question.answer;
+                                    
+                                    let buttonStyle = "border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-slate-700 bg-white";
+                                    let icon = null;
+
+                                    if (isAnswered) {
+                                        if (isCorrect) {
+                                            buttonStyle = "border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm";
+                                            icon = <CheckCircle size={20} className="text-emerald-500 shrink-0" />;
+                                        } else if (isSelected) {
+                                            buttonStyle = "border-red-400 bg-red-50 text-red-700";
+                                            icon = <XCircle size={20} className="text-red-500 shrink-0" />;
+                                        } else {
+                                            buttonStyle = "border-slate-100 bg-slate-50 text-slate-400 opacity-50";
+                                        }
+                                    } else if (isSelected) {
+                                        buttonStyle = "border-blue-500 bg-blue-50 text-blue-800";
+                                    }
+
+                                    return (
+                                        <button 
+                                            key={idx}
+                                            onClick={() => handleOptionClick(idx)}
+                                            disabled={isAnswered}
+                                            className={`w-full flex items-center justify-between p-4 rounded-xl border-2 font-semibold text-left transition-all ${buttonStyle} ${!isAnswered ? 'cursor-pointer' : 'cursor-default'}`}
+                                        >
+                                            <span className="flex-1 pr-4 leading-relaxed font-mono text-xs md:text-sm whitespace-pre-wrap">{opt}</span>
+                                            {icon}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {isAnswered && (
+                            <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
+                                <div className={`p-5 md:p-6 rounded-2xl mb-6 flex items-start gap-3 shadow-sm border ${
+                                    selectedAnswer === question.answer 
+                                    ? 'bg-emerald-50 border-emerald-200' 
+                                    : 'bg-red-50 border-red-200'
+                                }`}>
+                                    <Info className={`shrink-0 mt-0.5 ${selectedAnswer === question.answer ? 'text-emerald-600' : 'text-red-500'}`} size={24} />
+                                    <p className={`font-medium text-sm md:text-base leading-relaxed ${selectedAnswer === question.answer ? 'text-emerald-900' : 'text-red-900'}`}>
+                                        {question.explanation}
+                                    </p>
+                                </div>
+                                <button 
+                                    onClick={nextQuestion}
+                                    className="w-full flex justify-center items-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-all shadow-md hover:shadow-lg"
+                                >
+                                    {currentQ < QUIZ_QUESTIONS.length - 1 ? "Next Question" : "Finish Quiz"} <ArrowRight size={20} />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // ==========================================
+        // ROOT APP
+        // ==========================================
+        function App() {
+        const [activeView, setActiveView] = useState('visual'); 
+
+        return (
+            <div className="h-screen w-full flex flex-col bg-slate-100 font-sans overflow-hidden">
+            <div className="bg-slate-900 text-white p-2 md:p-3 flex flex-wrap justify-center gap-1.5 md:gap-3 shadow-md relative z-50 shrink-0">
+                <button 
+                onClick={() => setActiveView('visual')}
+                className={`flex items-center gap-1.5 md:gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-bold transition-all ${
+                    activeView === 'visual' ? 'bg-blue-600 text-white shadow-inner md:scale-105' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                }`}
+                >
+                <Monitor size={16} />
+                <span className="hidden sm:inline">1. </span>Concept
+                </button>
+                <button 
+                onClick={() => setActiveView('data')}
+                className={`flex items-center gap-1.5 md:gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-bold transition-all ${
+                    activeView === 'data' ? 'bg-blue-600 text-white shadow-inner md:scale-105' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                }`}
+                >
+                <Table size={16} />
+                <span className="hidden sm:inline">2. </span>Data
+                </button>
+                <button 
+                onClick={() => setActiveView('quiz')}
+                className={`flex items-center gap-1.5 md:gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-bold transition-all ${
+                    activeView === 'quiz' ? 'bg-emerald-500 text-white shadow-inner md:scale-105' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                }`}
+                >
+                <Trophy size={16} />
+                <span className="hidden sm:inline">3. </span>Quiz
+                </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto flex flex-col relative w-full">
+                {activeView === 'visual' && <VisualMetaphorView onNext={() => setActiveView('data')} />}
+                {activeView === 'data' && <DataWorkflowView onNext={() => setActiveView('quiz')} />}
+                {activeView === 'quiz' && <QuizView />}
+            </div>
+            </div>
+        );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
