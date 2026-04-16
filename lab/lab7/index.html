@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 7: Ticket Sales Data Preparation</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Quicksand', 'sans-serif'],
+                        heading: ['Fredoka', 'sans-serif'],
+                        mono: ['Courier New', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#1e1b4b',
+                            primary: '#4f46e5',
+                            accent: '#ec4899',
+                            light: '#f8fafc'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Gamified UI Patterns */
+        body { overflow: hidden; } 
+        
+        .quest-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 2.5rem;
+        }
+        .quest-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+        
+        .quest-border-blue { border-top: 6px solid #3b82f6; }
+        .quest-border-pink { border-top: 6px solid #ec4899; }
+        .quest-border-indigo { border-top: 6px solid #6366f1; }
+        .quest-border-emerald { border-top: 6px solid #10b981; }
+
+        /* Timeline Pattern */
+        .timeline-step {
+            position: relative;
+            padding-left: 3.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .timeline-step::before {
+            content: '';
+            position: absolute;
+            left: 1.2rem;
+            top: 2.5rem;
+            bottom: -3rem;
+            width: 3px;
+            background: #e2e8f0;
+            z-index: 0;
+            border-radius: 2px;
+        }
+        .timeline-step:last-child::before {
+            display: none;
+        }
+        .timeline-badge {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            z-index: 10;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        /* Syntax Boxes */
+        .syntax-box {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            border-left: 4px solid #3b82f6;
+            margin-top: 0.75rem;
+        }
+
+        /* Form Inputs */
+        .answer-box {
+            width: 100%;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            min-height: 100px;
+            background: #f8fafc;
+        }
+        .answer-box:focus {
+            outline: none;
+            border-color: #4f46e5;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .answer-box.success {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        /* Interactive Images */
+        .shot-card {
+            margin-top: 1rem;
+            display: inline-block;
+            position: relative;
+            width: 14rem;
+        }
+        .zoomable {
+            cursor: zoom-in;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            width: 100%;
+            height: auto;
+            background-color: #f8fafc;
+            object-fit: contain;
+        }
+        .zoomable:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            position: relative;
+        }
+
+        /* Tool Icons Inline */
+        .tool-icon {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            vertical-align: middle;
+            background-color: white;
+            border-radius: 0.25rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            padding: 0.125rem;
+            margin: 0 0.25rem;
+        }
+
+        /* Badge Animation */
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .rank-up {
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        #scroll-progress { width: 0%; transition: width 0.1s; }
+        
+        #main-content::-webkit-scrollbar { width: 8px; }
+        #main-content::-webkit-scrollbar-track { background: #f1f5f9; }
+        #main-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        #main-content::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .annotation-warning {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-left: 4px solid #f59e0b;
+            color: #b45309;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col md:flex-row h-screen relative" oncontextmenu="return false;">
+
+    <div id="authOverlay" class="fixed inset-0 z-[100] bg-brand-dark/95 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border border-indigo-100 mx-4">
+            <div class="flex justify-center mb-6">
+                <div class="bg-indigo-50 p-4 rounded-full text-brand-primary">
+                    <i data-lucide="shield-check" class="w-10 h-10"></i>
+                </div>
+            </div>
+            <h2 class="font-heading text-2xl font-bold text-center text-slate-800 mb-2">Agent Login</h2>
+            <p class="text-center text-slate-500 mb-6 text-sm">Please verify your identity to access the investigation Canvas.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Full Name</label>
+                    <input type="text" id="authName" class="w-full border-2 border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:border-brand-primary" placeholder="e.g., Jane Doe">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Zagmail</label>
+                    <input type="email" id="authEmail" class="w-full border-2 border-slate-200 rounded-lg px-4 py-2 focus:outline-none focus:border-brand-primary" placeholder="e.g., ha@zagmail.gonzaga.edu">
+                </div>
+                <div id="authError" class="text-red-500 text-sm font-semibold hidden text-center bg-red-50 p-2 rounded border border-red-100">
+                    <i data-lucide="alert-circle" class="inline w-4 h-4 mr-1"></i> Access Denied: Unauthorized Email.
+                </div>
+                <button onclick="authenticateUser()" class="w-full bg-brand-primary hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 mt-4 shadow-md">
+                    <i data-lucide="log-in" class="w-5 h-5"></i> Enter Canvas
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed top-0 left-0 h-1.5 bg-brand-primary z-50" id="scroll-progress"></div>
+
+    <header class="md:hidden bg-brand-dark text-white p-4 flex justify-between items-center z-40 relative shadow-md">
+        <div class="flex items-center gap-2">
+            <i data-lucide="database"></i>
+            <span class="font-heading font-semibold text-lg">Lab 7: Data Prep</span>
+        </div>
+        <button id="mobileMenuBtn" class="p-2 bg-indigo-800 rounded">
+            <i data-lucide="menu"></i>
+        </button>
+    </header>
+
+    <nav id="sidebar" class="bg-brand-dark text-slate-300 w-full md:w-72 flex-shrink-0 flex flex-col absolute md:relative z-30 h-[calc(100vh-60px)] md:h-screen transition-transform transform -translate-x-full md:translate-x-0 shadow-xl md:shadow-none">
+        <div class="p-6 hidden md:flex items-center gap-3 border-b border-indigo-900">
+            <div class="bg-brand-primary p-2 rounded-lg shadow-inner">
+                <i data-lucide="ticket" class="text-white"></i>
+            </div>
+            <h1 class="font-heading font-semibold text-xl text-white">Lab 7: Data Prep</h1>
+        </div>
+        
+        <div class="p-4 flex-1 overflow-y-auto">
+            <div class="text-xs uppercase tracking-wider text-indigo-400 font-semibold mb-3 px-2">Investigation Log</div>
+            <ul class="space-y-1 font-medium text-sm">
+                <li><a href="#briefing" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-900 hover:text-white transition-colors" onclick="closeMobileMenu()"><i data-lucide="file-text" class="w-4 h-4"></i> Scenario Briefing</a></li>
+                <li><a href="#quest1" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-900 hover:text-white transition-colors" onclick="closeMobileMenu()"><i data-lucide="folder-input" class="w-4 h-4"></i> Steps 1 & 2: Ingestion</a></li>
+                <li><a href="#quest2" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-900 hover:text-white transition-colors" onclick="closeMobileMenu()"><i data-lucide="calendar-clock" class="w-4 h-4"></i> Steps 3 & 4: Date Parsing</a></li>
+                <li><a href="#quest3" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-900 hover:text-white transition-colors" onclick="closeMobileMenu()"><i data-lucide="eraser" class="w-4 h-4"></i> Steps 5 & 6: Imputation</a></li>
+                <li><a href="#quest4" class="nav-link flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-900 hover:text-white transition-colors" onclick="closeMobileMenu()"><i data-lucide="save" class="w-4 h-4"></i> Steps 7 to 11: Formatting</a></li>
+            </ul>
+
+            <div class="mt-8 pt-6 border-t border-indigo-900 text-center">
+                <span class="text-xs uppercase tracking-wider text-indigo-400 font-semibold block mb-2">Current Detective Rank</span>
+                <div id="rankContainer" class="bg-indigo-900/50 rounded-xl p-4 border border-indigo-800 shadow-inner">
+                    <div id="detectiveRank" class="text-lg font-heading font-bold text-white flex items-center justify-center gap-2 transition-all">
+                        <i id="rankIcon" data-lucide="shield" class="text-slate-400"></i>
+                        <span id="rankText">Junior Analyst</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-indigo-900 bg-indigo-950/50">
+            <div class="flex justify-between items-center mb-2 text-sm font-semibold">
+                <span>Case Completion</span>
+                <span id="progressText" class="text-brand-accent font-bold">0%</span>
+            </div>
+            <div class="h-2 bg-indigo-900 rounded-full overflow-hidden shadow-inner">
+                <div id="progressBar" class="h-full bg-gradient-to-r from-brand-primary to-brand-accent w-0 transition-all duration-500"></div>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main-content" class="flex-1 overflow-y-auto scroll-smooth relative bg-slate-100">
+        <div class="max-w-4xl mx-auto p-6 md:p-10 pb-32">
+            
+            <section id="briefing" class="mb-12">
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="bg-indigo-50 p-4 rounded-xl text-indigo-600 border border-indigo-100">
+                            <i data-lucide="headphones" class="w-8 h-8"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-heading text-3xl font-semibold text-slate-800">Operation: HarmonyFest Audit</h2>
+                            <p class="text-slate-500 font-medium">Scenario: Event Ticket Sales Analysis</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 my-6 text-amber-900 shadow-inner">
+                        <h3 class="font-heading font-semibold text-lg mb-2 flex items-center gap-2 text-amber-700">
+                            <i data-lucide="shield-alert" class="w-5 h-5"></i> Academic Integrity & Hint System
+                        </h3>
+                        <p class="text-sm leading-relaxed mb-3">To encourage independent problem-solving, detailed tool configuration screenshots have been hidden behind "Reveal Hint" buttons. We monitor these interactions actively to assess workflow comprehension.</p>
+                        <ul class="text-sm list-disc pl-5 space-y-1 mb-3 text-amber-800">
+                            <li><strong>Total Points:</strong> The lab is worth a total of <strong>10 points</strong>.</li>
+                            <li><strong>Penalty:</strong> Each hint you reveal will deduct <strong class="text-red-600">0.1 points</strong> from your final lab grade.</li>
+                            <li><strong>Clear Instructions:</strong> If you read the text instructions carefully, you will not need to open the hints. Challenge yourself to build it from the instructions first!</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="prose max-w-none text-slate-600 space-y-4">
+                        <p>Welcome, Data Detective! The organizers of the <strong>HarmonyFest Global Music Tour</strong> are in a panic. Their primary database suffered a corruption event just days before artist payouts are due. The raw regional ticket sales export they managed to recover contains missing values, null strings, and dates completely stripped of standard formatting.</p>
+                        
+                        <p>Your objective is to create an Alteryx workflow that takes this messy input data and prepares it for the financial analysis team. You must standardize the temporal data, handle null payment strings by substituting the most common purchase method, and repair missing financial values using mathematical averages. Be mindful of how your data type choices impact downstream calculations.</p>
+                        
+                        <div class="annotation-warning bg-slate-50 border-slate-300 border-l-slate-500 text-slate-700 shadow-sm">
+                            <i data-lucide="info" class="w-5 h-5 flex-shrink-0 text-slate-500 mt-0.5"></i>
+                            <div>
+                                <strong class="block mb-1">Standard Lab Requirement: Annotation</strong>
+                                You <strong>must annotate every Alteryx tool</strong> you drop onto the canvas. Use the tool's annotation configuration to write a brief, clear sentence explaining exactly what that step is doing. Workflows submitted without annotations will lose points.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="quest1" class="quest-card quest-border-blue p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="bg-blue-50 p-2 rounded-lg"><i data-lucide="folder-input" class="text-blue-600"></i></div>
+                    <h2 class="font-heading text-2xl font-semibold text-slate-800">Steps 1 & 2: Ingestion & Identification</h2>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-badge bg-blue-500">1</div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-2">Download & Input the Data</h3>
+                    <p class="text-slate-600 text-sm mb-3">Begin by downloading the <code>lab7.zip</code> package below containing the recovered festival data.</p>
+                    
+                    <a href="data/lab7.zip" download class="inline-flex bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-md items-center gap-2 mb-4 mt-1">
+                        <i data-lucide="file-archive" class="w-4 h-4"></i> Download lab7.zip
+                    </a>
+
+                    <div class="annotation-warning bg-amber-50 border-amber-300 border-l-amber-500 text-amber-900 mb-4 shadow-sm">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0 text-amber-600 mt-0.5"></i>
+                        <div>
+                            <strong class="block mb-1">Crucial Extraction Warning</strong>
+                            Do not just double click the zip file to open it! You will be able to see the content inside the zip folder, but they are not fully extracted yet. You must select <strong>Extract All</strong> and then go into the newly unzipped folder. If you use zipped folder content anywhere in your setup, the workflow will not run.
+                        </div>
+                    </div>
+
+                    <p class="text-slate-600 text-sm mb-3">After unzipping the <code>lab7.zip</code> file, make sure there are exactly three files in the folder: <code>lab7-start.yxmd</code>, <code>Ticket Sales Data_Output.xlsx</code>, and <code>Ticket Sales Data.xlsx</code>.</p> 
+                    <p class="text-slate-600 text-sm mb-3">Open the <code>lab7-start.yxmd</code> file (this is your workflow file) and drag the <code>Ticket Sales Data.xlsx</code> file directly onto the Alteryx canvas to create your <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Input_71x71.png" alt="Input Data" class="tool-icon"><strong>Input Data</strong> tool. Add a <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/BrowseV2_71x71.png" alt="Browse" class="tool-icon"><strong>Browse</strong> tool immediately after it to perform a preliminary column review.</p>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 mt-2 mb-8 shadow-sm">
+                    <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2"><i data-lucide="search" class="w-5 h-5 text-blue-500"></i> Checkpoint 1: Initial Assessment</h4>
+                    <p class="text-slate-600 text-sm mb-3">Check each column separately on the Browse tool to do this assessment. List the columns below and describe the issues you observe to begin the investigation.</p>
+                    <textarea id="ans1" class="answer-box" placeholder="List the columns and describe the issues you observe..."></textarea>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-badge bg-blue-500">2</div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-2">Add Unique Identifier</h3>
+                    <p class="text-slate-600 text-sm mb-3">We need to ensure every single festival order has a traceable ID number in case we need to reference it later. Drag a <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/RecordID123_71x71.png" alt="Record ID" class="tool-icon"><strong>Record ID</strong> tool onto the canvas and connect it to your Input Data tool.</p>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3 shadow-sm">
+                        <ul class="list-disc pl-5 text-sm text-blue-900 space-y-1">
+                            <li>Configure the Record ID tool to start its numbering at <strong>1</strong>.</li>
+                            <li>Ensure the new column is named something logical, like <code>Order ID</code>.</li>
+                        </ul>
+                    </div>
+
+                    <div class="shot-card block">
+                        <div id="btn_step_2" class="bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg h-32 flex flex-col items-center justify-center text-center cursor-pointer hover:border-amber-400 group transition-all" onclick="revealHint('btn_step_2', 'img_step_2', 'Record ID', 2)">
+                            <i data-lucide="lock" class="w-6 h-6 text-slate-400 group-hover:text-amber-500 mb-2 transition-colors"></i>
+                            <span class="font-bold text-sm text-slate-600 group-hover:text-amber-600 transition-colors">Reveal Tool Hint</span>
+                            <span class="text-[10px] uppercase tracking-wider font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded mt-1">-0.1 pt Penalty</span>
+                        </div>
+                        <img id="img_step_2" src="img/step2_hint.png" onerror="this.onerror=null; this.src='https://placehold.co/600x400/f8fafc/334155?font=Quicksand&text=Place+Screenshot+Here'; this.setAttribute('data-src', this.src);" class="zoomable hidden" data-src="img/step2_hint.png" data-title="Step 2: Record ID" alt="Record ID Configuration">
+                        <figcaption class="hidden">Ensure the Starting Value is set to 1 and the Column Name is appropriately labeled.</figcaption>
+                    </div>
+                </div>
+            </section>
+
+            <section id="quest2" class="quest-card quest-border-pink p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="bg-pink-50 p-2 rounded-lg"><i data-lucide="calendar-clock" class="text-pink-600"></i></div>
+                    <h2 class="font-heading text-2xl font-semibold text-slate-800">Steps 3 & 4: Date Parsing</h2>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-badge bg-pink-500">3</div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-2">Convert Order Date</h3>
+                    <p class="text-slate-600 text-sm mb-3">The current date is stored as a string, preventing us from using temporal formulas. Drag a <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DateTime" class="tool-icon"><strong>DateTime</strong> tool onto the canvas.</p>
+                    <div class="bg-pink-50 border border-pink-200 rounded-lg p-4 mb-3 shadow-sm">
+                        <ul class="list-disc pl-5 text-sm text-pink-900 space-y-1">
+                            <li>Select the field that contains your order date string.</li>
+                            <li>Choose the conversion direction: <strong>String to Date/Time format</strong>.</li>
+                            <li>Select the format that matches your incoming data exactly: <code>MM/dd/yyyy</code>.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="shot-card block">
+                        <div id="btn_step_3" class="bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg h-32 flex flex-col items-center justify-center text-center cursor-pointer hover:border-amber-400 group transition-all" onclick="revealHint('btn_step_3', 'img_step_3', 'DateTime Parsing', 3)">
+                            <i data-lucide="lock" class="w-6 h-6 text-slate-400 group-hover:text-amber-500 mb-2 transition-colors"></i>
+                            <span class="font-bold text-sm text-slate-600 group-hover:text-amber-600 transition-colors">Reveal Tool Hint</span>
+                            <span class="text-[10px] uppercase tracking-wider font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded mt-1">-0.1 pt Penalty</span>
+                        </div>
+                        <img id="img_step_3" src="img/step3_hint.png" onerror="this.onerror=null; this.src='https://placehold.co/600x400/f8fafc/334155?font=Quicksand&text=Place+Screenshot+Here'; this.setAttribute('data-src', this.src);" class="zoomable hidden" data-src="img/step3_hint.png" data-title="Step 3: DateTime Parsing" alt="DateTime Configuration">
+                        <figcaption class="hidden">Ensure you are converting FROM a string TO a Date/Time object, selecting the custom MM/dd/yyyy format that matches the raw input.</figcaption>
+                    </div>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-badge bg-pink-500">4</div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-2">Extract Weekday Name</h3>
+                    <p class="text-slate-600 text-sm mb-3">Management wants to know which days of the week generate the most ticket sales. Drag a second <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Date_Time_71x71.png" alt="DateTime" class="tool-icon"><strong>DateTime</strong> tool onto the canvas.</p>
+                    <div class="bg-pink-50 border border-pink-200 rounded-lg p-4 mb-3 shadow-sm">
+                        <ul class="list-disc pl-5 text-sm text-pink-900 space-y-1">
+                            <li>Select the new proper Date column you generated in Step 3.</li>
+                            <li>Choose the conversion direction: <strong>Date/Time format to String</strong>.</li>
+                            <li>Use the custom format box to extract just the abbreviated weekday name (e.g., Sun, Mon). In Alteryx date formatting, this is represented by <code>abbreviated Day</code>.</li>
+                            <li class="mt-2 text-pink-800 italic">For more information, refer to the <a href="https://help.alteryx.com/current/en/designer/functions/datetime-functions.html#specifiers" target="_blank" class="underline text-brand-primary font-semibold hover:text-pink-600 transition-colors">Alteryx Documentation</a> or the <a href="https://jhyung00.github.io/data-analytics/interactive-apps/8.1.alteryx/8.2a_data-cleansing/" target="_blank" class="underline text-brand-primary font-semibold hover:text-pink-600 transition-colors">DateTime Specifiers</a> guide.</li>
+                        </ul>
+                    </div>
+
+                    <div class="shot-card block">
+                        <div id="btn_step_4" class="bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg h-32 flex flex-col items-center justify-center text-center cursor-pointer hover:border-amber-400 group transition-all" onclick="revealHint('btn_step_4', 'img_step_4', 'Extract Weekday Name', 4)">
+                            <i data-lucide="lock" class="w-6 h-6 text-slate-400 group-hover:text-amber-500 mb-2 transition-colors"></i>
+                            <span class="font-bold text-sm text-slate-600 group-hover:text-amber-600 transition-colors">Reveal Tool Hint</span>
+                            <span class="text-[10px] uppercase tracking-wider font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded mt-1">-0.1 pt Penalty</span>
+                        </div>
+                        <img id="img_step_4" src="img/step4_hint.png" onerror="this.onerror=null; this.src='https://placehold.co/600x400/f8fafc/334155?font=Quicksand&text=Place+Screenshot+Here'; this.setAttribute('data-src', this.src);" class="zoomable hidden" data-src="img/step4_hint.png" data-title="Step 4: Extract Weekday" alt="Weekday Extraction Configuration">
+                        <figcaption class="hidden">Select Date/Time to String. Choose the format that yields the abbreviated day of the week (Mon, Tue, Wed).</figcaption>
+                    </div>
+                </div>
+            </section>
+
+            <section id="quest3" class="quest-card quest-border-indigo p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="bg-indigo-50 p-2 rounded-lg"><i data-lucide="eraser" class="text-indigo-600"></i></div>
+                    <h2 class="font-heading text-2xl font-semibold text-slate-800">Steps 5 & 6: Data Imputation</h2>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 mb-8 shadow-sm">
+                    <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2"><i data-lucide="check-square" class="w-5 h-5 text-emerald-500"></i> Checkpoint 2: Data Discovery</h4>
+                    <p class="text-slate-600 text-sm mb-3">What is the most popular ticket purchase method observed in the dataset?</p>
+                    <div class="flex flex-col gap-2 mt-3">
+                        <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="cp2_answer" value="Credit" class="w-4 h-4 text-emerald-600 cp2-radio">
+                            <span class="text-sm font-medium text-slate-700">Credit Card</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="cp2_answer" value="Check" class="w-4 h-4 text-emerald-600 cp2-radio">
+                            <span class="text-sm font-medium text-slate-700">Paper Check</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="cp2_answer" value="Cash" class="w-4 h-4 text-emerald-600 cp2-radio">
+                            <span class="text-sm font-medium text-slate-700">Direct Cash</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-badge bg-indigo-500">5</div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-2">Replace Null Strings (Purchase Method)</h3>
+                    <p class="text-slate-600 text-sm mb-3">We have missing data in the <code>purchase_method</code> column. Management wants us to assume the most common payment type for missing records. Drag a <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Formula_71x71.png" alt="Formula" class="tool-icon"><strong>Formula</strong> tool onto the canvas.</p>
+                    <p class="text-slate-600 text-sm mb-3 bg-indigo-50 p-3 rounded-lg border border-indigo-100 shadow-sm"><i data-lucide="info" class="inline w-4 h-4 text-indigo-500 mb-0.5 mr-1"></i> The <strong>Formula</strong> tool allows you to create new columns, update existing columns, and use expressions (like IF statements or math calculations) to manipulate your data. You can find it in the <strong>Preparation</strong> tool palette at the top of your screen.</p>
+                    
+                    <div class="syntax-box border-l-indigo-500 mb-3 shadow-inner">
+// Formula logic to handle missing string values:
+IF IsNull([purchase_method]) 
+THEN "Credit" 
+ELSE [purchase_method] 
+ENDIF
+                    </div>
+
+                    <div class="shot-card block">
+                        <img id="img_step_5" src="img/step5_hint.png" onerror="this.onerror=null; this.src='https://placehold.co/600x400/f8fafc/334155?font=Quicksand&text=Place+Screenshot+Here'; this.setAttribute('data-src', this.src);" class="zoomable" data-src="img/step5_hint.png" data-title="Step 5: Formula Imputation" alt="Formula Configuration">
+                        <figcaption class="hidden">Ensure you select the existing purchase_method column to overwrite it, rather than creating a new column. Check your quotation marks carefully.</figcaption>
+                    </div>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-badge bg-indigo-500">6</div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-2">Replace Null Numeric Values</h3>
+                    <p class="text-slate-600 text-sm mb-3">Some ticket sales records are missing their final numeric amount. We need to substitute these gaps with the mathematical average. Drag an <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Imputation_71x71.png" alt="Imputation" class="tool-icon"><strong>Imputation</strong> tool onto the canvas.</p>
+                    <p class="text-slate-600 text-sm mb-3 bg-indigo-50 p-3 rounded-lg border border-indigo-100 shadow-sm"><i data-lucide="info" class="inline w-4 h-4 text-indigo-500 mb-0.5 mr-1"></i> The <strong>Imputation</strong> tool is designed specifically to easily replace missing (Null) values with a specified string or a calculated statistical value like an average or median. You can find it in the <strong>Preparation</strong> tool palette.</p>
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-3 shadow-sm">
+                        <ul class="list-disc pl-5 text-sm text-indigo-900 space-y-1">
+                            <li>Select the target numeric column containing the null sales values.</li>
+                            <li>Choose to replace <strong>Null()</strong> values.</li>
+                            <li>Set the replacement value to the <strong>Average</strong>.</li>
+                        </ul>
+                    </div>
+
+                    <div class="shot-card block">
+                        <img id="img_step_6" src="img/step6_hint.png" onerror="this.onerror=null; this.src='https://placehold.co/600x400/f8fafc/334155?font=Quicksand&text=Place+Screenshot+Here'; this.setAttribute('data-src', this.src);" class="zoomable" data-src="img/step6_hint.png" data-title="Step 6: Imputation Tool" alt="Imputation Configuration">
+                        <figcaption class="hidden">Target the specific sales amount column. Select 'Null()' as the incoming value to replace, and 'Average' as the value to replace it with.</figcaption>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 mt-2 shadow-sm">
+                    <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2"><i data-lucide="scale" class="w-5 h-5 text-indigo-500"></i> Checkpoint 3: Imputation Ethics</h4>
+                    <p class="text-slate-600 text-sm mb-3">You just replaced missing financial data with an average value. What is the potential risk or analytical bias introduced by substituting missing sales figures with a mathematical average rather than investigating the root cause?</p>
+                    <textarea id="ans3" class="answer-box" placeholder="Discuss the risks of data imputation..."></textarea>
+                </div>
+            </section>
+
+            <section id="quest4" class="quest-card quest-border-emerald p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="bg-emerald-50 p-2 rounded-lg"><i data-lucide="save" class="text-emerald-600"></i></div>
+                    <h2 class="font-heading text-2xl font-semibold text-slate-800">Steps 7 to 11: Formatting & Delivery</h2>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-badge bg-emerald-500">7</div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-2">Clean Structure</h3>
+                    <p class="text-slate-600 text-sm mb-3">Our dataset now has original columns mixed with new ones we generated. Drag a <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Select_71x71.png" alt="Select" class="tool-icon"><strong>Select</strong> tool to clean the structure before outputting.</p>
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-3 shadow-sm">
+                        <ul class="list-disc pl-5 text-sm text-emerald-900 space-y-1">
+                            <li>Remove the redundant original string date columns.</li>
+                            <li>Rename columns so they are clean and professional (e.g., remove underscores).</li>
+                            <li>Reorder the columns so <code>Order ID</code> is first, followed by the Date, Weekday, Method, and Amount.</li>
+                            <li>Ensure numeric columns are properly set to an appropriate numeric Type (like Double).</li>
+                        </ul>
+                    </div>
+
+                    <div class="shot-card block">
+                        <div id="btn_step_7" class="bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg h-32 flex flex-col items-center justify-center text-center cursor-pointer hover:border-amber-400 group transition-all" onclick="revealHint('btn_step_7', 'img_step_7', 'Select Structure', 7)">
+                            <i data-lucide="lock" class="w-6 h-6 text-slate-400 group-hover:text-amber-500 mb-2 transition-colors"></i>
+                            <span class="font-bold text-sm text-slate-600 group-hover:text-amber-600 transition-colors">Reveal Tool Hint</span>
+                            <span class="text-[10px] uppercase tracking-wider font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded mt-1">-0.1 pt Penalty</span>
+                        </div>
+                        <img id="img_step_7" src="img/step7_hint.png" onerror="this.onerror=null; this.src='https://placehold.co/600x400/f8fafc/334155?font=Quicksand&text=Place+Screenshot+Here'; this.setAttribute('data-src', this.src);" class="zoomable hidden" data-src="img/step7_hint.png" data-title="Step 7: Select Structure" alt="Select Tool Configuration">
+                        <figcaption class="hidden">Use the arrows at the top to reorder fields. Uncheck any box corresponding to a column you no longer want in the final dataset.</figcaption>
+                    </div>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-badge bg-emerald-500">8</div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-2">Filter Data</h3>
+                    <p class="text-slate-600 text-sm mb-3">Management specifically requested a dedicated report for cash transactions. Drag a <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Filter_71x71.png" alt="Filter" class="tool-icon"><strong>Filter</strong> tool onto the canvas and connect it to your Select tool.</p>
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-3 shadow-sm">
+                        <ul class="list-disc pl-5 text-sm text-emerald-900 space-y-1">
+                            <li>Configure the Basic Filter to target the <code>purchase_method</code> column.</li>
+                            <li>Set the operator to Equals (<code>=</code>).</li>
+                            <li>Type <code>Cash</code> into the value field.</li>
+                        </ul>
+                    </div>
+
+                    <div class="shot-card block">
+                        <div id="btn_step_8" class="bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg h-32 flex flex-col items-center justify-center text-center cursor-pointer hover:border-amber-400 group transition-all" onclick="revealHint('btn_step_8', 'img_step_8', 'Filter Configuration', 8)">
+                            <i data-lucide="lock" class="w-6 h-6 text-slate-400 group-hover:text-amber-500 mb-2 transition-colors"></i>
+                            <span class="font-bold text-sm text-slate-600 group-hover:text-amber-600 transition-colors">Reveal Tool Hint</span>
+                            <span class="text-[10px] uppercase tracking-wider font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded mt-1">-0.1 pt Penalty</span>
+                        </div>
+                        <img id="img_step_8" src="img/filter.png" onerror="this.onerror=null; this.src='https://placehold.co/600x400/f8fafc/334155?font=Quicksand&text=Place+Screenshot+Here'; this.setAttribute('data-src', this.src);" class="zoomable hidden" data-src="img/filter.png" data-title="Step 8: Filter Configuration" alt="Filter Tool Configuration">
+                        <figcaption class="hidden">Ensure the basic filter is set to purchase_method equals Cash.</figcaption>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 mt-2 mb-8 shadow-sm">
+                    <h4 class="font-bold text-slate-800 flex items-center gap-2 mb-2"><i data-lucide="bar-chart-2" class="w-5 h-5 text-emerald-500"></i> Checkpoint 4: Comparative Analysis</h4>
+                    <p class="text-slate-600 text-sm mb-3">Compare final total amount of cash transactions versus non-cash transactions. Which segment has a higher average transaction value?</p>
+                    <div class="flex flex-col gap-2 mt-3">
+                        <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="cp4_answer" value="Cash" class="w-4 h-4 text-emerald-600 cp4-radio">
+                            <span class="text-sm font-medium text-slate-700">Cash Transactions</span>
+                        </label>
+                        <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="cp4_answer" value="Non-Cash" class="w-4 h-4 text-emerald-600 cp4-radio">
+                            <span class="text-sm font-medium text-slate-700">Non-Cash Payments</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-badge bg-emerald-500">9</div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-2">Output</h3>
+                    <p class="text-slate-600 text-sm mb-3">Add the <img src="https://downloads.alteryx.com/betawh_xnext/images/Tool_Icons/Output2_71x71.png" alt="Output Data" class="tool-icon"><strong>Output Data</strong> tool to export the "True" (T) anchor of your Filter tool. In the configuration panel, click <strong>Set Up a Connection</strong>, select <strong>File</strong>, and find the location of the extracted lab7 folder.</p>
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-5 shadow-sm">
+                        <ul class="list-disc pl-5 text-sm text-emerald-900 space-y-1">
+                            <li>Give the file a name (e.g., <code>Output.xlsx</code>).</li>
+                            <li>For <strong>Save as type</strong>, select <strong>Excel (*.xlsx)</strong> and click Save.</li>
+                            <li>Set the Output Options to <strong>Overwrite File (Remove)</strong> to prevent errors on multiple runs.</li>
+                        </ul>
+                    </div>
+
+                    <div class="shot-card block">
+                        <div id="btn_step_9" class="bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg h-32 flex flex-col items-center justify-center text-center cursor-pointer hover:border-amber-400 group transition-all" onclick="revealHint('btn_step_9', 'img_step_9', 'Output Configuration', 9)">
+                            <i data-lucide="lock" class="w-6 h-6 text-slate-400 group-hover:text-amber-500 mb-2 transition-colors"></i>
+                            <span class="font-bold text-sm text-slate-600 group-hover:text-amber-600 transition-colors">Reveal Tool Hint</span>
+                            <span class="text-[10px] uppercase tracking-wider font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded mt-1">-0.1 pt Penalty</span>
+                        </div>
+                        <img id="img_step_9" src="img/step9_hint.png" onerror="this.onerror=null; this.src='https://placehold.co/600x400/f8fafc/334155?font=Quicksand&text=Place+Screenshot+Here'; this.setAttribute('data-src', this.src);" class="zoomable hidden" data-src="img/step9_hint.png" data-title="Step 9: Output Configuration" alt="Output Configuration">
+                        <figcaption class="hidden">Ensure you configure the Output tool to write an Excel file named Output.xlsx and set the option to Overwrite File (Remove).</figcaption>
+                    </div>
+                </div>
+                
+                <div class="timeline-step">
+                    <div class="timeline-badge bg-emerald-500">10</div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-2">Critical Step: Make File Paths Relative</h3>
+                    <p class="text-slate-600 text-sm mb-3">If you submit your file with absolute paths, the workflow will break on the grader's computer. You must make paths relative so the workflow can be graded:</p>
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4 shadow-sm">
+                        <ol class="list-decimal pl-5 text-sm text-amber-900 space-y-2">
+                            <li>Ensure your workflow is saved in the same <strong>Project</strong> folder as your datasets.</li>
+                            <li>In Alteryx, click <strong>Options</strong> in the top menu bar.</li>
+                            <li>Navigate to <strong>Advanced Options</strong> > <strong>Workflow Dependencies</strong>.</li>
+                            <li>Click the <strong>All Relative</strong> button at the bottom of the window.</li>
+                            <li>Click <strong>OK</strong> and immediately <strong>Save</strong> your workflow (.yxmd) one last time.</li>
+                        </ol>
+                    </div>
+                    <div class="annotation-warning bg-slate-50 border-slate-300 border-l-slate-500 text-slate-700 shadow-sm mt-0">
+                        <i data-lucide="info" class="w-5 h-5 flex-shrink-0 text-slate-500 mt-0.5"></i>
+                        <div>
+                            <strong class="block mb-1">Submission Requirement</strong>
+                            This updated and relatively linked <strong>.yxmd file</strong> is the ONLY file that needs to be submitted for grading.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-step">
+                    <div class="timeline-badge bg-emerald-500">11</div>
+                    <h3 class="font-bold text-slate-800 text-lg mb-2">Completed Workflow</h3>
+                    <p class="text-slate-600 text-sm mb-3">If you are completely stuck, you can reveal the final completed workflow image below to check your tool sequence.</p>
+                    
+                    <div class="shot-card block">
+                        <div id="btn_step_10" class="bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg h-32 flex flex-col items-center justify-center text-center cursor-pointer hover:border-amber-400 group transition-all" onclick="revealHint('btn_step_10', 'img_step_10', 'Completed Workflow', 10)">
+                            <i data-lucide="lock" class="w-6 h-6 text-slate-400 group-hover:text-amber-500 mb-2 transition-colors"></i>
+                            <span class="font-bold text-sm text-slate-600 group-hover:text-amber-600 transition-colors">Reveal Tool Hint</span>
+                            <span class="text-[10px] uppercase tracking-wider font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded mt-1">-0.1 pt Penalty</span>
+                        </div>
+                        <img id="img_step_10" src="img/step10_hint.png" onerror="this.onerror=null; this.src='https://placehold.co/800x300/f8fafc/334155?font=Quicksand&text=Completed+Workflow'; this.setAttribute('data-src', this.src);" class="zoomable hidden" data-src="img/step10_hint.png" data-title="Completed Workflow" alt="Completed Workflow">
+                        <figcaption class="hidden">This is the fully completed workflow sequence from start to finish.</figcaption>
+                    </div>
+                </div>
+
+                <div class="space-y-8 mt-10 border-t border-slate-200 pt-8">
+                    
+                    <div class="pt-6">
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-4 flex items-center justify-between shadow-sm">
+                            <div>
+                                <span class="block text-xs uppercase tracking-wider text-indigo-500 font-bold mb-1">Logged in as</span>
+                                <span id="displayAuthName" class="font-semibold text-indigo-900 text-lg"></span>
+                                <span id="displayAuthEmail" class="text-sm text-indigo-700 ml-2"></span>
+                            </div>
+                            <div class="bg-indigo-100 p-2 rounded-full">
+                                <i data-lucide="user-check" class="text-indigo-600 w-6 h-6"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-slate-50 border border-slate-200 rounded-lg p-5 text-sm text-slate-600 mb-4 relative shadow-sm">
+                            <h5 class="font-bold text-slate-800 flex items-center gap-2 mb-2"><i data-lucide="server" class="w-4 h-4 text-emerald-500"></i> Secure Grading Submission</h5>
+                            <p>Clicking the button below will securely transmit your Checkpoint answers directly to the instructor's grading database.</p>
+                            
+                            <div id="hint-penalty-display" class="mt-4 p-3 bg-white border border-slate-200 rounded text-slate-600 text-center text-sm transition-colors duration-300">
+                                Hints Opened: 0 (Penalty: -0.0 pts)
+                            </div>
+                        </div>
+                        
+                        <button id="submitBtn" onclick="submitLab()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
+                            <i data-lucide="send"></i> Submit Checkpoint Responses
+                        </button>
+                        <div id="submitMsg" class="mt-4 text-center text-sm font-semibold hidden"></div>
+
+                    </div>
+                    
+                    <div class="bg-indigo-600 text-white p-6 rounded-xl text-center shadow-lg mt-8 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-20">
+                            <i data-lucide="upload-cloud" class="w-24 h-24"></i>
+                        </div>
+                        <h4 class="font-heading text-2xl mb-2 relative z-10">Canvas Submission Required</h4>
+                        <p class="text-indigo-100 relative z-10 mb-4">You have completed the structural prep, but you must submit your actual file to receive credit.</p>
+                        <p class="font-bold text-lg bg-indigo-800 inline-block px-4 py-2 rounded-lg relative z-10">
+                            Upload your annotated <span class="text-amber-300">.yxmd</span> file to Canvas!
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <aside id="sideViewer" class="w-full md:w-[500px] xl:w-[600px] bg-white border-l border-slate-200 shadow-2xl transform translate-x-full transition-transform duration-300 fixed right-0 top-0 h-full z-50 flex flex-col hidden md:flex">
+        <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <h3 id="sv-title" class="font-heading font-semibold text-lg text-slate-800">Tool Configuration</h3>
+            <button onclick="closeViewer()" class="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div class="p-6 flex-1 overflow-y-auto flex flex-col">
+            <div class="bg-slate-100 rounded-xl overflow-hidden mb-6 border border-slate-200 flex-shrink-0 p-2">
+                <img id="sv-image" src="" alt="Zoomed view" class="w-full h-auto object-contain max-h-[60vh] rounded border border-slate-200">
+            </div>
+            <div class="bg-indigo-50 border border-indigo-100 p-5 rounded-xl">
+                <h4 class="text-xs uppercase tracking-wider text-indigo-800 font-bold mb-2">Instructor Notes</h4>
+                <p id="sv-desc" class="text-sm text-indigo-900 leading-relaxed"></p>
+            </div>
+        </div>
+    </aside>
+
+    <div id="viewerOverlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden md:hidden transition-opacity" onclick="closeViewer()"></div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+        
+        // Generate a random tracking session ID on load
+        const sessionTrackingId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
+
+        // Security & User Tracking
+        const ALLOWED_EMAILS = [
+            "tarnold3@zagmail.gonzaga.edu", "lballantyne@zagmail.gonzaga.edu", "hbarnett@zagmail.gonzaga.edu",
+            "rbelusko@zagmail.gonzaga.edu", "jbrennan4@zagmail.gonzaga.edu", "lbutcher2@zagmail.gonzaga.edu",
+            "gbyrne@zagmail.gonzaga.edu", "lcadezamartinez@zagmail.gonzaga.edu", "mchilian@zagmail.gonzaga.edu",
+            "rciavarra@zagmail.gonzaga.edu", "fdavis2@zagmail.gonzaga.edu", "rdenning@zagmail.gonzaga.edu",
+            "jdong2@zagmail.gonzaga.edu", "aduenas@zagmail.gonzaga.edu", "gdunton@zagmail.gonzaga.edu",
+            "beaton@zagmail.gonzaga.edu", "cellis8@zagmail.gonzaga.edu", "cfergusson@zagmail.gonzaga.edu",
+            "cfisher5@zagmail.gonzaga.edu", "sgibson6@zagmail.gonzaga.edu", "jgilberg@zagmail.gonzaga.edu",
+            "hhuang5@zagmail.gonzaga.edu", "djaquez@zagmail.gonzaga.edu", "gkramer@zagmail.gonzaga.edu",
+            "alamonica@zagmail.gonzaga.edu", "jlee24@zagmail.gonzaga.edu", "smagee2@zagmail.gonzaga.edu",
+            "amalubay@zagmail.gonzaga.edu", "kmartinez@zagmail.gonzaga.edu", "mmay2@zagmail.gonzaga.edu",
+            "rmcgee2@zagmail.gonzaga.edu", "jmcguire4@zagmail.gonzaga.edu", "jmichalski@zagmail.gonzaga.edu",
+            "nmiyabe@zagmail.gonzaga.edu", "kochkur@zagmail.gonzaga.edu", "aortiz4@zagmail.gonzaga.edu",
+            "nrobertson@zagmail.gonzaga.edu", "aschulz3@zagmail.gonzaga.edu", "esciarrotta@zagmail.gonzaga.edu",
+            "qsnow@zagmail.gonzaga.edu", "storres2@zagmail.gonzaga.edu", "lwearmouth@zagmail.gonzaga.edu",
+            "pweyrauch@zagmail.gonzaga.edu", "jwidmer@zagmail.gonzaga.edu", "mwohlrab@zagmail.gonzaga.edu",
+            "kyates2@zagmail.gonzaga.edu", "lyocom@zagmail.gonzaga.edu", "eyoo@zagmail.gonzaga.edu",
+            "cyore@zagmail.gonzaga.edu", "mobara2@zagmail.gonzaga.edu", "haj@gonzaga.edu"
+        ];
+        
+        let globalStudentName = "";
+        let globalStudentEmail = "";
+        let openedHintsList = [];
+        let hintsOpenedCount = 0;
+
+        function authenticateUser() {
+            const nameInput = document.getElementById('authName').value.trim();
+            const emailInput = document.getElementById('authEmail').value.trim().toLowerCase();
+            const errorMsg = document.getElementById('authError');
+            
+            if(!nameInput || !emailInput) {
+                errorMsg.innerHTML = '<i data-lucide="alert-circle" class="inline w-4 h-4 mr-1"></i> Please provide both Name and Email.';
+                errorMsg.classList.remove('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            if(ALLOWED_EMAILS.includes(emailInput)) {
+                // Successful Auth
+                globalStudentName = nameInput;
+                globalStudentEmail = emailInput;
+                
+                // Populate bottom submission display
+                document.getElementById('displayAuthName').textContent = globalStudentName;
+                document.getElementById('displayAuthEmail').textContent = `(${globalStudentEmail})`;
+
+                // Dismiss overlay
+                document.getElementById('authOverlay').classList.add('opacity-0');
+                setTimeout(() => {
+                    document.getElementById('authOverlay').classList.add('hidden');
+                }, 300);
+            } else {
+                // Failed Auth
+                errorMsg.innerHTML = '<i data-lucide="alert-circle" class="inline w-4 h-4 mr-1"></i> Access Denied: Email not found in course registry.';
+                errorMsg.classList.remove('hidden');
+                lucide.createIcons();
+            }
+        }
+
+        // Mobile Menu Logic
+        const sidebar = document.getElementById('sidebar');
+        let menuOpen = false;
+
+        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+            menuOpen = !menuOpen;
+            if(menuOpen) {
+                sidebar.classList.remove('-translate-x-full');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+
+        function closeMobileMenu() {
+            if(window.innerWidth < 768) {
+                sidebar.classList.add('-translate-x-full');
+                menuOpen = false;
+            }
+        }
+
+        // Scroll Progress Logic
+        const mainContent = document.getElementById('main-content');
+        const scrollProgress = document.getElementById('scroll-progress');
+
+        mainContent.addEventListener('scroll', () => {
+            const scrollTop = mainContent.scrollTop;
+            const scrollHeight = mainContent.scrollHeight - mainContent.clientHeight;
+            const scrollPercentage = (scrollTop / scrollHeight) * 100;
+            scrollProgress.style.width = scrollPercentage + '%';
+        });
+
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbxjMb5U3lYacqGEbLEzTG5VDykMIYqayGULhZ6I9bQVn3wX7arYoHOKgdEZDp-s8hD0/exec'; 
+
+        function revealHint(btnId, imgId, stepName, stepNumber) {
+            document.getElementById(btnId).style.display = 'none';
+            const img = document.getElementById(imgId);
+            img.classList.remove('hidden');
+            img.classList.add('block');
+
+            openedHintsList.push(stepName);
+            hintsOpenedCount++;
+
+            updateHintUI();
+        }
+
+        function updateHintUI() {
+            const displayEl = document.getElementById('hint-penalty-display');
+            if(displayEl) {
+                const penalty = (hintsOpenedCount * 0.1).toFixed(1);
+                displayEl.innerHTML = `Hints Opened: ${hintsOpenedCount} (Penalty: -${penalty} pts)`;
+                if(hintsOpenedCount > 0) {
+                    displayEl.classList.remove('text-slate-600', 'bg-white', 'border-slate-200');
+                    displayEl.classList.add('text-amber-800', 'bg-amber-100', 'border-amber-300', 'font-bold');
+                }
+            }
+        }
+
+        // Interactive Side Viewer Logic
+        const zoomables = document.querySelectorAll('.zoomable');
+        const sideViewer = document.getElementById('sideViewer');
+        const viewerOverlay = document.getElementById('viewerOverlay');
+        const svImage = document.getElementById('sv-image');
+        const svTitle = document.getElementById('sv-title');
+        const svDesc = document.getElementById('sv-desc');
+
+        zoomables.forEach(img => {
+            img.addEventListener('click', () => {
+                const imgSrc = img.getAttribute('data-src') || img.src;
+                svImage.src = imgSrc;
+                svTitle.textContent = img.getAttribute('data-title') || 'Configuration View';
+                const figcaption = img.nextElementSibling;
+                svDesc.textContent = figcaption ? figcaption.textContent : 'No additional details provided.';
+                
+                sideViewer.classList.remove('translate-x-full');
+                if(window.innerWidth < 768) {
+                    viewerOverlay.classList.remove('hidden');
+                }
+            });
+        });
+
+        function closeViewer() {
+            sideViewer.classList.add('translate-x-full');
+            viewerOverlay.classList.add('hidden');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'Escape') closeViewer();
+        });
+
+        // Gamification / Progress & Ranking Logic
+        const progressState = { q1: false, q2: false, q3: false, q4: false };
+        
+        function updateRank(pct) {
+            const rankIcon = document.getElementById('rankIcon');
+            const rankText = document.getElementById('rankText');
+            const rankContainer = document.getElementById('rankContainer');
+            const iconEl = document.getElementById('detectiveRank');
+            
+            iconEl.classList.remove('rank-up');
+            void iconEl.offsetWidth; 
+            iconEl.classList.add('rank-up');
+
+            if(pct < 50) {
+                rankIcon.setAttribute('data-lucide', 'shield');
+                rankText.textContent = 'Junior Analyst';
+                rankIcon.className = 'text-slate-400';
+            } else if(pct >= 50 && pct < 100) {
+                rankIcon.setAttribute('data-lucide', 'search-check');
+                rankText.textContent = 'Investigator';
+                rankIcon.className = 'text-blue-400';
+            } else if(pct >= 100) {
+                rankIcon.setAttribute('data-lucide', 'award');
+                rankText.textContent = 'Master Data Detective';
+                rankIcon.className = 'text-amber-400';
+                rankContainer.classList.add('border-amber-500', 'bg-indigo-900');
+            }
+            lucide.createIcons();
+        }
+
+        function updateProgress() {
+            const completed = Object.values(progressState).filter(v => v).length;
+            const pct = (completed / 4) * 100; // Calculated out of 4 checkpoints now
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressText').textContent = Math.round(pct) + '%';
+            
+            updateRank(pct);
+
+            if(pct >= 100) {
+                document.getElementById('progressBar').classList.replace('from-brand-primary', 'from-emerald-400');
+                document.getElementById('progressBar').classList.replace('to-brand-accent', 'to-emerald-500');
+                document.getElementById('progressText').classList.replace('text-brand-accent', 'text-emerald-400');
+            } else {
+                document.getElementById('progressBar').classList.replace('from-emerald-400', 'from-brand-primary');
+                document.getElementById('progressBar').classList.replace('to-emerald-500', 'to-brand-accent');
+                document.getElementById('progressText').classList.replace('text-emerald-400', 'text-brand-accent');
+            }
+        }
+
+        function checkInput(id, flagName) {
+            const el = document.getElementById(id);
+            const hasText = el.value.trim().length > 0;
+            
+            if(hasText && !progressState[flagName]) {
+                progressState[flagName] = true;
+                el.classList.add('success');
+                updateProgress();
+            } else if (!hasText && progressState[flagName]) {
+                progressState[flagName] = false;
+                el.classList.remove('success');
+                updateProgress();
+            }
+        }
+
+        document.getElementById('ans1').addEventListener('input', () => checkInput('ans1', 'q1'));
+        document.getElementById('ans3').addEventListener('input', () => checkInput('ans3', 'q3'));
+
+        document.querySelectorAll('.cp2-radio').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                progressState.q2 = true;
+                document.querySelectorAll('.cp2-radio').forEach(r => {
+                    r.closest('label').classList.remove('border-emerald-500', 'bg-emerald-50');
+                    r.closest('label').classList.add('border-slate-200');
+                });
+                e.target.closest('label').classList.remove('border-slate-200');
+                e.target.closest('label').classList.add('border-emerald-500', 'bg-emerald-50');
+                updateProgress();
+            });
+        });
+
+        document.querySelectorAll('.cp4-radio').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                progressState.q4 = true;
+                document.querySelectorAll('.cp4-radio').forEach(r => {
+                    r.closest('label').classList.remove('border-emerald-500', 'bg-emerald-50');
+                    r.closest('label').classList.add('border-slate-200');
+                });
+                e.target.closest('label').classList.remove('border-slate-200');
+                e.target.closest('label').classList.add('border-emerald-500', 'bg-emerald-50');
+                updateProgress();
+            });
+        });
+
+        function submitLab() {
+            const ans1 = document.getElementById('ans1').value;
+            const ans3 = document.getElementById('ans3').value;
+            const ans2El = document.querySelector('input[name="cp2_answer"]:checked');
+            const ans2 = ans2El ? ans2El.value : '';
+            const ans4El = document.querySelector('input[name="cp4_answer"]:checked');
+            const ans4 = ans4El ? ans4El.value : '';
+            
+            const msg = document.getElementById('submitMsg');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if(!ans1.trim() || !ans2 || !ans3.trim() || !ans4) {
+                msg.innerHTML = '<span class="text-red-500"><i data-lucide="alert-circle" class="inline w-4 h-4 mr-1"></i> Please ensure all checkpoints have an answer or selection.</span>';
+                msg.classList.remove('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            if(!globalStudentName || !globalStudentEmail) {
+                msg.innerHTML = '<span class="text-red-500"><i data-lucide="alert-circle" class="inline w-4 h-4 mr-1"></i> Please log in with your course name and email before submitting.</span>';
+                msg.classList.remove('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            submitBtn.innerHTML = '<i data-lucide="loader-2" class="animate-spin inline w-5 h-5 mr-2"></i> Transmitting...';
+            submitBtn.disabled = true;
+            lucide.createIcons();
+
+            // Direct FormData mapping to Google Apps Script
+            const formData = new FormData();
+            formData.append('event_type', 'final_submit');
+            formData.append('student_name', globalStudentName || '');
+            formData.append('student_id', globalStudentEmail || '');
+            formData.append('checkpoint1', ans1);
+            formData.append('checkpoint2', ans2);
+            formData.append('checkpoint3', ans3);
+            formData.append('checkpoint4', ans4);
+            formData.append('hintsOpened', hintsOpenedCount.toString());
+            formData.append('hints_list', openedHintsList.join(', ') || 'None');
+
+            fetch(scriptURL, { 
+                method: 'POST', 
+                body: formData, 
+                mode: 'no-cors' 
+            })
+            .then(response => {
+                msg.innerHTML = '<span class="text-emerald-600"><i data-lucide="check-circle-2" class="inline w-4 h-4 mr-1"></i> Report Filed Successfully to Instructor Grading Database.</span>';
+                msg.classList.remove('hidden');
+                submitBtn.innerHTML = '<i data-lucide="check" class="inline w-5 h-5 mr-2"></i> Submission Complete';
+                lucide.createIcons();
+            })
+            .catch(error => {
+                console.error('Submission failed:', error);
+                msg.innerHTML = '<span class="text-red-500"><i data-lucide="alert-circle" class="inline w-4 h-4 mr-1"></i> Submission could not be sent. Please try again.</span>';
+                msg.classList.remove('hidden');
+                submitBtn.innerHTML = '<i data-lucide="send" class="inline w-5 h-5 mr-2"></i> Try Again';
+                submitBtn.disabled = false;
+                lucide.createIcons();
+            });
+        }
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+    </script>
+</body>
+</html>
