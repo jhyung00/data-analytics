@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Alteryx Lesson: Combining Data</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body { -webkit-tap-highlight-color: transparent; }
+        
+        .target-row {
+            outline: 2px solid #ef4444; 
+            outline-offset: -1px;
+        }
+        
+        .anim-element {
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .draw-line {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw 1s forwards;
+        }
+
+        @keyframes draw {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 h-screen overflow-hidden flex flex-col">
+
+    <div id="root" class="flex-1 overflow-hidden flex flex-col"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect } = React;
+
+        // ==========================================
+        // ICON FACTORY
+        // ==========================================
+        const createIcon = (paths) => ({ size = 24, className = '', strokeWidth = 2 }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} dangerouslySetInnerHTML={{ __html: paths }} />
+        );
+
+        const Monitor = createIcon('<rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" />');
+        const TableIcon = createIcon('<path d="M12 3v18" /><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" />');
+        const Trophy = createIcon('<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>');
+        const ArrowRight = createIcon('<path d="M5 12h14" /><path d="m12 5 7 7-7 7" />');
+        const ArrowDown = createIcon('<path d="M12 5v14" /><path d="m19 12-7 7-7-7" />');
+        const Settings = createIcon('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" />');
+        const Info = createIcon('<circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />');
+        const CheckCircle = createIcon('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>');
+        const XCircle = createIcon('<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>');
+        const RefreshCw = createIcon('<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>');
+        const Link = createIcon('<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />');
+        const Layers = createIcon('<polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" />');
+        const Grid = createIcon('<rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" />');
+        const Network = createIcon('<rect x="16" y="16" width="6" height="6" rx="1" /><rect x="2" y="16" width="6" height="6" rx="1" /><rect x="9" y="2" width="6" height="6" rx="1" /><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3" /><path d="M12 12V8" />');
+        const Combine = createIcon('<rect width="8" height="8" x="2" y="8" rx="2"/><rect width="8" height="8" x="14" y="8" rx="2"/><path d="M10 12h4"/>');
+
+        // ==========================================
+        // DATA PROCESSING ENGINES
+        // ==========================================
+        const executeJoin = (left, right, keyLeft, keyRight, joinType) => {
+            let j = [];
+            let l = [];
+            let r = [...right];
+
+            left.forEach(leftRow => {
+                const matches = r.filter(rightRow => String(rightRow[keyRight]) === String(leftRow[keyLeft]));
+                if (matches.length > 0) {
+                    matches.forEach(match => {
+                        const { [keyRight]: omit, ...restRight } = match;
+                        j.push({ ...leftRow, ...restRight });
+                        // Remove from unjoined right list
+                        const idx = r.findIndex(item => item === match);
+                        if(idx > -1) r.splice(idx, 1);
+                    });
+                } else {
+                    l.push(leftRow);
+                }
+            });
+
+            // Format padded data for displaying Unions of anchors properly
+            const padL = l.map(row => {
+                const newRow = { ...row };
+                Object.keys(right[0] || {}).filter(c => c !== keyRight).forEach(c => newRow[c] = null);
+                return newRow;
+            });
+            const padR = r.map(row => {
+                const mappedRow = {};
+                mappedRow[keyLeft] = row[keyRight]; // Align keys visually
+                Object.keys(left[0] || {}).filter(c => c !== keyLeft).forEach(c => mappedRow[c] = null);
+                Object.keys(row).filter(c => c !== keyRight).forEach(c => mappedRow[c] = row[c]);
+                return mappedRow;
+            });
+
+            if (joinType === 'Inner (J Anchor)') return j;
+            if (joinType === 'Left Unjoined (L Anchor)') return l;
+            if (joinType === 'Right Unjoined (R Anchor)') return r;
+            if (joinType === 'Left Outer Join (Union L and J)') return [...padL, ...j];
+            if (joinType === 'Right Outer Join (Union J and R)') return [...j, ...padR];
+            if (joinType === 'Full Outer Join (Union L, J, R)') return [...padL, ...j, ...padR];
+            return j;
+        };
+
+        const executeUnion = (tables, config) => {
+            let result = [];
+            if (config === 'Auto Config by Name') {
+                tables.forEach(table => {
+                    table.forEach(row => {
+                        result.push({ ...row });
+                    });
+                });
+                const allKeys = [...new Set(result.flatMap(Object.keys))];
+                return result.map(row => {
+                    const newRow = {};
+                    allKeys.forEach(k => newRow[k] = row.hasOwnProperty(k) ? row[k] : null);
+                    return newRow;
+                });
+            } else if (config === 'Auto Config by Position') {
+                const colNames = Object.keys(tables[0][0]);
+                tables.forEach(table => {
+                    table.forEach(row => {
+                        const newRow = {};
+                        const values = Object.values(row);
+                        colNames.forEach((col, idx) => {
+                            newRow[col] = values[idx] !== undefined ? values[idx] : null;
+                        });
+                        result.push(newRow);
+                    });
+                });
+                return result;
+            }
+            return result;
+        };
+
+        const executeAppend = (target, source) => {
+            let result = [];
+            target.forEach(tRow => {
+                source.forEach(sRow => {
+                    result.push({ ...tRow, ...sRow });
+                });
+            });
+            return result;
+        };
+
+        const executeJoinMultiple = (tables, key) => {
+            if (tables.length === 0) return [];
+            let result = [...tables[0]];
+            
+            for (let i = 1; i < tables.length; i++) {
+                const rightTable = tables[i];
+                let newResult = [];
+                result.forEach(leftRow => {
+                    const match = rightTable.find(rRow => String(rRow[key]) === String(leftRow[key]));
+                    if (match) {
+                        const { [key]: omit, ...restRight } = match;
+                        newResult.push({ ...leftRow, ...restRight });
+                    }
+                });
+                result = newResult;
+            }
+            return result;
+        };
+
+        // ==========================================
+        // DATASETS (Real world bakery examples)
+        // ==========================================
+        const BAKERY_DATA = {
+            employees: [
+                { Emp_ID: 101, Name: 'Alice' },
+                { Emp_ID: 102, Name: 'Bob' },
+                { Emp_ID: 103, Name: 'Charlie' }
+            ],
+            roles: [
+                { Emp_ID: 102, Dept: 'Kitchen' },
+                { Emp_ID: 103, Dept: 'Counter' },
+                { Emp_ID: 104, Dept: 'Manager' } // ID 104 does not exist in employees
+            ],
+            // Union Scenario A: Scrambled Headers
+            monOrders: [
+                { Date: 'Monday', Sales: 450, Staff: 'Alice' },
+                { Date: 'Monday', Sales: 320, Staff: 'Bob' }
+            ],
+            tueOrdersScrambled: [
+                { Staff: 'Charlie', Date: 'Tuesday', Sales: 510 },
+                { Sales: 400, Staff: 'Alice', Date: 'Tuesday' }
+            ],
+            // Union Scenario B: Different Header Names
+            tueOrdersDiffNames: [
+                { Day: 'Tuesday', Revenue: 510, Employee: 'Charlie' }, 
+                { Day: 'Tuesday', Revenue: 400, Employee: 'Alice' }
+            ],
+            // Append
+            menuItems: [
+                { Drink: 'Latte' },
+                { Drink: 'Cappuccino' }
+            ],
+            milkOptions: [
+                { Milk: 'Whole' },
+                { Milk: 'Oat' },
+                { Milk: 'Almond' }
+            ],
+            // Join Multiple - Consistent Attributes
+            multipleName: [
+                { Cust_ID: 1, Name: 'Alice' },
+                { Cust_ID: 2, Name: 'Bob' }
+            ],
+            multiplePhone: [
+                { Cust_ID: 1, Phone: '555-0100' },
+                { Cust_ID: 2, Phone: '555-0200' }
+            ],
+            multipleCity: [
+                { Cust_ID: 1, City: 'Seattle' },
+                { Cust_ID: 2, City: 'Portland' }
+            ]
+        };
+
+        // ==========================================
+        // VIEW 1: VISUAL METAPHOR
+        // ==========================================
+        function VisualMetaphorView({ onNext }) {
+            const [mode, setMode] = useState('join');
+            const [step, setStep] = useState(0);
+
+            useEffect(() => { setStep(0); }, [mode]);
+
+            const nextStep = () => {
+                if (mode === 'append' && step < 3) setStep(step + 1);
+                else if (mode === 'join' && step < 2) setStep(step + 1);
+                else setStep(1);
+            };
+            const resetStep = () => setStep(0);
+
+            const renderJoinMetaphor = () => {
+                return (
+                    <div className="relative h-[460px] w-full bg-slate-50 border-2 border-slate-200 rounded-xl overflow-y-auto overflow-x-hidden hide-scrollbar flex flex-col p-4">
+                        <div className="text-sm font-bold text-slate-500 bg-white px-3 py-1 rounded-full shadow-sm z-20 self-center mb-2 shrink-0">
+                            {step < 2 ? "Alteryx Anchor System: Separating matched and unmatched data" : "Creating an Outer Join requires a Union tool"}
+                        </div>
+                        
+                        <div className={`flex justify-between w-full mt-2 relative transition-all duration-700 ${step === 2 ? 'h-24 opacity-50' : 'flex-1'}`}>
+                            {/* Left Input */}
+                            <div className="flex flex-col items-center z-10 w-1/2">
+                                <div className="text-xs font-bold text-blue-600 mb-2">Input 1 (Employees)</div>
+                                <div className={`flex flex-col gap-2 anim-element ${step >= 1 ? 'opacity-0 scale-90' : 'opacity-100'}`}>
+                                    <div className="bg-white border-2 border-blue-400 px-3 py-1.5 rounded shadow text-xs font-bold w-40 flex items-center justify-between"><span>Alice</span> <span className="bg-blue-100 text-blue-800 px-1.5 rounded">101</span></div>
+                                    <div className="bg-white border-2 border-blue-400 px-3 py-1.5 rounded shadow text-xs font-bold w-40 flex items-center justify-between"><span>Bob</span> <span className="bg-blue-100 text-blue-800 px-1.5 rounded">102</span></div>
+                                    <div className="bg-white border-2 border-blue-400 px-3 py-1.5 rounded shadow text-xs font-bold w-40 flex items-center justify-between"><span>Charlie</span> <span className="bg-blue-100 text-blue-800 px-1.5 rounded">103</span></div>
+                                </div>
+                            </div>
+
+                            {/* Right Input */}
+                            <div className="flex flex-col items-center z-10 w-1/2">
+                                <div className="text-xs font-bold text-orange-600 mb-2">Input 2 (Roles)</div>
+                                <div className={`flex flex-col gap-2 anim-element ${step >= 1 ? 'opacity-0 scale-90' : 'opacity-100'}`}>
+                                    <div className="bg-white border-2 border-orange-400 px-3 py-1.5 rounded shadow text-xs font-bold w-40 flex items-center justify-between"><span className="bg-orange-100 text-orange-800 px-1.5 rounded">102</span> <span>Kitchen</span></div>
+                                    <div className="bg-white border-2 border-orange-400 px-3 py-1.5 rounded shadow text-xs font-bold w-40 flex items-center justify-between"><span className="bg-orange-100 text-orange-800 px-1.5 rounded">103</span> <span>Counter</span></div>
+                                    <div className="bg-white border-2 border-orange-400 px-3 py-1.5 rounded shadow text-xs font-bold w-40 flex items-center justify-between"><span className="bg-orange-100 text-orange-800 px-1.5 rounded">104</span> <span>Manager</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Alteryx Tool Anchors Output */}
+                        <div className={`mt-auto flex justify-between gap-4 anim-element relative z-20 ${step >= 1 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
+                            
+                            {/* Lines connecting L and J to Union block (Step 2) */}
+                            {step === 2 && (
+                                <svg className="absolute inset-0 w-full h-[150px] pointer-events-none z-0 overflow-visible" style={{ top: '100%' }}>
+                                    <path d="M 16.6% 0 C 16.6% 40, 50% 40, 50% 60" fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray="5,5" className="draw-line" />
+                                    <path d="M 50% 0 L 50% 60" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray="5,5" className="draw-line" />
+                                </svg>
+                            )}
+
+                            {/* L Anchor */}
+                            <div className={`flex-1 flex flex-col items-center bg-blue-50 border-2 border-blue-200 rounded-lg p-2 transition-all ${step === 2 ? 'shadow-[0_0_15px_rgba(59,130,246,0.5)] border-blue-400' : ''}`}>
+                                <div className="w-8 h-8 bg-blue-600 text-white rounded-md font-bold flex items-center justify-center shadow-md mb-2">L</div>
+                                <div className="text-[10px] text-slate-500 font-bold mb-2">Unjoined Left</div>
+                                <div className="bg-white border border-blue-300 px-2 py-1 rounded shadow-sm text-xs w-full text-center">Alice (101)</div>
+                            </div>
+
+                            {/* J Anchor */}
+                            <div className={`flex-1 flex flex-col items-center bg-emerald-50 border-2 border-emerald-200 rounded-lg p-2 transition-all ${step === 2 ? 'shadow-[0_0_15px_rgba(16,185,129,0.5)] border-emerald-400' : ''}`}>
+                                <div className="w-8 h-8 bg-emerald-600 text-white rounded-md font-bold flex items-center justify-center shadow-md mb-2">J</div>
+                                <div className="text-[10px] text-slate-500 font-bold mb-2">Inner Join (Matches)</div>
+                                <div className="flex flex-col gap-1 w-full">
+                                    <div className="bg-white border border-emerald-300 px-2 py-1 rounded shadow-sm text-[10px] w-full text-center">Bob (102) : Kitchen</div>
+                                    <div className="bg-white border border-emerald-300 px-2 py-1 rounded shadow-sm text-[10px] w-full text-center">Charlie (103) : Counter</div>
+                                </div>
+                            </div>
+
+                            {/* R Anchor */}
+                            <div className={`flex-1 flex flex-col items-center bg-orange-50 border-2 border-orange-200 rounded-lg p-2 transition-all ${step === 2 ? 'opacity-30 scale-95' : ''}`}>
+                                <div className="w-8 h-8 bg-orange-600 text-white rounded-md font-bold flex items-center justify-center shadow-md mb-2">R</div>
+                                <div className="text-[10px] text-slate-500 font-bold mb-2">Unjoined Right</div>
+                                <div className="bg-white border border-orange-300 px-2 py-1 rounded shadow-sm text-xs w-full text-center">Manager (104)</div>
+                            </div>
+                        </div>
+
+                        {/* Union Block & Left Outer Join Result (Step 2) */}
+                        <div className={`mt-4 flex flex-col items-center justify-center gap-2 anim-element transition-all duration-700 w-full shrink-0 ${step === 2 ? 'opacity-100 h-auto pb-4' : 'opacity-0 h-0 overflow-hidden'}`}>
+                            <div className="bg-slate-700 text-white px-3 py-1 rounded shadow flex items-center gap-2 text-xs font-bold mt-4 z-10 relative">
+                                <Layers size={14} /> Union Tool
+                            </div>
+                            <div className="bg-indigo-50 border-2 border-indigo-300 p-2 rounded-lg w-[60%] flex flex-col items-center shadow-md z-10 relative">
+                                <div className="text-[10px] font-bold text-indigo-800 mb-1">Result: Left Outer Join</div>
+                                <div className="bg-white border border-indigo-200 px-2 py-0.5 rounded text-[10px] w-full text-center mb-1">Alice (101) : <i className="text-slate-400">Null</i></div>
+                                <div className="bg-white border border-indigo-200 px-2 py-0.5 rounded text-[10px] w-full text-center mb-1">Bob (102) : Kitchen</div>
+                                <div className="bg-white border border-indigo-200 px-2 py-0.5 rounded text-[10px] w-full text-center">Charlie (103) : Counter</div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderUnionMetaphor = () => {
+                return (
+                    <div className="relative h-[360px] w-full bg-slate-50 border-2 border-slate-200 rounded-xl overflow-hidden flex flex-col p-4">
+                        <div className="text-sm font-bold text-slate-500 bg-white px-3 py-1 rounded-full shadow-sm z-20 self-center mb-2 shrink-0">
+                            Stacking rows vertically
+                        </div>
+                        
+                        <div className="relative flex-1 w-full mt-2">
+                            <div className={`anim-element flex flex-col items-center absolute w-[200px] ${step === 1 ? 'top-[15px] left-1/2 -translate-x-1/2' : 'top-[20px] left-[10%]'}`}>
+                                <div className="text-xs font-bold text-blue-500 mb-1">Stream 1 (Monday)</div>
+                                <div className="bg-blue-100 border-2 border-blue-400 text-blue-800 w-full py-2 rounded shadow text-sm font-bold text-center mb-1">Record A</div>
+                                <div className="bg-blue-100 border-2 border-blue-400 text-blue-800 w-full py-2 rounded shadow text-sm font-bold text-center">Record B</div>
+                            </div>
+
+                            <div className={`anim-element flex flex-col items-center absolute w-[200px] ${step === 1 ? 'top-[125px] left-1/2 -translate-x-1/2' : 'bottom-[20px] right-[10%]'}`}>
+                                <div className={`text-xs font-bold text-orange-500 mb-1 transition-opacity ${step===1?'opacity-0 hidden':'opacity-100'}`}>Stream 2 (Tuesday)</div>
+                                <div className="bg-orange-100 border-2 border-orange-400 text-orange-800 w-full py-2 rounded shadow text-sm font-bold text-center mb-1">Record C</div>
+                                <div className="bg-orange-100 border-2 border-orange-400 text-orange-800 w-full py-2 rounded shadow text-sm font-bold text-center">Record D</div>
+                            </div>
+
+                            {step === 1 && (
+                                <div className="absolute top-[0px] left-1/2 -translate-x-1/2 w-[220px] h-[225px] border-4 border-dashed border-emerald-400 rounded-lg anim-element opacity-100 transition-opacity delay-300 pointer-events-none"></div>
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderAppendMetaphor = () => {
+                return (
+                    <div className="relative h-[360px] w-full bg-slate-50 border-2 border-slate-200 rounded-xl overflow-hidden flex flex-col p-4 items-center">
+                        <div className="text-sm font-bold text-slate-500 bg-white px-3 py-1 rounded-full shadow-sm z-20 shrink-0 mb-4">
+                            Cartesian Product: Target rows multiplied by Source rows
+                        </div>
+                        
+                        {/* Step 1 & 2: Top section with Target and Source */}
+                        <div className={`relative w-full max-w-lg flex items-center justify-between anim-element transition-all duration-700 ${step === 3 ? 'opacity-0 h-0 overflow-hidden scale-90' : 'opacity-100 h-48 scale-100'}`}>
+                            
+                            {/* Connecting Lines Overlay */}
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+                                {step >= 1 && (
+                                    <>
+                                        <line x1="30%" y1="25%" x2="70%" y2="20%" stroke="#3b82f6" strokeWidth="2" className="draw-line" />
+                                        <line x1="30%" y1="25%" x2="70%" y2="50%" stroke="#3b82f6" strokeWidth="2" className="draw-line" />
+                                        <line x1="30%" y1="25%" x2="70%" y2="80%" stroke="#3b82f6" strokeWidth="2" className="draw-line" />
+                                    </>
+                                )}
+                                {step >= 2 && (
+                                    <>
+                                        <line x1="30%" y1="75%" x2="70%" y2="20%" stroke="#8b5cf6" strokeWidth="2" className="draw-line" />
+                                        <line x1="30%" y1="75%" x2="70%" y2="50%" stroke="#8b5cf6" strokeWidth="2" className="draw-line" />
+                                        <line x1="30%" y1="75%" x2="70%" y2="80%" stroke="#8b5cf6" strokeWidth="2" className="draw-line" />
+                                    </>
+                                )}
+                            </svg>
+
+                            {/* Target Table (2 Rows) */}
+                            <div className="flex flex-col justify-center gap-6 h-full z-10 w-[30%]">
+                                <div className="text-xs font-bold text-blue-600 text-center">Target (2)</div>
+                                <div className={`bg-white border-2 py-2 rounded-lg shadow-md font-bold text-center transition-colors ${step === 1 ? 'border-blue-500 text-blue-700 bg-blue-50' : 'border-slate-300 text-slate-700'}`}>Latte</div>
+                                <div className={`bg-white border-2 py-2 rounded-lg shadow-md font-bold text-center transition-colors ${step === 2 ? 'border-purple-500 text-purple-700 bg-purple-50' : 'border-slate-300 text-slate-700'}`}>Cappuccino</div>
+                            </div>
+
+                            {/* Source Table (3 Rows) */}
+                            <div className="flex flex-col justify-center gap-3 h-full z-10 w-[30%]">
+                                <div className="text-xs font-bold text-orange-600 text-center">Source (3)</div>
+                                <div className="bg-white border-2 border-orange-300 py-1.5 rounded-lg shadow font-bold text-center text-slate-700">Whole</div>
+                                <div className="bg-white border-2 border-orange-300 py-1.5 rounded-lg shadow font-bold text-center text-slate-700">Oat</div>
+                                <div className="bg-white border-2 border-orange-300 py-1.5 rounded-lg shadow font-bold text-center text-slate-700">Almond</div>
+                            </div>
+                        </div>
+
+                        {/* Results Table (6 Rows) - Shows exclusively on Step 3 */}
+                        <div className={`flex flex-col w-[60%] mx-auto anim-element transition-all duration-700 ${step === 3 ? 'opacity-100 translate-y-0 h-auto' : 'opacity-0 translate-y-10 h-0 overflow-hidden'}`}>
+                            <div className="text-sm font-bold text-emerald-700 text-center mb-3">Appended Output Matrix (2 × 3 = 6 Rows)</div>
+                            <div className="flex flex-col gap-1.5">
+                                <div className="bg-emerald-50 border border-emerald-400 py-2 px-4 rounded shadow-sm text-sm font-bold text-emerald-900 flex justify-between"><span>Latte</span> <span>Whole</span></div>
+                                <div className="bg-emerald-50 border border-emerald-400 py-2 px-4 rounded shadow-sm text-sm font-bold text-emerald-900 flex justify-between"><span>Latte</span> <span>Oat</span></div>
+                                <div className="bg-emerald-50 border border-emerald-400 py-2 px-4 rounded shadow-sm text-sm font-bold text-emerald-900 flex justify-between"><span>Latte</span> <span>Almond</span></div>
+                                <div className="bg-purple-50 border border-purple-400 py-2 px-4 rounded shadow-sm text-sm font-bold text-purple-900 flex justify-between"><span>Cappuccino</span> <span>Whole</span></div>
+                                <div className="bg-purple-50 border border-purple-400 py-2 px-4 rounded shadow-sm text-sm font-bold text-purple-900 flex justify-between"><span>Cappuccino</span> <span>Oat</span></div>
+                                <div className="bg-purple-50 border border-purple-400 py-2 px-4 rounded shadow-sm text-sm font-bold text-purple-900 flex justify-between"><span>Cappuccino</span> <span>Almond</span></div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderJoinMultipleMetaphor = () => {
+                return (
+                    <div className="relative h-[360px] w-full bg-slate-50 border-2 border-slate-200 rounded-xl overflow-hidden flex flex-col p-4 items-center">
+                        <div className="text-sm font-bold text-slate-500 bg-white px-3 py-1 rounded-full shadow-sm z-20 shrink-0 mb-4">
+                            Connecting three or more tables by a shared key instantly
+                        </div>
+                        
+                        <div className="flex flex-col items-center w-full h-full justify-between pb-4">
+                            
+                            {/* Top Row: 3 Inputs horizontally */}
+                            <div className="flex w-full justify-center gap-6 z-10">
+                                <div className="flex flex-col items-center">
+                                    <div className="text-[10px] font-bold text-blue-600 mb-1">Input 1 (Name)</div>
+                                    <div className={`bg-white border-2 border-blue-400 p-2 rounded shadow text-xs font-bold flex flex-col items-center w-24 transition-all ${step === 1 ? 'translate-y-8 opacity-0' : 'opacity-100'}`}>
+                                        <span className="bg-blue-100 text-blue-800 px-1 rounded w-full text-center mb-1">ID: 101</span> <span>Alice</span>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <div className="text-[10px] font-bold text-orange-600 mb-1">Input 2 (Phone)</div>
+                                    <div className={`bg-white border-2 border-orange-400 p-2 rounded shadow text-xs font-bold flex flex-col items-center w-24 transition-all ${step === 1 ? 'translate-y-8 opacity-0 delay-75' : 'opacity-100'}`}>
+                                        <span className="bg-orange-100 text-orange-800 px-1 rounded w-full text-center mb-1">ID: 101</span> <span>555-0100</span>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <div className="text-[10px] font-bold text-purple-600 mb-1">Input 3 (City)</div>
+                                    <div className={`bg-white border-2 border-purple-400 p-2 rounded shadow text-xs font-bold flex flex-col items-center w-24 transition-all ${step === 1 ? 'translate-y-8 opacity-0 delay-150' : 'opacity-100'}`}>
+                                        <span className="bg-purple-100 text-purple-800 px-1 rounded w-full text-center mb-1">ID: 101</span> <span>Seattle</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Middle: Connecting Node */}
+                            <div className="flex justify-center z-0 relative my-2">
+                                {/* SVG Lines connecting inputs to node would go here for extra polish, but keeping simple for now */}
+                                <div className="w-12 h-12 rounded-full border-4 border-slate-300 bg-white shadow-md flex items-center justify-center text-slate-400 z-10">
+                                    <Network size={24} />
+                                </div>
+                            </div>
+
+                            {/* Bottom: Single Output */}
+                            <div className="flex justify-center z-10 w-full">
+                                <div className={`bg-emerald-50 border-2 border-emerald-500 p-3 rounded-lg shadow-lg text-sm font-bold transition-all duration-700 w-[80%] max-w-sm flex flex-col items-center ${step === 1 ? 'opacity-100 scale-100 -translate-y-2' : 'opacity-0 scale-50'}`}>
+                                    <div className="text-xs text-emerald-700 mb-2 border-b border-emerald-200 w-full text-center pb-1">Combined Record</div>
+                                    <div className="flex gap-3 text-slate-800">
+                                        <span className="bg-slate-200 px-1.5 rounded">101</span>
+                                        <span className="text-blue-700">Alice</span>
+                                        <span className="text-orange-700">555-0100</span>
+                                        <span className="text-purple-700">Seattle</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+
+            return (
+                <div className="flex-1 p-4 md:p-8 flex flex-col items-center justify-start overflow-y-auto w-full animate-in fade-in">
+                    <div className="max-w-4xl w-full bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <h1 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                            <Layers className="text-blue-600" /> Combining Data Sets
+                        </h1>
+                        <p className="text-slate-600 mb-6">
+                            Select a tool below to view an animated metaphor of how it restructures your data streams.
+                        </p>
+
+                        <div className="flex flex-wrap gap-2 mb-6">
+                            <button onClick={() => setMode('join')} className={`flex-1 min-w-[100px] py-2 rounded-lg border-2 font-bold text-sm transition-all ${mode === 'join' ? 'bg-blue-50 border-blue-500 text-blue-800 shadow' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                                <Link className="mx-auto mb-1" size={16}/> Join
+                            </button>
+                            <button onClick={() => setMode('union')} className={`flex-1 min-w-[100px] py-2 rounded-lg border-2 font-bold text-sm transition-all ${mode === 'union' ? 'bg-blue-50 border-blue-500 text-blue-800 shadow' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                                <Layers className="mx-auto mb-1" size={16}/> Union
+                            </button>
+                            <button onClick={() => setMode('append')} className={`flex-1 min-w-[100px] py-2 rounded-lg border-2 font-bold text-sm transition-all ${mode === 'append' ? 'bg-blue-50 border-blue-500 text-blue-800 shadow' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                                <Grid className="mx-auto mb-1" size={16}/> Append
+                            </button>
+                            <button onClick={() => setMode('join-multiple')} className={`flex-1 min-w-[100px] py-2 rounded-lg border-2 font-bold text-sm transition-all ${mode === 'join-multiple' ? 'bg-blue-50 border-blue-500 text-blue-800 shadow' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                                <Network className="mx-auto mb-1" size={16}/> Join Multiple
+                            </button>
+                        </div>
+
+                        {mode === 'join' && renderJoinMetaphor()}
+                        {mode === 'union' && renderUnionMetaphor()}
+                        {mode === 'append' && renderAppendMetaphor()}
+                        {mode === 'join-multiple' && renderJoinMultipleMetaphor()}
+
+                        <div className="mt-6 flex justify-center gap-4">
+                            {((mode === 'join' && step < 2) || (mode === 'append' && step < 3) || (mode !== 'join' && mode !== 'append' && step === 0)) ? (
+                                <button onClick={nextStep} className="px-8 py-3 bg-blue-600 text-white rounded-lg font-bold shadow hover:bg-blue-700 transition flex items-center gap-2 w-64 justify-center">
+                                    {mode === 'append' ? (step === 2 ? 'Show Final Output' : `Draw Connections ${step + 1}`) : mode === 'join' ? (step === 1 ? 'Simulate Left Outer Join' : 'Execute Concept') : 'Execute Concept'} <ArrowRight size={18} />
+                                </button>
+                            ) : (
+                                <button onClick={resetStep} className="px-8 py-3 bg-slate-200 text-slate-700 rounded-lg font-bold shadow hover:bg-slate-300 transition flex items-center gap-2 w-64 justify-center">
+                                    <RefreshCw size={18} /> Reset Animation
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="mt-8">
+                        <button onClick={onNext} className="group px-8 py-4 bg-slate-900 text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition shadow-lg flex items-center gap-3">
+                            Apply to Live Data <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+
+        // ==========================================
+        // VIEW 2: DATA WORKFLOW
+        // ==========================================
+        function DataWorkflowView({ onNext }) {
+            const [activeTool, setActiveTool] = useState('Join');
+            const [joinType, setJoinType] = useState('Inner (J Anchor)');
+            
+            // Union States
+            const [unionScenario, setUnionScenario] = useState('scrambled');
+            const [unionConfig, setUnionConfig] = useState('Auto Config by Name');
+
+            const getToolDescription = () => {
+                if (activeTool === 'Join') return "Combines two streams horizontally. Alteryx outputs three distinct anchors: L, J, and R.";
+                if (activeTool === 'Union') return "Stacks multiple data streams vertically. Perfect for stacking daily sales logs into a master list.";
+                if (activeTool === 'Append') return "Adds columns of a smaller target to every row of a larger source, creating a Cartesian product.";
+                if (activeTool === 'Join Multiple') return "Combines three or more inputs based on a common field all at once. Cleaner than daisy-chaining standard joins.";
+                return "";
+            };
+
+            const renderTable = (data, title, colorClass) => (
+                <div className={`flex flex-col border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm flex-1 min-w-[200px] max-h-[300px]`}>
+                    <div className={`px-4 py-2 text-xs font-bold uppercase tracking-wider text-white flex justify-between ${colorClass}`}>
+                        <span>{title}</span>
+                        <span className="opacity-80 bg-black/20 px-2 rounded">{data.length} records</span>
+                    </div>
+                    <div className="overflow-x-auto overflow-y-auto items-start">
+                        <table className="min-w-full text-left text-xs whitespace-nowrap">
+                            <thead className="bg-slate-100 sticky top-0 border-b border-slate-200 shadow-sm">
+                                <tr>
+                                    {Object.keys(data[0] || {}).map(k => <th key={k} className="px-3 py-2 font-bold text-slate-600">{k}</th>)}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {data.map((row, i) => (
+                                    <tr key={i} className="hover:bg-slate-50">
+                                        {Object.values(row).map((val, j) => <td key={j} className={`px-3 py-1.5 text-slate-700 ${val === null ? 'italic text-slate-400 bg-red-50/30' : ''}`}>{val === null ? 'Null' : val}</td>)}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        {data.length === 0 && <div className="p-4 text-center text-slate-400 italic text-sm">No data records.</div>}
+                    </div>
+                </div>
+            );
+
+            const renderJoinConfig = () => {
+                const resultData = executeJoin(BAKERY_DATA.employees, BAKERY_DATA.roles, 'Emp_ID', 'Emp_ID', joinType);
+                return (
+                    <div className="flex flex-col gap-4 h-full">
+                        <div className="bg-slate-50 p-4 border-b border-slate-200 flex flex-wrap gap-4 items-center shrink-0">
+                            <div className="flex items-center gap-2 bg-white px-3 py-1.5 border border-slate-300 rounded text-sm shadow-sm">
+                                <span className="font-semibold text-blue-700">Left Key:</span> Emp_ID
+                                <span className="mx-2 text-slate-300">|</span>
+                                <span className="font-semibold text-orange-700">Right Key:</span> Emp_ID
+                            </div>
+                            
+                            <select value={joinType} onChange={e => setJoinType(e.target.value)} className="bg-white border border-slate-300 text-sm p-1.5 rounded font-bold shadow-sm focus:ring-2 focus:ring-blue-500">
+                                <optgroup label="Direct Tool Anchors">
+                                    <option value="Inner (J Anchor)">Inner Join (J Anchor)</option>
+                                    <option value="Left Unjoined (L Anchor)">Left Unjoined (L Anchor)</option>
+                                    <option value="Right Unjoined (R Anchor)">Right Unjoined (R Anchor)</option>
+                                </optgroup>
+                                <optgroup label="Requires Union Tool">
+                                    <option value="Left Outer Join (Union L and J)">Left Outer Join (Union L and J)</option>
+                                    <option value="Right Outer Join (Union J and R)">Right Outer Join (Union J and R)</option>
+                                    <option value="Full Outer Join (Union L, J, R)">Full Outer Join (Union L, J, R)</option>
+                                </optgroup>
+                            </select>
+
+                            <div className="w-full text-xs text-slate-500 bg-white p-2 border rounded shadow-sm border-slate-200 mt-2 flex gap-2 items-start">
+                                <Info size={16} className="text-blue-500 shrink-0" />
+                                <span>Alteryx Join tool directly outputs three streams (L, J, R). To create a traditional SQL "Left Outer Join," you must attach a Union tool immediately after, connecting the L and J output anchors to it.</span>
+                            </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-start gap-4 px-4 shrink-0">
+                            {renderTable(BAKERY_DATA.employees, 'L Input: Employees', 'bg-blue-600')}
+                            {renderTable(BAKERY_DATA.roles, 'R Input: Roles', 'bg-orange-500')}
+                        </div>
+
+                        <div className="px-4 pb-4 flex-1 flex flex-col min-h-0">
+                            {renderTable(resultData, `Output: ${joinType}`, 'bg-emerald-600')}
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderUnionConfig = () => {
+                const inputs = unionScenario === 'scrambled' 
+                    ? [BAKERY_DATA.monOrders, BAKERY_DATA.tueOrdersScrambled]
+                    : [BAKERY_DATA.monOrders, BAKERY_DATA.tueOrdersDiffNames];
+                
+                const resultData = executeUnion(inputs, unionConfig);
+
+                return (
+                    <div className="flex flex-col gap-4 h-full overflow-y-auto">
+                        <div className="bg-slate-50 p-4 border-b border-slate-200 flex flex-col gap-4 shrink-0">
+                            <div className="flex gap-4 items-center flex-wrap">
+                                <div className="font-bold text-sm text-slate-700">Data Scenario:</div>
+                                <select value={unionScenario} onChange={e => setUnionScenario(e.target.value)} className="bg-yellow-50 border border-yellow-300 text-sm p-1.5 rounded font-medium shadow-sm">
+                                    <option value="scrambled">Scrambled Column Order</option>
+                                    <option value="different_names">Different Header Names</option>
+                                </select>
+                                <div className="text-xs text-slate-500 italic max-w-sm">
+                                    {unionScenario === 'scrambled' ? "Input 2 has the exact same column names, but in the wrong order." : "Input 2's columns mean the same thing, but the headers are named differently."}
+                                </div>
+                            </div>
+                            
+                            <div className="flex gap-4 items-center flex-wrap">
+                                <div className="font-bold text-sm text-slate-700">Union Config:</div>
+                                <select value={unionConfig} onChange={e => setUnionConfig(e.target.value)} className="bg-white border border-slate-300 text-sm p-1.5 rounded font-medium shadow-sm">
+                                    <option value="Auto Config by Name">Auto Config by Name</option>
+                                    <option value="Auto Config by Position">Auto Config by Position</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-start gap-4 px-4 shrink-0">
+                            {renderTable(inputs[0], '#1: Monday Orders', 'bg-blue-600')}
+                            {renderTable(inputs[1], '#2: Tuesday Orders', 'bg-orange-500')}
+                        </div>
+
+                        <div className="px-4 pb-4 flex-1 flex flex-col min-h-0">
+                            {renderTable(resultData, 'Output: Unified Orders', 'bg-emerald-600')}
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderAppendConfig = () => {
+                const resultData = executeAppend(BAKERY_DATA.menuItems, BAKERY_DATA.milkOptions);
+                return (
+                    <div className="flex flex-col gap-4 h-full">
+                        <div className="bg-red-50 p-4 border-b border-red-200 flex gap-3 items-start shrink-0 text-red-800 text-sm">
+                            <Info size={20} className="shrink-0 mt-0.5" />
+                            <p><strong>Warning:</strong> Append creates a Cartesian product by adding every column from the Target to every row of the Source. Notice how 2 Drinks × 3 Milks = 6 Output Rows. By default, Alteryx will throw an error if you append more than 16 rows to prevent freezing the system.</p>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-start gap-4 px-4 shrink-0">
+                            {renderTable(BAKERY_DATA.menuItems, 'Target (T): Drinks', 'bg-blue-600')}
+                            {renderTable(BAKERY_DATA.milkOptions, 'Source (S): Milks', 'bg-orange-500')}
+                        </div>
+
+                        <div className="px-4 pb-4 flex-1 flex flex-col min-h-0">
+                            {renderTable(resultData, 'Output: Full Menu Matrix', 'bg-emerald-600')}
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderJoinMultipleConfig = () => {
+                const inputs = [BAKERY_DATA.multipleName, BAKERY_DATA.multiplePhone, BAKERY_DATA.multipleCity];
+                const resultData = executeJoinMultiple(inputs, 'Cust_ID');
+                return (
+                    <div className="flex flex-col gap-4 h-full">
+                        <div className="bg-slate-50 p-4 border-b border-slate-200 flex gap-4 items-center shrink-0">
+                            <div className="font-bold text-sm text-slate-700">Configuration:</div>
+                            <div className="bg-white px-3 py-1.5 border border-slate-300 rounded text-sm shadow-sm font-semibold">
+                                Join by Specific Field: <span className="text-blue-600">Cust_ID</span>
+                            </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-start gap-4 px-4 shrink-0 overflow-x-auto">
+                            {renderTable(inputs[0], 'Input 1: Name', 'bg-blue-600')}
+                            {renderTable(inputs[1], 'Input 2: Phone', 'bg-orange-500')}
+                            {renderTable(inputs[2], 'Input 3: City', 'bg-purple-500')}
+                        </div>
+
+                        <div className="px-4 pb-4 flex-1 flex flex-col min-h-0">
+                            {renderTable(resultData, 'Output: Complete Customer View', 'bg-emerald-600')}
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="flex-1 flex flex-col h-full bg-slate-100 animate-in fade-in">
+                    <header className="bg-white border-b border-slate-200 p-4 flex justify-between items-center shrink-0 z-10 shadow-sm">
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2"><Settings className="text-blue-600" /> Interactive Data Configuration</h2>
+                            <p className="text-sm text-slate-500 max-w-xl leading-tight mt-1">{getToolDescription()}</p>
+                        </div>
+                        <button onClick={onNext} className="bg-emerald-100 text-emerald-800 px-4 py-2 rounded-lg font-bold hover:bg-emerald-200 transition shadow-sm text-sm border border-emerald-300 shrink-0">
+                            Take Final Quiz &rarr;
+                        </button>
+                    </header>
+
+                    <div className="flex flex-1 min-h-0">
+                        {/* Sidebar */}
+                        <div className="w-56 bg-slate-800 text-white flex flex-col shrink-0">
+                            <div className="p-4 text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-700">Select Tool</div>
+                            <button onClick={() => setActiveTool('Join')} className={`flex items-center gap-3 p-4 text-left font-bold transition ${activeTool === 'Join' ? 'bg-blue-600' : 'hover:bg-slate-700'}`}>
+                                <Link size={18} /> Join Tool
+                            </button>
+                            <button onClick={() => setActiveTool('Union')} className={`flex items-center gap-3 p-4 text-left font-bold transition ${activeTool === 'Union' ? 'bg-blue-600' : 'hover:bg-slate-700'}`}>
+                                <Layers size={18} /> Union Tool
+                            </button>
+                            <button onClick={() => setActiveTool('Append')} className={`flex items-center gap-3 p-4 text-left font-bold transition ${activeTool === 'Append' ? 'bg-blue-600' : 'hover:bg-slate-700'}`}>
+                                <Grid size={18} /> Append Fields
+                            </button>
+                            <button onClick={() => setActiveTool('Join Multiple')} className={`flex items-center gap-3 p-4 text-left font-bold transition ${activeTool === 'Join Multiple' ? 'bg-blue-600' : 'hover:bg-slate-700'}`}>
+                                <Network size={18} /> Join Multiple
+                            </button>
+                        </div>
+
+                        {/* Main Content Area */}
+                        <div className="flex-1 flex flex-col bg-white overflow-hidden">
+                            {activeTool === 'Join' && renderJoinConfig()}
+                            {activeTool === 'Union' && renderUnionConfig()}
+                            {activeTool === 'Append' && renderAppendConfig()}
+                            {activeTool === 'Join Multiple' && renderJoinMultipleConfig()}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ==========================================
+        // VIEW 3: QUIZ
+        // ==========================================
+        const QUIZ_QUESTIONS = [
+            {
+                question: "How do you perform a traditional 'Left Outer Join' using standard Alteryx tools?",
+                options: [
+                    "Select the 'Left Outer Join' checkbox directly within the settings of a single Join tool block.",
+                    "Connect an output line from the Join tool's L anchor directly into a specialized Output tool block.",
+                    "Connect the L and J output anchors from a Join tool into a Union tool to stack the records."
+                ],
+                answer: 2,
+                explanation: "Correct! Because Alteryx separates matched (J) and unmatched (L) records into distinct data streams, you must stack them back together using a Union tool to create a Left Outer join."
+            },
+            {
+                question: "When is the 'Append Fields' tool the most appropriate choice to use in a workflow?",
+                options: [
+                    "When you need to add a single target row of values to every single row in a much larger dataset.",
+                    "When you want to stack two identical datasets on top of each other without utilizing a shared key.",
+                    "When you need to match records from two completely different tables based on a Customer ID field."
+                ],
+                answer: 0,
+                explanation: "Correct. Append creates a Cartesian product, which is ideal for adding universal lookup values or building matrices, but dangerous with two large tables."
+            },
+            {
+                question: "What happens if you Union two tables where the column headers do not match perfectly?",
+                options: [
+                    "If configuring by name, unmatched columns get Null values for the missing data records in the final output.",
+                    "The Union tool will immediately throw a critical error and refuse to combine the two selected data streams.",
+                    "Alteryx automatically renames all the columns in the second table to perfectly match the first table."
+                ],
+                answer: 0,
+                explanation: "Correct! If configured by name, the columns are preserved and any record that didn't originally possess that column gets populated with a Null value."
+            }
+        ];
+
+        function QuizView() {
+            const [currentQ, setCurrentQ] = useState(0);
+            const [selectedAnswer, setSelectedAnswer] = useState(null);
+            const [isAnswered, setIsAnswered] = useState(false);
+            const [score, setScore] = useState(0);
+            const [quizComplete, setQuizComplete] = useState(false);
+
+            const question = QUIZ_QUESTIONS[currentQ];
+
+            const handleOptionClick = (index) => {
+                if (isAnswered) return;
+                setSelectedAnswer(index);
+                setIsAnswered(true);
+                if (index === question.answer) {
+                    setScore(prev => prev + 1);
+                }
+            };
+
+            const nextQuestion = () => {
+                if (currentQ < QUIZ_QUESTIONS.length - 1) {
+                    setCurrentQ(prev => prev + 1);
+                    setSelectedAnswer(null);
+                    setIsAnswered(false);
+                } else {
+                    setQuizComplete(true);
+                }
+            };
+
+            const resetQuiz = () => {
+                setCurrentQ(0);
+                setSelectedAnswer(null);
+                setIsAnswered(false);
+                setScore(0);
+                setQuizComplete(false);
+            };
+
+            if (quizComplete) {
+                return (
+                    <div className="flex-1 flex flex-col items-center justify-center p-4 bg-slate-50 animate-in fade-in zoom-in">
+                        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-200 text-center max-w-md w-full">
+                            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Trophy size={40} className="text-emerald-500" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-slate-900 mb-2">Knowledge Checked!</h2>
+                            <p className="text-slate-500 mb-6">You scored {score} out of {QUIZ_QUESTIONS.length}.</p>
+                            
+                            <button onClick={resetQuiz} className="flex justify-center items-center gap-2 w-full px-6 py-4 bg-slate-900 text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-colors shadow-md">
+                                <RefreshCw size={20} /> Restart Lesson
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="flex-1 flex flex-col p-4 md:p-8 overflow-y-auto bg-slate-50 animate-in fade-in">
+                    <div className="max-w-3xl mx-auto w-full">
+                        <div className="mb-6 flex justify-between items-center text-sm font-bold text-slate-500">
+                            <span>Question {currentQ + 1} of {QUIZ_QUESTIONS.length}</span>
+                            <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full border border-emerald-200">Score: {score}</span>
+                        </div>
+
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                            <div className="bg-slate-800 p-6 md:p-8 text-white">
+                                <h2 className="text-lg font-bold leading-relaxed">{question.question}</h2>
+                            </div>
+
+                            <div className="p-4 md:p-6 space-y-3">
+                                {question.options.map((opt, idx) => {
+                                    const isSelected = selectedAnswer === idx;
+                                    const isCorrect = idx === question.answer;
+                                    
+                                    let buttonStyle = "border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-slate-700 bg-white";
+                                    let icon = null;
+
+                                    if (isAnswered) {
+                                        if (isCorrect) {
+                                            buttonStyle = "border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm";
+                                            icon = <CheckCircle size={20} className="text-emerald-500 shrink-0" />;
+                                        } else if (isSelected) {
+                                            buttonStyle = "border-red-400 bg-red-50 text-red-700";
+                                            icon = <XCircle size={20} className="text-red-500 shrink-0" />;
+                                        } else {
+                                            buttonStyle = "border-slate-100 bg-slate-50 text-slate-400 opacity-50";
+                                        }
+                                    } else if (isSelected) {
+                                        buttonStyle = "border-blue-500 bg-blue-50 text-blue-800";
+                                    }
+
+                                    return (
+                                        <button 
+                                            key={idx}
+                                            onClick={() => handleOptionClick(idx)}
+                                            disabled={isAnswered}
+                                            className={`w-full flex items-center justify-between p-4 rounded-xl border-2 font-semibold text-left transition-all ${buttonStyle} ${!isAnswered ? 'cursor-pointer' : 'cursor-default'}`}
+                                        >
+                                            <span className="flex-1 pr-4 leading-relaxed text-sm">{opt}</span>
+                                            {icon}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {isAnswered && (
+                            <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
+                                <div className={`p-5 rounded-xl mb-6 flex items-start gap-3 shadow-sm border ${
+                                    selectedAnswer === question.answer ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'
+                                }`}>
+                                    <Info className={`shrink-0 mt-0.5 ${selectedAnswer === question.answer ? 'text-emerald-600' : 'text-red-500'}`} size={20} />
+                                    <p className={`font-medium text-sm leading-relaxed ${selectedAnswer === question.answer ? 'text-emerald-900' : 'text-red-900'}`}>
+                                        {question.explanation}
+                                    </p>
+                                </div>
+                                <button onClick={nextQuestion} className="w-full flex justify-center items-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-all shadow-md">
+                                    {currentQ < QUIZ_QUESTIONS.length - 1 ? "Next Question" : "View Results"} <ArrowRight size={20} />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // ==========================================
+        // ROOT APP COMPONENT
+        // ==========================================
+        function App() {
+            const [activeView, setActiveView] = useState('visual'); 
+
+            return (
+                <div className="h-full w-full flex flex-col font-sans">
+                    {/* Top Navigation */}
+                    <div className="bg-slate-900 p-3 flex justify-center gap-2 shadow-md z-50 shrink-0">
+                        <button onClick={() => setActiveView('visual')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'visual' ? 'bg-blue-600 text-white shadow-inner scale-105' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}`}>
+                            <Monitor size={16} /> <span className="hidden sm:inline">1. </span>Concept
+                        </button>
+                        <button onClick={() => setActiveView('data')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'data' ? 'bg-blue-600 text-white shadow-inner scale-105' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}`}>
+                            <TableIcon size={16} /> <span className="hidden sm:inline">2. </span>Data
+                        </button>
+                        <button onClick={() => setActiveView('quiz')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'quiz' ? 'bg-emerald-600 text-white shadow-inner scale-105' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}`}>
+                            <Trophy size={16} /> <span className="hidden sm:inline">3. </span>Quiz
+                        </button>
+                    </div>
+
+                    {/* Main Container */}
+                    <div className="flex-1 flex flex-col relative w-full min-h-0">
+                        {activeView === 'visual' && <VisualMetaphorView onNext={() => setActiveView('data')} />}
+                        {activeView === 'data' && <DataWorkflowView onNext={() => setActiveView('quiz')} />}
+                        {activeView === 'quiz' && <QuizView />}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
