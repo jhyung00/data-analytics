@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicago Payment Audit | Alteryx Case Guide</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        quicksand: ['Quicksand', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff', 100: '#ede9fe', 300: '#c4b5fd', 400: '#a78bfa',
+                            500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9', 900: '#4c1d95',
+                        }
+                    },
+                    animation: {
+                        blob: "blob 7s infinite",
+                    },
+                    keyframes: {
+                        blob: {
+                            "0%": { transform: "translate(0px, 0px) scale(1)" },
+                            "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+                            "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
+                            "100%": { transform: "translate(0px, 0px) scale(1)" }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .timeline-step:last-child { border-left-color: transparent; }
+        
+        .shot-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; margin-top: 16px; }
+        .shot { display: inline-flex; flex-direction: column; align-items: flex-start; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); max-width: 100%; }
+        .shot img { display: block; max-width: 100%; border-radius: 8px; cursor: pointer; transition: transform 0.2s ease-in-out, box-shadow 0.2s ease; }
+        .shot img.zoomable:not(.locked-img):hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+
+        .hint-container { overflow: hidden; position: relative; }
+        .locked-img { filter: blur(8px); cursor: not-allowed !important; pointer-events: none; }
+        
+        .no-select { user-select: none; -webkit-user-select: none; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .rainbow-bg {
+            background: linear-gradient(270deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #6366f1, #a855f7);
+            background-size: 1400% 1400%;
+            animation: rainbow 5s ease infinite;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden font-quicksand bg-slate-50 text-slate-800 no-select">
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] flex items-center justify-center overflow-y-auto p-4">
+        <div class="bg-gradient-to-br from-white to-brand-50 rounded-[2rem] p-8 max-w-md w-full shadow-2xl transform transition-all border border-brand-100 my-auto relative overflow-hidden">
+            <div class="absolute -top-16 -right-16 w-40 h-40 bg-brand-300 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob"></div>
+            <div class="absolute -bottom-16 -left-16 w-40 h-40 bg-indigo-300 rounded-full mix-blend-multiply filter blur-2xl opacity-40 animate-blob animation-delay-2000"></div>
+
+            <div class="relative z-10">
+                <div class="w-20 h-20 rainbow-bg rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_8px_30px_rgb(124,58,237,0.3)] border border-brand-400 transform rotate-3 transition-transform hover:rotate-6">
+                    <i data-lucide="building" class="w-10 h-10 text-white transform -rotate-3"></i>
+                </div>
+                <h2 class="text-3xl font-fredoka font-bold text-slate-800 mb-2 text-center">Chicago Payment Audit</h2>
+                <p class="text-slate-600 mb-6 font-medium text-center text-sm leading-relaxed">Welcome! Prepare to perform a continuous compliance audit on municipal spending. Enter your credentials to access the simulation.</p>
+                
+                <div id="authError" class="hidden bg-rose-50 border border-rose-200 text-rose-700 p-3 rounded-xl text-sm font-bold mb-4 flex items-start gap-2 shadow-sm">
+                    <i data-lucide="alert-circle" class="w-5 h-5 shrink-0 mt-0.5"></i>
+                    <span id="authErrorText"></span>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-1 ml-1">Group Number</label>
+                        <input type="number" min="0" id="groupNumber" required class="w-full border-2 border-brand-100 rounded-xl p-3.5 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all font-bold text-slate-800 bg-white shadow-inner" placeholder="e.g., 5">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-900 uppercase tracking-wider mb-1 ml-1">Student Email</label>
+                        <input type="email" id="studentEmail" required class="w-full border-2 border-brand-100 rounded-xl p-3.5 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all font-bold text-slate-800 bg-white shadow-inner" placeholder="yourname@zagmail.gonzaga.edu">
+                    </div>
+                    
+                    <div class="bg-amber-50/80 backdrop-blur border border-amber-200 p-3 rounded-xl text-xs text-amber-800 font-medium">
+                        <strong>Hint Rules:</strong> Unlocking configuration screenshots will deduct <strong>0.5 points</strong> per hint. Maximum penalty capped at <strong>10 points</strong>. After that, subsequent unlocks are free.
+                    </div>
+
+                    <button id="startBtn" class="w-full rainbow-bg text-white font-bold py-4 rounded-xl transition-all shadow-[0_4px_14px_0_rgb(124,58,237,0.39)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.23)] hover:-translate-y-0.5 flex justify-center items-center gap-2 text-lg">
+                        Access Environment <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hint Modal -->
+    <div id="hintModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[150] hidden items-center justify-center overflow-y-auto p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl transform transition-all border border-rose-100 my-auto text-center">
+            <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="unlock" class="w-8 h-8 text-rose-600"></i>
+            </div>
+            <h3 class="text-2xl font-fredoka font-bold text-slate-800 mb-2">Unlock Hint?</h3>
+            <p id="hintModalText" class="text-slate-600 mb-6 font-medium text-sm whitespace-pre-line"></p>
+            <div class="flex gap-3 w-full">
+                <button id="hintCancelBtn" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition-colors">Cancel</button>
+                <button id="hintConfirmBtn" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md">Unlock</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div id="logoutModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[150] hidden items-center justify-center overflow-y-auto p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl transform transition-all border border-slate-200 my-auto text-center">
+            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="log-out" class="w-8 h-8 text-slate-600"></i>
+            </div>
+            <h3 class="text-2xl font-fredoka font-bold text-slate-800 mb-2">End Session?</h3>
+            <p class="text-slate-600 mb-6 font-medium text-sm">Are you sure you want to end the session? This will clear your login and relock all hints locally.</p>
+            <div class="flex gap-3 w-full">
+                <button id="logoutCancelBtn" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition-colors">Cancel</button>
+                <button id="logoutConfirmBtn" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl transition-colors shadow-md">End Session</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="progressBar" class="fixed top-0 left-0 h-1.5 bg-gradient-to-r from-brand-400 to-indigo-500 z-50 transition-all duration-300 w-0"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 flex-shrink-0 bg-white border-r border-slate-200 overflow-y-auto hidden md:flex flex-col z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <div class="p-6 border-b border-slate-100 bg-gradient-to-br from-brand-50 to-white">
+            <h1 class="font-fredoka text-xl font-bold text-brand-900 flex items-center gap-2 leading-tight">
+                <div class="p-1.5 bg-brand-100 rounded-lg"><i data-lucide="building" class="w-5 h-5 text-brand-600"></i></div>
+                Chicago Audit
+            </h1>
+            <p class="text-[10px] text-slate-500 mt-2 font-bold tracking-wide uppercase">Open Checkbook Lab</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto" id="navLinks">
+            <a href="#" id="btnCaseDetails" class="flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg hover:bg-slate-100 transition-colors border bg-slate-100 text-brand-600 border-brand-200">
+                <i data-lucide="file-search" class="w-4 h-4"></i> Full Case Details
+            </a>
+            
+            <div class="pt-4 pb-2 px-3 text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><i data-lucide="book-open" class="w-3 h-3"></i> Tutorial</div>
+            <a href="#case-overview" onclick="navigateTutorial('case-overview')" class="tutorial-link flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 hover:text-brand-600 transition-colors border border-transparent">
+                <i data-lucide="eye" class="w-4 h-4 text-slate-400"></i> Overview
+            </a>
+            <a href="#setup" onclick="navigateTutorial('setup')" class="tutorial-link flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-100 hover:text-blue-600 transition-colors border border-transparent">
+                <i data-lucide="settings" class="w-4 h-4 text-blue-400"></i> Setup
+            </a>
+            
+            <div class="pt-4 pb-2 px-3 text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><i data-lucide="target" class="w-3 h-3"></i> Phases</div>
+            <a href="#phase1" onclick="navigateTutorial('phase1')" class="tutorial-link flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors border border-transparent">
+                <i data-lucide="database" class="w-4 h-4 text-blue-400"></i> Phase 1: Master Dataset
+            </a>
+            <a href="#phase2" onclick="navigateTutorial('phase2')" class="tutorial-link flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-purple-50 hover:text-purple-600 transition-colors border border-transparent">
+                <i data-lucide="split-square-horizontal" class="w-4 h-4 text-purple-400"></i> Phase 2: Split Payments
+            </a>
+            <a href="#phase3" onclick="navigateTutorial('phase3')" class="tutorial-link flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-pink-50 hover:text-pink-600 transition-colors border border-transparent">
+                <i data-lucide="copy" class="w-4 h-4 text-pink-400"></i> Phase 3: Duplicates
+            </a>
+            <a href="#phase4" onclick="navigateTutorial('phase4')" class="tutorial-link flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors border border-transparent">
+                <i data-lucide="file-warning" class="w-4 h-4 text-red-400"></i> Phase 4: Bypassed Contract
+            </a>
+            <a href="#phase5" onclick="navigateTutorial('phase5')" class="tutorial-link flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-orange-50 hover:text-orange-600 transition-colors border border-transparent">
+                <i data-lucide="file-search" class="w-4 h-4 text-orange-400"></i> Phase 5: Generic Voucher
+            </a>
+            <a href="#phase6" onclick="navigateTutorial('phase6')" class="tutorial-link flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors border border-transparent">
+                <i data-lucide="network" class="w-4 h-4 text-emerald-400"></i> Phase 6: Master Join
+            </a>
+            <a href="#phase7" onclick="navigateTutorial('phase7')" class="tutorial-link flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors border border-transparent">
+                <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-400"></i> Phase 7: Reporting
+            </a>
+            <a href="#phase8" onclick="navigateTutorial('phase8')" class="tutorial-link flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 transition-colors border border-transparent">
+                <i data-lucide="microscope" class="w-4 h-4 text-cyan-400"></i> Phase 8: Open Exploration
+            </a>
+            
+            <div class="pt-4 pb-2 px-3 text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><i data-lucide="flag" class="w-3 h-3"></i> Conclusion</div>
+            <a href="#report" onclick="navigateTutorial('report')" class="tutorial-link flex items-center gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-teal-50 hover:text-teal-600 transition-colors mb-4 border border-transparent">
+                <i data-lucide="file-text" class="w-4 h-4 text-teal-400"></i> Output Report
+            </a>
+        </nav>
+
+        <div id="userProfile" class="p-4 border-t border-slate-200 bg-slate-50 mt-auto hidden shrink-0">
+            <div class="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-1 flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i> Active Session</div>
+            <div id="displayEmail" class="text-sm font-bold text-slate-800 truncate w-full"></div>
+            <div id="displayGroup" class="text-xs text-brand-600 font-bold mb-4 bg-brand-100 inline-block px-2 py-0.5 rounded mt-1"></div>
+            
+            <button id="downloadLogBtn" class="w-full bg-slate-800 border border-slate-700 text-slate-100 hover:bg-slate-700 hover:border-slate-600 rounded-lg py-2 text-xs font-bold transition-all flex items-center justify-center gap-2 mb-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                <i data-lucide="download-cloud" class="w-3.5 h-3.5"></i> Download Hint Log
+            </button>
+            <button id="logoutBtn" class="w-full bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded-lg py-1.5 text-xs font-bold transition-colors flex items-center justify-center gap-2">
+                <i data-lucide="log-out" class="w-3.5 h-3.5"></i> End Session
+            </button>
+        </div>
+    </aside>
+
+    <!-- Content: Full Case Details -->
+    <main id="caseView" class="flex-1 overflow-y-auto relative scroll-smooth bg-slate-50 p-4 md:p-8 lg:p-12 block">
+        <div class="max-w-4xl mx-auto pb-32">
+            
+            <header class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 text-white rounded-3xl p-8 md:p-10 shadow-2xl mb-10 relative overflow-hidden border border-slate-600">
+                <div class="absolute -right-10 -top-10 opacity-10 transform rotate-12 transition-transform duration-700 hover:rotate-45">
+                    <i data-lucide="building" class="w-64 h-64"></i>
+                </div>
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full text-xs font-bold tracking-wide uppercase mb-6 backdrop-blur border border-white/20">
+                    <i data-lucide="check-square" class="w-4 h-4 text-brand-300"></i> Compliance Engagement
+                </div>
+                <h1 class="font-fredoka text-4xl md:text-5xl font-bold mb-4 relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300">Chicago Payment Audit</h1>
+                <p class="text-slate-300 text-lg font-medium relative z-10 max-w-2xl leading-relaxed">Continuous Audit Protocol and Risk Scoring Engine Guidelines</p>
+            </header>
+
+            <section class="bg-white rounded-2xl shadow-md border border-slate-200 p-8 mb-8 hover:shadow-lg transition-shadow">
+                <h2 class="font-fredoka text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3 border-b border-slate-100 pb-4">
+                    <div class="p-2 bg-brand-50 rounded-lg"><i data-lucide="landmark" class="w-6 h-6 text-brand-500"></i></div> 
+                    Case Description
+                </h2>
+                
+                <div class="space-y-6 text-slate-600 leading-relaxed">
+
+                    <div class="bg-gradient-to-br from-rose-50 to-red-50 p-6 rounded-2xl border border-rose-200 mb-8 shadow-inner relative overflow-hidden">
+                        <div class="absolute right-0 top-0 w-32 h-32 bg-rose-500 opacity-5 rounded-bl-full pointer-events-none"></div>
+                        <h3 class="font-fredoka text-xl font-bold text-rose-900 mb-5 flex items-center gap-2 border-b border-rose-200/60 pb-3">
+                            <i data-lucide="shield-alert" class="w-6 h-6 text-rose-600"></i> Project Rules & Academic Integrity
+                        </h3>
+                        <ul class="space-y-4 text-rose-800 text-sm font-medium relative z-10">
+                            <li class="flex gap-3 items-start bg-white/40 p-3 rounded-lg border border-rose-100/50">
+                                <i data-lucide="message-circle" class="w-5 h-5 shrink-0 text-rose-500 mt-0.5"></i> 
+                                <span>While the Instructor and GAs won't answer project-related specific workflow hints directly, we are always happy to guide you in the right direction! Please don't hesitate to reach out if you feel completely stuck.</span>
+                            </li>
+                            <li class="flex gap-3 items-start bg-white/40 p-3 rounded-lg border border-rose-100/50">
+                                <i data-lucide="users" class="w-5 h-5 shrink-0 text-rose-500 mt-0.5"></i> 
+                                <span>This is strictly <strong>group work</strong> to be done with your team members only. Sharing hints or solutions with other groups is strictly forbidden. Integrity is paramount.</span>
+                            </li>
+                            <li class="flex gap-3 items-start bg-white/40 p-3 rounded-lg border border-rose-100/50">
+                                <i data-lucide="message-circle" class="w-5 h-5 shrink-0 text-rose-500 mt-0.5"></i>
+                                <span><strong>Discuss with your group</strong> always before you click the screenshot hints because once that is opened, it cannot be taken back. A point deduction will happen immediately. Every unlock is securely transmitted and logged in the instructor's database.</span>
+                            </li>
+                            <li class="flex gap-3 items-start bg-white/40 p-3 rounded-lg border border-rose-100/50">
+                                <i data-lucide="unlock" class="w-5 h-5 shrink-0 text-rose-500 mt-0.5"></i> 
+                                <span><strong>Hint System:</strong> Most hints are provided in the text. Screenshot configuration hints are hidden. Each screenshot hint unlocked costs <strong>0.5 points</strong>. The maximum deduction is capped at <strong>10 points</strong>. After that, hints are free. The maximum score you can earn on this project is 25 points.</span>
+                            </li>
+                            <li class="flex gap-3 items-start bg-white/40 p-3 rounded-lg border border-rose-100/50">
+                                <i data-lucide="refresh-cw" class="w-5 h-5 shrink-0 text-rose-500 mt-0.5"></i> 
+                                <span>Opening a hint multiple times will not penalize you more. However, <strong>hints will re-lock if you end the session and restart the project</strong>. If you are still logged in on this page, then you can keep continuing working on it and unlocked hints will stay opened.</span>
+                            </li>
+                            <li class="flex gap-3 items-start bg-white/40 p-3 rounded-lg border border-rose-100/50">
+                                <i data-lucide="download" class="w-5 h-5 shrink-0 text-rose-500 mt-0.5"></i> 
+                                <span>You may <strong>download your Hint Log as a TXT file</strong> at the end of each session attempt for your own information to track your usage. A download button is provided in the bottom left menu. <em>(Note: This is just for your records; every time you unlock a screenshot hint, that information is transmitted to the instructor in real time.)</em></span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="hover:bg-slate-50 p-4 rounded-xl transition-colors border border-transparent hover:border-slate-100">
+                        <h3 class="font-bold text-slate-800 text-lg mb-2 flex items-center gap-2"><i data-lucide="target" class="w-5 h-5 text-slate-400"></i> Objective</h3>
+                        <p class="mb-3">Transform an extensive raw municipal vendor dataset into targeted compliance audit samples. You will build a foundational data normalization workflow (Master Dataset), create separate analytical branches to perform specific audit tests, stitch findings together, and generate a composite risk score to flag potential procurement control violations.</p>
+                    </div>
+
+                    <div class="bg-brand-50 p-6 rounded-2xl border border-brand-100 text-brand-900 shadow-sm relative overflow-hidden">
+                        <div class="absolute right-2 bottom-2 opacity-5 pointer-events-none"><i data-lucide="download" class="w-32 h-32"></i></div>
+                        <h3 class="font-bold text-lg mb-3 flex items-center gap-2 border-b border-brand-200/50 pb-2">
+                            <i data-lucide="link" class="w-5 h-5 text-brand-600"></i> Dataset Location
+                        </h3>
+                        <p class="relative z-10 leading-relaxed mb-4 text-sm">All vendor payments made by the City of Chicago from 1996 to present. Payments from 1996 through 2002 have been rolled-up and appear as "2002." Total payment information is summarized for each vendor and contract number for data older than two years. These data are extracted from the City's Vendor, Contract, and Payment Search.<br><br><strong>Time Period:</strong> 1996 to present.<br><strong>Frequency:</strong> Data is updated daily.</p>
+                        <a href="https://data.cityofchicago.org/Administration-Finance/Payments/s4vu-giwb/about_data" target="_blank" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow-sm relative z-10">
+                            <i data-lucide="external-link" class="w-4 h-4"></i> View Chicago Data Portal
+                        </a>
+                        <p class="text-xs font-semibold mt-3 text-brand-700 relative z-10">Note: Click Export on the portal page and download the file as a CSV.</p>
+                    </div>
+
+                </div>
+            </section>
+
+            <section class="bg-white rounded-2xl shadow-md border border-slate-200 p-8 mb-8 hover:shadow-lg transition-shadow">
+                <h2 class="font-fredoka text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3 border-b border-slate-100 pb-4">
+                    <div class="p-2 bg-blue-50 rounded-lg"><i data-lucide="table-2" class="w-6 h-6 text-blue-500"></i></div> 
+                    Data Dictionary
+                </h2>
+
+                <div class="space-y-8">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-lg mb-3 flex items-center gap-2"><i data-lucide="database" class="w-4 h-4 text-slate-400"></i> Chicago Payments Tab</h3>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                                        <th class="p-4 font-bold w-1/3">Field Name</th>
+                                        <th class="p-4 font-bold">Field Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-slate-600 divide-y divide-slate-100">
+                                    <tr class="hover:bg-slate-50 transition-colors"><td class="p-4 font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="hash" class="w-4 h-4 text-slate-400"></i> VOUCHER NUMBER</td><td class="p-4">Unique identifier for the municipal payment voucher.</td></tr>
+                                    <tr class="hover:bg-slate-50 transition-colors"><td class="p-4 font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="circle-dollar-sign" class="w-4 h-4 text-slate-400"></i> AMOUNT</td><td class="p-4">The dollar value of the payment. Contains currency formatting (e.g., $ signs) requiring normalization.</td></tr>
+                                    <tr class="hover:bg-slate-50 transition-colors"><td class="p-4 font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i> CHECK DATE</td><td class="p-4">The date the payment was issued. Note: Older records may only display a rolled-up 4-digit year (these are historical subtotals).</td></tr>
+                                    <tr class="hover:bg-slate-50 transition-colors"><td class="p-4 font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4 text-slate-400"></i> DEPARTMENT NAME</td><td class="p-4">The city department that authorized or received the good/service.</td></tr>
+                                    <tr class="hover:bg-slate-50 transition-colors"><td class="p-4 font-semibold text-slate-800 flex items-center gap-2 items-start"><i data-lucide="file-signature" class="w-4 h-4 text-slate-400 mt-1"></i> CONTRACT NUMBER</td><td class="p-4 leading-relaxed">The formal agreement number. <br><span class="italic text-xs text-slate-500 font-medium bg-slate-100 px-2 py-1 rounded inline-block mt-1">"DV" indicates a Direct Voucher, used for miscellaneous products lacking a signed contract.</span></td></tr>
+                                    <tr class="hover:bg-slate-50 transition-colors"><td class="p-4 font-semibold text-slate-800 flex items-center gap-2"><i data-lucide="store" class="w-4 h-4 text-slate-400"></i> VENDOR NAME</td><td class="p-4">The name of the entity receiving the payment.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Content: Tutorial Views -->
+    <main id="tutorialView" class="flex-1 overflow-y-auto relative scroll-smooth bg-slate-50 p-4 md:p-8 lg:p-12 hidden">
+        <div class="max-w-4xl mx-auto pb-32">
+            
+            <header class="bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-3xl p-8 md:p-10 shadow-lg mb-10 relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 opacity-10 transform rotate-12">
+                    <i data-lucide="workflow" class="w-64 h-64"></i>
+                </div>
+                <h1 class="font-fredoka text-4xl md:text-5xl font-bold mb-4 relative z-10">Continuous Audit Workflow</h1>
+                <p class="text-brand-100 text-lg md:text-xl font-medium max-w-2xl relative z-10">A step-by-step Alteryx compliance analysis guide. Build the data foundation, connect the audit branches, and report findings.</p>
+                <div class="flex flex-wrap gap-3 mt-6 relative z-10">
+                    <span class="bg-white/20 backdrop-blur text-white text-sm font-semibold px-4 py-1.5 rounded-full border border-white/20 flex items-center gap-2">
+                        <i data-lucide="graduation-cap" class="w-4 h-4"></i> Student Guide
+                    </span>
+                    <span class="bg-white/20 backdrop-blur text-white text-sm font-semibold px-4 py-1.5 rounded-full border border-white/20 flex items-center gap-2">
+                        <i data-lucide="mouse-pointer-click" class="w-4 h-4"></i> Click images to view
+                    </span>
+                </div>
+            </header>
+
+            <section id="case-overview" class="quest-card bg-white rounded-2xl shadow-sm border border-slate-200 border-t-8 border-t-slate-400 p-8 mb-10 hover:shadow-md transition-shadow">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                            <i data-lucide="book-open" class="w-5 h-5"></i>
+                        </div>
+                        <h2 class="font-fredoka text-3xl font-bold text-slate-800">Case Overview</h2>
+                    </div>
+                </div>
+                <p class="text-lg text-slate-600 mb-6">Auditors use Continuous Audit methodologies to systematically identify control failures within large scale general ledger datasets. Your objective is to build an automated scoring engine designed to flag potential procurement violations.</p>
+                
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-6 mb-8 shadow-sm">
+                    <h3 class="font-fredoka text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="target" class="w-5 h-5 text-brand-500"></i> Primary Audit Tasks</h3>
+                    <ul class="space-y-4 text-slate-700 text-sm">
+                        <li class="flex items-start gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i><span><strong>Task 1:</strong> For the transaction year 2025, determine which vendor generated the single highest Composite Risk Score and Dollar Amount.</span></li>
+                        <li class="flex items-start gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i><span><strong>Task 2:</strong> After applying specific risk profile filters (LLC, > $1M, Year 2025, Score >= 0.70), determine exactly how many invoices fall into this high-risk category.</span></li>
+                        <li class="flex items-start gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i>
+                            <div>
+                                <span><strong>Task 3:</strong> Across the analyzed daily dataset (May 31, 2024, to present), determine which vendor accumulated the highest total sum of Composite Risk Scores. The Composite Risk Score is calculated based on the following anomalies derived from Phase 2 through Phase 5:</span>
+                                <ul class="mt-3 flex flex-wrap gap-4 text-slate-600 bg-white p-3 rounded-lg border border-slate-200 shadow-sm inline-flex">
+                                    <li><i data-lucide="percent" class="w-3 h-3 inline mr-1 text-brand-500"></i>Phase 2 (Split Payment): 40%</li>
+                                    <li><i data-lucide="percent" class="w-3 h-3 inline mr-1 text-brand-500"></i>Phase 3 (Duplicate): 30%</li>
+                                    <li><i data-lucide="percent" class="w-3 h-3 inline mr-1 text-brand-500"></i>Phase 4 (DV Contract): 20%</li>
+                                    <li><i data-lucide="percent" class="w-3 h-3 inline mr-1 text-brand-500"></i>Phase 5 (Generic Voucher): 10%</li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500 mt-0.5 shrink-0"></i><span><strong>Tasks 4 & 5:</strong> Formulate two distinct open-ended audit questions and build a workflow to answer them.</span></li>
+                    </ul>
+                </div>
+
+                <div class="bg-brand-50 border border-brand-200 rounded-xl p-5 mb-8 shadow-sm">
+                    <p class="text-brand-900 font-medium text-sm flex items-start gap-3">
+                        <i data-lucide="info" class="w-5 h-5 text-brand-600 shrink-0 mt-0.5"></i>
+                        The following sections provide suggested steps. You do not have to exactly follow them, as there might be multiple different ways to solve this problem.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-slate-50 rounded-xl p-6 border border-slate-100">
+                        <h3 class="font-fredoka text-xl font-semibold mb-3 flex items-center gap-2 text-slate-800"><i data-lucide="split-square-horizontal" class="w-5 h-5 text-brand-500"></i> The Structuring Problem</h3>
+                        <p class="text-slate-600 text-sm">"Structuring" occurs when an employee circumvents approval limits by splitting a large invoice into multiple smaller vouchers on the same day. You will build logic to catch this exact behavior.</p>
+                    </div>
+                    <div class="bg-brand-50 rounded-xl p-6 border border-brand-100">
+                        <h3 class="font-fredoka text-xl font-semibold mb-3 flex items-center gap-2 text-brand-900"><i data-lucide="network" class="w-5 h-5 text-brand-500"></i> The Branch Architecture</h3>
+                        <p class="text-slate-700 text-sm">You will build a single, perfectly cleansed 'Master Dataset', and then branch off multiple 'Branches' to perform specific audit tests. Finally, you will rejoin these flags to build a single risk score per transaction.</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end mt-8 border-t border-slate-100 pt-6">
+                    <button onclick="navigateTutorial('setup')" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Next: Setup <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+            </section>
+
+            <section id="setup" class="quest-card bg-gradient-to-b from-white to-blue-50/30 rounded-2xl shadow-sm border border-slate-200 border-t-8 border-t-blue-500 p-8 mb-10 hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm border border-blue-200">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="font-fredoka text-3xl font-bold text-slate-800">Level 0: Prep & Setup</h2>
+                </div>
+                
+                <div class="bg-indigo-50 rounded-xl p-6 border border-indigo-200 mb-6 shadow-sm">
+                    <h3 class="font-fredoka text-xl font-bold text-indigo-900 mb-3 flex items-center gap-2">
+                        <i data-lucide="folder-tree" class="w-5 h-5 text-indigo-600"></i> Project Folder & Relative Paths
+                    </h3>
+                    <p class="text-indigo-800 font-medium mb-2">
+                        <strong>CRITICAL:</strong> Create a new folder on your computer for this project. Put the downloaded raw dataset inside that folder, and save your Alteryx workflow file (.yxmd) in the exact same location. Setting this up first makes relative referencing easier and sharing Alteryx workflow files between group members seamless.
+                    </p>
+                </div>
+
+                <div class="bg-amber-50 rounded-xl p-6 border border-amber-200 mb-6 shadow-sm">
+                    <h3 class="font-fredoka text-xl font-bold text-amber-900 mb-3 flex items-center gap-2">
+                        <i data-lucide="alert-circle" class="w-5 h-5"></i> Single Canvas Workflow
+                    </h3>
+                    <p class="text-amber-800 font-medium mb-2">
+                        Every phase of this project must be placed into its own clearly labeled container. However, <strong>ALL of these containers must live on ONE single canvas.</strong> Do not create separate files.
+                    </p>
+                </div>
+
+                <div class="bg-blue-50 rounded-xl p-6 border border-blue-200 mb-8 shadow-sm">
+                    <h3 class="font-fredoka text-xl font-bold text-blue-900 mb-3 flex items-center gap-2">
+                        <i data-lucide="message-square" class="w-5 h-5 text-blue-600"></i> Strict Annotation Requirement
+                    </h3>
+                    <p class="text-blue-800 font-medium mb-2">
+                        You must thoroughly annotate every Alteryx tool used in your workflow to explain its purpose. Clear audit documentation is a heavily graded requirement (15 points are dedicated to workflow accuracy, annotation, logic, and readability).
+                    </p>
+                </div>
+
+                <div class="flex justify-between mt-8 border-t border-slate-100 pt-6">
+                    <button onclick="navigateTutorial('case-overview')" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i> Previous</button>
+                    <button onclick="navigateTutorial('phase1')" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Next: Phase 1 <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+            </section>
+
+            <!-- Phase 1 -->
+            <section id="phase1" class="quest-card bg-gradient-to-b from-white to-blue-50/30 rounded-2xl shadow-sm border border-slate-200 border-t-8 border-t-blue-500 p-8 mb-10 hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold font-fredoka text-xl shadow-sm border border-blue-200">1</div>
+                    <h2 class="font-fredoka text-3xl font-bold text-slate-800">Data Normalization (Master Dataset)</h2>
+                </div>
+                <p class="text-slate-500 mb-6 font-medium">Cleanse the raw municipal data, handle date inconsistencies, and generate a reliable primary key.</p>
+
+                <div class="ml-4 space-y-0 border-l-2 border-blue-200">
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">1</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-blue-400"></i> Input Data Tool</h3>
+                        <p class="text-slate-600 mb-2">Connect the tool to the downloaded CSV dataset.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p1.1">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p1s1.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Input Data Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">2</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-blue-400"></i> Data Cleansing Tool</h3>
+                        <p class="text-slate-600 mb-2">Target the <code>VENDOR NAME</code> column. Apply Upper Case, Remove Punctuation, and Strip Whitespace.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p1.2">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p1s2.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Data Cleanse Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">3</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-blue-400"></i> Formula Tool 1</h3>
+                        <p class="text-slate-600 mb-2">Target the <code>AMOUNT</code> column to strip currency symbols while preserving negative signs.<br>Expression: <code>ToNumber(ReplaceChar([AMOUNT], "$,", ""))</code><br>Explanation: ReplaceChar removes the $ and commas, and ToNumber converts the resulting string into a numeric value for calculations. <em class="text-emerald-600 text-xs">(Screenshot unlocked without penalty)</em></p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative group min-w-[280px] min-h-[180px] w-full">
+                                    <img src="img/p1s3.png" class="transition-opacity zoomable w-full h-full object-cover" alt="Formula 1 Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">4</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-blue-400"></i> Filter Tool (Drop Subtotals)</h3>
+                        <p class="text-slate-600 mb-2">Historical data older than two years is summarized into annual subtotals and lacks a specific voucher number. Filter out these aggregated rows using the False anchor.<br>Expression: <code>IsNull([VOUCHER NUMBER])</code></p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p1.4">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p1s4.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Filter Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">5</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-blue-400"></i> DateTime Tool 1 (Parse Date)</h3>
+                        <p class="text-slate-600 mb-2">Connect to the False anchor of your filter to keep only valid transactions. Convert the string into a standard Date format. Select <code>CHECK DATE</code>, specify the new column name as <code>Date</code>, and choose the correct format.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p1.5">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p1s5.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="DateTime 1 Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">6</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-blue-400"></i> Filter Tool (Isolate Granular Data)</h3>
+                        <p class="text-slate-600 mb-2">Add a second filter to ensure we are only analyzing the daily payment data going forward.<br>Expression: <code>[Date] >= "2024-05-31"</code></p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p1.6">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p1s6.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Filter Config 2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">7</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-blue-400"></i> DateTime Tool 2 (Extract Year)</h3>
+                        <p class="text-slate-600 mb-2">Extract year from the Date and name it <code>Transaction_Year</code>.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p1.7">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p1s7.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="DateTime Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">8</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-blue-400"></i> Record ID Tool</h3>
+                        <p class="text-slate-600 mb-2">Insert this to generate a primary key. Leave the starting value at 1. Name the column <code>RecordID</code>.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p1.8">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p1s8.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Record ID Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">9</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-blue-400"></i> Select Tool</h3>
+                        <p class="text-slate-600 mb-2">Finalize your schema types to prepare for analytical grouping. Ensure amounts are decimals, dates are dates, IDs are integers, and drop the original <code>[CHECK DATE]</code> column.</p>
+                        <div class="bg-blue-100/50 border border-blue-200 p-3 rounded-xl text-sm font-bold text-blue-800 inline-block mb-2">This Select Tool output acts as your Master Dataset.</div>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p1.9">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p1s9.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Select Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-gradient-to-r from-blue-50 to-white rounded-xl p-6 border border-blue-200 shadow-sm">
+                    <h3 class="font-fredoka text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-6 h-6 text-blue-500"></i> Phase 1 Complete
+                    </h3>
+                    <p class="text-blue-800 mb-4 font-medium">Group these tools into a container named <strong>Phase 1: Normalization</strong>. Verify your layout matches the final checkpoint below. <em class="text-emerald-600 text-xs">(Screenshot unlocked without penalty)</em></p>
+                    <div class="shot-row w-full">
+                        <div class="shot relative group w-full border-2 border-slate-200">
+                            <img src="img/p1cp.png" class="zoomable w-full h-auto object-contain bg-slate-50 p-2" data-title="Phase 1 Checkpoint" alt="Full Phase 1 workflow">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8 border-t border-slate-100 pt-6">
+                    <button onclick="navigateTutorial('setup')" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i> Previous</button>
+                    <button onclick="navigateTutorial('phase2')" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Next: Phase 2 <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+            </section>
+
+            <!-- Phase 2 -->
+            <section id="phase2" class="quest-card bg-gradient-to-b from-white to-purple-50/30 rounded-2xl shadow-sm border border-slate-200 border-t-8 border-t-purple-500 p-8 mb-10 hover:shadow-md transition-shadow hidden">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 font-bold font-fredoka text-xl shadow-sm border border-purple-200">2</div>
+                    <h2 class="font-fredoka text-3xl font-bold text-slate-800">Split Payment Audit (Branch 1)</h2>
+                </div>
+                <p class="text-slate-500 mb-6 font-medium">Connect to the Phase 1 Master Dataset. Identify potential "structuring" where invoices >= $10,000 were split across multiple vouchers on the same day.</p>
+
+                <div class="ml-4 space-y-0 border-l-2 border-purple-200">
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">1</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-purple-400"></i> Summarize Tool</h3>
+                        <p class="text-slate-600 mb-2">Aggregate the data to find the total amount and number of vouchers per vendor, per day.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p2.1">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p2s1.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Summarize Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">2</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-purple-400"></i> Filter Tool</h3>
+                        <p class="text-slate-600 mb-2">Filter for instances where a vendor had multiple vouchers on the same day totaling $10,000 or more.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p2.2">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p2s2.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Filter Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">3</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-purple-400"></i> Join Tool</h3>
+                        <p class="text-slate-600 mb-2">Join your flagged records back to the Master Dataset on VENDOR NAME and Date, and remove duplicate column names in the built in select tool (that starts with Right_ ).</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p2.3">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p2s3.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Join Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">4</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-purple-400"></i> Formula Tool 3</h3>
+                        <p class="text-slate-600 mb-2"><strong>Add Column</strong> named <code>Flag_Split</code> to numerically identify these split payments (set to 1). <em class="text-emerald-600 text-xs">(Screenshot unlocked without penalty)</em></p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative group min-w-[280px] min-h-[180px] w-full">
+                                    <img src="img/p2s4.png" class="transition-opacity zoomable w-full h-full object-cover" alt="Formula Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">5</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-purple-400"></i> Select Tool</h3>
+                        <p class="text-slate-600 mb-2">Clean up the data stream to only keep the primary key and your new flag. Ensure your flag is set to a numeric type (e.g., Int16).</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p2.5">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p2s5.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Select Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-gradient-to-r from-purple-50 to-white rounded-xl p-6 border border-purple-200 shadow-sm">
+                    <h3 class="font-fredoka text-xl font-bold text-purple-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-6 h-6 text-purple-500"></i> Phase 2 Complete
+                    </h3>
+                    <p class="text-purple-800 mb-4 font-medium">Group these tools into a container named <strong>Phase 2: Split Payments</strong>. Verify your layout matches the final checkpoint below. <em class="text-emerald-600 text-xs">(Screenshot unlocked without penalty)</em></p>
+                    <div class="shot-row w-full">
+                        <div class="shot relative group w-full border-2 border-slate-200">
+                            <img src="img/p2cp.png" class="zoomable w-full h-auto object-contain bg-slate-50 p-2" data-title="Phase 2 Checkpoint" alt="Full Phase 2 workflow">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8 border-t border-slate-100 pt-6">
+                    <button onclick="navigateTutorial('phase1')" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i> Previous</button>
+                    <button onclick="navigateTutorial('phase3')" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Next: Phase 3 <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+            </section>
+
+            <!-- Phase 3 -->
+            <section id="phase3" class="quest-card bg-gradient-to-b from-white to-pink-50/30 rounded-2xl shadow-sm border border-slate-200 border-t-8 border-t-pink-500 p-8 mb-10 hover:shadow-md transition-shadow hidden">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-lg bg-pink-100 flex items-center justify-center text-pink-600 font-bold font-fredoka text-xl shadow-sm border border-pink-200">3</div>
+                    <h2 class="font-fredoka text-3xl font-bold text-slate-800">Duplicate Payment Audit (Branch 2)</h2>
+                </div>
+                <p class="text-slate-500 mb-6 font-medium">Connect to the Master Dataset. Flag exact dollar amounts paid to the same vendor multiple times on the same day.</p>
+
+                <div class="ml-4 space-y-0 border-l-2 border-pink-200">
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">1</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-pink-400"></i> Summarize Tool</h3>
+                        <p class="text-slate-600 mb-2">Aggregate the data to find instances where the exact same dollar amount was paid to the same vendor on the same day.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p3.1">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p3s1.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Summarize Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">2</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-pink-400"></i> Filter Tool</h3>
+                        <p class="text-slate-600 mb-2">Filter the dataset to keep only the duplicated records.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p3.2">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p3s2.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Filter Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">3</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-pink-400"></i> Join Tool</h3>
+                        <p class="text-slate-600 mb-2">Join the duplicated records back to the Master Dataset to reattach the precise transaction details. Match on VENDOR NAME, Date, and AMOUNT, and in the built-in select tool, remove duplicate columns (all the column names that start with Right_ ).</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p3.3">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p3s3.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Join Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">4</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-pink-400"></i> Formula Tool 4</h3>
+                        <p class="text-slate-600 mb-2"><strong>Add Column</strong> named <code>Flag_Dupe</code> to mathematically identify these duplicate payments (set to 1).</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p3.4">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p3s4.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Formula Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">5</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-pink-400"></i> Select Tool</h3>
+                        <p class="text-slate-600 mb-2">Clean up the data stream to only keep the primary key and your newly created flag. Ensure your flag is set to a numeric type (e.g., Int16).</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p3.5">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p3s5.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Select Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-gradient-to-r from-pink-50 to-white rounded-xl p-6 border border-pink-200 shadow-sm">
+                    <h3 class="font-fredoka text-xl font-bold text-pink-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-6 h-6 text-pink-500"></i> Phase 3 Complete
+                    </h3>
+                    <p class="text-pink-800 mb-4 font-medium">Group these tools into a container named <strong>Phase 3: Duplicates</strong>. Verify your layout matches the final checkpoint below. <em class="text-emerald-600 text-xs">(Screenshot unlocked without penalty)</em></p>
+                    <div class="shot-row w-full">
+                        <div class="shot relative group w-full border-2 border-slate-200">
+                            <img src="img/p3cp.png" class="zoomable w-full h-auto object-contain bg-slate-50 p-2" data-title="Phase 3 Checkpoint" alt="Full Phase 3 workflow">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8 border-t border-slate-100 pt-6">
+                    <button onclick="navigateTutorial('phase2')" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i> Previous</button>
+                    <button onclick="navigateTutorial('phase4')" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Next: Phase 4 <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+            </section>
+
+            <!-- Phase 4 -->
+            <section id="phase4" class="quest-card bg-gradient-to-b from-white to-red-50/30 rounded-2xl shadow-sm border border-slate-200 border-t-8 border-t-red-500 p-8 mb-10 hover:shadow-md transition-shadow hidden">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center text-red-600 font-bold font-fredoka text-xl shadow-sm border border-red-200">4</div>
+                    <h2 class="font-fredoka text-3xl font-bold text-slate-800">Bypassed Contract (Branch 3)</h2>
+                </div>
+                <p class="text-slate-500 mb-6 font-medium">Connect to Master Dataset. Isolate vendors exploiting Direct Vouchers (DV) which lack a formal bidding process.</p>
+
+                <div class="ml-4 space-y-0 border-l-2 border-red-200">
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">1</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-red-400"></i> Filter Tool</h3>
+                        <p class="text-slate-600 mb-2">Filter the dataset to isolate exceptionally large payments (over $100,000) that utilized Direct Vouchers.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p4.1">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p4s1.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Filter Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">2</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-red-400"></i> Formula Tool 5</h3>
+                        <p class="text-slate-600 mb-2"><strong>Add Column</strong> named <code>Flag_DV</code> on the True anchor to identify these risks (set to 1).</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p4.2">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p4s2.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Formula Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">3</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-red-400"></i> Select Tool</h3>
+                        <p class="text-slate-600 mb-2">Clean the output stream to only include the required ID and flag. Ensure your flag is set to a numeric type (e.g., Int16).</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p4.3">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p4s3.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Select Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-gradient-to-r from-red-50 to-white rounded-xl p-6 border border-red-200 shadow-sm">
+                    <h3 class="font-fredoka text-xl font-bold text-red-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-6 h-6 text-red-500"></i> Phase 4 Complete
+                    </h3>
+                    <p class="text-red-800 mb-4 font-medium">Group these tools into a container named <strong>Phase 4: Bypassed Contract</strong>. Verify your layout matches the final checkpoint below. <em class="text-emerald-600 text-xs">(Screenshot unlocked without penalty)</em></p>
+                    <div class="shot-row w-full">
+                        <div class="shot relative group w-full border-2 border-slate-200">
+                            <img src="img/p4cp.png" class="zoomable w-full h-auto object-contain bg-slate-50 p-2" data-title="Phase 4 Checkpoint" alt="Full Phase 4 workflow">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8 border-t border-slate-100 pt-6">
+                    <button onclick="navigateTutorial('phase3')" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i> Previous</button>
+                    <button onclick="navigateTutorial('phase5')" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Next: Phase 5 <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+            </section>
+
+            <!-- Phase 5 -->
+            <section id="phase5" class="quest-card bg-gradient-to-b from-white to-orange-50/30 rounded-2xl shadow-sm border border-slate-200 border-t-8 border-t-orange-500 p-8 mb-10 hover:shadow-md transition-shadow hidden">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-bold font-fredoka text-xl shadow-sm border border-orange-200">5</div>
+                    <h2 class="font-fredoka text-3xl font-bold text-slate-800">Generic Voucher Audit (Branch 4)</h2>
+                </div>
+                <p class="text-slate-500 mb-6 font-medium">Connect to the Master Dataset. Payments processed with a generic voucher number of "Multiple" lack proper accountability and are not traceable to a specific transaction in the system.</p>
+
+                <div class="ml-4 space-y-0 border-l-2 border-orange-200">
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">1</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-orange-400"></i> Filter Tool</h3>
+                        <p class="text-slate-600 mb-2">Filter the dataset to identify payments marked with "Multiple" in the Voucher Number field.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p5.1">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p5s1.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Filter Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">2</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-orange-400"></i> Formula Tool 6</h3>
+                        <p class="text-slate-600 mb-2"><strong>Add Column</strong> named <code>Flag_Generic_Voucher</code> on the True anchor to identify these risks (set to 1).</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p5.2">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p5s2.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Formula Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">3</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-orange-400"></i> Select Tool</h3>
+                        <p class="text-slate-600 mb-2">Finalize the output stream for this branch. Keep only <code>RecordID</code> and <code>Flag_Generic_Voucher</code>. Ensure your flag is set to a numeric type (e.g., Int16).</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p5.3">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p5s3.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Select Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-gradient-to-r from-orange-50 to-white rounded-xl p-6 border border-orange-200 shadow-sm">
+                    <h3 class="font-fredoka text-xl font-bold text-orange-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-6 h-6 text-orange-500"></i> Phase 5 Complete
+                    </h3>
+                    <p class="text-orange-800 mb-4 font-medium">Group these tools into a container named <strong>Phase 5: Generic Voucher</strong>. Verify your layout matches the final checkpoint below. <em class="text-emerald-600 text-xs">(Screenshot unlocked without penalty)</em></p>
+                    <div class="shot-row w-full">
+                        <div class="shot relative group w-full border-2 border-slate-200">
+                            <img src="img/p5cp.png" class="zoomable w-full h-auto object-contain bg-slate-50 p-2" data-title="Phase 5 Checkpoint" alt="Full Phase 5 workflow">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8 border-t border-slate-100 pt-6">
+                    <button onclick="navigateTutorial('phase4')" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i> Previous</button>
+                    <button onclick="navigateTutorial('phase6')" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Next: Phase 6 <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+            </section>
+
+            <!-- Phase 6 -->
+            <section id="phase6" class="quest-card bg-gradient-to-b from-white to-emerald-50/30 rounded-2xl shadow-sm border border-slate-200 border-t-8 border-t-emerald-500 p-8 mb-10 hover:shadow-md transition-shadow hidden">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold font-fredoka text-xl shadow-sm border border-emerald-200">6</div>
+                    <h2 class="font-fredoka text-3xl font-bold text-slate-800">Master Join & Scoring</h2>
+                </div>
+                <p class="text-slate-500 mb-6 font-medium">Rejoin all flags to the Master Dataset and calculate the Risk Score.</p>
+
+                <div class="ml-4 space-y-0 border-l-2 border-emerald-200">
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">1</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-emerald-400"></i> Join Multiple Tool</h3>
+                        <p class="text-slate-600 mb-2">The dataset from Phase 1, 2, 3, 4, 5 (specifically) will be joined based on <code>RecordID</code>. Use the built-in Select tool functionality within the Join Multiple configuration to deselect all duplicate <code>Input_#_RecordID</code> columns, leaving only one clean <code>RecordID</code> alongside your flags. <br><em class="text-emerald-600 text-xs">Note: These screenshots are provided completely free of charge to ensure your master join is configured properly.</em></p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative group min-w-[280px] min-h-[180px] w-full">
+                                    <img src="img/p6s1.png" class="transition-opacity zoomable w-full h-full object-cover" alt="Join Multiple Config">
+                                </div>
+                            </div>
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative group min-w-[280px] min-h-[180px] w-full">
+                                    <img src="img/p6s1-1.png" class="transition-opacity zoomable w-full h-full object-cover" alt="Join Multiple Config 2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">2</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-emerald-400"></i> Data Cleansing Tool</h3>
+                        <p class="text-slate-600 mb-2">Replace any Null values in your newly joined flag columns with zeros.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p6.2">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p6s2.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Cleanse Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">3</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-emerald-400"></i> Formula Tool 7 (Scoring)</h3>
+                        <p class="text-slate-600 mb-2">Calculate the <code>Composite_Risk_Score</code>. Below is the weight for each anomaly: <br>• Split Payment = 40% <br>• Duplicate = 30% <br>• DV Contract = 20% <br>• Generic Voucher = 10%</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p6.3">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p6s3.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Formula Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-gradient-to-r from-emerald-50 to-white rounded-xl p-6 border border-emerald-200 shadow-sm">
+                    <h3 class="font-fredoka text-xl font-bold text-emerald-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-6 h-6 text-emerald-500"></i> Phase 6 Complete
+                    </h3>
+                    <p class="text-emerald-800 mb-4 font-medium">Group these tools into a container named <strong>Phase 6: Master Join</strong>. Verify your layout matches the final checkpoint below. <em class="text-emerald-600 text-xs">(Screenshot unlocked without penalty)</em></p>
+                    <div class="shot-row w-full">
+                        <div class="shot relative group w-full border-2 border-slate-200">
+                            <img src="img/p6cp.png" class="zoomable w-full h-auto object-contain bg-slate-50 p-2" data-title="Phase 6 Checkpoint" alt="Full Phase 6 workflow">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8 border-t border-slate-100 pt-6">
+                    <button onclick="navigateTutorial('phase5')" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i> Previous</button>
+                    <button onclick="navigateTutorial('phase7')" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Next: Phase 7 <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+            </section>
+
+            <!-- Phase 7 -->
+            <section id="phase7" class="quest-card bg-gradient-to-b from-white to-indigo-50/30 rounded-2xl shadow-sm border border-slate-200 border-t-8 border-t-indigo-500 p-8 mb-10 hover:shadow-md transition-shadow hidden">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold font-fredoka text-xl shadow-sm border border-indigo-200">7</div>
+                    <h2 class="font-fredoka text-3xl font-bold text-slate-800">Reporting</h2>
+                </div>
+                <p class="text-slate-500 mb-6 font-medium">The following tasks correspond directly to the questions in your Final Audit Report. Build these branches to derive the correct answers.</p>
+
+                <div class="ml-4 space-y-0 border-l-2 border-indigo-200">
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">1</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-indigo-400"></i> Task 1: Sort Tool</h3>
+                        <p class="text-slate-600 mb-2"><strong>Objective:</strong> Identify the highest-risk transaction for 2025 to answer Question 1 in the Output Report.<br>Sort the dataset to prioritize the highest risk score and highest amount per Year.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p7.1">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p7s1.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Task 1 Sort Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">2</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-indigo-400"></i> Task 1: Sample Tool</h3>
+                        <p class="text-slate-600 mb-2">Sample the top record per year to identify the top risk flag for 2025.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p7.2">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p7s2.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Task 1 Sample Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">3</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-indigo-400"></i> Task 2: Filter Tool</h3>
+                        <p class="text-slate-600 mb-2"><strong>Objective:</strong> Determine the total number of high-risk LLC invoices in 2025 to answer Question 2 in the Output Report.<br>Filter the dataset for LLCs with amounts over $1,000,000 in 2025 and a risk score of 0.70 or higher. Expression: <code>Contains([VENDOR NAME],"LLC") AND [AMOUNT] > 1000000 AND [Transaction_Year] = 2025 AND [Composite_Risk_Score] >= 0.70</code></p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p7.3">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p7s3.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Task 2 Filter Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">4</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-indigo-400"></i> Task 2: Summarize Tool</h3>
+                        <p class="text-slate-600 mb-2">Count the results to answer the audit question.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p7.4">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p7s4.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Task 2 Summarize Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">5</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-indigo-400"></i> Task 3: Summarize Tool</h3>
+                        <p class="text-slate-600 mb-2"><strong>Objective:</strong> Find the specific vendor with the highest cumulative risk score across the analyzed daily dataset to answer Question 3.<br>Summarize the data to find the total sum of risk scores per vendor.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p7.5">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p7s5.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Task 3 Summarize Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">6</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-indigo-400"></i> Task 3: Sort Tool</h3>
+                        <p class="text-slate-600 mb-2">Sort by the newly created <code>Sum_Composite_Risk_Score</code> in Descending order.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p7.6">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p7s6.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Task 3 Sort Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">7</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-indigo-400"></i> Task 3: Sample Tool</h3>
+                        <p class="text-slate-600 mb-2">Extract the First 1 row to find the vendor with the most consistent high-risk flags.</p>
+                        <div class="shot-row">
+                            <div class="flex gap-3 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto">
+                                <div class="shot relative hint-container group min-w-[280px] min-h-[180px] w-full" data-hint-id="p7.7">
+                                    <div class="hint-overlay absolute inset-0 bg-slate-800/85 backdrop-blur-md rounded-lg flex flex-col items-center justify-center text-white cursor-pointer z-10 transition-colors m-1 hover:bg-slate-800/95">
+                                        <i data-lucide="lock" class="w-8 h-8 mb-3 text-rose-400"></i>
+                                        <span class="text-sm font-bold uppercase tracking-wider text-rose-100 text-center px-2 mb-1">View Configuration</span>
+                                        <span class="text-[10px] text-rose-200 text-center px-4 leading-tight mb-3">Unlock tool settings</span>
+                                        <span class="text-[11px] font-bold bg-rose-500/30 text-white px-3 py-1 rounded-full border border-rose-500/50 shadow-inner">-0.5 Pts</span>
+                                    </div>
+                                    <img src="img/p7s7.png" class="locked-img transition-opacity zoomable w-full h-full object-cover" alt="Task 3 Sample Config">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-gradient-to-r from-indigo-50 to-white rounded-xl p-6 border border-indigo-200 shadow-sm">
+                    <h3 class="font-fredoka text-xl font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-6 h-6 text-indigo-500"></i> Phase 7 Complete
+                    </h3>
+                    <p class="text-indigo-800 mb-4 font-medium">Group these reporting tools into a container named <strong>Phase 7: Reporting</strong>. Verify your layout matches the final checkpoint below. <em class="text-emerald-600 text-xs">(Screenshot unlocked without penalty)</em></p>
+                    <div class="shot-row w-full">
+                        <div class="shot relative group w-full border-2 border-slate-200">
+                            <img src="img/p7cp.png" class="zoomable w-full h-auto object-contain bg-slate-50 p-2" data-title="Phase 7 Checkpoint" alt="Full Phase 7 workflow">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8 border-t border-slate-100 pt-6">
+                    <button onclick="navigateTutorial('phase6')" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i> Previous</button>
+                    <button onclick="navigateTutorial('phase8')" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Next: Phase 8 <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+            </section>
+
+            <!-- Phase 8 -->
+            <section id="phase8" class="quest-card bg-gradient-to-b from-white to-cyan-50/30 rounded-2xl shadow-sm border border-slate-200 border-t-8 border-t-cyan-500 p-8 mb-10 hover:shadow-md transition-shadow hidden">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center text-cyan-600 font-bold font-fredoka text-xl shadow-sm border border-cyan-200">8</div>
+                    <h2 class="font-fredoka text-3xl font-bold text-slate-800">Open-Ended Exploration</h2>
+                </div>
+                <p class="text-slate-500 mb-6 font-medium">Design your own analytical branches from the Master Dataset to extract distinct new insights into the city's spending.</p>
+
+                <div class="ml-4 space-y-0 border-l-2 border-cyan-200">
+                    <div class="timeline-step relative pl-8 pb-10">
+                        <div class="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-cyan-500 text-white flex items-center justify-center font-bold text-sm shadow-md border-4 border-white">1</div>
+                        <h3 class="font-fredoka text-xl font-semibold mb-2 text-slate-800 flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 text-cyan-400"></i> Open-Ended Data Exploration</h3>
+                        <p class="text-slate-600 mb-4">Create your own analytical branches from the Master Dataset to extract new insights. Identify what questions you are trying to answer with this exploration.</p>
+                        
+                        <div class="bg-cyan-50 border border-cyan-200 rounded-xl p-5 mb-4 shadow-sm">
+                            <h4 class="font-bold text-cyan-900 mb-2 flex items-center gap-2"><i data-lucide="list-checks" class="w-4 h-4"></i> Requirements:</h4>
+                            <ul class="list-disc ml-5 text-sm text-cyan-800 space-y-1">
+                                <li>Formulate <strong>two clear, specific audit questions</strong> you are trying to answer.</li>
+                                <li>Build workflow branches for both questions.</li>
+                                <li>Explain the financial or control implications of your discoveries in the final report.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm text-sm text-slate-600 mb-2">
+                            <strong class="text-slate-800">Ideas to Consider (Auditing Perspectives & Required Tools):</strong>
+                            <p class="text-xs text-slate-500 mt-1 mb-2 italic">Note: These are just suggestions! You can come up with any other ideas you can think of—whether they are specific audit-related questions or more exploratory ones (e.g., Which vendor has the highest frequency of payments over $100,000?).</p>
+                            <ul class="mt-2 space-y-3">
+                                <li><strong>Generic Voucher Pattern Analysis:</strong><br><em>Question:</em> Which vendors are most frequently using the generic "Multiple" voucher entry to process their payments, bypassing specific invoice tracking?<br><em>Workflow Hint:</em> Connect to the Master Dataset. You might use a Filter tool to isolate these specific vouchers, followed by a Summarize tool to group and aggregate the totals per vendor, and finally a Sort tool to rank your findings.</li>
+                                <li><strong>Weekend Processing Audit:</strong><br><em>Question:</em> Are payments being processed on weekends when municipal finance offices are typically closed, indicating potential unauthorized system access?<br><em>Workflow Hint:</em> Connect to the Master Dataset. Consider using a Formula tool with a DateTime function to determine the day of the week, a Filter tool to isolate weekends, and a Summarize tool to count incidents by department.</li>
+                                <li><strong>Vendor Direct Voucher Analysis:</strong><br><em>Question:</em> Is one specific vendor responsible for the majority of the high-risk direct vouchers over $100,000?<br><em>Workflow Hint:</em> Connect to your Phase 6 Output. You could use a Summarize tool to add up the direct voucher flags per vendor, a Sort tool to organize them, and a Sample tool to pull the top records.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-gradient-to-r from-cyan-50 to-white rounded-xl p-6 border border-cyan-200 shadow-sm">
+                    <h3 class="font-fredoka text-xl font-bold text-cyan-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-6 h-6 text-cyan-500"></i> Phase 8 Complete
+                    </h3>
+                    <p class="text-cyan-800 mb-4 font-medium">Group these tools into a container named <strong>Phase 8: Open-Ended Exploration</strong>.</p>
+                </div>
+                
+                <div class="mt-8 bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700 shadow-sm text-white">
+                    <h3 class="font-fredoka text-xl font-bold mb-4 flex items-center gap-2">
+                        <i data-lucide="award" class="w-6 h-6 text-brand-400"></i> Entire Project Complete
+                    </h3>
+                    <p class="text-slate-300 mb-4 font-medium">Congratulations! Compare your entire Continuous Audit Engine to the suggested workflow checkpoint below before proceeding to the final report. This is a suggested workflow—students might have different setups to solve specific problems on their own. It does not have to exactly match this layout as long as you get to the same valid results. <em class="text-emerald-400 text-xs">(Screenshot unlocked without penalty)</em></p>
+                    <div class="shot-row w-full">
+                        <div class="shot relative group w-full border-2 border-slate-600 bg-slate-800">
+                            <img src="img/full_project_cp.png" class="zoomable w-full h-auto object-contain bg-slate-50 p-2 transition-transform duration-300 group-hover:scale-[2] hover:z-50 cursor-zoom-in relative" data-title="Complete Project Checkpoint" alt="Entire Project workflow">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between mt-8 border-t border-slate-100 pt-6">
+                    <button onclick="navigateTutorial('phase7')" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i> Previous</button>
+                    <button onclick="navigateTutorial('report')" class="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold flex items-center gap-2 hover:bg-slate-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Next: Output Report <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+            </section>
+
+            <section id="report" class="quest-card bg-gradient-to-b from-white to-teal-50/30 rounded-2xl shadow-sm border border-slate-200 border-t-8 border-t-teal-500 p-8 mb-10 hover:shadow-md transition-shadow hidden">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center text-teal-600 shadow-sm border border-teal-200">
+                        <i data-lucide="file-check" class="w-5 h-5"></i>
+                    </div>
+                    <h2 class="font-fredoka text-3xl font-bold text-slate-800">Final Audit Report</h2>
+                </div>
+                
+                <div class="bg-teal-50 border border-teal-200 rounded-xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+                    <div>
+                        <h3 class="font-fredoka text-xl font-bold text-teal-900 mb-2">Submission Requirements</h3>
+                        <p class="text-teal-800 text-sm">Submit your Alteryx <code class="bg-teal-100 px-1 rounded text-teal-900 font-mono">(.yxmd)</code> and the <code class="bg-teal-100 px-1 rounded text-teal-900 font-mono">.docx</code> Answer Sheet generated below.</p>
+                        
+                        <div class="mt-4 bg-white/50 p-4 rounded-lg border border-teal-200">
+                            <h4 class="font-bold text-teal-900 text-sm mb-2 flex items-center gap-2"><i data-lucide="calculator" class="w-4 h-4 text-teal-600"></i> Grading Rubric (25 Points Total)</h4>
+                            <ul class="text-teal-800 text-sm mb-2 space-y-1">
+                                <li><strong>Questions 1-5:</strong> 2 points each (10 points total)</li>
+                                <li><strong>Alteryx Workflow (.yxmd):</strong> 15 points (Evaluated on accuracy, annotation, logic, and readability)</li>
+                                <li><strong>Hint Penalties:</strong> -0.5 points per screenshot unlocked (Max deduction: 10 points)</li>
+                            </ul>
+                        </div>
+
+                        <div class="mt-4 bg-white/50 p-4 rounded-lg border border-teal-200">
+                            <h4 class="font-bold text-teal-900 text-sm mb-2 flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i> Critical Step: Make File Paths Relative</h4>
+                            <p class="text-teal-800 text-sm mb-2">If you submit your file with absolute paths, the workflow will break on the grader's computer. You must make paths relative so the workflow can be graded:</p>
+                            <ol class="list-decimal ml-5 text-sm text-teal-800 space-y-1">
+                                <li>Ensure your workflow is saved in the same <strong>Project</strong> folder as your datasets.</li>
+                                <li>In Alteryx, click <strong>Options</strong> in the top menu bar.</li>
+                                <li>Navigate to <strong>Advanced Options</strong> > <strong>Workflow Dependencies</strong>.</li>
+                                <li>Click the <strong>All Relative</strong> button at the bottom of the window.</li>
+                                <li>Click <strong>OK</strong> and immediately <strong>Save</strong> your workflow (.yxmd) one last time.</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <button id="downloadAnswerSheet" class="shrink-0 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-all shadow-[0_4px_14px_0_rgb(13,148,136,0.39)] hover:shadow-[0_6px_20px_rgba(13,148,136,0.23)] transform hover:-translate-y-0.5 mt-4 md:mt-0">
+                        <i data-lucide="download" class="w-5 h-5"></i> Generate Docx
+                    </button>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-8 shadow-inner overflow-x-auto text-sm font-serif leading-relaxed text-slate-800 relative">
+                    <div class="absolute top-4 right-4 opacity-5 pointer-events-none"><i data-lucide="file-text" class="w-24 h-24"></i></div>
+                    <h3 class="font-bold text-center text-lg mb-6 underline relative z-10">Answer Sheet Preview</h3>
+                    
+                    <div class="relative z-10 space-y-6">
+                        <p class="font-bold text-base border-b border-slate-100 pb-2">Group Member Names: _________________________________________</p>
+
+                        <div>
+                            <p class="mb-2 italic text-slate-700">1. For the transaction year 2025, which vendor generated the single highest Composite Risk Score and Dollar Amount? <strong class="text-teal-700">(2 Points)</strong></p>
+                            <div class="h-16 border border-slate-300 bg-slate-50 mt-2 p-3 text-slate-400 text-center rounded-lg flex items-center justify-center italic">[Type your answer here]</div>
+                        </div>
+
+                        <div>
+                            <p class="mb-2 italic text-slate-700">2. After applying specific risk profile filters (LLC, > $1M, Year 2025, Score >= 0.70), exactly how many invoices fall into this high-risk category? <strong class="text-teal-700">(2 Points)</strong></p>
+                            <div class="h-16 border border-slate-300 bg-slate-50 mt-2 p-3 text-slate-400 text-center rounded-lg flex items-center justify-center italic">[Type your answer here]</div>
+                        </div>
+
+                        <div>
+                            <p class="mb-2 italic text-slate-700">3. Across the analyzed daily dataset (May 31, 2024, to present), which vendor accumulated the highest total sum of Composite Risk Scores? <strong class="text-teal-700">(2 Points)</strong></p>
+                            <div class="h-16 border border-slate-300 bg-slate-50 mt-2 p-3 text-slate-400 text-center rounded-lg flex items-center justify-center italic">[Type your answer here]</div>
+                        </div>
+
+                        <div class="mt-8 border-t border-slate-200 pt-6">
+                            <h4 class="font-bold text-lg mb-4 underline">Open-Ended Report</h4>
+                            <p class="mb-2 italic text-slate-700">4. Based on your custom branch for Phase 8, clearly explain your first open-ended question, provide a screenshot, and detail the financial implications of your discoveries. <strong class="text-teal-700">(2 Points)</strong></p>
+                            
+                            <p class="font-bold text-teal-800 mt-4 mb-2 text-sm">Question 4: What is your specific audit question?</p>
+                            <div class="h-16 border border-slate-300 bg-slate-50 mt-2 p-3 text-slate-400 text-center rounded-lg flex items-center justify-center italic">[Type your audit question here]</div>
+                            
+                            <p class="font-bold text-teal-800 mt-4 mb-2 text-sm">Workflow Screenshot 1:</p>
+                            <div class="h-48 border-2 border-dashed border-slate-300 bg-slate-50 mt-2 p-4 text-slate-400 text-center rounded-xl flex items-center justify-center italic">
+                                [Paste your Alteryx workflow screenshot here]
+                            </div>
+
+                            <p class="font-bold text-teal-800 mt-4 mb-2 text-sm">Financial / Control Implications 1:</p>
+                            <div class="h-32 border border-slate-300 bg-slate-50 mt-2 p-4 text-slate-400 text-center rounded-xl flex items-center justify-center italic">
+                                [Type your explanation of the findings here]
+                            </div>
+                        </div>
+
+                        <div class="mt-8 border-t border-slate-200 pt-6">
+                            <p class="mb-2 italic text-slate-700">5. Based on your custom branch for Phase 8, clearly explain your second open-ended question, provide a screenshot, and detail the financial implications of your discoveries. <strong class="text-teal-700">(2 Points)</strong></p>
+                            
+                            <p class="font-bold text-teal-800 mt-4 mb-2 text-sm">Question 5: What is your specific audit question?</p>
+                            <div class="h-16 border border-slate-300 bg-slate-50 mt-2 p-3 text-slate-400 text-center rounded-lg flex items-center justify-center italic">[Type your audit question here]</div>
+                            
+                            <p class="font-bold text-teal-800 mt-4 mb-2 text-sm">Workflow Screenshot 2:</p>
+                            <div class="h-48 border-2 border-dashed border-slate-300 bg-slate-50 mt-2 p-4 text-slate-400 text-center rounded-xl flex items-center justify-center italic">
+                                [Paste your Alteryx workflow screenshot here]
+                            </div>
+
+                            <p class="font-bold text-teal-800 mt-4 mb-2 text-sm">Financial / Control Implications 2:</p>
+                            <div class="h-32 border border-slate-300 bg-slate-50 mt-2 p-4 text-slate-400 text-center rounded-xl flex items-center justify-center italic">
+                                [Type your explanation of the findings here]
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-start mt-8 border-t border-slate-100 pt-6">
+                    <button onclick="navigateTutorial('phase8')" class="px-6 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i> Previous</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Image Viewer -->
+    <aside id="sideViewer" class="fixed inset-y-0 right-0 w-full md:w-3/4 lg:w-2/3 xl:w-3/4 bg-white shadow-[0_0_60px_rgba(0,0,0,0.2)] border-l border-slate-200 transform translate-x-full transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] z-50 flex flex-col">
+        <div class="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50">
+            <h3 id="viewerTitle" class="font-fredoka text-xl font-semibold text-slate-800 truncate pr-4">Image Preview</h3>
+            <button id="closeViewer" class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors shadow-sm shrink-0">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 bg-slate-100 flex items-start justify-center pattern-dots">
+            <div class="bg-white p-2 rounded-xl shadow-md border border-slate-200 w-full">
+                <img id="viewerImg" src="" alt="Zoomed in content" class="w-full h-auto rounded-lg">
+            </div>
+        </div>
+        <div class="p-6 border-t border-slate-100 bg-white">
+            <p class="text-sm text-slate-500 flex items-center gap-2">
+                <i data-lucide="info" class="w-4 h-4"></i> Press <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded font-mono text-xs mx-1">ESC</kbd> to close
+            </p>
+        </div>
+    </aside>
+
+    <script>
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        lucide.createIcons();
+
+        // ----------------------------------------------------
+        // GOOGLE APPS SCRIPT URL - LIVE TRACKING
+        // ----------------------------------------------------
+        const GOOGLE_APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwbt6rx11Fnfc2y01hJxsQn_f-jFNaulwT5IfKp3cd__ef0L6_2ouCeM38acf_P-J_k/exec"; 
+
+        // ----------------------------------------------------
+        // DOCX GENERATION LOGIC
+        // ----------------------------------------------------
+        async function generateDocx() {
+            const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
+
+            const createBox = (placeholderText, heightSpacing = 400) => {
+                return new Table({
+                    width: { size: 100, type: WidthType.PERCENTAGE },
+                    borders: {
+                        top: { style: BorderStyle.SINGLE, size: 4, color: "CBD5E1" },
+                        bottom: { style: BorderStyle.SINGLE, size: 4, color: "CBD5E1" },
+                        left: { style: BorderStyle.SINGLE, size: 4, color: "CBD5E1" },
+                        right: { style: BorderStyle.SINGLE, size: 4, color: "CBD5E1" }
+                    },
+                    rows: [
+                        new TableRow({
+                            children: [
+                                new TableCell({
+                                    shading: { fill: "F8FAFC" },
+                                    margins: { top: 150, bottom: heightSpacing, left: 150, right: 150 },
+                                    children: [
+                                        new Paragraph({
+                                            text: placeholderText,
+                                            italics: true,
+                                            color: "64748B",
+                                            font: "Arial"
+                                        })
+                                    ]
+                                })
+                            ]
+                        })
+                    ]
+                });
+            };
+
+            const doc = new Document({
+                creator: "Chicago Audit System",
+                title: "Chicago Audit Answer Sheet",
+                styles: {
+                    paragraphStyles: [
+                        {
+                            id: "Heading1",
+                            name: "Heading 1",
+                            basedOn: "Normal",
+                            next: "Normal",
+                            quickFormat: true,
+                            run: { color: "0F766E", bold: true, size: 48, font: "Arial" }, 
+                            paragraph: { alignment: AlignmentType.CENTER, spacing: { after: 400 } }
+                        },
+                        {
+                            id: "QuestionBlock",
+                            name: "Question Block",
+                            basedOn: "Normal",
+                            next: "Normal",
+                            run: { color: "1E293B", italics: true, font: "Arial", size: 24 }, 
+                            paragraph: { spacing: { before: 300, after: 150 } }
+                        }
+                    ]
+                },
+                sections: [{
+                    properties: {},
+                    children: [
+                        new Paragraph({ text: "Chicago Payment Audit - Answer Sheet", heading: HeadingLevel.HEADING_1 }),
+                        
+                        new Paragraph({ 
+                            children: [
+                                new TextRun({ text: "Group Member Names: ", bold: true, font: "Arial" }), 
+                                new TextRun({ text: "_________________________________________", color: "94A3B8" })
+                            ],
+                            spacing: { after: 400 }
+                        }),
+                        
+                        new Paragraph({ 
+                            children: [
+                                new TextRun({ text: "1. For the transaction year 2025, which vendor generated the single highest Composite Risk Score and Dollar Amount? ", italics: true, font: "Arial", size: 24 }),
+                                new TextRun({ text: "(2 Points)", bold: true, color: "0F766E", font: "Arial", size: 24 })
+                            ],
+                            style: "QuestionBlock" 
+                        }),
+                        createBox("[Type your answer here]", 400),
+
+                        new Paragraph({ 
+                            children: [
+                                new TextRun({ text: "2. After applying specific risk profile filters (LLC, > $1M, Year 2025, Score >= 0.70), exactly how many invoices fall into this high-risk category? ", italics: true, font: "Arial", size: 24 }),
+                                new TextRun({ text: "(2 Points)", bold: true, color: "0F766E", font: "Arial", size: 24 })
+                            ],
+                            style: "QuestionBlock" 
+                        }),
+                        createBox("[Type your answer here]", 400),
+
+                        new Paragraph({ 
+                            children: [
+                                new TextRun({ text: "3. Across the analyzed daily dataset (May 31, 2024, to present), which vendor accumulated the highest total sum of Composite Risk Scores? ", italics: true, font: "Arial", size: 24 }),
+                                new TextRun({ text: "(2 Points)", bold: true, color: "0F766E", font: "Arial", size: 24 })
+                            ],
+                            style: "QuestionBlock" 
+                        }),
+                        createBox("[Type your answer here]", 400),
+
+                        new Paragraph({ 
+                            children: [
+                                new TextRun({ text: "4. Based on your custom branch for Phase 8, clearly explain your first open-ended question, provide a screenshot, and detail the financial implications of your discoveries. ", italics: true, font: "Arial", size: 24 }),
+                                new TextRun({ text: "(2 Points)", bold: true, color: "0F766E", font: "Arial", size: 24 })
+                            ],
+                            style: "QuestionBlock" 
+                        }),
+                        
+                        new Paragraph({ text: "Question 4: What is your specific audit question?", font: "Arial", bold: true, spacing: { before: 200, after: 100 } }),
+                        createBox("[Type your audit question here]", 400),
+                        
+                        new Paragraph({ text: "Workflow Screenshot 1:", font: "Arial", bold: true, spacing: { before: 200, after: 100 } }),
+                        createBox("[Paste your Alteryx workflow screenshot here]", 2500),
+                        
+                        new Paragraph({ text: "Financial / Control Implications 1:", font: "Arial", bold: true, spacing: { before: 200, after: 100 } }),
+                        createBox("[Type your explanation of the findings here]", 1500),
+
+                        new Paragraph({ 
+                            children: [
+                                new TextRun({ text: "5. Based on your custom branch for Phase 8, clearly explain your second open-ended question, provide a screenshot, and detail the financial implications of your discoveries. ", italics: true, font: "Arial", size: 24 }),
+                                new TextRun({ text: "(2 Points)", bold: true, color: "0F766E", font: "Arial", size: 24 })
+                            ],
+                            style: "QuestionBlock" 
+                        }),
+                        
+                        new Paragraph({ text: "Question 5: What is your specific audit question?", font: "Arial", bold: true, spacing: { before: 200, after: 100 } }),
+                        createBox("[Type your audit question here]", 400),
+                        
+                        new Paragraph({ text: "Workflow Screenshot 2:", font: "Arial", bold: true, spacing: { before: 200, after: 100 } }),
+                        createBox("[Paste your Alteryx workflow screenshot here]", 2500),
+                        
+                        new Paragraph({ text: "Financial / Control Implications 2:", font: "Arial", bold: true, spacing: { before: 200, after: 100 } }),
+                        createBox("[Type your explanation of the findings here]", 1500)
+                    ]
+                }]
+            });
+
+            try {
+                const blob = await Packer.toBlob(doc);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "Chicago_Audit_Answer_Sheet.docx";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error("Error generating docx:", error);
+            }
+        }
+
+        const downloadBtn = document.getElementById('downloadAnswerSheet');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                generateDocx();
+            });
+        }
+
+        // ----------------------------------------------------
+        // AUTHENTICATION & HINT TRACKING LOGIC
+        // ----------------------------------------------------
+        const ROSTER = {
+            "tarnold3@zagmail.gonzaga.edu": 7,
+            "lballantyne@zagmail.gonzaga.edu": 3,
+            "hbarnett@zagmail.gonzaga.edu": 17,
+            "rbelusko@zagmail.gonzaga.edu": 15,
+            "jbrennan4@zagmail.gonzaga.edu": 4,
+            "lbutcher2@zagmail.gonzaga.edu": 18,
+            "gbyrne@zagmail.gonzaga.edu": 11,
+            "lcadezamartinez@zagmail.gonzaga.edu": 16,
+            "mchilian@zagmail.gonzaga.edu": 9,
+            "rciavarra@zagmail.gonzaga.edu": 10,
+            "fdavis2@zagmail.gonzaga.edu": 10,
+            "rdenning@zagmail.gonzaga.edu": 5,
+            "jdong2@zagmail.gonzaga.edu": 11,
+            "aduenas@zagmail.gonzaga.edu": 7,
+            "gdunton@zagmail.gonzaga.edu": 13,
+            "beaton@zagmail.gonzaga.edu": 14,
+            "cellis8@zagmail.gonzaga.edu": 5,
+            "cfergusson@zagmail.gonzaga.edu": 1,
+            "cfisher5@zagmail.gonzaga.edu": 4,
+            "sgibson6@zagmail.gonzaga.edu": 1,
+            "jgilberg@zagmail.gonzaga.edu": 3,
+            "hhuang5@zagmail.gonzaga.edu": 18,
+            "djaquez@zagmail.gonzaga.edu": 17,
+            "gkramer@zagmail.gonzaga.edu": 8,
+            "alamonica@zagmail.gonzaga.edu": 9,
+            "jlee24@zagmail.gonzaga.edu": 5,
+            "smagee2@zagmail.gonzaga.edu": 2,
+            "amalubay@zagmail.gonzaga.edu": 12,
+            "kmartinez@zagmail.gonzaga.edu": 13,
+            "mmay2@zagmail.gonzaga.edu": 14,
+            "rmcgee2@zagmail.gonzaga.edu": 14,
+            "jmcguire4@zagmail.gonzaga.edu": 19,
+            "nmiyabe@zagmail.gonzaga.edu": 18,
+            "kochkur@zagmail.gonzaga.edu": 6,
+            "aortiz4@zagmail.gonzaga.edu": 11,
+            "nrobertson@zagmail.gonzaga.edu": 15,
+            "aschulz3@zagmail.gonzaga.edu": 8,
+            "esciarrotta@zagmail.gonzaga.edu": 6,
+            "qsnow@zagmail.gonzaga.edu": 2,
+            "storres2@zagmail.gonzaga.edu": 16,
+            "lwearmouth@zagmail.gonzaga.edu": 7,
+            "pweyrauch@zagmail.gonzaga.edu": 10,
+            "mwohlrab@zagmail.gonzaga.edu": 8,
+            "kyates2@zagmail.gonzaga.edu": 2,
+            "lyocom@zagmail.gonzaga.edu": 6,
+            "eyoo@zagmail.gonzaga.edu": 16,
+            "cyore@zagmail.gonzaga.edu": 19,
+            "jwidmer@zagmail.gonzaga.edu": 21,
+            "mobara2@zagmail.gonzaga.edu": 0,
+            "haj@gonzaga.edu": 0
+        };
+
+        const authModal = document.getElementById('authModal');
+        const startBtn = document.getElementById('startBtn');
+        const userProfile = document.getElementById('userProfile');
+        const displayEmail = document.getElementById('displayEmail');
+        const displayGroup = document.getElementById('displayGroup');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const authError = document.getElementById('authError');
+        const authErrorText = document.getElementById('authErrorText');
+        
+        const hintModal = document.getElementById('hintModal');
+        const hintModalText = document.getElementById('hintModalText');
+        const hintConfirmBtn = document.getElementById('hintConfirmBtn');
+        const hintCancelBtn = document.getElementById('hintCancelBtn');
+        let currentHintToUnlock = null;
+
+        const logoutModal = document.getElementById('logoutModal');
+        const logoutConfirmBtn = document.getElementById('logoutConfirmBtn');
+        const logoutCancelBtn = document.getElementById('logoutCancelBtn');
+
+        let studentData = JSON.parse(localStorage.getItem('chicago_student')) || null;
+        let unlockedHints = JSON.parse(localStorage.getItem('chicago_unlocked_hints')) || [];
+
+        if (studentData) {
+            authModal.classList.add('hidden');
+            showUserProfile();
+            restoreUnlockedHints();
+        }
+
+        startBtn.addEventListener('click', () => {
+            const emailInput = document.getElementById('studentEmail').value.trim().toLowerCase();
+            const groupInput = parseInt(document.getElementById('groupNumber').value.trim(), 10);
+            
+            if (isNaN(groupInput) || groupInput < 0) {
+                authErrorText.textContent = 'Please enter a valid Group Number.';
+                authError.classList.remove('hidden');
+                return;
+            }
+            if (!emailInput || !(emailInput in ROSTER)) {
+                authErrorText.textContent = 'Access Denied: Email not found on the roster. Check spelling.';
+                authError.classList.remove('hidden');
+                return;
+            }
+            if (ROSTER[emailInput] !== groupInput) {
+                authErrorText.textContent = 'Access Denied: The Group Number does not match the assigned group for this email.';
+                authError.classList.remove('hidden');
+                return;
+            }
+
+            authError.classList.add('hidden');
+            studentData = { email: emailInput, group: groupInput };
+            unlockedHints = [];
+            
+            localStorage.setItem('chicago_student', JSON.stringify(studentData));
+            localStorage.setItem('chicago_unlocked_hints', JSON.stringify(unlockedHints));
+            
+            authModal.classList.add('hidden');
+            showUserProfile();
+            restoreUnlockedHints();
+        });
+
+        const downloadLogBtn = document.getElementById('downloadLogBtn');
+        if (downloadLogBtn) {
+            downloadLogBtn.addEventListener('click', () => {
+                if (!studentData) return;
+                const ptsLost = Math.min(unlockedHints.length * 0.5, 10.0);
+                const maxPts = 25.0 - ptsLost;
+                
+                let log = `Chicago Audit Investigation - Hint Tracking Log\n=================================================\n\nGroup Number: ${studentData.group}\nStudent Email: ${studentData.email}\nDate Downloaded: ${new Date().toLocaleString()}\n\nTotal Screenshot Hints Unlocked: ${unlockedHints.length}\nPoints Deducted (-0.5 pts each, max 10 pts): ${ptsLost.toFixed(1)}\nMaximum Possible Project Score: ${maxPts.toFixed(1)} / 25.0\n\nUnlocked Hints Details:\n--------------------------------------\n`;
+                if (unlockedHints.length === 0) log += `- Excellent work! No hints were unlocked.\n`;
+                else unlockedHints.forEach((h, index) => log += `${index + 1}. Unlocked Hint ID: [${h}]\n`);
+                
+                const blob = new Blob([log], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `Chicago_HintLog_Group${studentData.group}.txt`;
+                document.body.appendChild(a);
+                a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+            });
+        }
+
+        logoutBtn.addEventListener('click', () => {
+            logoutModal.classList.remove('hidden');
+            logoutModal.classList.add('flex');
+        });
+        
+        logoutCancelBtn.addEventListener('click', () => {
+            logoutModal.classList.add('hidden');
+            logoutModal.classList.remove('flex');
+        });
+
+        logoutConfirmBtn.addEventListener('click', () => {
+            localStorage.removeItem('chicago_student');
+            localStorage.removeItem('chicago_unlocked_hints');
+            location.reload(); 
+        });
+
+        function showUserProfile() {
+            userProfile.classList.remove('hidden');
+            displayEmail.textContent = studentData.email;
+            displayGroup.textContent = "Group " + studentData.group;
+        }
+
+        function restoreUnlockedHints() {
+            document.querySelectorAll('.hint-container').forEach(container => {
+                if(unlockedHints.includes(container.dataset.hintId)) unlockVisuals(container);
+            });
+        }
+
+        function unlockVisuals(container) {
+            const overlay = container.querySelector('.hint-overlay');
+            const img = container.querySelector('.locked-img') || container.querySelector('img');
+            if(overlay) overlay.classList.add('hidden');
+            if(img) {
+                img.classList.remove('locked-img', 'opacity-0');
+                img.style.filter = "none";
+            }
+        }
+
+        document.querySelectorAll('.hint-container').forEach(container => {
+            const overlay = container.querySelector('.hint-overlay');
+            const hintId = container.dataset.hintId;
+            if(overlay) {
+                overlay.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (unlockedHints.includes(hintId)) return;
+                    currentHintToUnlock = hintId;
+                    const currentPenalty = unlockedHints.length * 0.5;
+                    const isCapped = currentPenalty >= 10.0;
+                    
+                    if (isCapped) {
+                        hintModalText.innerHTML = `You have reached the maximum hint penalty (10 points).<br>Unlocking this hint will not deduct any further points.<br><br><strong>Proceed to unlock?</strong>`;
+                    } else {
+                        hintModalText.innerHTML = `Are you sure you want to unlock this hint?<br><br>This will deduct <strong>0.5 points</strong>.<br><span class="text-xs text-rose-500">(Total penalty will be ${currentPenalty + 0.5} / 10 points max)</span>`;
+                    }
+                    hintModal.classList.remove('hidden');
+                    hintModal.classList.add('flex');
+                });
+            }
+        });
+
+        hintCancelBtn.addEventListener('click', () => {
+            hintModal.classList.add('hidden');
+            hintModal.classList.remove('flex');
+            currentHintToUnlock = null;
+        });
+
+        hintConfirmBtn.addEventListener('click', async () => {
+            if(!currentHintToUnlock) return;
+            const hintId = currentHintToUnlock;
+            hintModal.classList.add('hidden');
+            hintModal.classList.remove('flex');
+            currentHintToUnlock = null;
+
+            document.querySelectorAll(`.hint-container[data-hint-id="${hintId}"]`).forEach(c => unlockVisuals(c));
+            unlockedHints.push(hintId);
+            localStorage.setItem('chicago_unlocked_hints', JSON.stringify(unlockedHints));
+
+            // Transmit Live Hint Data to Google Sheet
+            try {
+                await fetch(GOOGLE_APP_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    headers: { 
+                        'Content-Type': 'text/plain;charset=utf-8' 
+                    },
+                    body: JSON.stringify({
+                        email: studentData.email,
+                        group: studentData.group,
+                        hintId: hintId,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                console.log("Hint data successfully transmitted to instructor database.");
+            } catch (err) {
+                console.error("Error transmitting hint log:", err);
+            }
+        });
+
+        // ----------------------------------------------------
+        // UI & NAVIGATION LOGIC (PAGINATION)
+        // ----------------------------------------------------
+        const sectionsOrder = ['case-overview', 'setup', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5', 'phase6', 'phase7', 'phase8', 'report'];
+
+        const tutorialView = document.getElementById('tutorialView');
+        const caseView = document.getElementById('caseView');
+        const btnCaseDetails = document.getElementById('btnCaseDetails');
+        const tutorialLinks = document.querySelectorAll('.tutorial-link');
+
+        btnCaseDetails.addEventListener('click', (e) => {
+            e.preventDefault();
+            tutorialView.classList.add('hidden');
+            caseView.classList.remove('hidden');
+            tutorialLinks.forEach(l => {
+                l.classList.remove('bg-slate-100', 'text-brand-600', 'font-bold');
+                l.classList.add('border-transparent');
+            });
+            btnCaseDetails.classList.add('bg-slate-100', 'text-brand-600', 'font-bold', 'border-brand-200');
+            document.getElementById('progressBar').style.width = '0%';
+            caseView.scrollTop = 0;
+        });
+
+        window.navigateTutorial = function(targetId) {
+            caseView.classList.add('hidden');
+            tutorialView.classList.remove('hidden');
+            
+            document.querySelectorAll('.quest-card').forEach(card => card.classList.add('hidden'));
+            const targetCard = document.getElementById(targetId);
+            if(targetCard) targetCard.classList.remove('hidden');
+            
+            tutorialLinks.forEach(l => {
+                l.classList.remove('bg-slate-100', 'text-brand-600', 'font-bold');
+                l.classList.add('border-transparent');
+            });
+            btnCaseDetails.classList.remove('bg-slate-100', 'text-brand-600', 'font-bold', 'border-brand-200');
+            btnCaseDetails.classList.add('border-transparent');
+            
+            const activeLink = document.querySelector(`.tutorial-link[href="#${targetId}"]`);
+            if(activeLink) {
+                activeLink.classList.add('bg-slate-100', 'text-brand-600', 'font-bold');
+                activeLink.classList.remove('border-transparent');
+            }
+
+            const index = sectionsOrder.indexOf(targetId);
+            document.getElementById('progressBar').style.width = ((index + 1) / sectionsOrder.length) * 100 + '%';
+            tutorialView.scrollTop = 0;
+        };
+
+        // Interactive Side Viewer Logic
+        const viewer = document.getElementById('sideViewer');
+        const viewerImg = document.getElementById('viewerImg');
+        const viewerTitle = document.getElementById('viewerTitle');
+        const closeBtn = document.getElementById('closeViewer');
+
+        document.addEventListener('click', (e) => {
+            if(e.target.classList.contains('zoomable') && !e.target.classList.contains('locked-img')) {
+                const img = e.target;
+                viewerImg.style.opacity = '0';
+                viewerImg.src = img.src;
+                viewerImg.onload = () => { viewerImg.style.opacity = '1'; viewerImg.style.transition = 'opacity 0.2s'; };
+                viewerTitle.textContent = img.dataset.title || img.alt || 'View Image';
+                viewer.classList.remove('translate-x-full');
+            }
+        });
+
+        const closePanel = () => {
+            viewer.classList.add('translate-x-full');
+            setTimeout(() => { viewerImg.src = ''; }, 300);
+        };
+
+        closeBtn.addEventListener('click', closePanel);
+        document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !viewer.classList.contains('translate-x-full')) closePanel(); });
+    </script>
+</body>
+</html>
